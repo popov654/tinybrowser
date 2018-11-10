@@ -1502,7 +1502,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (b.zIndex < 0 && !b.zIndexAuto && b.positioning != Position.STATIC) {
                 l1.add(b);
             }
-            if ((b.zIndex == 0 && !b.zIndexAuto || zIndexAuto) && b.positioning != Position.STATIC) {
+            if ((b.zIndex == 0 && !b.zIndexAuto || b.zIndexAuto) && b.positioning != Position.STATIC) {
                 l2.add(b);
             }
             if (b.zIndex > 0 && !b.zIndexAuto && b.positioning != Position.STATIC) {
@@ -1548,13 +1548,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Arrays.sort(a3, new BlockSort2());
 
         for (int i = 0; i < a1.length; i++) {
-            list.addAll(a1[i].getZIndexList());
+            if (a1[i].zIndexAuto) {
+                list.add(a1[i]);
+            } else {
+                list.addAll(a1[i].getZIndexList());
+            }
         }
         for (int i = 0; i < a2.length; i++) {
-            list.addAll(a2[i].getZIndexList());
+            if (a2[i].zIndexAuto) {
+                list.add(a2[i]);
+            } else {
+                list.addAll(a2[i].getZIndexList());
+            }
         }
         for (int i = 0; i < a3.length; i++) {
-            list.addAll(a3[i].getZIndexList());
+            if (a3[i].zIndexAuto) {
+                list.add(a3[i]);
+            } else {
+                list.addAll(a3[i].getZIndexList());
+            }
         }
 
         return list;
@@ -1577,6 +1589,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     private static LinkedList<Block> reorderList(LinkedList<Block> list) {
         LinkedList<Block> list2 = new LinkedList<Block>();
+        //list2.add(list.remove());
         Iterator it = list.listIterator();
         while (it.hasNext()) {
             Block b = (Block)it.next();
@@ -1872,7 +1885,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         label.setBounds(_x_ + c.getX() - scroll_x, _y_ + c.getY() - scroll_y, text_italic ? c.getWidth() + 2 : c.getWidth(), c.getHeight());
 
-        label.setForeground(color);
+        Color col = alpha < 1.0f ? new Color(color.getRed(), color.getGreen(), color.getBlue(), Math.round(255 * alpha)) : color;
+
+        label.setForeground(col);
 
         if (selectable) {
 
@@ -2641,6 +2656,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (prop.equals("top") && value.equals("auto")) {
+            auto_top = true;
+            return;
+        } else if (prop.equals("top")) {
+            auto_top = false;
+        }
+        if (prop.equals("bottom") && value.equals("auto")) {
+            auto_bottom = true;
+            return;
+        } else if (prop.equals("bottom")) {
+            auto_bottom = false;
+        }
+
+        if (prop.equals("right") && value.equals("auto")) {
+            auto_right = true;
+            return;
+        }
+
         if (prop.matches("border(-left|-right|-top|-bottom)-color")) {
             if (prop.contains("-left")) borderColor[3] = parseColor(value);
             if (prop.contains("-right")) borderColor[1] = parseColor(value);
@@ -2884,6 +2917,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (auto_width && !auto_right) {
             width = right - left;
         }
+        auto_left = false;
         left = (int)Math.round(value * ratio);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
@@ -2973,6 +3007,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(14 * ratio * val);
             rules_for_recalc.remove("top");
         }
+        auto_top = false;
         top = (int)Math.round(value * ratio);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
@@ -3014,6 +3049,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(14 * ratio * val);
             rules_for_recalc.remove("bottom");
         }
+        auto_bottom = false;
         bottom = (int)Math.round(value * value);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
@@ -3078,6 +3114,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void removeAllElements() {
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).removeAll();
+        }
         removeAll();
         children.clear();
         //performLayout();
@@ -3172,8 +3211,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean auto_width = false;
     public boolean auto_height = true;
-    public boolean auto_left = false;
+    public boolean auto_left = true;
     public boolean auto_right = true;
+    public boolean auto_top = true;
+    public boolean auto_bottom = true;
     public boolean auto_x_margin = false;
     public boolean auto_y_margin = false;
 

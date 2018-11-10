@@ -211,15 +211,20 @@ public class LayoutTests extends WebDocument {
         Block block = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.STATIC);
         block.setDisplayType(Block.Display.INLINE_BLOCK);
-        block.addText("Text");
+        block.addText("Text1");
         b.addElement(block);
 
-        block.setPositioning(Block.Position.ABSOLUTE);
-        block.setLeft(50, Block.Units.percent);
-        block.setTop(50, Block.Units.percent);
-        block.performLayout();
-        block.setProp("margin-left", -block.width / 2, Block.Units.px);
-        block.setProp("margin-top", -block.height / 2, Block.Units.px);
+        Block block2 = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        block2.setPositioning(Block.Position.STATIC);
+        block2.setDisplayType(Block.Display.INLINE_BLOCK);
+        block2.addText("Text2");
+        b.addElement(block2);
+
+        block2.setPositioning(Block.Position.ABSOLUTE);
+        block2.setLeft(50, Block.Units.percent);
+        block2.setTop(50, Block.Units.percent);
+        block2.setProp("margin-left", -block.width / 2, Block.Units.px);
+        block2.setProp("margin-top", -block.height / 2, Block.Units.px);
 
         root.performLayout();
         root.forceRepaintAll();
