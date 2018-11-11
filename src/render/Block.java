@@ -1485,30 +1485,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (this == document.root) this.zIndexAuto = false;
         LinkedList<Block> list = getSubtree(this);
         if (this == document.root) list.removeFirst();
-        Iterator it = list.listIterator();
+        
         LinkedList<Block> l1 = new LinkedList<Block>();
         LinkedList<Block> l2 = new LinkedList<Block>();
         LinkedList<Block> l3 = new LinkedList<Block>();
-        Block b;
-        int pos = -1;
-        if (this != document.root) {
-            it.next();
-            pos++;
-        }
 
-        while (it.hasNext()) {
-            b = (Block)(it.next());
-            pos++;
-            if (b.zIndex < 0 && !b.zIndexAuto && b.positioning != Position.STATIC) {
-                l1.add(b);
-            }
-            if ((b.zIndex == 0 && !b.zIndexAuto || b.zIndexAuto) && b.positioning != Position.STATIC) {
-                l2.add(b);
-            }
-            if (b.zIndex > 0 && !b.zIndexAuto && b.positioning != Position.STATIC) {
-                l3.add(b);
-            }
-        }
+        sortList(list, l1, l2, l3);
 
         if (l1.size() + l2.size() + l3.size() == 1) {
            if (l1.size() == 1) {
@@ -1532,6 +1514,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         list = reorderList(list);
 
+        sortList(list, l1, l2, l3);
+
+        list.removeAll(l1);
+        list.removeAll(l2);
+        list.removeAll(l3);
+
         if (l1.size() == 0 && l2.size() == 0 && l3.size() == 0) {
             return list;
         }
@@ -1548,11 +1536,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Arrays.sort(a3, new BlockSort2());
 
         for (int i = 0; i < a1.length; i++) {
-            if (a1[i].zIndexAuto) {
-                list.add(a1[i]);
-            } else {
-                list.addAll(a1[i].getZIndexList());
-            }
+            list.addAll(a1[i].getZIndexList());
         }
         for (int i = 0; i < a2.length; i++) {
             if (a2[i].zIndexAuto) {
@@ -1562,14 +1546,34 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         for (int i = 0; i < a3.length; i++) {
-            if (a3[i].zIndexAuto) {
-                list.add(a3[i]);
-            } else {
-                list.addAll(a3[i].getZIndexList());
-            }
+            list.addAll(a3[i].getZIndexList());
         }
 
         return list;
+    }
+
+    private void sortList(List list, List l1, List l2, List l3) {
+        Block b;
+        int pos = -1;
+        Iterator it = list.listIterator();
+        if (this != document.root) {
+            it.next();
+            pos++;
+        }
+
+        while (it.hasNext()) {
+            b = (Block)(it.next());
+            pos++;
+            if (b.zIndex < 0 && !b.zIndexAuto && b.positioning != Position.STATIC) {
+                l1.add(b);
+            }
+            if ((b.zIndex == 0 && !b.zIndexAuto || b.zIndexAuto) && b.positioning != Position.STATIC) {
+                l2.add(b);
+            }
+            if (b.zIndex > 0 && !b.zIndexAuto && b.positioning != Position.STATIC) {
+                l3.add(b);
+            }
+        }
     }
 
     public void setZIndices() {
@@ -1587,10 +1591,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    private static LinkedList<Block> reorderList(LinkedList<Block> list) {
+    private LinkedList<Block> reorderList(LinkedList<Block> list) {
         LinkedList<Block> list2 = new LinkedList<Block>();
-        //list2.add(list.remove());
+        if (this != document.root) {
+            list2.add(list.remove());
+        }
         Iterator it = list.listIterator();
+        if (!it.hasNext()) return list2;
         while (it.hasNext()) {
             Block b = (Block)it.next();
             if (b.display_type == Display.NONE) {
@@ -1611,14 +1618,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         while (it.hasNext()) {
             Block b = (Block)it.next();
             if (b.float_type != FloatType.NONE) {
-                list2.add(b);
+                List l = b.reorderList(getSubtree(b));
+                list2.addAll(l);
             }
         }
         list.removeAll(list2);
         it = list.listIterator();
         while (it.hasNext()) {
             Block b = (Block)it.next();
-            list2.add(b);
+            List l = b.reorderList(getSubtree(b));
+            list2.addAll(l);
         }
         return list2;
     }
@@ -1634,7 +1643,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b = b.children.get(0);
         while (b != null) {
             if (b.type != NodeTypes.TEXT) list.add(b);
-            if (b.zIndexAuto) {
+            if (b.zIndexAuto && b.float_type == FloatType.NONE && b.display_type == Display.BLOCK) {
                 boolean is_leaf = (b.children.size() == 1 && b.children.get(0).type == NodeTypes.TEXT);
                 if (b.children.size() > 0 && !is_leaf) {
                     stack.add(b);
@@ -1884,10 +1893,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             flag = true;
         }
         label.setBounds(_x_ + c.getX() - scroll_x, _y_ + c.getY() - scroll_y, text_italic ? c.getWidth() + 2 : c.getWidth(), c.getHeight());
-
-        Color col = alpha < 1.0f ? new Color(color.getRed(), color.getGreen(), color.getBlue(), Math.round(255 * alpha)) : color;
-
-        label.setForeground(col);
 
         if (selectable) {
 

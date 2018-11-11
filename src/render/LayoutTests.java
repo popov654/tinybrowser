@@ -35,7 +35,50 @@ public class LayoutTests extends WebDocument {
         root.addMouseListeners();
         
         bp.setBounds(9, 283, 474, 86);
+
+        root.height = height-2;
+        root.viewport_height = root.height;
+        root.orig_height = root.height;
+        root.max_height = root.height;
+        root.setBounds(root.getX(), root.getY(), root.width, root.height);
+
+        //System.out.println();
+        //d.getLayouter().printLines(d, 0);
+        //System.out.println();
+
+        basicTest();
+        //testNormal(d2);
+        //testPreWrap(d2);
+        //testWordBreak(d2);
+        //testInlineBlocks(d2);
+        //testRelativePositioning(d2);
+        //testAbsolutePositioning(d2);
+        //testZIndex();
+        //testLists(d2, 2);
+        
+
+        //testTextAlign(d, Block.TextAlign.ALIGN_CENTER);
+
+        panel.repaint();
+        btn = new JButton("Close");
+        btn.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        btn.setBounds((bp.getWidth() - btn.getPreferredSize().width) / 2, (bp.getHeight() - btn.getPreferredSize().height)-10, btn.getPreferredSize().width, btn.getPreferredSize().height);
+        bp.add(btn);
+        cp.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
+        cp.setPreferredSize(new Dimension(494, 370));
+        pack();
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    public void basicTest() {
         ready = false;
+
         Block d = new Block(this, null, 136, 92, 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
@@ -125,10 +168,10 @@ public class LayoutTests extends WebDocument {
         root.addElement(d2);
 
         //d2.setBold(true);
-        d2.setItalic(true);
-        
+        //d2.setItalic(true);
+
         //d2.setTransform(true);
-        
+
         //d.has_shadow = true;
         //d.shadow_x = 1;
         //d.shadow_y = -1;
@@ -136,54 +179,20 @@ public class LayoutTests extends WebDocument {
         //d.shadow_size = 0;
         //d.shadow_color = new Color(0, 0, 0, 114);
         //d.setProp("box-shadow", "0px 0px 3px 1px #c0c0c0");
-        
+
         //d.setAlpha(0.42f);
         //d03.setAlpha(0.64f);
 
         //root.setBackgroundImage("400.jpg");
         //root.setBackgroundRepeat(Block.BackgroundRepeat.REPEAT_XY);
 
-        d.display_type = Block.Display.NONE;
+        //d.display_type = Block.Display.NONE;
         //d.visibility = Block.Visibility.HIDDEN;
 
-        root.height = height-2;
-        root.viewport_height = root.height;
-        root.orig_height = root.height;
-        root.max_height = root.height;
-        root.setBounds(root.getX(), root.getY(), root.width, root.height);
-        
         ready = true;
+
         root.performLayout();
         root.forceRepaintAll();
-        //System.out.println();
-        //d.getLayouter().printLines(d, 0);
-        //System.out.println();
-        //testNormal(d2);
-        //testPreWrap(d2);
-        //testWordBreak(d2);
-        //testInlineBlocks(d2);
-        //testRelativePositioning(d2);
-        //testAbsolutePositioning(d2);
-        //testZIndex();
-        testLists(2);
-
-        //testTextAlign(d, Block.TextAlign.ALIGN_CENTER);
-
-        panel.repaint();
-        btn = new JButton("Close");
-        btn.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
-        btn.setBounds((bp.getWidth() - btn.getPreferredSize().width) / 2, (bp.getHeight() - btn.getPreferredSize().height)-10, btn.getPreferredSize().width, btn.getPreferredSize().height);
-        bp.add(btn);
-        cp.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
-        cp.setPreferredSize(new Dimension(494, 370));
-        pack();
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
     public void testRelativePositioning(Block b) {
@@ -272,7 +281,7 @@ public class LayoutTests extends WebDocument {
         //b3.float_type = Block.FloatType.LEFT;
         //b3.clear_type = Block.ClearType.BOTH;
 
-        b2.display_type = Block.Display.NONE;
+        //b2.display_type = Block.Display.NONE;
 
         root.performLayout();
         root.forceRepaintAll();
@@ -303,33 +312,8 @@ public class LayoutTests extends WebDocument {
         root.forceRepaint();
     }
 
-    public void testLists(int type) {
-        root.removeAllElements();
-        
-        Block b = new Block(this, null, 136, 92, 1, 7, Color.MAGENTA);
-        b.setPositioning(Block.Position.STATIC);
-        b.setMargins(4);
-        b.setPaddings(15, 17, 15, 17);
-        b.setWidth(-1);
-        b.setHeight(80);
-        b.setBorderWidth(2);
-        b.setTextColor(new Color(0, 0, 0));
-
-        Vector<Color> c = new Vector<Color>();
-        c.add(new Color(0, 100, 192, 134));
-        c.add(new Color(235, 235, 235, 245));
-        Vector<Float> p = new Vector<Float>();
-        p.add(0f);
-        p.add(0.52f);
-        b.setLinearGradient(c, p, -54);
-
-        root.addElement(b);
-
-//        b.setItalic(false);
-//        b.setPositioning(Block.Position.STATIC);
-//        b.removeAllElements();
-//        b.no_draw = true;
-//        b.setHeight(-1);
+    public void testLists(Block b, int type) {
+        b.removeAllElements();
         Block b1 = new Block(this);
         b1.addText("Item 1");
         Block b2 = new Block(this);
