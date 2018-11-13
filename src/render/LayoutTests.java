@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.Vector;
 
 
@@ -46,13 +48,14 @@ public class LayoutTests extends WebDocument {
         //d.getLayouter().printLines(d, 0);
         //System.out.println();
 
-        basicTest();
-        //testNormal(d2);
-        //testPreWrap(d2);
-        //testWordBreak(d2);
-        //testInlineBlocks(d2);
-        //testRelativePositioning(d2);
-        //testAbsolutePositioning(d2);
+        //basicTest();
+        //testNormal();
+        //testPreWrap();
+        //testWordBreak();
+        //testInlineBlocks();
+        //testRelativePositioning();
+        //testAbsolutePositioning();
+        testAutoMargins(60, 15);
         //testZIndex();
         //testLists(d2, 2);
         
@@ -74,6 +77,34 @@ public class LayoutTests extends WebDocument {
         pack();
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    public void prepareBlock() {
+        ready = false;
+
+        Block d = new Block(this, null, 136, 92, 1, 7, Color.MAGENTA);
+        d.setPositioning(Block.Position.STATIC);
+        //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
+        d.setMargins(4);
+        d.setPaddings(15, 17, 15, 17);
+        d.setWidth(-1);
+        d.setHeight(80);
+        d.setBorderWidth(2);
+        d.setTextColor(new Color(0, 0, 0));
+        Vector<Color> c = new Vector<Color>();
+        c.add(new Color(0, 100, 192, 134));
+        c.add(new Color(235, 235, 235, 245));
+        Vector<Float> p = new Vector<Float>();
+        p.add(0f);
+        p.add(0.52f);
+        d.setLinearGradient(c, p, -54);
+
+        root.addElement(d);
+
+        ready = true;
+        
+        root.performLayout();
+        root.forceRepaintAll();
     }
 
     public void basicTest() {
@@ -195,7 +226,11 @@ public class LayoutTests extends WebDocument {
         root.forceRepaintAll();
     }
 
-    public void testRelativePositioning(Block b) {
+    public void testRelativePositioning() {
+        prepareBlock();
+
+        Block b = root.children.get(0);
+
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
 
@@ -213,7 +248,11 @@ public class LayoutTests extends WebDocument {
         root.forceRepaintAll();
     }
 
-    public void testAbsolutePositioning(Block b) {
+    public void testAbsolutePositioning() {
+        prepareBlock();
+
+        Block b = root.children.get(0);
+
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
 
@@ -234,6 +273,34 @@ public class LayoutTests extends WebDocument {
         block2.setTop(50, Block.Units.percent);
         block2.setProp("margin-left", -block.width / 2, Block.Units.px);
         block2.setProp("margin-top", -block.height / 2, Block.Units.px);
+
+        root.performLayout();
+        root.forceRepaintAll();
+    }
+
+    public void testAutoMargins(int left, int right) {
+        prepareBlock();
+
+        Block b = root.children.get(0);
+
+        b.auto_x_margin = true;
+        b.width = 180;
+        b.viewport_width = b.width;
+        b.auto_width = false;
+        b.no_draw = true;
+        b.setLeft(left, Block.Units.px);
+        b.setRight(right, Block.Units.px);
+
+        if (left > 0 || right > 0) {
+            b.setPositioning(Block.Position.ABSOLUTE);
+        }
+        b.removeAllElements();
+
+        Block block = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        block.setPositioning(Block.Position.STATIC);
+        block.setDisplayType(Block.Display.INLINE_BLOCK);
+        block.addText("Text");
+        b.addElement(block);
 
         root.performLayout();
         root.forceRepaintAll();
@@ -334,7 +401,11 @@ public class LayoutTests extends WebDocument {
         root.forceRepaintAll();
     }
 
-    public void testNormal(Block b) {
+    public void testNormal() {
+
+        root.children.get(0).setDisplayType(Block.Display.NONE);
+
+        Block b = root.children.get(1);
         b.removeAllElements();
         b.setWidth(126);
         b.setHeight(-1);
@@ -344,7 +415,11 @@ public class LayoutTests extends WebDocument {
         root.forceRepaintAll();
     }
 
-    public void testPreWrap(Block b) {
+    public void testPreWrap() {
+
+        root.children.get(0).setDisplayType(Block.Display.NONE);
+
+        Block b = root.children.get(1);
         b.removeAllElements();
         b.setWidth(126);
         b.setHeight(-1);
@@ -354,7 +429,11 @@ public class LayoutTests extends WebDocument {
         root.forceRepaintAll();
     }
 
-    public void testWordBreak(Block b) {
+    public void testWordBreak() {
+
+        root.children.get(0).setDisplayType(Block.Display.NONE);
+
+        Block b = root.children.get(1);
         b.removeAllElements();
         b.setWidth(126);
         b.setHeight(-1);
@@ -387,6 +466,17 @@ public class LayoutTests extends WebDocument {
         LayoutTests lt = new LayoutTests();
         lt.setVisible(true);
         lt.setPanelSize(474, 300);
+
+        //lt.testAutoMargins(60, 15);
+        //lt.testZIndex();
+
+        //lt.setVisible(true);
+
+        try {
+            Robot robot = new Robot();
+            java.awt.image.BufferedImage screenShot = robot.createScreenCapture(new Rectangle(lt.getBounds()));
+            javax.imageio.ImageIO.write(screenShot, "png", new File("snapshot.png"));
+        } catch(Exception ex) {}
     }
 
     private JPanel bp;

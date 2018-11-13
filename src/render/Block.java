@@ -1492,33 +1492,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         sortList(list, l1, l2, l3);
 
-        if (l1.size() + l2.size() + l3.size() == 1) {
-           if (l1.size() == 1) {
-               list.remove(l1.getFirst());
-               list.add(l1.getFirst());
-           }
-           if (l2.size() == 1) {
-               list.remove(l2.getFirst());
-               list.add(l2.getFirst());
-           }
-           if (l3.size() == 1) {
-               list.remove(l3.getFirst());
-               list.add(l3.getFirst());
-           }
-           return list;
-        }
-
         list.removeAll(l1);
         list.removeAll(l2);
         list.removeAll(l3);
 
-        list = reorderList(list);
-
-        sortList(list, l1, l2, l3);
-
-        list.removeAll(l1);
-        list.removeAll(l2);
-        list.removeAll(l3);
+        if (list.size() > 0) list = reorderList(list);
 
         if (l1.size() == 0 && l2.size() == 0 && l3.size() == 0) {
             return list;
@@ -1540,7 +1518,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         for (int i = 0; i < a2.length; i++) {
             if (a2[i].zIndexAuto) {
-                list.add(a2[i]);
+                list.addAll(a2[i].reorderList(getSubtree(a2[i])));
             } else {
                 list.addAll(a2[i].getZIndexList());
             }
@@ -1589,6 +1567,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else c.setComponentZOrder(b, list.size()-1-i);
         }
+        layer_list = list;
     }
 
     private LinkedList<Block> reorderList(LinkedList<Block> list) {
@@ -1641,19 +1620,34 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         LinkedList<Integer> stack2 = new LinkedList<Integer>();
         if (b.children.size() == 0) return list;
         b = b.children.get(0);
+        int psc = 0;
         while (b != null) {
-            if (b.type != NodeTypes.TEXT) list.add(b);
-            if (b.zIndexAuto && b.float_type == FloatType.NONE && b.display_type == Display.BLOCK) {
+            /* Do not include descendants of floats and inline-blocks except elements
+               generating their own contexts */
+            boolean skip = block.zIndexAuto && b.positioning != Position.STATIC && !b.zIndexAuto;
+            if (b.type != NodeTypes.TEXT && !skip && (psc <= 0 || b.positioning != Position.STATIC && !b.zIndexAuto)) {
+                list.add(b);
+            }
+            if (b.positioning == Position.STATIC || b.zIndexAuto) {
+                /* Traverse everything except elements
+                   generating their own contexts */
                 boolean is_leaf = (b.children.size() == 1 && b.children.get(0).type == NodeTypes.TEXT);
                 if (b.children.size() > 0 && !is_leaf) {
                     stack.add(b);
                     stack2.add(pos);
+                    if (b.float_type != FloatType.NONE || b.display_type == Display.INLINE_BLOCK ||
+                            b.display_type == Display.INLINE || b.zIndexAuto) {
+                        psc++;
+                    }
                     b = b.children.get(0);
                     pos = 0;
                 } else {
                     while (b.parent.children.size() <= pos+1 && !stack.isEmpty()) {
                         pos = stack2.pollLast();
                         b = stack.pollLast();
+                        if (b.float_type != FloatType.NONE || b.display_type == Display.INLINE_BLOCK || b.display_type == Display.INLINE) {
+                            psc--;
+                        }
                     }
                     if (b.parent.children.size() > pos+1) {
                         pos++;
@@ -1663,7 +1657,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
                 continue;
-            } else {
+            } else {    
+                /*  Do not include descendants of blocks generating their own contexts */
                 while (b.parent.children.size() <= pos+1 && !stack.isEmpty()) {
                     pos = stack2.pollLast();
                     b = stack.pollLast();
@@ -2589,6 +2584,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             width = 0;
             viewport_width = 0;
         }
+        if (display_type == Display.NONE) {
+            removeTextLayers();
+        }
+    }
+
+    private void removeTextLayers() {
+        if (text_layer != null) {
+            remove(text_layer);
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).removeTextLayers();
+        }
     }
 
     public boolean isRoot() {
@@ -2860,7 +2867,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 rules_for_recalc.put(prop, val + "%");
             }
             else if (units == Units.em) {
-                value = (int)Math.round(14 * ratio * val);
+                value = (int)Math.round(16 * val);
                 rules_for_recalc.remove(prop);
             }
             if (prop.matches("margin(-left)?")) {
@@ -2913,7 +2920,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.put("left", val + "%");
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * val);
             rules_for_recalc.remove("left");
         }
         if (!auto_width && auto_right) {
@@ -2961,7 +2968,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.put("right", val + "%");
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * val);
             rules_for_recalc.remove("right");
         }
         if (!auto_width && auto_left) {
@@ -2971,7 +2978,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             width = right - left;
         }
         auto_right = false;
-        right = (int)Math.round(value * value);
+        right = (int)Math.round(value * ratio);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -3009,7 +3016,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.put("top", val + "%");
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * val);
             rules_for_recalc.remove("top");
         }
         auto_top = false;
@@ -3051,11 +3058,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.put("bottom", val + "%");
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * val);
             rules_for_recalc.remove("bottom");
         }
         auto_bottom = false;
-        bottom = (int)Math.round(value * value);
+        bottom = (int)Math.round(value * ratio);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -3112,17 +3119,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void removeElement(Block d) {
-        remove(d);
+        d.removeTextLayers();
+        d.removeAllElements();
+        document.root.remove(d);
+        document.root.forceRepaint();
         children.remove(d);
         //performLayout();
         //forceRepaint();
     }
 
-    public void removeAllElements() {
+    public void removeElement(int index) {
+        removeElement(children.get(index));
+    }
+
+    public void removeAllElements() { 
         for (int i = 0; i < children.size(); i++) {
+            document.root.remove(children.get(i));
             children.get(i).removeAll();
         }
-        removeAll();
         children.clear();
         //performLayout();
         //forceRepaint();
@@ -3364,7 +3378,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int list_item_type = 0;
     private static Vector<String> list_types = new Vector<String>();
 
-    private BufferedImage buffer;
+    protected BufferedImage buffer;
 
     JPanel text_layer;
 
@@ -3536,31 +3550,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int _getHeight() {
         return viewport_height;
     }
+
+    private LinkedList<Block> layer_list = null;
     
 
     public void mouseClicked(MouseEvent e) {
-        boolean flag = false;
-        for (int i = 0; i < children.size(); i++) {
-            Block b = children.get(i);
-            if (b._x_ <= e.getX() && b._x_ + b.viewport_width >= e.getX() &&
-                b._y_ <= e.getY() && b._y_ + b.viewport_height >= e.getY() &&
-                (b.positioning == Position.ABSOLUTE ||
-                 b.float_type != FloatType.NONE)) {
-                   //MouseEvent evt = new MouseEvent((Block)d, 0, 0, 0, e.getX() - b._x_, e.getY() - b._y_, 1, false);
-                   children.get(i).mouseClicked(e);
-                   flag = true;
-            }
-        }
-        if (!flag) {
-            for (int i = 0; i < lines.size(); i++) {
-                for (int j = 0; j < lines.get(i).elements.size(); j++) {
-                    if (!(lines.get(i).elements.get(j) instanceof Block)) continue;
-                    Block b = (Block)lines.get(i).elements.get(j);
-                    if (b._x_ <= e.getX() && b._x_ + b.viewport_width >= e.getX() &&
-                        b._y_ <= e.getY() && b._y_ + b.viewport_height >= e.getY()) {
-                          //MouseEvent evt = new MouseEvent((Block)d, 0, 0, 0, e.getX() - b._x_, e.getY() - b._y_, 1, false);
-                          b.mouseClicked(e);
-                    }
+
+        Block[] blocks = new Block[document.root.layer_list.size()];
+        document.root.layer_list.toArray(blocks);
+
+        for (int i = 0; i < blocks.length; i++) {
+            if (children.contains(blocks[i])) {
+                Block b = blocks[i];
+                if (b._x_ <= e.getX() && b._x_ + b.viewport_width >= e.getX() &&
+                    b._y_ <= e.getY() && b._y_ + b.viewport_height >= e.getY()) {
+                      //MouseEvent evt = new MouseEvent((Block)d, 0, 0, 0, e.getX() - b._x_, e.getY() - b._y_, 1, false);
+                      b.mouseClicked(e);
                 }
             }
         }
