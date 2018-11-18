@@ -48,14 +48,14 @@ public class LayoutTests extends WebDocument {
         //d.getLayouter().printLines(d, 0);
         //System.out.println();
 
-        //basicTest();
+        basicTest();
         //testNormal();
         //testPreWrap();
         //testWordBreak();
         //testInlineBlocks();
         //testRelativePositioning();
         //testAbsolutePositioning();
-        testAutoMargins(60, 15);
+        //testAutoMargins(60, 15);
         //testZIndex();
         //testLists(d2, 2);
         
@@ -140,32 +140,18 @@ public class LayoutTests extends WebDocument {
         d02.setPositioning(Block.Position.STATIC);
         d02.setDisplayType(Block.Display.INLINE_BLOCK);
         d02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-        d02.addText("\u00A0");
+        d02.addText("text");
+        d02.setBackgroundColor(new Color(255, 210, 0));
+        d02.setFontSize(24);
+        //d02.setMargins(0, 4);
         d.addElement(d02);
 
         Block d03 = new Block(this, d, -1, -1, 0, 0, Color.BLACK);
         d03.setPositioning(Block.Position.STATIC);
         d03.setDisplayType(Block.Display.INLINE_BLOCK);
         d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-        d03.addText("text");
-        d03.setBackgroundColor(new Color(255, 210, 0));
-        d03.setFontSize(24);
-        //d03.setMargins(0, 4);
+        d03.addText(" and some more");
         d.addElement(d03);
-
-        Block d04 = new Block(this, d, -1, -1, 0, 0, Color.BLACK);
-        d04.setPositioning(Block.Position.STATIC);
-        d04.setDisplayType(Block.Display.INLINE_BLOCK);
-        d04.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-        d04.addText("\u00A0");
-        d.addElement(d04);
-
-        Block d05 = new Block(this, d, -1, -1, 0, 0, Color.BLACK);
-        d05.setPositioning(Block.Position.STATIC);
-        d05.setDisplayType(Block.Display.INLINE_BLOCK);
-        d05.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-        d05.addText(" and some more");
-        d.addElement(d05);
 
         root.addElement(d);
 
@@ -190,11 +176,11 @@ public class LayoutTests extends WebDocument {
         //d2.setProp("border-right", "2px dashed #0f0");
         //d2.setProp("border-bottom", "2px dotted #0cf");
 
-        Block d06 = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
-        d06.setPositioning(Block.Position.STATIC);
-        d06.setDisplayType(Block.Display.INLINE_BLOCK);
-        d06.addText("Text");
-        d2.addElement(d06);
+        Block d04 = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        d04.setPositioning(Block.Position.STATIC);
+        d04.setDisplayType(Block.Display.INLINE_BLOCK);
+        d04.addText("Text");
+        d2.addElement(d04);
 
         root.addElement(d2);
 

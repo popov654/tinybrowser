@@ -277,8 +277,8 @@ public class Layouter {
         label.setFont(font);
         int width = label.getFontMetrics(font).stringWidth(str);
         char[] ch = {};
-        if ((last_line.elements.size() == 0 ||
-               (last_line.elements.lastElement() instanceof Character &&
+        if ((last_line.elements.size() == 0 && last_line != block.lines.get(0) ||
+               (last_line.elements.size() > 0 && last_line.elements.lastElement() instanceof Character &&
                 ((Character)last_line.elements.lastElement()).getText().matches("\\s+"))) && str.equals(" ")) {
             last_word = -1;
             return;
@@ -308,7 +308,7 @@ public class Layouter {
                 c.parent = last_line;
             }
             last_line.addElement(c);
-            block.height = last_line.getY() + last_line.getHeight() + block.paddings[2] + block.borderWidth[2];
+            //block.height = last_line.getY() + last_line.getHeight() + block.paddings[2] + block.borderWidth[2];
         }
         last_word = -1;
     }
@@ -323,13 +323,13 @@ public class Layouter {
             stack.remove(stack.lastIndexOf(d));
             return;
         }
-        if (d.positioning == Block.Position.ABSOLUTE) {
-            d._x_ = block._x_ + block.borderWidth[3] + d.margins[3] + d.left;
-            d._y_ = block._y_ + block.borderWidth[0] + d.margins[0] + d.top;
-            d.performLayout();
-            stack.remove(stack.lastIndexOf(d));
-            return;
-        }
+//        if (d.positioning == Block.Position.ABSOLUTE) {
+//            d._x_ = block._x_ + block.borderWidth[3] + d.margins[3] + d.left;
+//            d._y_ = block._y_ + block.borderWidth[0] + d.margins[0] + d.top;
+//            d.performLayout();
+//            stack.remove(stack.lastIndexOf(d));
+//            return;
+//        }
         if (d.display_type == Block.Display.BLOCK) {
             offset = d.margins[0];
             
@@ -364,6 +364,8 @@ public class Layouter {
                 d.setX(d._getX() + d.left);
                 d.setY(d._getY() + d.top);
             }
+
+            if (checkAbsolutePositioning(d)) return;
 
             d.no_draw = false;
 
@@ -408,6 +410,8 @@ public class Layouter {
                 d.setX(d._getX() + d.left);
                 d.setY(d._getY() + d.top);
             }
+
+            if (checkAbsolutePositioning(d)) return;
 
             if (last_block != null && last_block.line == last_line) {
                 applyVerticalAlignment(d);
@@ -514,6 +518,46 @@ public class Layouter {
 
             return;
         }
+    }
+
+    private boolean checkAbsolutePositioning(Block d) {
+        Block p = block;
+        while (p != null && p.positioning != Block.Position.RELATIVE && p.positioning != Block.Position.ABSOLUTE) {
+            p = p.parent;
+        }
+        if (p == null) p = block.document.root;
+        if (d.positioning == Block.Position.ABSOLUTE) {
+            if (d.auto_left) {
+                d.setX(last_line.getX());
+            } else {
+                if (!d.auto_left && !d.auto_right && !d.auto_width && d.auto_x_margin &&
+                      p.width - p.borderWidth[3] - p.borderWidth[1] - d.left - d.right - d.width > 0) {
+                    int w = p.width - p.borderWidth[3] - p.borderWidth[1] - d.left - d.right - d.width;
+                    d.margins[3] = Math.round(w / 2);
+                    d.margins[1] = w - d.margins[3];
+                }
+                d.setX(p.borderWidth[3] + d.margins[3] + d.left);
+            }
+            if (d.auto_top) {
+                d.setY(last_line.getY());
+            } else {
+                if (!d.auto_top && !d.auto_bottom && !d.auto_height && d.auto_y_margin &&
+                      p.height - p.borderWidth[0] - p.borderWidth[2] - d.top - d.bottom - d.height > 0) {
+                    int h = p.height - p.borderWidth[0] - p.borderWidth[2] - d.top - d.bottom - d.height;
+                    d.margins[0] = Math.round(h / 2);
+                    d.margins[2] = h - d.margins[0];
+                }
+                d.setY(p.borderWidth[0] + d.margins[0] + d.top);
+            }
+            block.lines.remove(block.lines.size()-1);
+            last_line = block.lines.size() > 0 ? block.lines.lastElement() : null;
+            if (last_line != null) {
+                cur_x = last_line.getX() + last_line.cur_pos;
+                cur_y = last_line.getY();
+            }
+            return true;
+        }
+        return false;
     }
 
     public void applyVerticalAlignment(Block d) {

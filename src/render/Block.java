@@ -1256,7 +1256,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
 
                 int style = (el.text_bold || el.text_italic) ? ((el.text_bold ? Font.BOLD : 0) | (el.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
-                Font font = new Font("Tahoma", style, el.fontSize);
+                Font font = new Font(fontFamily, style, el.fontSize);
 
                 int offset = el.getFontMetrics(font).stringWidth(str);
                 offset += Math.round(getFontMetrics(font).getHeight() / 2);
@@ -1277,6 +1277,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Font f = new Font(el.parent.fontFamily, style, el.parent.fontSize);
                 layouter.last_element = i;
                 for (int j = 0; j < w.length; j++) {
+                    if (w[j].length() == 0) continue;
                     layouter.last_word = j;
                     layouter.addWord(w[j], f);
                     layouter.last_word = -1;
@@ -1288,6 +1289,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
                 layouter.last_element = -1;
+                Line last = lines.lastElement();
+                height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
             } else {
 
                 if (el.viewport_width == 0) el.viewport_width = el.width;
@@ -1335,11 +1338,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (lines.size() > 0) {
             Line last = lines.lastElement();
-            while (!last.elements.isEmpty() && last.elements.lastElement() instanceof Character &&
-                    ((Character)last.elements.lastElement()).getText().matches("\\s+")) {
-                last.cur_pos -= ((Character)last.elements.lastElement()).getWidth();
-                last.elements.remove(last.elements.size()-1);
-            }
+//            while (!last.elements.isEmpty() && last.elements.lastElement() instanceof Character &&
+//                    ((Character)last.elements.lastElement()).getText().matches("\\s+")) {
+//                last.cur_pos -= ((Character)last.elements.lastElement()).getWidth();
+//                last.elements.remove(last.elements.size()-1);
+//            }
             if (Layouter.stack.isEmpty() && width == 0) {
                 last.setWidth(last.cur_pos);
                 width = borderWidth[3] + paddings[3] + lines.get(0).getWidth() + paddings[1] + borderWidth[1];
@@ -1492,10 +1495,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         sortList(list, l1, l2, l3);
 
-        list.removeAll(l1);
-        list.removeAll(l2);
-        list.removeAll(l3);
-
         if (list.size() > 0) list = reorderList(list);
 
         if (l1.size() == 0 && l2.size() == 0 && l3.size() == 0) {
@@ -1552,6 +1551,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 l3.add(b);
             }
         }
+
+        list.removeAll(l1);
+        list.removeAll(l2);
+        list.removeAll(l3);
     }
 
     public void setZIndices() {
@@ -1624,7 +1627,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         while (b != null) {
             /* Do not include descendants of floats and inline-blocks except elements
                generating their own contexts */
-            boolean skip = block.zIndexAuto && b.positioning != Position.STATIC && !b.zIndexAuto;
+            boolean z_auto = block.zIndexAuto || (block.parent != null && block.positioning == Position.STATIC);
+            boolean skip = z_auto && b.positioning != Position.STATIC && !b.zIndexAuto;
             if (b.type != NodeTypes.TEXT && !skip && (psc <= 0 || b.positioning != Position.STATIC && !b.zIndexAuto)) {
                 list.add(b);
             }
@@ -1636,7 +1640,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     stack.add(b);
                     stack2.add(pos);
                     if (b.float_type != FloatType.NONE || b.display_type == Display.INLINE_BLOCK ||
-                            b.display_type == Display.INLINE || b.zIndexAuto) {
+                            b.display_type == Display.INLINE || (b.positioning != Position.STATIC && b.zIndexAuto)) {
                         psc++;
                     }
                     b = b.children.get(0);
@@ -1645,7 +1649,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     while (b.parent.children.size() <= pos+1 && !stack.isEmpty()) {
                         pos = stack2.pollLast();
                         b = stack.pollLast();
-                        if (b.float_type != FloatType.NONE || b.display_type == Display.INLINE_BLOCK || b.display_type == Display.INLINE) {
+                        if (b.float_type != FloatType.NONE || b.display_type == Display.INLINE_BLOCK ||
+                                b.display_type == Display.INLINE || (b.positioning != Position.STATIC && b.zIndexAuto)) {
                             psc--;
                         }
                     }
@@ -3091,7 +3096,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         dr.text_underline = text_underline;
         dr.text_strikethrough = text_strikethrough;
         children.add(dr);
-        if (!no_layout) performLayout();
+        //if (!no_layout) performLayout();
         //forceRepaint();
     }
 
