@@ -3182,6 +3182,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void addElement(Block d) {
         type = NodeTypes.ELEMENT;
+        if (children.contains(d)) {
+            System.err.println("Duplicate block insert");
+            return;
+        }
         children.add(d);
         Block b = this;
         while (b.parent != null) b = b.parent;
@@ -3204,6 +3208,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void removeElement(Block d) {
+        if (d == null || !(d instanceof Block) || !children.contains(d)) {
+            System.err.println("Child not found");
+            return;
+        }
         d.removeTextLayers();
         d.removeAllElements();
         document.root.remove(d);

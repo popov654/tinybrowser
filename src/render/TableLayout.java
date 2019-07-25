@@ -128,6 +128,11 @@ public class TableLayout {
                 }
                 if (j >= cols_n) break;
 
+                if (j >= rows.get(i).cells.size()) {
+                    j++;
+                    continue;
+                }
+
                 Cell cell = rows.get(i).cells.get(j);
                 cell.block.performLayout();
 
@@ -266,6 +271,11 @@ public class TableLayout {
                 }
                 if (j >= cols_n) break;
 
+                if (j >= rows.get(i).cells.size()) {
+                    j++;
+                    continue;
+                }
+
                 Cell cell = rows.get(i).cells.get(j);
                 if (cell.rowspan > 1) pendingCells.add(cell);
 
@@ -315,6 +325,11 @@ public class TableLayout {
                     }
                 }
                 if (j >= cols_n) break;
+
+                if (j >= rows.get(i).cells.size()) {
+                    j++;
+                    continue;
+                }
 
                 if (cell == null) cell = rows.get(i).cells.get(j);
 
