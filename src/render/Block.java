@@ -313,7 +313,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             g2d.setColor(bgcolor);
             g2d.fillRect(0, 0, bw, bh);
         }
-        if (parent != null && parent.gradient == null && parent.bgImage == null) {
+        if (parent != null && parent.bgcolor != null && parent.gradient == null && parent.bgImage == null) {
             g2d.setColor(parent.bgcolor);
             g2d.fillRect(0, 0, bw, bh);
         }
@@ -498,7 +498,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             } else {
                 g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
             }
-            if (display_type == 2) System.err.println(width + "x" + height);
+            //if (display_type == 2) System.err.println(width + "x" + height);
         }
         if (bgImage != null) {
             if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
@@ -1064,7 +1064,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         for (int i = 0; i < children.size(); i++) {
-            if (children.get(i).positioning == Position.ABSOLUTE) {
+            if (children.get(i).positioning != Position.STATIC ||
+                    children.get(i).display_type == Display.TABLE_ROW || children.get(i).display_type == Display.TABLE_CELL) {
                 children.get(i).clearSelection();
             }
         }
@@ -1171,6 +1172,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         layouter = new Layouter(document);
         layouter.clearBoth();
         layouter.setCurrentBlock(this);
+
+        pref_size = 0;
+        min_size = 0;
         
         if (text_layer != null) {
             text_layer.removeAll();
@@ -1181,11 +1185,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         content_x_max = 0;
         content_y_max = 0;
 
-        if (!no_viewport_reset && viewport_width > 0) {
+        boolean is_table_cell = parent != null && parent.parent != null && (parent.parent.display_type == Block.Display.TABLE || parent.parent.display_type == Block.Display.INLINE_TABLE);
+
+        if (!is_table_cell && !no_viewport_reset && viewport_width > 0) {
             width = viewport_width + (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0);
         }
-        if (!no_viewport_reset && viewport_height > 0) {
+        if (!is_table_cell && !no_viewport_reset && viewport_height > 0) {
             height = viewport_height + (scrollbar_x != null ? scrollbar_x.getPreferredSize().height : 0);
+        }
+
+        if (is_table_cell) {
+            if (auto_width) width = children.size() == 0 ? 1 : 50000;
+            if (auto_height) height = 1;
+            else height = parent.parent.fontSize + borderWidth[0] + borderWidth[2] + paddings[0] + paddings[2];
         }
 
         if (viewport_width == 0 || !no_viewport_reset) viewport_width = width;
@@ -1282,7 +1294,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     layouter.addWord(w[j], f);
                     layouter.last_word = -1;
                     content_y_max = lines.lastElement().getY() - borderWidth[0] + lines.lastElement().getHeight() + paddings[2];
-                    if (parent != null && content_y_max > parent.height) {
+                    if (parent != null && content_y_max > parent.height && !parent.auto_height) {
                         addScrollbarY();
                         performLayout(no_rec, true);
                         return;
@@ -1291,6 +1303,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 layouter.last_element = -1;
                 Line last = lines.lastElement();
                 height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
+                if (is_table_cell && auto_width) width = pref_size;
             } else {
 
                 if (el.viewport_width == 0) el.viewport_width = el.width;
@@ -1332,17 +1345,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
+        pref_size += paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1];
+        min_size += paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1];
         if ((layouter.getBlock().cut & Cut.LEFT) > 0 && (layouter.getBlock().cut & Cut.RIGHT) == 0) {
             layouter.getBlock().width = layouter.getBlock().lines.get(0).getWidth() + paddings[1] + borderWidth[1];
             layouter.getBlock().viewport_width = layouter.getBlock().width;
         }
         if (lines.size() > 0) {
             Line last = lines.lastElement();
-//            while (!last.elements.isEmpty() && last.elements.lastElement() instanceof Character &&
-//                    ((Character)last.elements.lastElement()).getText().matches("\\s+")) {
-//                last.cur_pos -= ((Character)last.elements.lastElement()).getWidth();
-//                last.elements.remove(last.elements.size()-1);
-//            }
+            while (display_type != Display.INLINE && !last.elements.isEmpty() && last.elements.lastElement() instanceof Character &&
+                    ((Character)last.elements.lastElement()).getText().matches("\\s+")) {
+                last.cur_pos -= ((Character)last.elements.lastElement()).getWidth();
+                last.elements.remove(last.elements.size()-1);
+            }
             if (Layouter.stack.isEmpty() && width == 0) {
                 last.setWidth(last.cur_pos);
                 width = borderWidth[3] + paddings[3] + lines.get(0).getWidth() + paddings[1] + borderWidth[1];
@@ -1392,6 +1407,64 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void findPreferredSizes() {
+        int max = lines.size() > 0 ? lines.firstElement().width : 0;
+        int last = 0;
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0 && (lines.get(i).elements.firstElement() instanceof Character ||
+                lines.get(i).elements.firstElement() instanceof Block && ((Block)lines.get(i).elements.firstElement()).display_type != Display.BLOCK &&
+                lines.get(i-1).elements.lastElement() instanceof Block && ((Block)lines.get(i-1).elements.lastElement()).display_type != Display.BLOCK)) {
+                if (last == i-1) {
+                    max += lines.get(i).cur_pos;
+                } else {
+                    max = lines.get(i-1).cur_pos + lines.get(i).cur_pos;
+                    last = i-1;
+                }
+            }
+            if (lines.get(i).elements.firstElement() instanceof Character ||
+                    lines.get(i).elements.firstElement() instanceof Block && ((Block)lines.get(i).elements.firstElement()).display_type != Display.BLOCK) {
+                max = findMaxSizeInLine(lines.get(i));
+                if (max > min_size) {
+                    min_size = max;
+                }
+            } else {
+                Block b = (Block)lines.get(i).elements.firstElement();
+                if (b.auto_x_margin) {
+                    if (b.width > min_size) {
+                        min_size = b.width;
+                    }
+                } else {
+                    if (b.width + b.margins[3] + b.margins[1] > min_size) {
+                        min_size = b.width + b.margins[3] + b.margins[1];
+                    }
+                }
+            }
+        }
+        pref_size = max + paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1];
+        min_size = min_size + paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1];
+    }
+
+    private int findMaxSizeInLine(Line line) {
+        int max = 0;
+        int w = 0;
+        for (int i = 0; i < line.elements.size(); i++) {
+            if (line.elements.get(i) instanceof Character) {
+                w += ((Character)line.elements.get(i)).width;
+                if ((white_space == WhiteSpace.WORD_BREAK || ((Character)line.elements.get(i)).getText().matches("\\s+")) &&
+                        w > max) {
+                    max = w;
+                    w = 0;
+                }
+            } else {
+                Block b = (Block)line.elements.get(i);
+                if (b.width + b.margins[3] + b.margins[1] > max) {
+                    max = b.width + b.margins[3] + b.margins[1];
+                }
+            }
+        }
+        return max;
+    }
+
     public void sortBlocks() {
         v.clear();
         for (int i = 0; i < lines.size(); i++) {
@@ -1400,7 +1473,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 for (int k = 0; k < children.size(); k++) {
                     Block b = children.get(k);
                     if ((b.positioning == Position.ABSOLUTE ||
-                        b.float_type != FloatType.NONE) &&
+                        b.float_type != FloatType.NONE || b.display_type == Display.TABLE_CELL) &&
                         b._getX() <= d._getX() &&
                         b._getY() >= lines.get(i).getY() &&
                         b._getY() <= lines.get(i).getY() + lines.get(i).getHeight()) {
@@ -1470,7 +1543,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Drawable d = children.get(i);
             if (d instanceof Block) {
                 Block b = (Block)d;
-                if (b.positioning == Block.Position.ABSOLUTE || b.float_type != Block.FloatType.NONE) {
+                if (b.positioning == Block.Position.ABSOLUTE || b.float_type != Block.FloatType.NONE ||
+                        b.display_type == Display.TABLE_ROW || b.display_type == Display.TABLE_CELL) {
                     //if (b.overflow == Block.Overflow.VISIBLE) {
                         b.setBounds(0, 0, r.width, r.height);
                     //} else {
@@ -1564,8 +1638,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block b = list.get(i);
             if (c == null && list.get(i).parts.size() > 0) {
                 c = b.parts.get(0).getParent();
+                list.remove(i);
                 for (int j = 0; j < b.parts.size(); j++) {
-                    c.setComponentZOrder(b.parts.get(j), list.size()-1-i);
+                    list.add(i+j, b.parts.get(j));
+                    c.setComponentZOrder(b.parts.get(j), list.size()-1-i+j);
                 }
             }
             else c.setComponentZOrder(b, list.size()-1-i);
@@ -1591,7 +1667,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         while (it.hasNext()) {
             Block b = (Block)it.next();
             if (b.float_type == FloatType.NONE && b.positioning == Position.STATIC &&
-                    b.display_type == Display.BLOCK) {
+                    (b.display_type == Display.BLOCK || b.display_type == Display.TABLE || b.display_type == Display.TABLE_ROW || b.display_type == Display.TABLE_CELL)) {
                 list2.add(b);
             }
         }
@@ -2603,6 +2679,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public TableLayout getTable() {
+        return table;
+    }
+
     public boolean isRoot() {
         return positioning != 0;
     }
@@ -3224,8 +3304,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int orig_width;
     public int orig_height;
 
-    public int z_index = 0;
-
     public int white_space = 0;
 
     public int left_units = 0;
@@ -3248,10 +3326,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int clear_type = 0;
 
     public int letter_spacing = 0;
+    public int word_spacing = 0;
     private Color selection_color = new Color(0, 0, 196, 186);
     private int[] sel = null;
-    private int from_x = -1;
-    private int from_y = -1;
+    private volatile int from_x = -1;
+    private volatile int from_y = -1;
 
     private int content_x_max = 0;
     private int content_y_min = Integer.MAX_VALUE;
@@ -3316,6 +3395,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int INLINE_BLOCK = 1;
         public static final int INLINE = 2;
         public static final int NONE = 3;
+        public static final int TABLE = 4;
+        public static final int INLINE_TABLE = 5;
+        public static final int TABLE_ROW = 6;
+        public static final int TABLE_CELL = 7;
     }
 
     static class Visibility {
@@ -3368,6 +3451,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private int current_frame = 0;
     private long last_frame_displayed = 0;
 
+    public int colspan = 1;
+    public int rowspan = 1;
+
     public int bg_clip_x = -1;
     public int bg_clip_y = -1;
 
@@ -3399,9 +3485,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int scroll_left = 0;
     public int scroll_top = 0;
 
+    public int pref_size = 0;
+    public int min_size = 0;
+
     private RoundedBorder border;
 
     private volatile Layouter layouter;
+    volatile TableLayout table;
+
+    public int border_spacing = 2;
+    public boolean border_collapse = false;
 
     public boolean transform = false;
 
@@ -3422,6 +3515,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public int pos = 0;
     public Vector<Block> parts = new Vector<Block>();
+
+    public String id = "";
 
     static class Cut {
         public static final int NONE = 0;
@@ -3469,6 +3564,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.text_italic = this.text_italic;
         b.text_underline = this.text_underline;
         b.text_strikethrough = this.text_strikethrough;
+
+        b.letter_spacing = this.letter_spacing;
+        b.word_spacing = this.word_spacing;
+
+        b.vertical_align = this.vertical_align;
 
         b.border = this.border;
         b.borderWidth = new int[4];
@@ -3564,13 +3664,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block[] blocks = new Block[document.root.layer_list.size()];
         document.root.layer_list.toArray(blocks);
 
-        for (int i = 0; i < blocks.length; i++) {
-            if (children.contains(blocks[i])) {
-                Block b = blocks[i];
-                if (b._x_ <= e.getX() && b._x_ + b.viewport_width >= e.getX() &&
-                    b._y_ <= e.getY() && b._y_ + b.viewport_height >= e.getY()) {
-                      //MouseEvent evt = new MouseEvent((Block)d, 0, 0, 0, e.getX() - b._x_, e.getY() - b._y_, 1, false);
-                      b.mouseClicked(e);
+        if (!(children.size() == 1 && children.get(0).type == NodeTypes.TEXT)) {
+            for (int i = 0; i < blocks.length; i++) {
+                Block b = blocks[i].original != null ? blocks[i].original : blocks[i];
+                if (children.contains(b)) {
+                    //MouseEvent evt = new MouseEvent((Block)d, 0, 0, 0, e.getX() - b._x_, e.getY() - b._y_, 1, false);
+                    blocks[i].mouseClicked(e);
                 }
             }
         }
@@ -3643,39 +3742,52 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int y2 = Math.max(from_y, y);
             Drawable d = v.get(i);
             int offset = (d instanceof Block && ((Block)d).line != null ? ((Block)d).line.getHeight()-1 : 16);
-            if (d != null && d instanceof Block &&
-                  (((Block)d)._x_ - scroll_x <= x1 && ((Block)d)._x_ - scroll_x + ((Block)d).viewport_width >= x1 &&
-                   ((Block)d)._y_ - scroll_y <= y1 && ((Block)d)._y_ - scroll_y + ((Block)d).viewport_height >= y1 ||
-                   ((Block)d)._x_ - scroll_x <= x2 && ((Block)d)._x_ - scroll_x + ((Block)d).viewport_width >= x2 &&
-                   ((Block)d)._y_ - scroll_y <= y2 && ((Block)d)._y_ - scroll_y + ((Block)d).viewport_height >= y2)) {
-                ((Block)d).from_x = from_x;
-                ((Block)d).from_y = from_y;
-                ((Block)d).mouseDragged(e);
-                if (i < sel[0] || sel[0] == -1) sel[0] = i;
-                if (i > sel[1] || sel[1] == -1) sel[1] = i;
-                //System.err.println(sel[0] + ", " + sel[1]);
-            } else if (d != null && d instanceof Block && (((Block)d)._y_ - scroll_y + offset >= y1 && ((Block)d)._y_ - scroll_y + d._getHeight() - offset <= y2 &&
-                   ((Block)d)._x_ - scroll_x >= x1 && ((Block)d)._x_ - scroll_x + ((Block)d).viewport_width <= x2 ||
-                      (((Block)d)._y_ - scroll_y + offset >= y1 && ((Block)d)._y_ - scroll_y + d._getHeight() <= y2 && ((Block)d)._x_ - scroll_x + ((Block)d).viewport_width <= x2 ||
-                      ((Block)d).line != null && (((Block)d).line.getY() - scroll_y >= y1 && ((Block)d).line.getY() - scroll_y <= y2 || ((Block)d).line.getY() - scroll_y <= y1 && ((Block)d).line.getY() - scroll_y + ((Block)d).line.getHeight() >= y1)) &&
-                          y2 > ((Block)d).line.getY() - scroll_y + ((Block)d).line.getHeight())) {
-                ((Block)d).selectAll();
-                if (i < sel[0]) sel[0] = i;
-                if (i > sel[1]) sel[1] = i;
-            } else if (d instanceof Block) {
-                ((Block)d).clearSelection();
-                ((Block)d).forceRepaint();
+
+            if (d != null && d instanceof Block) {
+                Block b = (Block)d;
+                boolean flag = b._y_ - scroll_y + b.viewport_height < y2 &&
+                               !(e.isShiftDown() && b._x_ - scroll_x >= x1);
+                boolean c = b._x_ - scroll_x > x1 && b._x_ - scroll_x > x2 && flag ||
+                            b._x_ - scroll_x + b.viewport_width < x1 && b._x_ - scroll_x + b.viewport_width < x2 && flag ||
+                            b._y_ - scroll_y > y1 && b._y_ - scroll_y > y2 ||
+                            b._y_ - scroll_y + b.viewport_height < y1 && b._y_ - scroll_y + b.viewport_height < y2;
+                if (!c && !flag) {
+                    ((Block)d).from_x = from_x;
+                    ((Block)d).from_y = from_y;
+                    ((Block)d).mouseDragged(e);
+                    if (i < sel[0] || sel[0] == -1) sel[0] = i;
+                    if (i > sel[1] || sel[1] == -1) sel[1] = i;
+                } else {
+                    
+                    //System.err.println(sel[0] + ", " + sel[1]);
+
+                    boolean c1 = b._y_ - scroll_y + offset >= y1 && b._y_ - scroll_y + b.viewport_height - offset <= y2 &&
+                                b._x_ - scroll_x >= x1 && b._x_ - scroll_x + b.viewport_width <= x2;
+                    boolean c2 = b.line != null && y2 > b.line.getY() - scroll_y + b.line.getHeight() &&
+                                x1 <= b._x_ - scroll_x + b.viewport_width && x2 >= b._x_ - scroll_x + b.viewport_width;
+                    boolean c3 = b._y_ - scroll_y + b.viewport_height - offset <= y2 && (!e.isShiftDown() || b._x_ - scroll_x + b.viewport_width <= x2);
+                    if (c1 || c2 || c3) {
+                        b.selectAll();
+                        if (i < sel[0]) sel[0] = i;
+                        if (i > sel[1]) sel[1] = i;
+                    } else if (!(e.isShiftDown() && b._y_ - scroll_y + b.viewport_height - offset <= y2)) {
+                        ((Block)d).clearSelection();
+                        ((Block)d).forceRepaint();
+                    }
+                }
             } else if (d instanceof Character) {
                 Block b = ((Character)d).parent.parent;
                 boolean flag = false;
-                if (sel[0] == -1 && v.lastElement() instanceof Character && ((Character)v.lastElement()).parent.getY() + b._y_ - b.scroll_y <= y2 && v.lastElement()._getX() + b._x_ - b.scroll_x + d._getWidth() <= x2) {
-                    sel[0] = v.size()-1;
+                if (sel[0] == -1 && v.firstElement() instanceof Character && v.lastElement() instanceof Character &&
+                        v.firstElement()._getX() + b._x_ - b.scroll_x >= x1 &&
+                        ((Character)v.lastElement()).parent.getY() + b._y_ - b.scroll_y <= y2 && v.lastElement()._getX() + b._x_ - b.scroll_x + v.lastElement()._getWidth() <= x2) {
+                    sel[0] = 0;
                     sel[1] = v.size()-1;
                     //System.err.println("1 -> " + i);
                     flag = true;
                 }
                 else if (sel[0] == -1 && (x1 < d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 || y1 < ((Character)d).parent.getY() + b._y_ - b.scroll_y) && x2 >= d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 && x2 <= d._getX() + b._x_ - b.scroll_x + d._getWidth() && y2 >= ((Character)d).parent.getY() + b._y_ - b.scroll_y) {
-                    sel[0] = i;
+                    sel[0] = 0;
                     sel[1] = i;
                     //System.err.println("1 -> " + i);
                     flag = true;
@@ -3686,7 +3798,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     //System.err.println("2 -> " + i);
                     flag = true;
                 }
-                else if (i > sel[1] && sel[0] != -1 && (d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 <= x2 && ((Character)d).parent.getY() + b._y_ - b.scroll_y <= y2 ||
+                else if (i > sel[1] && (d._getX() + b._x_ - b.scroll_x > x1 && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 <= x2 && ((Character)d).parent.getY() + b._y_ - b.scroll_y <= y2 ||
                         (d._getY() + b._y_ - b.scroll_y >= y1 && d._getY() + b._y_ - b.scroll_y + d._getHeight() <= y2) ||
                         (d._getX() + b._x_ - b.scroll_x >= x1 && d._getX() + b._x_ - b.scroll_x + d._getWidth() <= x2 && ((Character)d).parent.getY() + b._y_ - b.scroll_y <= y2))) {
                     sel[1] = i;
@@ -3700,8 +3812,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (sel[0] == i && (x1 != x2 || y1 != y2) && (((Character)d).parent.getY() + b._y_ - b.scroll_y + ((Character)d).parent.getHeight() < y1 ||
                             y1 >= ((Character)d).parent.getY() + b._y_ - b.scroll_y &&  y1 <= ((Character)d).parent.getY() + b._y_ - b.scroll_y + ((Character)d).parent.getHeight() &&
                             (d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 < x1 || d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 > x2))) {
-                        sel[0] = i+1;
-                        if (sel[0] == sel[1] || i == v.size()-1) {
+                        //sel[0] = i+1;
+                        if (x > from_x && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 < x) sel[1] = i-1;
+                        if (x < from_x && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 > x) sel[0] = i-1;
+                        if (sel[0] == sel[1] || i == v.size()-1 && x < from_x || i == 0 && x > from_x) {
                             sel[0] = -1;
                             sel[1] = -1;
                         }
@@ -3743,7 +3857,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (overflow != Overflow.HIDDEN || content_x_max <= viewport_width - borderWidth[3] - borderWidth[1] &&
                 content_y_max <= viewport_height - borderWidth[0] - borderWidth[2]) {
             if (text_layer != null) {
-                text_layer.invalidate();
+                //text_layer.invalidate();
                 document.repaint();
             }
         }

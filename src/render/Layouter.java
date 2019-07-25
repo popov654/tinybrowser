@@ -264,6 +264,51 @@ public class Layouter {
     public int last_element = -1;
     public int last_word = -1;
 
+
+    private boolean omitWhitespace() {
+        if (last_line != block.lines.get(0) || block.display_type != Block.Display.INLINE) return true;
+        Block b = block;
+        while (b.parent != null) {
+            //First child cannot be a character since we don't have blocks with mixed content
+            if (b.parent.lines.get(0).elements.size() == 0) return true;
+            Block d = (Block)b.parent.lines.get(0).elements.get(0);
+            if (b == d) return true;
+
+            Block prev = null;
+            int i = 0; int j = 0;
+            while (i < b.parent.lines.size()) {
+                if ((Block)b.parent.lines.get(i).elements.get(j) == block) {
+                    if (prev.display_type != Block.Display.INLINE) return true;
+                    return endsWithWhitespace(prev.parts.size() > 0 ? prev.parts.lastElement() : prev);
+                }
+                if (j+1 < b.parent.lines.get(i).elements.size()) {
+                    prev = (Block)b.parent.lines.get(i).elements.get(j);
+                    j++;
+                } else {
+                    i++;
+                    j = 0;
+                }
+            }
+
+            b = b.parent;
+        }
+        return false;
+    }
+
+    private boolean endsWithWhitespace(Block b) {
+        if (!(b.children.size() == 1 && b.children.get(0).type == Block.NodeTypes.TEXT)) {
+            if (b.lines.size() == 0) return false;
+            Block b0 = (Block)b.lines.lastElement().elements.lastElement();
+            if (b0.display_type != Block.Display.INLINE) return false;
+            return endsWithWhitespace(b0.parts.size() > 0 ? b0.parts.lastElement() : b0);
+        }
+        if (b.lines.size() > 0 && b.lines.lastElement().elements.size() > 0 &&
+               ((Character)b.lines.lastElement().elements.lastElement()).getText().matches("\\s+")) {
+            return true;
+        }
+        return false;
+    }
+
     public void addWord(String str, Font font) {
         if (last_line == null) {
             last_line = startNewLine(0, 0, null);
@@ -272,43 +317,55 @@ public class Layouter {
             last_line = startNewLine(0, 0, null);
             return;
         }
-        if (str.matches("\\s+")) str = " ";
+        if (str.matches("\\s+") && block.white_space != Block.WhiteSpace.PRE_WRAP) str = " ";
         JLabel label = new JLabel(str);
         label.setFont(font);
         int width = label.getFontMetrics(font).stringWidth(str);
         char[] ch = {};
-        if ((last_line.elements.size() == 0 && last_line != block.lines.get(0) ||
+        if (((last_line.elements.size() == 0 && omitWhitespace() ||
                (last_line.elements.size() > 0 && last_line.elements.lastElement() instanceof Character &&
-                ((Character)last_line.elements.lastElement()).getText().matches("\\s+"))) && str.equals(" ")) {
+                ((Character)last_line.elements.lastElement()).getText().matches("\\s+"))) && str.equals(" ")) &&
+                block.white_space != Block.WhiteSpace.PRE_WRAP) {
             last_word = -1;
             return;
         }
         int parent_width = block.width - block.borderWidth[3] - block.paddings[3] - block.borderWidth[1] - block.paddings[1];
         if (last_line.cur_pos + width > last_line.getWidth() && !(last_line.cur_pos == 0 && width > parent_width)
-                && block.white_space != Block.WhiteSpace.WORD_BREAK &&
-                   block.white_space != Block.WhiteSpace.NO_WRAP) {
- 
-            Line new_line = startNewLine(0, 0, null);
-            cur_x = new_line.getX();
-            cur_y = new_line.getY();
-            last_line = new_line;
-            if (str.equals(" ")) {
-                last_word = -1;
-                return;
+                && block.white_space == Block.WhiteSpace.NORMAL) {
+            //Remove trailing spaces
+//            if (!str.matches("\\s+") && last_line.elements.lastElement() instanceof Character &&
+//                    ((Character)last_line.elements.lastElement()).getText().matches("\\s+")) {
+//                last_line.cur_pos -= ((Character)last_line.elements.lastElement()).width;
+//                last_line.elements.remove(last_line.elements.lastElement());
+//            }
+            if (!str.equals(" ")) {
+                Line new_line = startNewLine(0, 0, null);
+                cur_x = new_line.getX();
+                cur_y = new_line.getY();
+                last_line = new_line;
             }
         }
+        int last_pos = last_line.cur_pos;
         ch = str.toCharArray();
         for (int i = 0; i < ch.length; i++) {
             Character c = new Character(last_line, ch[i]);
             c.setColor(block.color);
             c.setFont(block.getFont());
+            if (str.matches("\\s+") && block.word_spacing > 0) {
+                c.setWidth(c.width + block.word_spacing);
+            }
             //block.height = label.getFontMetrics(font).getHeight();
-            if (last_line.cur_pos + c.getWidth() > last_line.getWidth() && block.white_space == Block.WhiteSpace.WORD_BREAK) {
+            if (last_line.cur_pos + c.getWidth() > last_line.getWidth() && (block.white_space == Block.WhiteSpace.WORD_BREAK ||
+                    block.white_space == Block.WhiteSpace.PRE_WRAP && str.matches("\\s+"))) {
                 last_line = startNewLine(0, 0, null);
                 c.parent = last_line;
             }
             last_line.addElement(c);
             //block.height = last_line.getY() + last_line.getHeight() + block.paddings[2] + block.borderWidth[2];
+        }
+        block.pref_size += last_line.cur_pos - last_pos;
+        if (block.min_size < last_line.cur_pos - last_pos) {
+            block.min_size = last_line.cur_pos - last_pos;
         }
         last_word = -1;
     }
@@ -323,14 +380,13 @@ public class Layouter {
             stack.remove(stack.lastIndexOf(d));
             return;
         }
-//        if (d.positioning == Block.Position.ABSOLUTE) {
-//            d._x_ = block._x_ + block.borderWidth[3] + d.margins[3] + d.left;
-//            d._y_ = block._y_ + block.borderWidth[0] + d.margins[0] + d.top;
-//            d.performLayout();
-//            stack.remove(stack.lastIndexOf(d));
-//            return;
-//        }
-        if (d.display_type == Block.Display.BLOCK) {
+        if (d.display_type == Block.Display.TABLE) {
+            layoutTable(d);
+        }
+        if (d.display_type == Block.Display.TABLE_ROW || d.parent.display_type == Block.Display.TABLE_CELL) {
+            return;
+        }
+        if (d.display_type == Block.Display.BLOCK || d.display_type == Block.Display.TABLE) {
             offset = d.margins[0];
             
             if (last_line != null && last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
@@ -354,10 +410,18 @@ public class Layouter {
 
             new_line.addElement(d);
 
-            if (d.auto_width && !d.no_layout) {
-                d.setWidth(-1, true);
-            } else {
-                d.performLayout();
+            if (d.display_type != Block.Display.TABLE) {
+                if (d.auto_width && !d.no_layout && !(d.parent != null && d.parent.parent != null && (d.parent.parent.display_type == Block.Display.TABLE || d.parent.parent.display_type == Block.Display.INLINE_TABLE))) {
+                    d.setWidth(-1, true);
+                } else {
+                    d.performLayout();
+                    if (block.pref_size < d.width + d.margins[3] + d.margins[1]) {
+                        block.pref_size = d.width + d.margins[3] + d.margins[1];
+                    }
+                    if (block.min_size < d.width + d.margins[3] + d.margins[1]) {
+                        block.min_size = d.width + d.margins[3] + d.margins[1];
+                    }
+                }
             }
 
             if (d.positioning == Block.Position.RELATIVE) {
@@ -378,7 +442,7 @@ public class Layouter {
             last_margin_top = 0;
             stack.remove(stack.lastIndexOf(d));
             return;
-        } else if (d.display_type == Block.Display.INLINE_BLOCK) {
+        } else if (d.display_type == Block.Display.INLINE_BLOCK || d.display_type == Block.Display.INLINE_TABLE) {
             if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
                     ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK) {
                 last_line = startNewLine(0, 0, d);
@@ -386,22 +450,35 @@ public class Layouter {
             cur_x = last_line.cur_pos;
             cur_y = last_line.getY();
             d.no_draw = true;
+
             int x = getFullLinePos(d);
             int w = getFullLineSize(d);
-            d.setWidth(d.width > 0 ? d.orig_width : -1, true);
-            
-            if (d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
-                int line_width = d.lines.get(0).cur_pos;
-                d.lines.get(0).setWidth(line_width);
-                d.width = d.borderWidth[3] + d.paddings[3] + line_width + d.paddings[1] + d.borderWidth[1];
-                d.orig_width = (int)Math.round(d.width / d.ratio);
-                d.viewport_width = d.width;
+
+            if (d.display_type != Block.Display.INLINE_TABLE) {
+                
+                d.setWidth(d.width > 0 ? d.orig_width : -1, true);
+
+                if (d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
+                    int line_width = d.lines.get(0).cur_pos;
+                    d.lines.get(0).setWidth(line_width);
+                    d.width = d.borderWidth[3] + d.paddings[3] + line_width + d.paddings[1] + d.borderWidth[1];
+                    d.orig_width = (int)Math.round(d.width / d.ratio);
+                    d.viewport_width = d.width;
+                }
             }
+
             if (x + d.margins[1] + d.margins[3] + d.width > w &&
                     block.white_space != Block.WhiteSpace.NO_WRAP) {
                 last_line = startNewLine(0, 0, d);
                 cur_x = last_line.getX();
                 cur_y = last_line.getY();
+            }
+            
+            if (block.pref_size < last_line.cur_pos + d.width + d.margins[3] + d.margins[1]) {
+                block.pref_size = last_line.cur_pos + d.width + d.margins[3] + d.margins[1];
+            }
+            if (block.min_size < d.width + d.margins[3] + d.margins[1]) {
+                block.min_size = d.width + d.margins[3] + d.margins[1];
             }
             
             last_line.addElement(d);
@@ -481,12 +558,19 @@ public class Layouter {
                 b.orig_width = (int)Math.round(b.width / b.ratio);
             }
 
+            if (block.pref_size < last_line.cur_pos + b.width + b.margins[3] + b.margins[1]) {
+                block.pref_size = last_line.cur_pos + b.width + b.margins[3] + b.margins[1];
+            }
+            if (block.min_size < b.width + b.margins[3] + b.margins[1]) {
+                block.min_size = b.width + b.margins[3] + b.margins[1];
+            }
+
             if (d.getParent() != null) {
                 int index = d.getParent().getComponentCount() - d.pos - 1;
                 for (int i = 0; i < d.parts.size(); i++) {
-                    d.getParent().add(d.parts.get(i), index);
+                    d.document.root.add(d.parts.get(i), index);
                 }
-                d.getParent().remove(d);
+                d.document.root.remove(d);
             }
 
             if (b.positioning == Block.Position.RELATIVE) {
@@ -572,7 +656,7 @@ public class Layouter {
         else if (d.vertical_align == Block.VerticalAlign.ALIGN_BASELINE) {
             int st1 = (last_block.text_bold || last_block.text_italic) ? ((last_block.text_bold ? Font.BOLD : 0) | (last_block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             int st2 = (d.text_bold || d.text_italic) ? ((d.text_bold ? Font.BOLD : 0) | (d.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
-            Font f1 = new Font(last_block.fontFamily, st1, block.fontSize);
+            Font f1 = new Font(last_block.fontFamily, st1, last_block.fontSize);
             Font f2 = new Font(d.fontFamily, st2, d.fontSize);
             FontMetrics m1 = last_block.getFontMetrics(f1);
             FontMetrics m2 = last_block.getFontMetrics(f2);
@@ -709,6 +793,12 @@ public class Layouter {
         }
     }
 
+    public void layoutTable(Block b) {
+        if (b.table == null) {
+            b.table = new TableLayout(b);
+        }
+    }
+
     public int getFullLineSize(Block b) {
         b = b.parent;
         while (b.parent != null && b.display_type == Block.Display.INLINE) {
@@ -727,7 +817,7 @@ public class Layouter {
             pos += b.getLayouter().last_line.cur_pos + b.getLayouter().last_line.getX();
             b = b.parent;
         }
-        if (b.display_type!= Block.Display.INLINE && b.getLayouter() != null) {
+        if (b.display_type != Block.Display.INLINE && b.getLayouter() != null) {
             return b.getLayouter().last_line.cur_pos + pos;
         }
         return last_line.cur_pos;

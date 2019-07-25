@@ -10,7 +10,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.Vector;
 
 
@@ -48,7 +48,8 @@ public class LayoutTests extends WebDocument {
         //d.getLayouter().printLines(d, 0);
         //System.out.println();
 
-        basicTest();
+        //basicTest();
+        testTables();
         //testNormal();
         //testPreWrap();
         //testWordBreak();
@@ -131,14 +132,14 @@ public class LayoutTests extends WebDocument {
 
         Block d01 = new Block(this, d, -1, -1, 0, 0, Color.BLACK);
         d01.setPositioning(Block.Position.STATIC);
-        d01.setDisplayType(Block.Display.INLINE_BLOCK);
+        d01.setDisplayType(Block.Display.INLINE);
         d01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d01.addText("Test ");
         d.addElement(d01);
 
         Block d02 = new Block(this, d, -1, -1, 0, 0, Color.BLACK);
         d02.setPositioning(Block.Position.STATIC);
-        d02.setDisplayType(Block.Display.INLINE_BLOCK);
+        d02.setDisplayType(Block.Display.INLINE);
         d02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d02.addText("text");
         d02.setBackgroundColor(new Color(255, 210, 0));
@@ -148,7 +149,7 @@ public class LayoutTests extends WebDocument {
 
         Block d03 = new Block(this, d, -1, -1, 0, 0, Color.BLACK);
         d03.setPositioning(Block.Position.STATIC);
-        d03.setDisplayType(Block.Display.INLINE_BLOCK);
+        d03.setDisplayType(Block.Display.INLINE);
         d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d03.addText(" and some more");
         d.addElement(d03);
@@ -335,6 +336,78 @@ public class LayoutTests extends WebDocument {
         //b3.clear_type = Block.ClearType.BOTH;
 
         //b2.display_type = Block.Display.NONE;
+
+        root.performLayout();
+        root.forceRepaintAll();
+    }
+
+    public void testTables() {
+        prepareBlock();
+
+        Block b = root.children.get(0);
+
+        b.setPositioning(Block.Position.RELATIVE);
+        b.removeAllElements();
+
+        Color c = new Color(178, 118, 28);
+
+        Block block = new Block(this, null, -1, -1, 1, 0, c);
+        block.setPositioning(Block.Position.STATIC);
+        block.setDisplayType(Block.Display.TABLE);
+
+        block.auto_width = false;
+        block.width = 200;
+        //block.border_collapse = true;
+
+        Block r = new Block(this, null, -1, -1, 0, 0, c);
+        r.setPositioning(Block.Position.STATIC);
+        r.setDisplayType(Block.Display.BLOCK);
+
+        Block c1 = new Block(this, null, -1, -1, 1, 0, c);
+        c1.setPositioning(Block.Position.STATIC);
+        c1.setDisplayType(Block.Display.BLOCK);
+        c1.addText("Table");
+        Arrays.fill(c1.paddings, 1);
+        c1.auto_width = false;
+        c1.width = 120;
+
+        Block c2 = new Block(this, null, -1, -1, 1, 0, c);
+        c2.setPositioning(Block.Position.STATIC);
+        c2.setDisplayType(Block.Display.BLOCK);
+        c2.addText("Test");
+        Arrays.fill(c2.paddings, 1);
+
+        r.addElement(c1);
+        r.addElement(c2);
+        
+        Block r2 = new Block(this, null, -1, -1, 0, 0, c);
+        r2.setPositioning(Block.Position.STATIC);
+        r2.setDisplayType(Block.Display.BLOCK);
+
+        Block c3 = new Block(this, null, -1, -1, 1, 0, c);
+        c3.setPositioning(Block.Position.STATIC);
+        c3.setDisplayType(Block.Display.BLOCK);
+        c3.addText("Looks Fine");
+        Arrays.fill(c3.paddings, 1);
+        //c3.auto_width = false;
+        //c3.width = 120;
+
+        Block c4 = new Block(this, null, -1, -1, 1, 0, c);
+        c4.setPositioning(Block.Position.STATIC);
+        c4.setDisplayType(Block.Display.BLOCK);
+        c4.addText("Fine");
+        Arrays.fill(c4.paddings, 1);
+
+        c2.rowspan = 2;
+        //c3.colspan = 2;
+        c3.id = "test";
+        r2.addElement(c3);
+        //r2.addElement(c4);
+
+        block.addElement(r);
+        block.addElement(r2);
+
+        b.addElement(block);
 
         root.performLayout();
         root.forceRepaintAll();

@@ -178,6 +178,7 @@ public class TableLayout {
                     }
                 }
                 j += cell.colspan;
+                if (cell == rows.get(i).cells.lastElement()) break;
             }
             min_w = Math.max(min, min_w);
         }
@@ -239,17 +240,11 @@ public class TableLayout {
         System.out.println();
     }
 
-    int[] min_row_heights;
-
     private void calculateHeights() {
         int sum_h = 0;
-        min_row_heights = new int[rows_n];
-        for (int i = 0; i < rows_n; i++) {
-            min_row_heights[i] = 0;
-        }
         for (int i = 0; i < rows_n; i++) {
             int j = 0;
-            int max = min_row_heights[i];
+            int max = 0;
             Row row = rows.get(i);
             while (j < cols_n) {
                 Cell pc;
@@ -279,6 +274,8 @@ public class TableLayout {
                 }
 
                 j += cell.colspan;
+
+                if (cell == rows.get(i).cells.lastElement()) break;
             }
             row_heights[i] = max;
             System.out.println("Row " + (i+1) + " height: " + row_heights[i]);
@@ -350,6 +347,8 @@ public class TableLayout {
                 if (cell.rowspan > 1) pendingCells.add(cell);
 
                 j += cell.colspan;
+
+                if (cell == rows.get(i).cells.lastElement()) break;
             }
 
             y += (!border_collapse ? cellspacing : 0) + rows.get(i).height;
