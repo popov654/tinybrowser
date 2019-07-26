@@ -50,6 +50,7 @@ public class LayoutTests extends WebDocument {
 
         //basicTest();
         testTables();
+        //testInternalFrames();
         //testNormal();
         //testPreWrap();
         //testWordBreak();
@@ -408,6 +409,37 @@ public class LayoutTests extends WebDocument {
         block.addElement(r2);
 
         b.addElement(block);
+
+        root.performLayout();
+        root.forceRepaintAll();
+    }
+
+    public void testInternalFrames() {
+        prepareBlock();
+
+        Block b = root.children.get(0);
+
+        b.setPositioning(Block.Position.RELATIVE);
+        b.removeAllElements();
+
+        Block block = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        block.setPositioning(Block.Position.ABSOLUTE);
+        block.setDisplayType(Block.Display.BLOCK);
+
+        block.setWidth(200);
+        block.setHeight(100);
+        block.setLeft(50, Block.Units.percent);
+        block.setTop(50, Block.Units.percent);
+        block.setProp("margin-left", -block.width / 2, Block.Units.px);
+        block.setProp("margin-top", -block.height / 2, Block.Units.px);
+        block.setBackgroundColor(Color.WHITE);
+
+        b.addElement(block);
+        //block.id = "test";
+
+        //WebDocument child = new WebDocument("");
+        //block.addChildDocument(child);
+        //child.root.addText("test");
 
         root.performLayout();
         root.forceRepaintAll();

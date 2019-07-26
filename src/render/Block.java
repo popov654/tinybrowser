@@ -184,6 +184,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     protected void paintComponent(Graphics g) {
         //g.clearRect(0, 0, width, height);
 
+        if (childDocument != null) {
+            childDocument.getRoot().paintComponent(g);
+            return;
+        }
+
         int dx = 0;
         int dy = 0;
 
@@ -295,6 +300,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     protected void draw(Graphics g) {
         if (type == NodeTypes.TEXT || display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
+        if (childDocument != null) {
+            childDocument.getRoot().draw(g);
             return;
         }
         if (parts.size() > 0) {
@@ -1163,6 +1172,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void performLayout(boolean no_rec, boolean no_viewport_reset) {
 
         if (no_layout || !document.ready || display_type == Display.NONE) return;
+
+        if (childDocument != null) {
+            Block root = childDocument.getRoot();
+            root.width = root.viewport_width = width;
+            root.height = root.viewport_height = height;
+            root.setBounds(0, 0, width, height);
+            root.performLayout(false, false);
+            return;
+        }
 
         if (children.size() == 0 && getComponents().length == 1) {
             return;
@@ -3207,6 +3225,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         //forceRepaint();
     }
 
+    public void addChildDocument(WebDocument d) {
+        removeAllElements();
+        childDocument = d;
+        d.parent_document = this.document;
+        d.parent_document_block = this;
+    }
+
+    public void removeChildDocument() {
+        if (childDocument == null) return;
+        childDocument.getRoot().removeAllElements();
+        childDocument.parent_document = null;
+        childDocument.parent_document_block = null;
+        childDocument = null;
+    }
+
     public void removeElement(Block d) {
         if (d == null || !(d instanceof Block) || !children.contains(d)) {
             System.err.println("Child not found");
@@ -3514,6 +3547,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Line line;
     public Block parent;
     public WebDocument document;
+    public WebDocument childDocument;
 
     private long last_click = 0;
 
@@ -3622,6 +3656,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.zIndex = this.zIndex;
         b.zIndexAuto = this.zIndexAuto;
 
+        b.childDocument = this.childDocument;
+
         if (original == null) {
             b.children = cloneChildren();
             for (int i = 0; i < b.children.size(); i++) {
@@ -3669,6 +3705,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void mouseClicked(MouseEvent e) {
 
+        if (childDocument != null) {
+            childDocument.getRoot().mouseClicked(e);
+            return;
+        }
+
         Block[] blocks = new Block[document.root.layer_list.size()];
         document.root.layer_list.toArray(blocks);
 
@@ -3709,8 +3750,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void mousePressed(MouseEvent e) {
         Block d = this;
-        while (d.parent != null) {
-            d = d.parent;
+        while (d.parent != null && d.document.getParentDocument() != null) {
+            if (d.parent != null) d = d.parent;
+            else d = d.document.getParentDocumentBlock();
         }
         d.clearSelection();
         d.forceRepaint();
@@ -3773,14 +3815,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                 b._x_ - scroll_x >= x1 && b._x_ - scroll_x + b.viewport_width <= x2;
                     boolean c2 = b.line != null && y2 > b.line.getY() - scroll_y + b.line.getHeight() &&
                                 x1 <= b._x_ - scroll_x + b.viewport_width && x2 >= b._x_ - scroll_x + b.viewport_width;
-                    boolean c3 = b._y_ - scroll_y + b.viewport_height - offset <= y2 && (!e.isShiftDown() || b._x_ - scroll_x + b.viewport_width <= x2);
+                    boolean c3 = b._y_ - scroll_y + b.viewport_height >= y1 && b._y_ - scroll_y + b.viewport_height - offset <= y2 && (!e.isShiftDown() || b._x_ - scroll_x + b.viewport_width <= x2);
                     if (c1 || c2 || c3) {
                         b.selectAll();
                         if (i < sel[0]) sel[0] = i;
                         if (i > sel[1]) sel[1] = i;
                     } else if (!(e.isShiftDown() && b._y_ - scroll_y + b.viewport_height - offset <= y2)) {
-                        ((Block)d).clearSelection();
-                        ((Block)d).forceRepaint();
+                        b.clearSelection();
+                        b.forceRepaint();
                     }
                 }
             } else if (d instanceof Character) {

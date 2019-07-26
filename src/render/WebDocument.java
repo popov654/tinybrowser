@@ -166,11 +166,30 @@ public class WebDocument extends JFrame {
         return layouter;
     }
 
+    public Block getRoot() {
+        return root;
+    }
+
+    public WebDocument getParentDocument() {
+        return parent_document;
+    }
+
+    public void setParentDocument(WebDocument d) {
+        parent_document = d;
+    }
+
+    public Block getParentDocumentBlock() {
+        return parent_document_block;
+    }
+
     protected Layouter layouter = new Layouter(this);
 
     protected Block root = new Block(this, null, -1, -1);
 
     public boolean ready = true;
+
+    protected WebDocument parent_document;
+    protected Block parent_document_block;
 
     private Watcher w;
 
