@@ -15,12 +15,12 @@ public class FunctionC extends Function {
 
     @Override
     public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-        if (args.size() >= 1 && args.get(0).getType().equals("String")) {
-            JSParser jp = new JSParser("{ " + ((JSString)args.get(0)).getValue() + " }");
+        if (args.size() >= 1 && args.lastElement().getType().equals("String")) {
+            JSParser jp = new JSParser("{ " + ((JSString)args.lastElement()).getValue() + " }");
             Block b = (Block)Expression.create(jp.getHead());
             b.parent_block = ((Window)context).getRoot();
             Vector<String> p = new Vector<String>();
-            for (int i = 1; i < args.size(); i++) {
+            for (int i = 0; i < args.size()-1; i++) {
                 if (args.get(i).getType().equals("String")) {
                     p.add(((JSString)args.get(i)).getValue());
                 }

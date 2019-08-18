@@ -926,8 +926,8 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"anonymous\"", exp.getValue().toString());
-        jp = new JSParser("var f = Function(\"return a*5\", \"a\"); f(2)");
-        System.out.println("var f = Function(\"return a*5\", \"a\"); f(2)");
+        jp = new JSParser("var f = Function(\"a\", \"return a*5\"); f(2)");
+        System.out.println("var f = Function(\"a\", \"return a*5\"); f(2)");
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("10", exp.getValue().toString());
