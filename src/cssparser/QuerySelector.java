@@ -48,7 +48,7 @@ public class QuerySelector {
         parts = query.split("((?<=[> +~])|(?=[> +~]))");
         int pos = -1;
         boolean failed = false;
-        pos = tryFindID();
+        pos = tryToFindID();
         if (pos >= 0) {
             resultSet = new Vector<Node>();
             Node n = hp.getElementById(getId(parts[pos]).substring(1));
@@ -62,6 +62,7 @@ public class QuerySelector {
                      .contains(resultSet.get(0))) {
                     return;
                 }
+                resultSet.add(n);
                 applyPseudoClasses(parts[pos]);
                 if (resultSet.isEmpty()) return;
             } else {
@@ -69,7 +70,7 @@ public class QuerySelector {
             }
         }
         else if (pos < 0) {
-            pos = tryFindClassName();
+            pos = tryToFindClassName();
             if (pos >= 0) {
                 String str = getClasses(parts[pos]);
                 resultSet = hp.getElementsByClassName(str);
@@ -202,7 +203,7 @@ public class QuerySelector {
         return result;
     }
 
-    private int tryFindID() {
+    private int tryToFindID() {
         for (int i = parts.length-1; i >= 0; i--) {
             if (parts[i].trim().contains("#")) {
                 return i;
@@ -211,7 +212,7 @@ public class QuerySelector {
         return -1;
     }
 
-    private int tryFindClassName() {
+    private int tryToFindClassName() {
         for (int i = parts.length-1; i >= 0; i--) {
             if (parts[i].trim().contains(".")) {
                 return i;
@@ -224,62 +225,49 @@ public class QuerySelector {
         if (pos == 0) return;
         for (int i = 0; i < resultSet.size(); i++) {
             String str = parts[pos-1];
+            boolean matches = true;
             if (parts[pos].equals(">")) {
-                checkAncestor(resultSet.get(i), str, i);
+                matches = checkAncestor(resultSet.get(i), str, i);
             } else if (parts[pos].equals(" ")) {
-                checkAllAncestors(resultSet.get(i), str, i);
+                matches = checkAllAncestors(resultSet.get(i), str, i);
+            }
+            if (!matches) {
+                resultSet.remove(i--);
             }
         }
     }
 
-    private void checkAncestor(Node node, String expr, int index) {
+    private boolean checkAncestor(Node node, String expr, int index) {
         node = node.parent;
         if (node == null) {
-            resultSet.remove(index);
-            return;
+            return false;
         }
         String id = getId(expr);
         String classes = getClasses(expr);
         String tag = getTag(expr);
         if (!classes.isEmpty() && !hp.getElementsByClassName(node.parent, classes, false).contains(node)) {
-            resultSet.remove(index);
-            return;
+            return false;
         }
         if (!id.isEmpty() && !node.attributes.get("id").equals(id.substring(1))) {
-            resultSet.remove(index);
-            return;
+            return false;
         }
         if (!node.tagName.equals(tag)) {
-            resultSet.remove(index);
+            return false;
         }
         if (!checkPseudoClassesOfAncestor(node, expr)) {
-            resultSet.remove(index);
+            return false;
         }
+        return true;
     }
 
-    private void checkAllAncestors(Node node, String expr, int index) {
-        String id = getId(expr);
-        String classes = getClasses(expr);
-        String tag = getTag(expr);
-        Node n = node.parent;
-        boolean flag = true;
-        while (n != null) {
-            if (!classes.isEmpty() && !hp.getElementsByClassName(n.parent, classes, false).contains(node)) {
-                flag = false;
+    private boolean checkAllAncestors(Node node, String expr, int index) {
+        while (node != null) {
+            if (checkAncestor(node, expr, index)) {
+                return true;
             }
-            if (flag && !id.isEmpty() && !n.attributes.get("id").equals(id.substring(1))) {
-                flag = false;
-            }
-            if (flag && !n.tagName.equals(tag)) {
-                flag = false;
-            }
-            if (flag && !checkPseudoClassesOfAncestor(n, expr)) {
-                flag = false;
-            }
-            if (flag) break;
-            n = n.parent;
+            node = node.parent;
         }
-        if (!flag) resultSet.remove(index);
+        return false;
     }
 
     private void stepRight(int pos) {
@@ -348,7 +336,7 @@ public class QuerySelector {
 
     private String[] parts;
     private String query;
-    private String orig_query;
+    private String orig_query = query;
     private Vector<Node> resultSet;
     HTMLParser hp;
 }
