@@ -31,6 +31,7 @@ public class Main {
         System.out.println("First element with class \"link\" has tag <" + hp.getClassIndex().get("link").get(0).tagName + ">");
         System.out.println();
         System.out.println("Checking queries:");
+
         QuerySelector qs = new QuerySelector(".link.red", hp);
         System.out.print("Result of matching .link.red is ");
         qs.printResults();
@@ -67,6 +68,9 @@ public class Main {
         qs = new QuerySelector("body a", hp);
         System.out.print("Result of matching body a is ");
         qs.printResults();
+
+        System.out.print("\n");
+        
         qs = new QuerySelector("body a:first-child", hp);
         System.out.print("Result of matching body a:first-child is ");
         qs.printResults();
@@ -78,6 +82,54 @@ public class Main {
         qs.printResults();
         qs = new QuerySelector("body:last-child p", hp);
         System.out.print("Result of matching body:last-child p is ");
+        qs.printResults();
+
+        System.out.print("\n");
+
+        qs = new QuerySelector("a[id=\"link\"]", hp);
+        System.out.print("Result of matching a[id=\"link\"] is ");
+        qs.printResults();
+        qs = new QuerySelector("a[id=\"red\"]", hp);
+        System.out.print("Result of matching a[id=\"red\"] is ");
+        qs.printResults();
+
+        System.out.print("\n");
+
+        qs = new QuerySelector("a[id^=\"link\"]", hp);
+        System.out.print("Result of matching a[id^=\"link\"] is ");
+        qs.printResults();
+        qs = new QuerySelector("a[id$=\"link\"]", hp);
+        System.out.print("Result of matching a[id$=\"link\"] is ");
+        qs.printResults();
+
+        System.out.print("\n");
+
+        qs = new QuerySelector("a[id^=\"li\"]", hp);
+        System.out.print("Result of matching a[id^=\"li\"] is ");
+        qs.printResults();
+        qs = new QuerySelector("a[id^=\"nk\"]", hp);
+        System.out.print("Result of matching a[id^=\"nk\"] is ");
+        qs.printResults();
+        qs = new QuerySelector("a[id$=\"nk\"]", hp);
+        System.out.print("Result of matching a[id^=\"nk\"] is ");
+        qs.printResults();
+        qs = new QuerySelector("a[id$=\"li\"]", hp);
+        System.out.print("Result of matching a[id^=\"li\"] is ");
+        qs.printResults();
+        qs = new QuerySelector("a[id~=\"in\"]", hp);
+        System.out.print("Result of matching a[id~=\"in\"] is ");
+        qs.printResults();
+        qs = new QuerySelector("a[id~=\"im\"]", hp);
+        System.out.print("Result of matching a[id~=\"im\"] is ");
+        qs.printResults();
+
+        System.out.print("\n");
+
+        qs = new QuerySelector(".link[href]", hp);
+        System.out.print("Result of matching .link[href] is ");
+        qs.printResults();
+        qs = new QuerySelector(".link[href=\"/home\"]", hp);
+        System.out.print("Result of matching .link[href=\"/home\"] is ");
         qs.printResults();
     }
 

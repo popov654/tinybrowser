@@ -7,6 +7,8 @@ package cssparser;
 
 import htmlparser.HTMLParser;
 import htmlparser.Node;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,9 +47,9 @@ public class QuerySelector {
         query = query.replaceAll(" + ", "+");
         query = query.replaceAll(" ~ ", "~");
         query = query.replaceAll("::", ":");
-        parts = query.split("((?<=[> +~])|(?=[> +~]))");
+        parts = query.split("((?<=[> +~](?!\\=))|(?=[> +~](?!\\=)))");
+        
         int pos = -1;
-        boolean failed = false;
         pos = tryToFindID();
         if (pos >= 0) {
             resultSet = new Vector<Node>();
@@ -64,6 +66,7 @@ public class QuerySelector {
                 }
                 resultSet.add(n);
                 applyPseudoClasses(parts[pos]);
+                applyAttributes(parts[pos]);
                 if (resultSet.isEmpty()) return;
             } else {
                 return;
@@ -78,11 +81,12 @@ public class QuerySelector {
                 if (!tag.isEmpty()) {
                     for (int i = 0; i < resultSet.size(); i++) {
                         if (!resultSet.get(i).tagName.equals(tag)) {
-                            resultSet.remove(i);
+                            resultSet.remove(i--);
                         }
                     }
                 }
                 applyPseudoClasses(parts[pos]);
+                applyAttributes(parts[pos]);
                 if (resultSet.isEmpty()) return;
             }
         }
@@ -111,15 +115,15 @@ public class QuerySelector {
                         break;
                     }
                     if (pseudoclasses[i].equals("last-child") && !resultSet.get(j).isLastElementChild()) {
-                        resultSet.remove(j);
+                        resultSet.remove(j--);
                         break;
                     }
                     if (pseudoclasses[i].equals("nth-child(odd)") && !resultSet.get(j).isOddElementChild()) {
-                        resultSet.remove(j);
+                        resultSet.remove(j--);
                         break;
                     }
                     if (pseudoclasses[i].equals("nth-child(even)") && !resultSet.get(j).isEvenElementChild()) {
-                        resultSet.remove(j);
+                        resultSet.remove(j--);
                         break;
                     }
                     if (pseudoclasses[i].startsWith("nth-child(")) {
@@ -127,11 +131,36 @@ public class QuerySelector {
                         if (m.find()) {
                             int num = Integer.parseInt(m.group(1));
                             if (!resultSet.get(j).isNthElementChild(num)) {
-                                resultSet.remove(j);
+                                resultSet.remove(j--);
                                 break;
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private void applyAttributes(String expr) {
+        if (getAttributes(expr).isEmpty()) return;
+        String[] attr = getAttributes(expr).split("(?<=\\])(?=($|\\[))");
+        for (int j = 0; j < resultSet.size(); j++) {
+            for (int i = 0; i < attr.length; i++) {
+                attr[i] = attr[i].replaceAll("(^\\[|\\]$)", "");
+                int pos = attr[i].indexOf("=");
+                String key = pos > -1 ? attr[i].substring(0, pos) : attr[i];
+                String value = pos > -1 ? attr[i].substring(pos+2, attr[i].length()-1) : "";
+                key = key.replaceAll("[$^~]$", "");
+                List<String> chars = Arrays.asList(new String[] {"^", "$", "~"});
+                String c = pos > 0 ? attr[i].substring(pos-1, pos) : "";
+                String val = resultSet.get(j).getAttribute(key);
+                if (pos == -1 && !resultSet.get(j).hasAttribute(key) ||
+                    c.equals("^") && (val == null || val.indexOf(value) != 0) ||
+                    c.equals("$") && (val == null || val.indexOf(value) + value.length() != val.length()) ||
+                    c.equals("~") && (val == null || val.indexOf(value) == -1) ||
+                    !c.equals("") && !chars.contains(c) && !val.equals(value)) {
+                    resultSet.remove(j--);
+                    break;
                 }
             }
         }
@@ -177,6 +206,7 @@ public class QuerySelector {
 
     private String getTag(String str) {
         str = str.replaceAll("(\\.|#|:)[^\\.#:]+", "");
+        str = str.replaceAll("\\[[^=\\s]+([$^~]?=\"[^\"]*\")?\\]", "");
         return str;
     }
 
@@ -184,6 +214,7 @@ public class QuerySelector {
         str = str.replaceAll("^[^\\.#:]+", "");
         str = str.replaceAll("\\.[^\\.#:]+", "");
         str = str.replaceAll(":[^:]+", "");
+        str = str.replaceAll("\\[[^=\\s]+([$^~]?=\"[^\"]*\")?\\]", "");
         return str;
     }
 
@@ -191,11 +222,21 @@ public class QuerySelector {
         str = str.replaceAll("^[^\\.#:]+", "");
         str = str.replaceAll("#[^\\.#:]+", "");
         str = str.replaceAll(":[^:]+", "");
+        str = str.replaceAll("\\[[^=\\s]+([$^~]?=\"[^\"]*\")?\\]", "");
         return str;
     }
 
     private String getPseudoClasses(String str) {
         Matcher m = Pattern.compile(":[^:]+").matcher(str);
+        String result = "";
+        while (m.find()) {
+            result += str.substring(m.start(), m.end());
+        }
+        return result;
+    }
+
+    private String getAttributes(String str) {
+        Matcher m = Pattern.compile("\\[[^=\\s]+([$^~]?=\"[^\"]*\")?\\]").matcher(str);
         String result = "";
         while (m.find()) {
             result += str.substring(m.start(), m.end());
@@ -294,6 +335,7 @@ public class QuerySelector {
                 else resultSet.retainAll(v);
             }
             applyPseudoClasses(expr);
+            applyAttributes(expr);
             return;
         }
         if (parts[pos].equals(">") || parts[pos].equals(" ")) {
@@ -320,6 +362,7 @@ public class QuerySelector {
             }
             resultSet = v;
             applyPseudoClasses(expr);
+            applyAttributes(expr);
         }
     }
 
