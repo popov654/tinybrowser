@@ -154,11 +154,11 @@ public class QuerySelector {
                 List<String> chars = Arrays.asList(new String[] {"^", "$", "~"});
                 String c = pos > 0 ? attr[i].substring(pos-1, pos) : "";
                 String val = resultSet.get(j).getAttribute(key);
-                if (pos == -1 && !resultSet.get(j).hasAttribute(key) ||
+                if (pos == -1 && val == null ||
                     c.equals("^") && (val == null || val.indexOf(value) != 0) ||
                     c.equals("$") && (val == null || val.indexOf(value) + value.length() != val.length()) ||
                     c.equals("~") && (val == null || val.indexOf(value) == -1) ||
-                    !c.equals("") && !chars.contains(c) && !val.equals(value)) {
+                    !c.equals("") && (val == null || !chars.contains(c) && !val.equals(value))) {
                     resultSet.remove(j--);
                     break;
                 }
@@ -338,7 +338,57 @@ public class QuerySelector {
             applyAttributes(expr);
             return;
         }
-        if (parts[pos].equals(">") || parts[pos].equals(" ")) {
+        if (parts[pos].equals(">") || parts[pos].equals(" ") ||
+               parts[pos].equals("+") || parts[pos].equals("~")) {
+            
+            if (parts[pos].equals("+") || parts[pos].equals("~")) {
+                for (int i = 0; i < resultSet.size(); i++) {
+                    Node n = resultSet.get(i);
+                    resultSet.remove(i);
+                    if (!n.isLastElementChild()) {
+                        resultSet.add(i, n.nextElementSibling());
+                    } else {
+                        i--;
+                    }
+                }
+                
+
+                if (parts[pos].equals("~")) {
+                    for (int i = 0; i < resultSet.size(); i++) {
+                        Node n = resultSet.get(i);
+                        if (!n.isLastElementChild()) {
+                            resultSet.add(i+1, n.nextElementSibling());
+                        }
+                    }
+                }
+
+                if (!id.isEmpty()) {
+                    for (int i = 0; i < resultSet.size(); i++) {
+                        if (!resultSet.get(i).getAttribute("id").equals(id)) {
+                            resultSet.remove(i--);
+                        }
+                    }
+                }
+                if (!classes.isEmpty()) {
+                    for (int i = 0; i < resultSet.size(); i++) {
+                        Vector<Node> v = hp.getElementsByClassName(resultSet.get(i).parent, classes, false);
+                        if (!v.contains(resultSet.get(i))) {
+                            resultSet.remove(i--);
+                        }
+                    }
+                }
+                if (!tag.isEmpty()) {
+                    for (int i = 0; i < resultSet.size(); i++) {
+                        if (!resultSet.get(i).tagName.toLowerCase().equals(tag.toLowerCase())) {
+                            resultSet.remove(i--);
+                        }
+                    }
+                }
+                applyPseudoClasses(expr);
+                applyAttributes(expr);
+                return;
+            }
+
             Vector<Node> v = new Vector<Node>();
             boolean checked = false;
             for (int i = 0; i < resultSet.size(); i++) {

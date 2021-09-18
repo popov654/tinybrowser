@@ -23,7 +23,7 @@ public class Main {
         System.out.println();
         System.out.println("----------------------------------");
         System.out.println("Replacing innerHTML of <p> element");
-        hp.getRootNode().nthElementChild(2).firstElementChild().replaceInnerHTML("This is a paragraph with a <a href=\"#\" class=\"link red\" id=\"link\">link</a> inside.");
+        hp.getRootNode().nthElementChild(2).firstElementChild().replaceInnerHTML("This is a paragraph with a <a href=\"#\" class=\"link red\" id=\"link\">link</a> inside and <span>another</span> <a href=\"#\">one</a>.");
         System.out.println("----------------------------------");
         System.out.println();
         hp.traverseTree();
@@ -130,6 +130,15 @@ public class Main {
         qs.printResults();
         qs = new QuerySelector(".link[href=\"/home\"]", hp);
         System.out.print("Result of matching .link[href=\"/home\"] is ");
+        qs.printResults();
+
+        System.out.print("\n");
+
+        qs = new QuerySelector("body a.link + a", hp);
+        System.out.print("Result of matching body a.link + a is ");
+        qs.printResults();
+        qs = new QuerySelector("body a.link ~ a", hp);
+        System.out.print("Result of matching body a.link ~ a is ");
         qs.printResults();
     }
 
