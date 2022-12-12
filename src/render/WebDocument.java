@@ -17,10 +17,14 @@ import javax.swing.KeyStroke;
  *
  * @author Alex
  */
-public class WebDocument extends JFrame {
+public class WebDocument extends JPanel {
 
-    WebDocument(String title) {
-        super(title);
+    public WebDocument() {
+        setLayout(null);
+        panel.setLayout(null);
+        add(panel);
+        setOpaque(false);
+        panel.setOpaque(false);
         root.addMouseListener(new MouseListener() {
 
             public void mouseClicked(MouseEvent e) {
@@ -80,44 +84,33 @@ public class WebDocument extends JFrame {
             public void removePropertyChangeListener(PropertyChangeListener listener) {}
 
         });
-
-        addComponentListener(new java.awt.event.ComponentAdapter() {
-            @Override
-            public void componentMoved(java.awt.event.ComponentEvent evt) {}
-
-            @Override
-            public void componentResized(java.awt.event.ComponentEvent evt) {
-                if (last_width == 0) {
-                    last_width = getWidth();
-                }
-                panel.setSize(panel.getWidth() + getWidth() - last_width, panel.getHeight());
-                width = panel.getWidth();
-                if (last_width != 0 && last_height != 0 && (getWidth() != last_width || getHeight() != last_height)) {
-                    updateUI(last_width, last_height, getWidth(), getHeight());
-                    root.setBounds(borderSize, borderSize, panel.getWidth()-borderSize*2, height-borderSize*2);
-                    Component[] c = panel.getComponents();
-                    if (c.length == 1) {
-                        ((Block)c[0]).no_layout = true;
-                        ((Block)c[0]).setHeight(panel.getHeight()-borderSize*2);
-                        ((Block)c[0]).width = panel.getWidth()-borderSize*2;
-                        ((Block)c[0]).viewport_width = ((Block)c[0]).width;
-                        ((Block)c[0]).no_layout = false;
-                        ((Block)c[0]).updateOnResize();
-                    } else {
-                        for (int i = 0; i < c.length; i++) {
-                            if (c[i] instanceof Block) {
-                                ((Block)c[i]).updateOnResize();
-                            }
-                        }
-                    }
-                }
-                last_width = getWidth();
-                last_height = getHeight();
-            }
-        });
     }
 
-    public void updateUI(int last_width, int last_height, int width, int height) {}
+    public void resized() {
+        //panel.repaint();
+        width = getWidth();
+        height = getHeight();
+        panel.setBounds(borderSize, borderSize, getWidth() - borderSize * 2, getHeight() - borderSize * 2);
+        if (getWidth() != last_width || getHeight() != last_height) {
+            root.setBounds(borderSize, borderSize, width - borderSize * 2 - root.getScrollbarYSize(), height - borderSize * 2 - root.getScrollbarXSize());
+            root.width = width - borderSize * 2 - 2;
+            root.height = height - borderSize * 2 - 2;
+            root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
+            root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
+            root.orig_height = (int) (root.height / root.ratio);
+            root.max_height = root.height;
+            //System.err.println("Root width: " + root.width);
+            //System.err.println("Viewport width: " + root.viewport_width);
+            if (root.document.ready && !resizing) {
+                resizing = true;
+                root.performLayout();
+                root.forceRepaint();
+                resizing = false;
+            }
+        }
+        last_width = getWidth();
+        last_height = getHeight();
+    }
 
     public Color getDocumentBackground() {
         return panel.getBackground();
@@ -184,9 +177,13 @@ public class WebDocument extends JFrame {
 
     protected Layouter layouter = new Layouter(this);
 
-    protected Block root = new Block(this, null, -1, -1);
+    public Block root = new Block(this, null, -1, -1);
 
     public boolean ready = true;
+
+    public volatile boolean resizing = false;
+
+    public boolean debug = false;
 
     protected WebDocument parent_document;
     protected Block parent_document_block;
@@ -200,7 +197,7 @@ public class WebDocument extends JFrame {
     public static boolean scale_borders = true;
     public int borderSize = 0;
     public Color borderColor;
-    final JPanel panel = new JPanel();
+    public final JPanel panel = new JPanel();
     public int width = 0;
     public int height = 0;
 }

@@ -11,31 +11,38 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
-public class MediaTest extends WebDocument {
+public class MediaTest extends JFrame {
 
     public MediaTest() {
-        super("Simple component test");
-        JPanel cp = new JPanel();
-        cp.setLayout(null);
+        super("Media player test");
+        WebDocument cp = new WebDocument();
+        document = cp;
         bp = new JPanel();
         bp.setLayout(null);
-        panel.setLayout(null);
-        panel.setBorder(BorderFactory.createLineBorder(Color.black));
-        borderSize = 1;
+        cp.setBorder(BorderFactory.createLineBorder(Color.black));
+        cp.borderSize = 1;
         setContentPane(cp);
-        cp.add(panel);
-        cp.add(bp);
-        panel.setBounds(9, 10, 474, 300);
-        width = 474;
-        height = 300;
-        root.setBounds(1, 1, width-2, height-2);
-        root.setWidth(-1);
-        root.setHeight(height-2);
-        root.addMouseListeners();
+        add(bp);
+
+        cp.width = (int) Math.floor(474 * cp.root.ratio);
+        cp.height = (int) Math.floor(270 * cp.root.ratio);
+
+        cp.root.height = cp.height-2;
+        cp.root.viewport_height = cp.root.height;
+        cp.root.orig_height = cp.root.height;
+        cp.root.max_height = cp.root.height;
+        cp.root.setBounds(cp.root.getX(), cp.root.getY(), cp.root.width, cp.root.height);
+
+        cp.panel.setBounds(9, 10, cp.width, cp.height);
+        cp.root.setBounds(1, 1, cp.width-2, cp.height-2);
+        cp.root.setWidth(-1);
+        cp.root.setHeight(cp.height-2);
+        cp.root.addMouseListeners();
+        cp.repaint();
         
-        bp.setBounds(9, 283, 474, 86);
-        ready = false;
-        Block d = new Block(this, null, 136, 92, 1, 7, Color.MAGENTA);
+        bp.setBounds(9, cp.height - 28, cp.width, 86);
+        cp.ready = false;
+        Block d = new Block(cp, null, (int) Math.floor(136 * cp.root.ratio), (int) Math.floor(92 * cp.root.ratio), 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d.setMargins(4);
@@ -53,7 +60,7 @@ public class MediaTest extends WebDocument {
         
         d.setHeight(-1);
 
-        root.addElement(d);
+        cp.root.addElement(d);
 
         
         //d2.setTransform(true);
@@ -71,18 +78,18 @@ public class MediaTest extends WebDocument {
         //root.setBackgroundImage("400.jpg");
         //root.setBackgroundRepeat(Block.BackgroundRepeat.REPEAT_XY);
 
-        root.height = height-2;
-        root.viewport_height = root.height;
-        root.orig_height = root.height;
-        root.max_height = root.height;
-        root.setBounds(root.getX(), root.getY(), root.width, root.height);
+        cp.root.height = cp.height-2;
+        cp.root.viewport_height = cp.root.height;
+        cp.root.orig_height = cp.root.height;
+        cp.root.max_height = cp.root.height;
+        cp.root.setBounds(cp.root.getX(), cp.root.getY(), cp.root.width, cp.root.height);
         
-        ready = true;
-        root.performLayout();
+        cp.ready = true;
+        cp.root.performLayout();
 
-        root.forceRepaintAll();
+        cp.root.forceRepaintAll();
 
-        Block pc = new Block(this);
+        Block pc = new Block(cp);
         //MediaPlayer mp = new MediaPlayer(pc);
         //mp.open("sound.wav");
         int w = (int)Math.round(404 / pc.ratio);
@@ -98,16 +105,17 @@ public class MediaTest extends WebDocument {
         d.addElement(pc);
         pc.setAutoXMargin();
         MediaPlayer mp = new MediaPlayer(pc, pc.width, pc.height);
-        //int player_width = (int)Math.round(404 - d.borderWidth[3] * (d.ratio-1) - d.borderWidth[1] * (d.ratio-1));
-        //mp.container.children.get(0).width = player_width;
-        //mp.container.children.get(0).viewport_width = player_width;
-        //mp.container.children.get(0).max_width = player_width;
+        int player_width = (int)Math.round(404 - d.borderWidth[3] * (d.ratio-1) - d.borderWidth[1] * (d.ratio-1));
+        mp.container.children.get(0).width = player_width;
+        //mp.container.children.get(0).height = pc.height + 100;
+        mp.container.children.get(0).viewport_width = player_width;
+        mp.container.children.get(0).max_width = player_width;
         pc.performLayout();
-        root.forceRepaintAll();
+        cp.root.forceRepaintAll();
         mp.open("file:///D:/Inception_trailer_48fps.mkv");
         
 
-        panel.repaint();
+        cp.panel.repaint();
         btn = new JButton("Close");
         btn.addActionListener(new ActionListener(){
             @Override
@@ -118,8 +126,10 @@ public class MediaTest extends WebDocument {
         btn.setBounds((bp.getWidth() - btn.getPreferredSize().width) / 2, (bp.getHeight() - btn.getPreferredSize().height)-10, btn.getPreferredSize().width, btn.getPreferredSize().height);
         bp.add(btn);
         cp.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
-        cp.setPreferredSize(new Dimension(494, 370));
+        cp.setPreferredSize(new Dimension(cp.width + 20, cp.height + 60));
         pack();
+        System.out.println(cp.panel.getWidth());
+        System.out.println(cp.getParent().getX());
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
@@ -128,7 +138,7 @@ public class MediaTest extends WebDocument {
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
 
-        Block block = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.STATIC);
         block.setDisplayType(Block.Display.INLINE_BLOCK);
         block.addText("Text");
@@ -138,15 +148,15 @@ public class MediaTest extends WebDocument {
         block.setLeft(10, Block.Units.px);
         block.setTop(10, Block.Units.px);
 
-        root.performLayout();
-        root.forceRepaintAll();
+        document.root.performLayout();
+        document.root.forceRepaintAll();
     }
 
     public void testAbsolutePositioning(Block b) {
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
 
-        Block block = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.STATIC);
         block.setDisplayType(Block.Display.INLINE_BLOCK);
         block.addText("Text");
@@ -159,15 +169,14 @@ public class MediaTest extends WebDocument {
         block.setProp("margin-left", -block.width / 2, Block.Units.px);
         block.setProp("margin-top", -block.height / 2, Block.Units.px);
 
-        root.performLayout();
-        root.forceRepaintAll();
+        document.root.performLayout();
+        document.root.forceRepaintAll();
     }
 
     public void testTextAlign(Block b, int value) {
         b.setTextAlign(value);
     }
 
-    @Override
     public void updateUI(int last_width, int last_height, int width, int height) {
         bp.setSize(bp.getWidth() + width - last_width, bp.getHeight());
         bp.setBounds(bp.getX(), bp.getY()+height-last_height, bp.getWidth(), bp.getHeight());
@@ -175,7 +184,10 @@ public class MediaTest extends WebDocument {
     }
 
     public void setPanelSize(int width, int height) {
-        panel.setBounds(9, 10, width, height);
+        width *= document.root.ratio;
+        height *= document.root.ratio;
+        document.panel.setBounds(9, 10, width, height);
+        bp.setBounds(9, height - 28, width, 86);
     }
 
     public static void main(String[] args) {
@@ -185,8 +197,10 @@ public class MediaTest extends WebDocument {
         } catch (Exception e) {}
         MediaTest lt = new MediaTest();
         lt.setVisible(true);
-        lt.setPanelSize(474, 300);
+        lt.setPanelSize(474, 270);
     }
+
+    private WebDocument document;
 
     private JPanel bp;
     private JButton btn;

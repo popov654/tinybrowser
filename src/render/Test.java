@@ -12,29 +12,30 @@ import java.awt.event.ActionListener;
 import java.util.Vector;
 
 
-public class Test extends WebDocument {
+public class Test extends JFrame {
 
     public Test() {
         super("Simple component test");
-        JPanel cp = new JPanel();
+        WebDocument cp = new WebDocument();
+        document = cp;
         cp.setLayout(null);
         bp = new JPanel();
         bp.setLayout(null);
-        panel.setLayout(null);
-        panel.setBorder(BorderFactory.createLineBorder(Color.black));
-        borderSize = 1;
+        cp.panel.setLayout(null);
+        cp.panel.setBorder(BorderFactory.createLineBorder(Color.black));
+        cp.borderSize = 1;
         setContentPane(cp);
-        cp.add(panel);
+        cp.add(cp.panel);
         cp.add(bp);
-        panel.setBounds(9, 10, 474, 300);
-        width = 474;
-        height = 300;
-        root.setBounds(1, 1, width-2, height-2);
-        root.setWidth(-1);
-        root.setHeight(height-2);
-        root.setBackgroundColor(new Color(0, 0, 0, 0));
+        cp.width = 474;
+        cp.height = 300;
+        cp.panel.setBounds(9, 10, cp.width, cp.height);
+        cp.root.setBounds(1, 1, cp.width-2, cp.height-2);
+        cp.root.setWidth(-1);
+        cp.root.setHeight(cp.height-2);
+        cp.root.setBackgroundColor(new Color(0, 0, 0, 0));
         bp.setBounds(10, 280, 472, 86);
-        Block d = new Block(this, null, 136, 90, 1, 7, Color.MAGENTA);
+        Block d = new Block(document, null, 136, 90, 1, 7, Color.MAGENTA);
         d.setWidth(120);
         d.setHeight(90);
         d.setPositioning(Block.Position.ABSOLUTE);
@@ -52,9 +53,9 @@ public class Test extends WebDocument {
         d.setLinearGradient(c, p, -54);
         //d.setBackgroundColor(new Color(228, 223, 226));
         d.addText("Test text test text test text");
-        root.addElement(d);
+        document.root.addElement(d);
         
-        Block d2 = new Block(this, null, 136, 80, 1, 7, new Color(0, 180, 0));
+        Block d2 = new Block(document, null, 136, 80, 1, 7, new Color(0, 180, 0));
         d2.setWidth(120);
         d2.setHeight(80);
         d2.setPositioning(Block.Position.ABSOLUTE);
@@ -64,13 +65,13 @@ public class Test extends WebDocument {
         d2.setTextColor(new Color(0, 0, 0));
         d2.setBackgroundImage("400.jpg");
         d2.setBackgroundRepeat(Block.BackgroundRepeat.REPEAT_XY);
-        root.addElement(d2);
+        document.root.addElement(d2);
         //root.setComponentZOrder(d2, 1);
 
-        root.performLayout();
-        root.forceRepaint();
+        document.root.performLayout();
+        document.root.forceRepaint();
 
-        panel.repaint();
+        document.panel.repaint();
         
         btn = new JButton("Close");
         btn.addActionListener(new ActionListener(){
@@ -87,7 +88,6 @@ public class Test extends WebDocument {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
-    @Override
     public void updateUI(int last_width, int last_height, int width, int height) {
         bp.setSize(bp.getWidth() + width - last_width, bp.getHeight());
         bp.setBounds(bp.getX(), bp.getY()+height-last_height, bp.getWidth(), bp.getHeight());
@@ -95,7 +95,7 @@ public class Test extends WebDocument {
     }
 
     public void setPanelSize(int width, int height) {
-        panel.setBounds(9, 10, width, height);
+        document.panel.setBounds(9, 10, width, height);
     }
 
     public static void main(String[] args) {
@@ -105,6 +105,8 @@ public class Test extends WebDocument {
         } catch (Exception e) {}
         new Test().setVisible(true);
     }
+
+    private WebDocument document;
 
     private JPanel bp;
     private JButton btn;

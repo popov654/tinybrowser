@@ -10,6 +10,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.LinearGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
@@ -54,6 +55,7 @@ import org.w3c.dom.NodeList;
  * @author Alex
  */
 public class Block extends JPanel implements Drawable, MouseListener, MouseMotionListener {
+
     public Block(WebDocument document, Block parent, int width, int height, int borderWidth, int arc, Color borderColor) {
 
         this.document = document;
@@ -130,7 +132,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         addMouseListener(this);
         addMouseMotionListener(this);
     }
-    
+
     public int getOffsetLeft() {
         if (positioning == Position.ABSOLUTE) {
             return margins[3] + left;
@@ -227,7 +229,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void clearBuffer() {
-        
+
         Shape rect = new RoundedRect(0, 0, width, height, arc[0], arc[1], arc[2], arc[3]);
 
         Graphics g = buffer.getGraphics();
@@ -314,7 +316,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         Graphics2D g2d = (Graphics2D)g;
         document.setBackground(document.getDocumentBackground());
-        
+
         int bw = viewport_width > 0 ? viewport_width + (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0) : this.width;
         int bh = viewport_height > 0 ? viewport_height + (scrollbar_x != null ? scrollbar_x.getPreferredSize().height : 0): this.height;
 
@@ -419,7 +421,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         RoundedRect clip_rect = null;
 
         if (isPartlyHidden()) {
-            
+
             int sx = clipping_block.parent != null ? clipping_block.parent.scroll_x : 0;
             int sy = clipping_block.parent != null ? clipping_block.parent.scroll_y : 0;
 
@@ -529,6 +531,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 int y = y0 + borderWidth[0] + background_pos_y;
                 int iw = background_size_x < 0 ? bgImage.getWidth() : background_size_x;
                 int ih = background_size_y < 0 ? bgImage.getHeight() : background_size_y;
+                //Image scaledImage = bgImage.getScaledInstance(20, 20, java.awt.Image.SCALE_SMOOTH);
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
                 g2d.drawImage(bgImage, x, y, x+iw, y+ih, 0, 0, bgImage.getWidth(), bgImage.getHeight(), this);
             } else {
                 int x = x0 + borderWidth[3] + background_pos_x;
@@ -567,7 +571,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (clipping_block == this) g.setClip(null);
         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        
+
         if (border != null) {
             if (clipping_block == null && overflow != Overflow.VISIBLE) {
                 g.setClip(null);
@@ -576,8 +580,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         g.setClip(null);
         clipping_block = null;
+
         renderContent(g);
-        
+
         //if (this.getParent() != null) this.getParent().repaint();
 //        if (document != null && getX() < document.borderSize || getY() < document.borderSize ||
 //                getX() + width > document.width || getY() + height > document.height) {
@@ -1046,7 +1051,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             from_element = s[0];
             to_element = s[1];
         }
-        
+
         String result = "";
         try {
             for (int i = from_element; i <= to_element; i++) {
@@ -1117,6 +1122,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (overflow == Overflow.SCROLL) {
             if (scrollbar_y != null) {
                 remove(scrollbar_y);
+                viewport_height = height;
             }
             scrollbar_y = new JScrollBar();
             add(scrollbar_y, 0);
@@ -1135,6 +1141,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             //height = Math.max(height, h);
             //height = h;
         }
+    }
+
+    public boolean hasHorizontalScrollbar() {
+        return scrollbar_x != null;
+    }
+
+    public boolean hasVerticalScrollbar() {
+        return scrollbar_y != null;
+    }
+
+    public int getScrollbarXSize() {
+        return scrollbar_x != null ? scrollbar_x.getPreferredSize().height : 0;
+    }
+
+    public int getScrollbarYSize() {
+        return scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0;
     }
 
     class ScrollListener implements AdjustmentListener {
@@ -1193,7 +1215,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         pref_size = 0;
         min_size = 0;
-        
+
         if (text_layer != null) {
             text_layer.removeAll();
             remove(text_layer);
@@ -1267,6 +1289,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 addScrollbarY();
                 performLayout(no_rec, true);
                 return;
+            } else {
+                if (scrollbar_y != null) {
+                    remove(scrollbar_y);
+                    viewport_height = height;
+                }
             }
         }
 
@@ -1339,20 +1366,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                 if (el.getOffsetLeft() - borderWidth[3] + el.viewport_width > content_x_max) {
                     content_x_max = el.getOffsetLeft() - borderWidth[3] + el.viewport_width;
-                    if (el.positioning != Position.ABSOLUTE && el.margins[1] > 0) {
-                        content_x_max += el.margins[1];
-                    }
                     if (el.positioning != Position.ABSOLUTE) {
-                        content_x_max += paddings[1];
+                        content_x_max += el.margins[1] + paddings[1];
                     }
                 }
                 if (el.getOffsetTop() - borderWidth[0] + el.viewport_height > content_y_max) {
                     content_y_max = el.getOffsetTop() - borderWidth[0] + el.viewport_height;
-                    if (el.positioning != Position.ABSOLUTE && el.margins[2] > 0) {
-                        content_y_max += el.margins[2];
-                    }
                     if (el.positioning != Position.ABSOLUTE) {
-                        content_y_max += paddings[2];
+                        content_y_max += el.margins[2] + paddings[2];
                     }
                 }
 
@@ -1412,9 +1433,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             } else if (content_y_max > viewport_height - borderWidth[0] - borderWidth[2]) {
                 viewport_height += scrollbar_x.getPreferredSize().height;
                 height += scrollbar_x.getPreferredSize().height;
+                if (scrollbar_y != null) {
+                    remove(scrollbar_y);
+                    viewport_height = height;
+                }
             }
             sortBlocks();
             return;
+        }
+        if (content_x_max <= viewport_width - borderWidth[1] - borderWidth[3] && scrollbar_x != null) {
+            remove(scrollbar_x);
+            viewport_width = width;
+        }
+        if (content_y_max <= viewport_height - borderWidth[0] - borderWidth[2] && scrollbar_y != null) {
+            remove(scrollbar_y);
+            viewport_height = height;
         }
         if (text_align != TextAlign.ALIGN_LEFT) {
             Layouter.applyHorizontalAlignment(this);
@@ -1508,7 +1541,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 bv.add(children.get(i));
             }
         }
-        
+
         if (bv.size() > 0) {
             Block[] blocks = new Block[bv.size()];
             bv.toArray(blocks);
@@ -1580,7 +1613,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (this == document.root) this.zIndexAuto = false;
         LinkedList<Block> list = getSubtree(this);
         if (this == document.root) list.removeFirst();
-        
+
         LinkedList<Block> l1 = new LinkedList<Block>();
         LinkedList<Block> l2 = new LinkedList<Block>();
         LinkedList<Block> l3 = new LinkedList<Block>();
@@ -1658,11 +1691,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 c = b.parts.get(0).getParent();
                 list.remove(i);
                 for (int j = 0; j < b.parts.size(); j++) {
+                    Block block = b.parts.get(j);
                     list.add(i+j, b.parts.get(j));
-                    c.setComponentZOrder(b.parts.get(j), list.size()-1-i+j);
+                    try {
+                        c.setComponentZOrder(b.parts.get(j), list.size()-1-i+j);
+                    } catch (Exception ex) {}
                 }
             }
-            else c.setComponentZOrder(b, list.size()-1-i);
+            else {
+                try {
+                    c.setComponentZOrder(b, list.size()-1-i);
+                } catch (Exception ex) {}
+            }
         }
         layer_list = list;
     }
@@ -1756,7 +1796,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
                 continue;
-            } else {    
+            } else {
                 /*  Do not include descendants of blocks generating their own contexts */
                 while (b.parent.children.size() <= pos+1 && !stack.isEmpty()) {
                     pos = stack2.pollLast();
@@ -1840,7 +1880,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             sel[0] = -1;
             sel[1] = -1;
         }
-        
+
         int[] s = Arrays.copyOf(sel, 2);
         int from_element = sel[0];
         int to_element = sel[1];
@@ -1852,7 +1892,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             to_element = s[1];
         }
 
-        
+
         if (list_item_type > 0) {
             int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             Font font = new Font("Tahoma", style, fontSize);
@@ -2045,7 +2085,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public boolean isPartlyHidden() {
-        
+
         int dx = getOffsetLeft();
         int dy = getOffsetTop();
         Block b = parent;
@@ -2114,7 +2154,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         return Color.decode(value.toUpperCase());
     }
-    
+
     public void setTextColor(Color col) {
         color = col;
         forceRepaint();
@@ -2134,7 +2174,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (ir.getNumImages(true) > 1) {
                 readGIF(ir);
                 has_animation = true;
-                document.startWatcher();
+                startWatcher();
+            } else {
+                stopWatcher();
             }
         } catch (IOException ex) {}
     }
@@ -2431,7 +2473,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setAutoXMargin() {
         auto_x_margin = true;
         int pw = parent != null ? parent.width : document.width;
-        pw -= parent.borderWidth[3] + parent.borderWidth[1] + parent.paddings[3] + parent.paddings[1];
+        if (parent != null) pw -= parent.borderWidth[3] + parent.borderWidth[1] + parent.paddings[3] + parent.paddings[1];
         if (line != null) pw = line.getWidth();
         margins[3] = (int)Math.round((pw-width)/2);
         margins[1] = pw - width - margins[3];
@@ -2445,7 +2487,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setAutoYMargin() {
         auto_y_margin = true;
         int ph = parent != null ? parent.height : document.height;
-        ph -= parent.borderWidth[0] + parent.borderWidth[2];
+        if (parent != null) ph -= parent.borderWidth[0] + parent.borderWidth[2];
         margins[0] = Math.round((ph-height)/2);
         margins[2] = ph - height - margins[0];
         updateMargins();
@@ -2603,8 +2645,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         background_size_x = value;
         background_size_x_auto = false;
-        if (background_size_y_auto) {
-            background_size_y = (int)Math.round(background_size_x / (bgImage.getWidth() / bgImage.getHeight()));
+        if (background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
+            background_size_y = (int)Math.round(background_size_x / ((double) bgImage.getWidth() / bgImage.getHeight()));
         }
         forceRepaint();
     }
@@ -2628,14 +2670,40 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         background_size_y = value;
         background_size_y_auto = false;
         if (background_size_x_auto) {
-            background_size_x = (int)Math.round(background_size_y * (bgImage.getWidth() / bgImage.getHeight()));
+            background_size_x = (int)Math.round(background_size_y * ((double) bgImage.getWidth() / bgImage.getHeight()));
         }
         forceRepaint();
     }
 
+    public void setBackgroundSizeXY(double val_x, double val_y, int units) {
+        int value_x = 0, value_y = 0;
+        if (units == Units.px) {
+            value_x = (int)Math.round(val_x);
+            value_y = (int)Math.round(val_y);
+        }
+        else if (units == Units.percent) {
+            value_x = (int)Math.ceil((height-borderWidth[0]-borderWidth[2])*(val_x/100));
+            value_y = (int)Math.ceil((height-borderWidth[0]-borderWidth[2])*(val_y/100));
+        }
+        else if (units == Units.em) {
+            value_x = (int)Math.round(14 * ratio * value_x);
+            value_y = (int)Math.round(14 * ratio * value_y);
+        }
+        background_size_x = value_x;
+        background_size_y = value_y;
+        background_size_x_auto = false;
+        background_size_y_auto = false;
+
+        forceRepaint();
+    }
+
+    public void setBackgroundSizeAuto() {
+        setBackgroundSizeXY(-1f, -1f, Units.px);
+    }
+
     public void setBackgroundContain() {
-        double r1 = bgImage.getWidth() / bgImage.getHeight();
-        double r2 = width / height;
+        double r1 = (bgImage != null && bgImage.getHeight() > 0) ? (double) bgImage.getWidth() / bgImage.getHeight() : 0;
+        double r2 = height > 0 ? (double) width / height : 0;
         if (r1 > r2) {
             background_size_y_auto = true;
             setBackgroundSizeX(100, Units.percent);
@@ -2643,12 +2711,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             background_size_x_auto = true;
             setBackgroundSizeY(100, Units.percent);
         }
+        setBackgroundPositionX(50, Units.percent);
+        setBackgroundPositionY(50, Units.percent);
         forceRepaint();
     }
 
     public void setBackgroundCover() {
-        double r1 = bgImage.getWidth() / bgImage.getHeight();
-        double r2 = width / height;
+        double r1 = (bgImage != null && bgImage.getHeight() > 0) ? (double) bgImage.getWidth() / bgImage.getHeight() : 0;
+        double r2 = height > 0 ? (double) width / height : 0;
         if (r1 < r2) {
             background_size_y_auto = true;
             setBackgroundSizeX(100, Units.percent);
@@ -2656,6 +2726,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             background_size_x_auto = true;
             setBackgroundSizeY(100, Units.percent);
         }
+        setBackgroundPositionX(50, Units.percent);
+        setBackgroundPositionY(50, Units.percent);
         forceRepaint();
     }
 
@@ -3258,7 +3330,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         removeElement(children.get(index));
     }
 
-    public void removeAllElements() { 
+    public void removeAllElements() {
         for (int i = 0; i < children.size(); i++) {
             document.root.remove(children.get(i));
             children.get(i).removeAll();
@@ -3624,7 +3696,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.borderColor[2] = borderColor[2];
         b.borderColor[3] = borderColor[3];
         b.borderRadius = borderRadius;
-        
+
         b.bgImage = this.bgImage;
         if (bgImage != null) {
             b.background_pos_x = this.background_pos_x;
@@ -3647,7 +3719,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.paddings[1] = paddings[1];
         b.paddings[2] = paddings[2];
         b.paddings[3] = paddings[3];
-        
+
         b.auto_width = this.auto_width;
         b.auto_height = this.auto_height;
         b.auto_x_margin = this.auto_x_margin;
@@ -3701,7 +3773,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     private LinkedList<Block> layer_list = null;
-    
+
 
     public void mouseClicked(MouseEvent e) {
 
@@ -3808,7 +3880,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (i < sel[0] || sel[0] == -1) sel[0] = i;
                     if (i > sel[1] || sel[1] == -1) sel[1] = i;
                 } else {
-                    
+
                     //System.err.println(sel[0] + ", " + sel[1]);
 
                     boolean c1 = b._y_ - scroll_y + offset >= y1 && b._y_ - scroll_y + b.viewport_height - offset <= y2 &&
@@ -3836,7 +3908,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     //System.err.println("1 -> " + i);
                     flag = true;
                 }
-                else if (sel[0] == -1 && (x1 < d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 || y1 < ((Character)d).parent.getY() + b._y_ - b.scroll_y) && x2 >= d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 && x2 <= d._getX() + b._x_ - b.scroll_x + d._getWidth() && y2 >= ((Character)d).parent.getY() + b._y_ - b.scroll_y) {
+                else if (sel[0] == -1 && (y1 < ((Character)d).parent.getY() + b._y_ - b.scroll_y) && x2 >= d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 && x2 <= d._getX() + b._x_ - b.scroll_x + d._getWidth() && y2 >= ((Character)d).parent.getY() + b._y_ - b.scroll_y + 3) {
                     sel[0] = 0;
                     sel[1] = i;
                     //System.err.println("1 -> " + i);
@@ -3927,7 +3999,45 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     }
 
+    public void startWatcher() {
+        if (w != null) return;
+        w = new Watcher();
+        Thread th = new Thread(w);
+        th.setPriority(Thread.MIN_PRIORITY);
+        th.start();
+    }
+
+    public void stopWatcher() {
+        if (w != null) w.stop();
+    }
+
+    class Watcher implements Runnable {
+
+        @Override
+        public void run() {
+            while (!stop) {
+                long time = System.currentTimeMillis();
+                if (has_animation && time > nextFrameDisplayTime()) {
+                    displayNextFrame();
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {}
+            }
+        }
+
+        public void stop() {
+            stop = true;
+        }
+
+        public volatile boolean stop = false;
+
+    }
+
+    @Override
     public void mouseMoved(MouseEvent e) {}
+
+    private Watcher w;
 
     Vector<Drawable> v = new Vector<Drawable>();
 

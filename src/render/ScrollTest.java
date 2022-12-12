@@ -12,31 +12,32 @@ import java.awt.event.ActionListener;
 import java.util.Vector;
 
 
-public class ScrollTest extends WebDocument {
+public class ScrollTest extends JFrame {
 
     public ScrollTest() {
         super("Simple component test");
-        JPanel cp = new JPanel();
+        WebDocument cp = new WebDocument();
+        document = cp;
         cp.setLayout(null);
         bp = new JPanel();
         bp.setLayout(null);
-        panel.setLayout(null);
-        panel.setBorder(BorderFactory.createLineBorder(Color.black));
-        borderSize = 1;
+        cp.panel.setLayout(null);
+        cp.panel.setBorder(BorderFactory.createLineBorder(Color.black));
+        cp.borderSize = 1;
         setContentPane(cp);
-        cp.add(panel);
+        cp.add(cp.panel);
         cp.add(bp);
-        panel.setBounds(9, 10, 474, 300);
-        width = 474;
-        height = 300;
-        root.setBounds(1, 1, width-2, height-2);
-        root.setWidth(-1);
-        root.setHeight(height-2);
-        root.addMouseListeners();
+        cp.panel.setBounds(9, 10, 474, 300);
+        cp.width = 474;
+        cp.height = 300;
+        cp.root.setBounds(1, 1, cp.width-2, cp.height-2);
+        cp.root.setWidth(-1);
+        cp.root.setHeight(cp.height-2);
+        cp.root.addMouseListeners();
         
         bp.setBounds(9, 283, 474, 86);
-        ready = false;
-        Block d = new Block(this, null, 136, 92, 1, 7, Color.MAGENTA);
+        document.ready = false;
+        Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d.setMargins(4);
@@ -56,13 +57,13 @@ public class ScrollTest extends WebDocument {
 
         d.setPositioning(Block.Position.RELATIVE);
 
-        Block d01 = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        Block d01 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         d01.setPositioning(Block.Position.STATIC);
         d01.setDisplayType(Block.Display.INLINE_BLOCK);
         d01.addText("Text");
         d.addElement(d01);
         
-        Block d02 = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        Block d02 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         d02.setPositioning(Block.Position.STATIC);
         d02.setDisplayType(Block.Display.INLINE_BLOCK);
         d02.addText("Text2");
@@ -72,9 +73,9 @@ public class ScrollTest extends WebDocument {
         d02.setLeft(97, Block.Units.percent);
         d02.setTop(76, Block.Units.px);
         d02.setBackgroundColor(Color.PINK);
-        ready = true;
+        document.ready = true;
         d02.performLayout();
-        ready = false;
+        document.ready = false;
         d02.setProp("margin-left", -d02.width / 2, Block.Units.px);
         d02.setProp("margin-top", -d02.height / 2, Block.Units.px);
         d.overflow = Block.Overflow.SCROLL;
@@ -94,7 +95,7 @@ public class ScrollTest extends WebDocument {
 //        cols[2] = new Color(180, 0, 0); cols[3] = new Color(0, 180, 0);
 //        d.setBorderColor(cols);
         
-        root.addElement(d);
+        document.root.addElement(d);
         //root.addElement(d2);
         
         //d2.setTransform(true);
@@ -113,23 +114,23 @@ public class ScrollTest extends WebDocument {
         //root.setBackgroundImage("400.jpg");
         //root.setBackgroundRepeat(Block.BackgroundRepeat.REPEAT_XY);
 
-        root.height = height-2;
-        root.viewport_height = root.height;
-        root.orig_height = root.height;
-        root.max_height = root.height;
-        root.setBounds(root.getX(), root.getY(), root.width, root.height);
+        document.root.height = document.height-2;
+        document.root.viewport_height = document.root.height;
+        document.root.orig_height = document.root.height;
+        document.root.max_height = document.root.height;
+        document.root.setBounds(document.root.getX(), document.root.getY(), document.root.width, document.root.height);
         
-        ready = true;
-        root.performLayout();
+        document.ready = true;
+        document.root.performLayout();
         //d.scroll_top = 10;
         //d.scrollbar_y.setValue(d.scroll_top);
-        root.forceRepaintAll();
+        document.root.forceRepaintAll();
         
         System.out.println();
         d.getLayouter().printLines(d, 0);
         System.out.println();
 
-        panel.repaint();
+        document.panel.repaint();
         btn = new JButton("Close");
         btn.addActionListener(new ActionListener(){
             @Override
@@ -151,7 +152,7 @@ public class ScrollTest extends WebDocument {
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
 
-        Block block = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.STATIC);
         block.setDisplayType(Block.Display.INLINE_BLOCK);
         block.addText("Text");
@@ -161,15 +162,15 @@ public class ScrollTest extends WebDocument {
         block.setLeft(10, Block.Units.px);
         block.setTop(10, Block.Units.px);
 
-        root.performLayout();
-        root.forceRepaintAll();
+        document.root.performLayout();
+        document.root.forceRepaintAll();
     }
 
     public void testAbsolutePositioning(Block b) {
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
 
-        Block block = new Block(this, null, -1, -1, 0, 0, Color.BLACK);
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.STATIC);
         block.setDisplayType(Block.Display.INLINE_BLOCK);
         block.addText("Text");
@@ -182,24 +183,24 @@ public class ScrollTest extends WebDocument {
         block.setProp("margin-left", -block.width / 2, Block.Units.px);
         block.setProp("margin-top", -block.height / 2, Block.Units.px);
 
-        root.performLayout();
-        root.forceRepaintAll();
+        document.root.performLayout();
+        document.root.forceRepaintAll();
     }
 
     public void testInlineBlocks(Block b) {
         b.setPositioning(Block.Position.STATIC);
         b.removeAllElements();
         b.setHeight(-1);
-        Block b1 = new Block(this);
+        Block b1 = new Block(document);
         b1.display_type = Block.Display.INLINE;
         b1.addText("Test");
-        Block b2 = new Block(this);
+        Block b2 = new Block(document);
         b2.display_type = Block.Display.INLINE;
         b2.addText("and another one");
         b2.setBackgroundColor(new Color(255, 210, 0));
         b2.setMargins(0, 3);
         b2.setPaddings(0, 3);
-        Block b3 = new Block(this);
+        Block b3 = new Block(document);
         b3.display_type = Block.Display.INLINE;
         b3.addText("test");
         b.setWidth(120);
@@ -207,8 +208,8 @@ public class ScrollTest extends WebDocument {
         b.addElement(b2);
         b.addElement(b3);
         
-        root.performLayout();
-        root.forceRepaintAll();
+        document.root.performLayout();
+        document.root.forceRepaintAll();
     }
 
     public void testNormal(Block b) {
@@ -217,8 +218,8 @@ public class ScrollTest extends WebDocument {
         b.setHeight(-1);
         b.addText("Abracadabracadabracadabracadabra");
         b.setWhiteSpace(Block.WhiteSpace.NORMAL);
-        root.performLayout();
-        root.forceRepaint();
+        document.root.performLayout();
+        document.root.forceRepaint();
     }
 
     public void testPreWrap(Block b) {
@@ -227,8 +228,8 @@ public class ScrollTest extends WebDocument {
         b.setHeight(-1);
         b.addText("Abra\ncada brac ada b racadab rac adabra");
         b.setWhiteSpace(Block.WhiteSpace.PRE_WRAP);
-        root.performLayout();
-        root.forceRepaint();
+        document.root.performLayout();
+        document.root.forceRepaint();
     }
 
     public void testWordBreak(Block b) {
@@ -237,15 +238,14 @@ public class ScrollTest extends WebDocument {
         b.setHeight(-1);
         b.addText("Abracadabracadabracadabracadabra");
         b.setWhiteSpace(Block.WhiteSpace.WORD_BREAK);
-        root.performLayout();
-        root.forceRepaint();
+        document.root.performLayout();
+        document.root.forceRepaint();
     }
 
     public void testTextAlign(Block b, int value) {
         b.setTextAlign(value);
     }
 
-    @Override
     public void updateUI(int last_width, int last_height, int width, int height) {
         bp.setSize(bp.getWidth() + width - last_width, bp.getHeight());
         bp.setBounds(bp.getX(), bp.getY()+height-last_height, bp.getWidth(), bp.getHeight());
@@ -253,7 +253,7 @@ public class ScrollTest extends WebDocument {
     }
 
     public void setPanelSize(int width, int height) {
-        panel.setBounds(9, 10, width, height);
+        document.panel.setBounds(9, 10, width, height);
     }
 
     public static void main(String[] args) {
@@ -265,6 +265,8 @@ public class ScrollTest extends WebDocument {
         lt.setVisible(true);
         lt.setPanelSize(474, 300);
     }
+
+    private WebDocument document;
 
     private JPanel bp;
     private JButton btn;
