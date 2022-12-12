@@ -171,35 +171,37 @@ public class MediaPlayer {
 
             @Override
             public void mouseMoved(MouseEvent e) {
-                if (e.getX() >= icon1._x_ - icon1.scroll_x && e.getX() <= icon1._x_ - icon1.scroll_x + icon1.width &&
+                if (icon1 != null && e.getX() >= icon1._x_ - icon1.scroll_x && e.getX() <= icon1._x_ - icon1.scroll_x + icon1.width &&
                        e.getY() >= icon1._y_ - icon1.scroll_y && e.getY() <= icon1._y_ - icon1.scroll_y + icon1.height) {
                     icon1.bgr_state = 1;
-                } else {
+                } else if (icon1 != null) {
                     icon1.bgr_state = 0;
                 }
-                if (e.getX() >= icon2._x_ - icon2.scroll_x && e.getX() <= icon2._x_ - icon2.scroll_x + icon2.width &&
+                if (icon2 != null && e.getX() >= icon2._x_ - icon2.scroll_x && e.getX() <= icon2._x_ - icon2.scroll_x + icon2.width &&
                        e.getY() >= icon2._y_ - icon2.scroll_y && e.getY() <= icon2._y_ - icon2.scroll_y + icon2.height) {
                     icon2.bgr_state = 1;
-                } else {
+                } else if (icon2 != null) {
                     icon2.bgr_state = 0;
                 }
-                icon1.redraw();
-                icon2.redraw();
+                if (icon1 != null) icon1.redraw();
+                if (icon2 != null) icon2.redraw();
                 //System.err.println(e.getX() + ", " + e.getY());
             }
 
         });
-        progress = new Block(b.document, panel, b.width - play_btn.width - (fullscreen_btn != null ? fullscreen_btn.width + (int)Math.round(4 * b.ratio) : 0) - (int)Math.round(67 * b.ratio), 6, 1, 3, new Color(190, 200, 203));
+        int progress_width = b.width - play_btn.width - (fullscreen_btn != null ? fullscreen_btn.width + (int)Math.round(4 * b.ratio) : 0) - (int)Math.round(67 * b.ratio);
+        progress = new Block(b.document, panel, progress_width, 6, 1, 3, new Color(190, 200, 203));
         progress.display_type = Block.Display.INLINE_BLOCK;
         progress.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-        progress.width = progress.max_width = b.width - play_btn.width - (fullscreen_btn != null ? fullscreen_btn.width + (int)Math.round(4 * b.ratio) : 0) - (int)Math.round(67 * b.ratio);
+        progress.width = progress.max_width = progress_width;
         progress.setMargins(4, 7, 4, 10);
         progress.setBackgroundColor(new Color(241, 243, 245, 234));
         panel.addElement(progress);
-        ps = new Block(b.document, progress, progress.width, 6, 1, 3, new Color(190, 200, 203));
+        ps = new Block(b.document, progress, progress_width, 6, 1, 3, new Color(190, 200, 203));
         //ps.display_type = Block.Display.INLINE_BLOCK;
         //ps.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         progress.addElement(ps);
+        ps.width = progress.width;
         ps.setPositioning(Block.Position.RELATIVE);
         ps.top = -progress.borderWidth[0];
         ps.left = -progress.borderWidth[3];
@@ -433,7 +435,7 @@ public class MediaPlayer {
         mediaPlayerComponent = new AudioMediaPlayerComponent();
         mediaPlayerComponent.getMediaPlayer().prepareMedia(url);
 
-        if (mediaPlayerComponent.getMediaPlayer().getVideoTrackCount() == -1) {
+        if (type == VIDEO && mediaPlayerComponent.getMediaPlayer().getVideoTrackCount() == -1) {
 
 
             BufferFormatCallback bufferFormatCallback = new BufferFormatCallback() {
@@ -489,6 +491,8 @@ public class MediaPlayer {
             //video_surface_fullscreen.setBounds(0, 0, (int)screenSize.getWidth(), (int)screenSize.getHeight());
             fullscreen_window.setBounds(0, 0, video_surface_fullscreen.getWidth(), video_surface_fullscreen.getHeight());
             fullscreen_window.setUndecorated(true);
+
+            correction_delta = System.getProperty("os.name").equals("Windows XP") ? 500 : 100;
 
             strategy = System.getProperty("os.name").toLowerCase().contains("win") ?
                 new Win32FullScreenStrategy(fullscreen_window) : new XFullScreenStrategy(fullscreen_window);
@@ -596,7 +600,7 @@ public class MediaPlayer {
                 mediaPlayerComponent.release();
                 mediaPlayerComponent = null;
             }
-        } else if (avPlayerComponent.getMediaPlayer().getVideoTrackCount() == 0 && type == VIDEO) {
+        } else if (avPlayerComponent != null && avPlayerComponent.getMediaPlayer().getVideoTrackCount() == 0 && type == VIDEO) {
             if (avPlayerComponent != null) {
                 avPlayerComponent.release();
                 avPlayerComponent = null;
@@ -608,8 +612,8 @@ public class MediaPlayer {
             if (mediaPlayerComponent == null) {
                 mediaPlayerComponent = new AudioMediaPlayerComponent();
                 mediaPlayerComponent.getMediaPlayer().prepareMedia(url);
-                setListeners(mediaPlayerComponent.getMediaPlayer());
             }
+            setListeners(mediaPlayerComponent.getMediaPlayer());
         }
     }
 
@@ -655,10 +659,12 @@ public class MediaPlayer {
         if (is_fullscreen) return;
         removeListeners(avPlayerComponent.getMediaPlayer());
         setListeners(avPlayerComponentFullScreen.getMediaPlayer());
-        if (avPlayerComponent.getMediaPlayer().isPlaying()) ep.getMediaPlayer().play();
-        ep.getMediaPlayer().setTime(avPlayerComponent.getMediaPlayer().getTime()-500);
+        if (avPlayerComponent.getMediaPlayer().isPlaying()) {
+            ep.getMediaPlayer().play();
+        }
+        ep.getMediaPlayer().setTime(avPlayerComponent.getMediaPlayer().getTime() - correction_delta);
         //avPlayerComponentFullScreen.getMediaPlayer().play();
-        //avPlayerComponentFullScreen.getMediaPlayer().setTime(avPlayerComponent.getMediaPlayer().getTime()-500);
+        //avPlayerComponentFullScreen.getMediaPlayer().setTime(avPlayerComponent.getMediaPlayer().getTime() - correction_delta);
         avPlayerComponent.getMediaPlayer().pause();
         is_fullscreen = true;
         strategy.enterFullScreenMode();
@@ -667,13 +673,13 @@ public class MediaPlayer {
     public void exitFullScreen() {
         strategy.exitFullScreenMode();
         if (!is_fullscreen) return;
-        //avPlayerComponent.getMediaPlayer().setTime(avPlayerComponentFullScreen.getMediaPlayer().getTime()-500);
+        //avPlayerComponent.getMediaPlayer().setTime(avPlayerComponentFullScreen.getMediaPlayer().getTime() - correction_delta);
         //avPlayerComponentFullScreen.getMediaPlayer().pause();
-        avPlayerComponent.getMediaPlayer().setTime(ep.getMediaPlayer().getTime()-500);
+        avPlayerComponent.getMediaPlayer().setTime(ep.getMediaPlayer().getTime() - correction_delta);
+        if (ep.getMediaPlayer().isPlaying()) avPlayerComponent.getMediaPlayer().play();
         ep.getMediaPlayer().pause();
         removeListeners(avPlayerComponentFullScreen.getMediaPlayer());
         setListeners(avPlayerComponent.getMediaPlayer());
-        if (ep.getMediaPlayer().isPlaying()) avPlayerComponent.getMediaPlayer().play();
         is_fullscreen = false;
         fullscreen_window.setVisible(false);
     }
@@ -1026,6 +1032,10 @@ public class MediaPlayer {
         private Block block;
     }
 
+    public Block getContainer() {
+        return container;
+    }
+
     AudioMediaPlayerComponent mediaPlayerComponent;
     DirectMediaPlayerComponent avPlayerComponent;
     DirectMediaPlayerComponent avPlayerComponentFullScreen;
@@ -1035,6 +1045,7 @@ public class MediaPlayer {
     VideoRenderer video_surface;
     FastVideoRenderer video_surface_fullscreen;
     Block container;
+    int correction_delta = 0;
 
     EmbeddedMediaPlayerComponent ep;
 }
