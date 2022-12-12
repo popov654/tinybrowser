@@ -132,6 +132,22 @@ public class Node {
         }
         return false;
     }
+    public Node previousElementSibling() {
+        for (int i = 0; i < parent.children.size(); i++) {
+            if (this.equals(parent.children.get(i))) {
+                return i > 0 ? parent.children.get(i-1) : null;
+            }
+        }
+        return null;
+    }
+    public Node nextElementSibling() {
+        for (int i = 0; i < parent.children.size(); i++) {
+            if (this.equals(parent.children.get(i))) {
+                return i < parent.children.size() ? parent.children.get(i+1) : null;
+            }
+        }
+        return null;
+    }
     public int getNestingLevel() {
         if (parent == null) {
             return 0;
@@ -189,6 +205,22 @@ public class Node {
     public boolean setTagName(String name) {
         if (nodeType == 1) {
             tagName = name;
+            return true;
+        }
+        return false;
+    }
+    public boolean hasAttribute(String attr) {
+        return attributes.containsKey(attr);
+    }
+    public String getAttribute(String attr) {
+        return attributes.get(attr);
+    }
+    public String setAttribute(String attr, String val) {
+        return attributes.put(attr, val);
+    }
+    public boolean removeAttribute(String attr) {
+        if (attributes.containsKey(attr)) {
+            attributes.remove(attr);
             return true;
         }
         return false;

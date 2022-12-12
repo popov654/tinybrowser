@@ -107,7 +107,7 @@ public class HTMLParser {
                 cur_text += ch;
             } else if (ch != '>') {
                 cur_text = cur_text.substring(0, cur_text.length()-(pos-last_start));
-                if (last_start >= 0) {
+                if (last_start >= 0 && cur_text.length() > 0) {
                     if (curNode != root || !cur_text.startsWith("<!")) {
                         Node text = new Node(curNode, 3);
                         text.nodeValue = cur_text;

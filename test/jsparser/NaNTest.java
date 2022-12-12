@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author VVPopov
+ * @author Alex
  */
 public class NaNTest {
 
