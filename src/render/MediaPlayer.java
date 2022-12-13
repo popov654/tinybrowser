@@ -401,6 +401,7 @@ public class MediaPlayer {
             int mins = (int)((new_time / 1000 - secs) / 60 % 60);
             int hours = (int)((new_time / 1000 - secs - mins * 60) / 3600);
             //System.out.println((mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs));
+
             ps.bg_clip_x = (int)Math.round((double)new_time / mediaPlayer.getLength() * ps.width);
             ps.clearBuffer();
             ps.draw();

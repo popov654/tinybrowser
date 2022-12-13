@@ -128,8 +128,6 @@ public class MediaTest extends JFrame {
         cp.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
         cp.setPreferredSize(new Dimension(cp.width + 20, cp.height + 60));
         pack();
-        System.out.println(cp.panel.getWidth());
-        System.out.println(cp.getParent().getX());
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }

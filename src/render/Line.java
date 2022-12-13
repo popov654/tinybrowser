@@ -63,7 +63,9 @@ public class Line {
             b.setY(b.margins[0] + top);
         }
         else d.setY(top);
-        System.out.println((d instanceof Character ? "Letter " : "Element ") + "positioned at (" + d._getX() + ", " + d._getY() + ")");
+        if (parent.document.debug) {
+            System.out.println((d instanceof Character ? "Letter " : "Element ") + "positioned at (" + d._getX() + ", " + d._getY() + ")");
+        }
         
         if (d instanceof Block) {
             Block b = (Block)d;

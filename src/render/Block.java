@@ -147,7 +147,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return (parent == null) ? _y_ : _y_ - parent._y_;
     }
 
-    public void forceRepaint() {
+    public synchronized void forceRepaint() {
         if (!document.ready) return;
         Block b = this;
         while (b.parent != null) {
@@ -155,11 +155,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             b = b.parent;
         }
         b.buffer = null;
+        b.invalidate();
         b.draw();
         b.repaint();
     }
 
-    public void forceRepaint(Graphics g) {
+    public synchronized void forceRepaint(Graphics g) {
         Block b = this;
         while (b.parent != null) {
             b = b.parent;
@@ -169,12 +170,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void forceRepaintAll() {
+        if (document.debug) {
+            System.out.println("Complete repaint started");
+        }
         Block b = this;
         while (b.parent != null) {
             b = b.parent;
         }
         b.flushBuffersRecursively();
         b.draw();
+        if (document.debug) {
+            System.out.println("Complete repaint finished");
+        }
     }
 
     public void doPaint(Graphics g) {
@@ -1181,19 +1188,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block block;
     }
 
-    public void performLayout() {
+    public synchronized void performLayout() {
         if (!document.ready) return;
         performLayout(false, false);
     }
 
-    public void performLayout(boolean no_rec) {
+    public synchronized void performLayout(boolean no_rec) {
         if (!document.ready) return;
         performLayout(no_rec, false);
     }
 
-    public void performLayout(boolean no_rec, boolean no_viewport_reset) {
+    public synchronized void performLayout(boolean no_rec, boolean no_viewport_reset) {
 
         if (no_layout || !document.ready || display_type == Display.NONE) return;
+
+        if (document.debug) {
+            System.out.println("Layount started for block " + toString());
+            System.out.println();
+        }
 
         if (childDocument != null) {
             Block root = childDocument.getRoot();
@@ -1455,6 +1467,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         sortBlocks();
         if (this == document.root && this.children.size() > 0) {
             setZIndices();
+        }
+        if (document.debug) {
+            System.out.println();
+            System.out.println("Layount ended for block " + toString());
         }
     }
 
@@ -3810,10 +3826,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     int i2 = i;
                     while (i2 <= text_layer.getComponents().length-1 && ((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) i2++;
                     if (i2 > text_layer.getComponents().length-1 || !((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) i2--;
+                    if (sel == null) {
+                        sel = new int[2];
+                    }
                     sel[0] = i1;
                     sel[1] = i2;
                     forceRepaint();
                     getSelectedText();
+                    return;
                 }
             }
         }

@@ -38,8 +38,6 @@ public class LayoutTests extends JFrame {
         document.height = 300;
         //document.panel.setBounds(0, 0, cp.width, cp.height);
         //document.root.setBounds(1, 1, cp.width-2, cp.height-2);
-        document.root.setWidth(-1);
-        document.root.setHeight(document.height-2);
         document.root.addMouseListeners();
         
         //bp.setBounds(9, 283, 474, 86);
@@ -59,13 +57,15 @@ public class LayoutTests extends JFrame {
         //d.getLayouter().printLines(d, 0);
         //System.out.println();
 
-        //basicTest();
+        document.debug = true;
+
+        basicTest();
         //testTables();
         //testInternalFrames();
         //testNormal();
         //testPreWrap();
         //testWordBreak();
-        testInlineBlocks();
+        //testInlineBlocks();
         //testRelativePositioning();
         //testAbsolutePositioning();
         //testAutoMargins(60, 15);
