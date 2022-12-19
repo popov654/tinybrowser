@@ -61,6 +61,10 @@ public class Line {
         if (d instanceof Block && ((Block)d).display_type != Block.Display.BLOCK) {
             Block b = (Block)d;
             b.setY(b.margins[0] + top);
+            if (b.margins[0] + top + b.height + b.margins[2] > height) {
+                height = b.margins[0] + top + b.height + b.margins[2];
+                //implement vertical align
+            }
         }
         else d.setY(top);
         if (parent.document.debug) {

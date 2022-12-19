@@ -438,7 +438,7 @@ public class Layouter {
             last_block = d;
 
             int vh = d.viewport_height + (d.scrollbar_x != null ? d.scrollbar_x.getPreferredSize().height : 0);
-            last_line.setHeight(vh);
+            last_line.setHeight(vh + d.margins[0] + d.margins[2]);
             last_margin_top = 0;
             stack.remove(stack.lastIndexOf(d));
             return;
@@ -591,7 +591,7 @@ public class Layouter {
                 applyVerticalAlignment(b);
             }
             // set line height to the new maximum height
-            int h = b.height;
+            int h = b.height + b.margins[0] + b.margins[2];
             if (h > last_line.getHeight()) {
                 last_line.setHeight(h);
             }
