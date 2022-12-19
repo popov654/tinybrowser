@@ -3466,60 +3466,60 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private int content_y_max = 0;
 
 
-    static class FloatType {
+    public static class FloatType {
         public static final int NONE = 0;
         public static final int LEFT = 1;
         public static final int RIGHT = 2;
     }
 
-    static class ClearType {
+    public static class ClearType {
         public static final int NONE = 0;
         public static final int LEFT = 1;
         public static final int RIGHT = 2;
         public static final int BOTH = 3;
     }
 
-    static class TextAlign {
+    public static class TextAlign {
         public static final int ALIGN_LEFT = 0;
         public static final int ALIGN_CENTER = 1;
         public static final int ALIGN_RIGHT = 2;
         public static final int ALIGN_JUSTIFY = 3;
     }
 
-    static class VerticalAlign {
+    public static class VerticalAlign {
         public static final int ALIGN_TOP = 0;
         public static final int ALIGN_MIDDLE = 1;
         public static final int ALIGN_BASELINE = 2;
         public static final int ALIGN_BOTTOM = 3;
     }
 
-    static class WhiteSpace {
+    public static class WhiteSpace {
         public static final int NORMAL = 0;
         public static final int WORD_BREAK = 1;
         public static final int PRE_WRAP = 2;
         public static final int NO_WRAP = 3;
     }
 
-    static class BackgroundRepeat {
+    public static class BackgroundRepeat {
         public static final int NONE = 0;
         public static final int REPEAT_X = 1;
         public static final int REPEAT_Y = 2;
         public static final int REPEAT_XY = 3;
     }
 
-    static class Overflow {
+    public static class Overflow {
         public static final int VISIBLE = 0;
         public static final int HIDDEN = 1;
         public static final int SCROLL = 2;
     }
 
-    static class Position {
+    public static class Position {
         public static final int STATIC = 0;
         public static final int RELATIVE = 1;
         public static final int ABSOLUTE = 2;
     }
 
-    static class Display {
+    public static class Display {
         public static final int BLOCK = 0;
         public static final int INLINE_BLOCK = 1;
         public static final int INLINE = 2;
@@ -3530,12 +3530,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int TABLE_CELL = 7;
     }
 
-    static class Visibility {
+    public static class Visibility {
         public static final int VISIBLE = 0;
         public static final int HIDDEN = 1;
     }
 
-    static class Units {
+    public static class Units {
         public static final int px = 0;
         public static final int percent = 1;
         public static final int em = 2;
