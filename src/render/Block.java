@@ -3955,8 +3955,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     //System.err.println("1 -> " + i);
                     flag = true;
                 }
+                else if (sel[0] == -1 && x2 >= d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 && y1 > ((Character)d).line.getY() + b._y_ - b.scroll_y && y2 < ((Character)d).line.getY() + b._y_ - b.scroll_y + 3) {
+                    sel[0] = i;
+                    sel[1] = i;
+                    //System.err.println("1 -> " + i);
+                    flag = true;
+                }
                 else if (i < sel[0] && (d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 >= x1 && ((Character)d).line.getY() + b._y_ - b.scroll_y + ((Character)d).line.getHeight() >= y1 ||
-                        (d._getX() + b._x_ - b.scroll_x >= x1 && d._getX() + b._x_ - b.scroll_x + d._getWidth() <= x2 && ((Character)d).line.getY() + b._y_ - b.scroll_y <= y2 && ((Character)d).line.getY() + b._y_ - b.scroll_y >= y1))) {
+                        (d._getX() + b._x_ - b.scroll_x >= x1 && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 <= x2 && ((Character)d).line.getY() + b._y_ - b.scroll_y <= y2 && ((Character)d).line.getY() + b._y_ - b.scroll_y >= y1))) {
                     sel[0] = i;
                     //System.err.println("2 -> " + i);
                     flag = true;
