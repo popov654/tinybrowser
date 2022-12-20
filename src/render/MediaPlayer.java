@@ -135,20 +135,22 @@ public class MediaPlayer {
                         //mediaPlayerComponent.getMediaPlayer().play();
                     }
                 }
-                else if (e.getX() >= icon2._x_ - icon2.scroll_x && e.getX() <= icon2._x_ - icon2.scroll_x + icon2.width &&
+                else if (icon2 != null && e.getX() >= icon2._x_ - icon2.scroll_x && e.getX() <= icon2._x_ - icon2.scroll_x + icon2.width &&
                        e.getY() >= icon2._y_ - icon2.scroll_y && e.getY() <= icon2._y_ - icon2.scroll_y + icon2.height) {
                     enterFullScreen();
+                } else {
+                    container.document.root.mouseClicked(e);
                 }
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
+                container.document.root.mousePressed(e);
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
+                container.document.root.mouseReleased(e);
             }
 
             @Override
@@ -166,7 +168,7 @@ public class MediaPlayer {
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
+                container.document.root.mouseDragged(e);
             }
 
             @Override
@@ -186,6 +188,7 @@ public class MediaPlayer {
                 if (icon1 != null) icon1.redraw();
                 if (icon2 != null) icon2.redraw();
                 //System.err.println(e.getX() + ", " + e.getY());
+                container.document.root.mouseMoved(e);
             }
 
         });
