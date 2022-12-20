@@ -895,13 +895,19 @@ public class MediaPlayer {
             if (tag.equals("play")) {
                 if (icon_state > 0) {
                     g.setColor(new Color(74, 78, 94, 218));
-                    g.fillRect((int)(button.width * 0.28), (int)(button.height * 0.29), (int)(button.width * 0.17), (int)(button.height * 0.46));
-                    g.fillRect((int)(button.width * 0.56), (int)(button.height * 0.29), (int)(button.width * 0.17), (int)(button.height * 0.46));
+                    g.fillRect((int)(button.width * 0.27), (int)(button.height * 0.29), (int)(button.width * 0.17), (int)(button.height * 0.46));
+                    g.fillRect((int)(button.width * 0.55), (int)(button.height * 0.29), (int)(button.width * 0.17), (int)(button.height * 0.46));
                 } else {
                     g.setColor(new Color(74, 78, 94, 218));
                     ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int[] x = { (int)(button.width * 0.316), (int)(button.width * 0.69), (int)(button.width * 0.318) };
-                    int[] y = { (int)(button.width * 0.28), (int)(button.height * 0.5), (int)(button.height * 0.73) };
+                    int[] bw = { button.borderWidth[1] + button.borderWidth[3], button.borderWidth[0] + button.borderWidth[2]};
+                    if (WebDocument.scale_borders) {
+                        bw[0] = (int) Math.floor(bw[0] * button.ratio);
+                        bw[1] = (int) Math.floor(bw[1] * button.ratio);
+                    }
+                    int btn_width = button.width - bw[0];
+                    int[] x = { (int)(btn_width * 0.37), (int)(btn_width * 0.78), (int)(btn_width * 0.37) };
+                    int[] y = { (int)(btn_width * 0.3), (int)(btn_width * 0.55), (int)(btn_width * 0.8) };
                     Polygon p = new Polygon(x, y, 3);
                     g.fillPolygon(p);
                 }

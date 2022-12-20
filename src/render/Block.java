@@ -79,7 +79,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         this.arc[2] = arc;
         this.arc[3] = arc;
 
-        int bw = WebDocument.scale_borders ? (int)Math.round(borderWidth*ratio) : borderWidth;
+        int bw = WebDocument.scale_borders ? (int)Math.floor(borderWidth*ratio) : borderWidth;
         for (int i = 0; i < 4; i++) {
             this.borderWidth[i] = bw;
         }
@@ -2023,11 +2023,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             text_layer = new JPanel();
             text_layer.setLayout(null);
             add(text_layer);
-
             text_layer.setBounds(0, 0, b.getWidth(), b.getHeight());
-
             text_layer.setOpaque(false);
-
         }
 
         text_layer.add(label);
