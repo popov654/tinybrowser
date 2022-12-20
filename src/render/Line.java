@@ -60,11 +60,19 @@ public class Line {
         d.setX(left + cur_pos);
         if (d instanceof Block && ((Block)d).display_type != Block.Display.BLOCK) {
             Block b = (Block)d;
-            b.setY(b.margins[0] + top);
-            if (b.margins[0] + top + b.height + b.margins[2] > height) {
-                height = b.margins[0] + top + b.height + b.margins[2];
+            //b.setY(b.margins[0] + top);
+            int offset = b.margins[0];
+            if (b.margins[0] + b.height + b.margins[2] > height) {
+                height = b.margins[0] + b.height + b.margins[2];
+                if (b.vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
+                    offset = Math.round((height - b.height) / 2);
+                }
+                else if (b.vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
+                    offset = height - b.height;
+                }
                 //implement vertical align
             }
+            d.setY(offset + top);
         }
         else d.setY(top);
         if (parent.document.debug) {
