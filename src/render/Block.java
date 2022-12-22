@@ -163,7 +163,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void forceRepaint(Graphics g) {
-        if (!document.ready || document.isPainting) return;
         document.isPainting = true;
         Block b = this;
         while (b.parent != null) {
@@ -174,16 +173,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.isPainting = false;
     }
 
-    public void forceRepaintAll() {
+    public synchronized void forceRepaintAll() {
         if (document.isPainting) {
-            javax.swing.SwingUtilities.invokeLater(new Runnable() {
-
-                @Override
-                public void run() {
-                    forceRepaintAll();
-                }
-                
-            });
+            try {
+                if (document.debug) System.out.println("Retrying repaint...");
+                Thread.sleep(50);
+            } catch (InterruptedException ex) {}
+            forceRepaintAll();
             return;
         }
         document.isPainting = true;
@@ -202,7 +198,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.isPainting = false;
     }
 
-    public void doPaint(Graphics g) {
+    public synchronized void doPaint(Graphics g) {
         buffer = null;
         draw(g);
     }
@@ -210,6 +206,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     @Override
     protected void paintComponent(Graphics g) {
         //g.clearRect(0, 0, width, height);
+        super.paintComponent(g);
 
         if (childDocument != null) {
             childDocument.getRoot().paintComponent(g);
@@ -1207,12 +1204,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void performLayout() {
-        if (!document.ready) return;
+        if (document.inLayout && this == document.root) {
+            try {
+                if (document.debug) System.out.println("Retrying layout...");
+                Thread.sleep(50);
+            } catch (InterruptedException ex) {}
+            performLayout();
+            return;
+        }
+        document.inLayout = true;
         performLayout(false, false);
+        document.inLayout = false;
     }
 
     public synchronized void performLayout(boolean no_rec) {
-        if (!document.ready) return;
         performLayout(no_rec, false);
     }
 
