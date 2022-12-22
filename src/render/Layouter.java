@@ -482,6 +482,8 @@ public class Layouter {
             }
             
             last_line.addElement(d);
+
+            d.performLayout();
             
             if (d.positioning == Block.Position.RELATIVE) {
                 d.setX(d._getX() + d.left);
