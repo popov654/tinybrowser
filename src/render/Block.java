@@ -2803,6 +2803,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         for (int i = 0; i < children.size(); i++) {
             children.get(i).removeTextLayers();
+            for (int j = 0; j < children.get(i).parts.size(); j++) {
+                children.get(i).parts.get(j).removeTextLayers();
+            }
         }
     }
 
@@ -3370,6 +3373,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void removeAllElements() {
         for (int i = 0; i < children.size(); i++) {
             document.root.remove(children.get(i));
+            if (children.get(i).text_layer != null) {
+                children.get(i).text_layer.removeAll();
+            }
             children.get(i).removeAll();
         }
         children.clear();
