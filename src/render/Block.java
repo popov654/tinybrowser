@@ -12,6 +12,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.LinearGradientPaint;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Toolkit;
@@ -3832,6 +3833,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     private LinkedList<Block> layer_list = null;
 
+    private int isFullySelected(Rectangle sel, Rectangle el) {
+        if (sel.contains(el)) return 1;
+        if (sel.intersects(el)) return 0;
+        return -1;
+    }
+
 
     public void mouseClicked(MouseEvent e) {
 
@@ -3960,19 +3967,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int x2 = Math.max(from_x, x);
         int y2 = Math.max(from_y, y);
 
+        Rectangle selection = new Rectangle(x1, y1, x2-x1, y2-y1);
+
         for (int i = 0; i < v.size(); i++) {
             Drawable d = v.get(i);
             int offset = (d instanceof Block && ((Block)d).line != null ? ((Block)d).line.getHeight()-1 : 16);
+
+            Rectangle bounds = new Rectangle(d._getX() - scroll_x, d._getY() - scroll_y, d._getWidth(), d._getHeight());
 
             if (d != null && d instanceof Block) {
                 Block b = (Block)d;
                 boolean flag = b._y_ - scroll_y + b.viewport_height < y2 &&
                                !(e.isShiftDown() && b._x_ - scroll_x >= x1);
-                boolean c = b._x_ - scroll_x > x1 && b._x_ - scroll_x > x2 && flag ||
+                boolean none = b._x_ - scroll_x > x1 && b._x_ - scroll_x > x2 && flag ||
                             b._x_ - scroll_x + b.viewport_width < x1 && b._x_ - scroll_x + b.viewport_width < x2 && flag ||
                             b._y_ - scroll_y > y1 && b._y_ - scroll_y > y2 ||
                             b._y_ - scroll_y + b.viewport_height < y1 && b._y_ - scroll_y + b.viewport_height < y2;
-                if (!c && !flag) {
+                if (!none && !flag) {
                     ((Block)d).from_x = from_x;
                     ((Block)d).from_y = from_y;
                     ((Block)d).mouseDragged(e);
@@ -3983,14 +3994,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     //System.err.println(sel[0] + ", " + sel[1]);
 
                     boolean c1 = b._y_ - scroll_y + offset >= y1 && b._y_ - scroll_y + b.viewport_height - offset <= y2 &&
-                                b._x_ - scroll_x >= x1 && b._x_ - scroll_x + b.viewport_width <= x2;
+                                 b._x_ - scroll_x >= x1 && b._x_ - scroll_x + b.viewport_width <= x2;
                     boolean c2 = b.line != null && y2 > b.line.getY() - scroll_y + b.line.getHeight() &&
                                 x1 <= b._x_ - scroll_x + b.viewport_width && x2 >= b._x_ - scroll_x + b.viewport_width;
                     boolean c3 = b._y_ - scroll_y + b.viewport_height >= y1 && b._y_ - scroll_y + b.viewport_height - offset <= y2 && (!e.isShiftDown() || b._x_ - scroll_x + b.viewport_width <= x2);
-                    if (c1 || c2 || c3) {
+                    if (c1 || c3) {
                         b.selectAll();
-                        if (i < sel[0]) sel[0] = i;
-                        if (i > sel[1]) sel[1] = i;
+                        if (i < sel[0] || sel[0] == -1) sel[0] = i;
+                        if (i > sel[1] || sel[1] == -1) sel[1] = i;
                     } else if (!(e.isShiftDown() && b._y_ - scroll_y + b.viewport_height - offset <= y2)) {
                         b.clearSelection();
                         b.forceRepaint();
@@ -3998,83 +4009,49 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             } else if (d instanceof Character) {
                 Block b = ((Character)d).line.parent;
-                boolean flag = false;
-                if (sel[0] == -1 && v.firstElement() instanceof Character && v.lastElement() instanceof Character &&
-                        v.firstElement()._getX() + b._x_ - b.scroll_x >= x1 &&
-                        ((Character)v.lastElement()).line.getY() + b._y_ - b.scroll_y <= y2 && v.lastElement()._getX() + b._x_ - b.scroll_x + v.lastElement()._getWidth() <= x2) {
-                    sel[0] = 0;
-                    sel[1] = v.size()-1;
-                    //System.err.println("1 -> " + i);
-                    flag = true;
-                }
-                else if (sel[0] == -1 && (y1 < ((Character)d).line.getY() + b._y_ - b.scroll_y) && x2 >= d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 && x2 <= d._getX() + b._x_ - b.scroll_x + d._getWidth() && y2 >= ((Character)d).line.getY() + b._y_ - b.scroll_y + 3) {
-                    sel[0] = 0;
-                    sel[1] = i;
-                    //System.err.println("1 -> " + i);
-                    flag = true;
-                }
-                else if (sel[0] == -1 && x2 >= d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 && y1 > ((Character)d).line.getY() + b._y_ - b.scroll_y && y2 < ((Character)d).line.getY() + b._y_ - b.scroll_y + 3) {
-                    sel[0] = i;
-                    sel[1] = i;
-                    //System.err.println("1 -> " + i);
-                    flag = true;
-                }
-                else if (i < sel[0] && (d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 >= x1 && ((Character)d).line.getY() + b._y_ - b.scroll_y + ((Character)d).line.getHeight() >= y1 ||
-                        (d._getX() + b._x_ - b.scroll_x >= x1 && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 <= x2 && ((Character)d).line.getY() + b._y_ - b.scroll_y <= y2 && ((Character)d).line.getY() + b._y_ - b.scroll_y >= y1))) {
-                    sel[0] = i;
-                    //System.err.println("2 -> " + i);
-                    flag = true;
-                }
-                else if (i > sel[1] && (d._getX() + b._x_ - b.scroll_x > x1 && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 <= x2 && ((Character)d).line.getY() + b._y_ - b.scroll_y <= y2 ||
-                        (d._getY() + b._y_ - b.scroll_y >= y1 && d._getY() + b._y_ - b.scroll_y + d._getHeight() <= y2) ||
-                        (d._getX() + b._x_ - b.scroll_x >= x1 && d._getX() + b._x_ - b.scroll_x + d._getWidth() <= x2 && ((Character)d).line.getY() + b._y_ - b.scroll_y <= y2))) {
-                    sel[1] = i;
-                    if (sel[0] < 0) sel[0] = i;
-                    //System.err.println("3 -> " + i);
-                    flag = true;
-                }
-                else if (((Character)d).line.getY() + b._y_ - b.scroll_y + ((Character)d).line.getHeight() < y1 ||
-                        d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 < x1 || d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 > x2) {
-                    flag = false;
-                    if (sel[0] == i && (x1 != x2 || y1 != y2) && (((Character)d).line.getY() + b._y_ - b.scroll_y + ((Character)d).line.getHeight() < y1 ||
-                            y1 >= ((Character)d).line.getY() + b._y_ - b.scroll_y &&  y1 <= ((Character)d).line.getY() + b._y_ - b.scroll_y + ((Character)d).line.getHeight() &&
-                            (d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 < x1 || d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 > x2))) {
-                        //sel[0] = i+1;
-                        if (x > from_x && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 < x) sel[1] = i-1;
-                        if (x < from_x && d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 > x) sel[0] = i-1;
-                        if (sel[0] == sel[1] || i == v.size()-1 && x < from_x || i == 0 && x > from_x) {
-                            sel[0] = -1;
-                            sel[1] = -1;
-                        }
-                    }
-                    if (sel[1] >= i && (x1 != x2 || y1 != y2) && (((Character)d).line.getY() + b._y_ - b.scroll_y > y2 ||
-                            y2 >= ((Character)d).line.getY() + b._y_ - b.scroll_y && y2 <= ((Character)d).line.getY() + b._y_ - b.scroll_y + ((Character)d).line.getHeight() &&
-                            (d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 < x1 || d._getX() + b._x_ - b.scroll_x + d._getWidth() / 2 > x2))) {
-                        sel[1] = i-1;
-                        if (sel[0] == sel[1] || i == 0) {
-                            sel[0] = -1;
-                            sel[1] = -1;
-                        }
-                    }
-                }
-                else if (i >= sel[0] && i <= sel[1]) {
-                    flag = true;
-                    for (int j = i; j < v.size(); j++) {
-                       if (v.get(j) instanceof Character && ((Character)v.get(j)).line.getY() + b._y_ - b.scroll_y > y2 ||
-                               v.get(j) instanceof Block && ((Block)v.get(j))._y_ - scroll_y > y2) {
-                           sel[1] = i-1;
-                           break;
-                       }
-                    }
-                }
 
-                if (flag) {
-                    selectCharacter((Character)d);
-                } else {
-                    unselectCharacter((Character)d);
-                }
-                if (((Character)d).glyph != null && !((Character)d).glyph.isVisible()) {
-                    ((Character)d).line.parent.forceRepaint();
+                for (int k = 0; k < b.lines.size(); k++) {
+                    Line line = b.lines.get(k);
+                    if (!e.isShiftDown()) {
+                        if (y1 < b._y_ + line.getY() + line.getHeight() - scroll_y && y2 > b._y_ + line.getY() - scroll_y) {
+                            boolean full = y2 > b._y_ + line.getY() + line.getHeight() - scroll_y;
+                            for (int j = 0; j < line.elements.size(); j++) {
+                                boolean contains = x1 <= b._x_ + line.elements.get(j)._getX() + line.elements.get(j)._getWidth() / 2 - scroll_x &&
+                                                   x2 > b._x_ + line.elements.get(j)._getX() + line.elements.get(j)._getWidth() / 2 - scroll_x;
+                                if (full || contains) {
+                                    if (sel[0] > j || sel[0] == -1) sel[0] = j;
+                                    if (sel[1] < j || sel[1] == -1) sel[1] = j;
+                                    selectCharacter((Character)line.elements.get(j));
+                                } else {
+                                    if (sel[0] <= j && sel[1] >= j) sel[0] = j+1;
+                                    if (sel[1] >= j && sel[0] <= j) sel[1] = j-1;
+                                    if (sel[0] < 0 || sel[1] >= v.size() || sel[0] > sel[1]) {
+                                        sel[0] = sel[1] = -1;
+                                    }
+                                    unselectCharacter((Character)line.elements.get(j));
+                                }
+                                javax.swing.JLabel glyph = ((Character)line.elements.get(j)).glyph;
+                                if (glyph != null && !glyph.isVisible()) {
+                                    ((Character)line.elements.get(j)).line.parent.forceRepaint();
+                                }
+                            }
+                        }
+                    } else {
+                        for (int j = 0; j < line.elements.size(); j++) {
+                            boolean contains = x1 < b._x_ + line.elements.get(j)._getX() - scroll_x &&
+                                    x2 > b._x_ + line.elements.get(j)._getX() + line.elements.get(j)._getWidth() / 2 - scroll_x &&
+                                    y2 > b._y_ + line.getY() - scroll_y;
+                            if (contains) {
+                                selectCharacter((Character)line.elements.get(j));
+                            } else {
+                                unselectCharacter((Character)line.elements.get(j));
+                            }
+                            javax.swing.JLabel glyph = ((Character)line.elements.get(j)).glyph;
+                            if (glyph != null && !glyph.isVisible()) {
+                                ((Character)line.elements.get(j)).line.parent.forceRepaint();
+                            }
+                        }
+                    }
                 }
             }
         }
