@@ -507,6 +507,13 @@ public class Layouter {
             return;
         } else if (d.display_type == Block.Display.INLINE) {
 
+            for (Block part: d.parts) {
+                d.document.root.remove(part);
+            }
+            int index = d.document.root.getComponentCount() - d.pos - 1;
+            if (d.parts.size() > 0) d.document.root.add(d, index);
+            d.parts.clear();
+
             Block b = d.clone();
             d.width = 0;
             d.height = 0;
@@ -568,7 +575,7 @@ public class Layouter {
             }
 
             if (d.getParent() != null) {
-                int index = d.getParent().getComponentCount() - d.pos - 1;
+                index = d.getParent().getComponentCount() - d.pos - 1;
                 for (int i = 0; i < d.parts.size(); i++) {
                     d.document.root.add(d.parts.get(i), index);
                 }

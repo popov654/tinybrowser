@@ -5,8 +5,6 @@ package render;
  * @author Alex
  */
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;

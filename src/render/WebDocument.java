@@ -91,7 +91,9 @@ public class WebDocument extends JPanel {
         width = getWidth();
         height = getHeight();
         panel.setBounds(borderSize, borderSize, getWidth() - borderSize * 2, getHeight() - borderSize * 2);
+        borderSize = this.getBorder().getBorderInsets(this).left;
         if (getWidth() != last_width || getHeight() != last_height) {
+            //System.err.println("Size updated");
             root.setBounds(borderSize, borderSize, width - borderSize * 2 - root.getScrollbarYSize(), height - borderSize * 2 - root.getScrollbarXSize());
             root.width = width - borderSize * 2 - 2;
             root.height = height - borderSize * 2 - 2;
@@ -103,6 +105,7 @@ public class WebDocument extends JPanel {
             //System.err.println("Viewport width: " + root.viewport_width);
             if (root.document.ready && !resizing) {
                 resizing = true;
+                root.flushBuffersRecursively();
                 root.performLayout();
                 root.forceRepaint();
                 resizing = false;
