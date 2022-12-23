@@ -358,7 +358,7 @@ public class Layouter {
             if (last_line.cur_pos + c.getWidth() > last_line.getWidth() && (block.white_space == Block.WhiteSpace.WORD_BREAK ||
                     block.white_space == Block.WhiteSpace.PRE_WRAP && str.matches("\\s+"))) {
                 last_line = startNewLine(0, 0, null);
-                c.parent = last_line;
+                c.line = last_line;
             }
             last_line.addElement(c);
             //block.height = last_line.getY() + last_line.getHeight() + block.paddings[2] + block.borderWidth[2];
@@ -438,7 +438,7 @@ public class Layouter {
             last_block = d;
 
             int vh = d.viewport_height + (d.scrollbar_x != null ? d.scrollbar_x.getPreferredSize().height : 0);
-            last_line.setHeight(vh + d.margins[0] + d.margins[2]);
+            last_line.setHeight(vh);
             last_margin_top = 0;
             stack.remove(stack.lastIndexOf(d));
             return;

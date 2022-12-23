@@ -179,6 +179,9 @@ public class WebDocument extends JPanel {
 
     public Block root = new Block(this, null, -1, -1);
 
+    public volatile boolean inLayout = false;
+    public volatile boolean isPainting = false;
+
     public boolean ready = true;
 
     public volatile boolean resizing = false;

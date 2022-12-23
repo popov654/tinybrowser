@@ -19,16 +19,16 @@ import javax.swing.JLabel;
 public class Character extends JPanel implements Drawable {
 
     public Character(Line line) {
-        parent = line;
+        this.line = line;
     }
 
     public Character(Line line, char ch) {
-        parent = line;
+        this.line = line;
         setText(ch);
     }
 
     public Character(Line line, String str) {
-        parent = line;
+        this.line = line;
         textContent = str;
     }
 
@@ -125,11 +125,11 @@ public class Character extends JPanel implements Drawable {
     }
 
     public int getOffsetLeft() {
-        return (parent == null) ? left : parent.getOffsetLeft() + left;
+        return (line == null) ? left : line.getOffsetLeft() + left;
     }
 
     public int getOffsetTop() {
-        return (parent == null) ? top : parent.getOffsetTop() + top;
+        return (line == null) ? top : line.getOffsetTop() + top;
     }
 
     @Override
@@ -171,7 +171,7 @@ public class Character extends JPanel implements Drawable {
     }
 
     public void setLine(Line l) {
-        this.parent = l;
+        this.line = l;
     }
 
     public String textContent;
@@ -184,7 +184,7 @@ public class Character extends JPanel implements Drawable {
 
     private Font font;
     private Color color;
-    public Line parent;
+    public Line line;
     public JLabel glyph;
 
     private BufferedImage buffer;
