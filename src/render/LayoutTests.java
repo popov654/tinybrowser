@@ -30,6 +30,7 @@ public class LayoutTests extends JFrame {
         setContentPane(cp);
 
         cp.add(document);
+        cp.add(Box.createRigidArea(new Dimension(0, 15)));
         cp.add(bp);
 
         document.width = 478;
@@ -98,15 +99,7 @@ public class LayoutTests extends JFrame {
 
             @Override
             public void componentResized(java.awt.event.ComponentEvent evt) {
-                int w = getWidth();
-                int h = getHeight();
-                Insets insets = getInsets();
-                if (insets != null) {
-                    w -= insets.left + insets.right;
-                    h -= insets.top + insets.bottom;
-                }
-                document.setBounds(pad[0], pad[1], w - pad[0] * 2, h - 93);
-                bp.setBounds(pad[0], h - 38, w - pad[0] * 2, 30);
+                //System.err.println("Resize triggered");
                 document.resized();
             }
         });
@@ -136,8 +129,6 @@ public class LayoutTests extends JFrame {
 
         document.ready = true;
         
-        document.root.performLayout();
-        document.root.forceRepaintAll();
     }
 
     public void basicTest() {
@@ -241,8 +232,10 @@ public class LayoutTests extends JFrame {
 
         document.ready = true;
 
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testRelativePositioning() {
@@ -263,8 +256,12 @@ public class LayoutTests extends JFrame {
         block.setLeft(10, Block.Units.px);
         block.setTop(10, Block.Units.px);
 
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testAbsolutePositioning() {
@@ -293,8 +290,12 @@ public class LayoutTests extends JFrame {
         block2.setProp("margin-left", -block.width / 2, Block.Units.px);
         block2.setProp("margin-top", -block.height / 2, Block.Units.px);
 
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testAutoMargins(int left, int right) {
@@ -321,13 +322,19 @@ public class LayoutTests extends JFrame {
         block.addText("Text");
         b.addElement(block);
 
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testZIndex() {
         //root.setPositioning(Block.Position.RELATIVE);
         document.root.removeAllElements();
+
+        document.ready = false;
 
         Block b1 = new Block(document, null, 186, 140, 0, 0, Color.BLACK);
         b1.setPositioning(Block.Position.STATIC);
@@ -369,8 +376,12 @@ public class LayoutTests extends JFrame {
 
         //b2.display_type = Block.Display.NONE;
 
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testTables() {
@@ -380,6 +391,8 @@ public class LayoutTests extends JFrame {
 
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
+
+        document.ready = false;
 
         Color c = new Color(178, 118, 28);
 
@@ -441,8 +454,12 @@ public class LayoutTests extends JFrame {
 
         b.addElement(block);
 
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testInternalFrames() {
@@ -452,6 +469,8 @@ public class LayoutTests extends JFrame {
 
         b.setPositioning(Block.Position.RELATIVE);
         b.removeAllElements();
+
+        document.ready = false;
 
         Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.ABSOLUTE);
@@ -472,12 +491,18 @@ public class LayoutTests extends JFrame {
         //block.addChildDocument(child);
         //child.root.addText("test");
 
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testInlineBlocks() {
         prepareBlock();
+
+        document.ready = false;
 
         Block b = document.root.children.get(0);
         b.setPositioning(Block.Position.STATIC);
@@ -500,12 +525,19 @@ public class LayoutTests extends JFrame {
         b.addElement(b2);
         b.addElement(b3);
 
-        document.root.performLayout();
-        document.root.forceRepaint();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testLists(Block b, int type) {
         b.removeAllElements();
+
+        document.ready = false;
+        
         Block b1 = new Block(document);
         b1.addText("Item 1");
         Block b2 = new Block(document);
@@ -522,8 +554,12 @@ public class LayoutTests extends JFrame {
             b.children.get(i).list_item_type = type;
         }
         
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testNormal() {
@@ -536,8 +572,13 @@ public class LayoutTests extends JFrame {
         b.setHeight(-1);
         b.addText("Abracadabracadabracadabracadabra");
         b.setWhiteSpace(Block.WhiteSpace.NORMAL);
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testPreWrap() {
@@ -550,8 +591,13 @@ public class LayoutTests extends JFrame {
         b.setHeight(-1);
         b.addText("Abra\n\ncadabra");
         b.setWhiteSpace(Block.WhiteSpace.PRE_WRAP);
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testWordBreak() {
@@ -564,8 +610,12 @@ public class LayoutTests extends JFrame {
         b.setHeight(-1);
         b.addText("Abracadabracadabracadabracadabra");
         b.setWhiteSpace(Block.WhiteSpace.WORD_BREAK);
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testTextAlign(Block b, int value) {
@@ -573,7 +623,7 @@ public class LayoutTests extends JFrame {
     }
 
     public void updateUI(int last_width, int last_height, int width, int height) {
-        bp.setBounds(bp.getX(), bp.getY()+height-last_height, bp.getWidth() + width - last_width, bp.getHeight());
+        bp.setBounds(bp.getX(), bp.getY() + height - last_height, bp.getWidth() + width - last_width, bp.getHeight());
         //btn.setBounds((bp.getWidth() - btn.getPreferredSize().width) / 2, (bp.getHeight() - btn.getPreferredSize().height)-10, btn.getPreferredSize().width, btn.getPreferredSize().height);
     }
 
