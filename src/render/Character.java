@@ -1,5 +1,6 @@
 package render;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -7,7 +8,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import javax.swing.JPanel;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.Toolkit;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Map;
 import javax.swing.JLabel;
@@ -20,16 +23,19 @@ public class Character extends JPanel implements Drawable {
 
     public Character(Line line) {
         this.line = line;
+        setBackground(null);
     }
 
     public Character(Line line, char ch) {
         this.line = line;
         setText(ch);
+        setBackground(null);
     }
 
     public Character(Line line, String str) {
         this.line = line;
         textContent = str;
+        setBackground(null);
     }
 
     public void doPaint(Graphics g) {
@@ -60,12 +66,30 @@ public class Character extends JPanel implements Drawable {
         //setBounds(parent.getOffsetLeft()+left, parent.getOffsetTop()+top, width, height);
         Graphics2D g2d = (Graphics2D)g;
         g2d.setFont(font);
+
+        Shape rect = new Rectangle2D.Double(left, top, width, height);
+
+//        AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.CLEAR, 1f);
+//        g2d.setColor(line.block.bgcolor);
+//        g2d.setComposite(composite);
+//
+//        g2d.fill(rect);
+//
+//        composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f);
+//        g2d.setComposite(composite);
+
+
+        if (getBackground() != null) {
+            g2d.setColor(getBackground());
+            g2d.fillRect(left, top, width, height);
+        }
+
         g2d.setColor(color);
         @SuppressWarnings("unchecked")
         Map<String, String> desktopHints = (Map<String, String>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
         if (font.getSize() >= 21) {
-            g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
-                RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+//            g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+//                RenderingHints.VALUE_FRACTIONALMETRICS_ON);
             g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HBGR);
         }
@@ -78,7 +102,7 @@ public class Character extends JPanel implements Drawable {
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                              RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         g2d.drawString(textContent, left, top + fn.getHeight() - 3);
-        System.out.println(left + ", " + top);
+        //System.out.println(left + ", " + top);
     }
 
     @Override
