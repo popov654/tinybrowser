@@ -132,7 +132,70 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void addMouseListeners() {
         addMouseListener(this);
         addMouseMotionListener(this);
+        if (this == document.root && getParent() != null && getParent().getParent() != null) {
+            java.awt.Component c = this;
+            while (c.getParent() != null) {
+                c = c.getParent();
+            }
+            c.addMouseListener(parentListener);
+            final Block instance = this;
+            parentMotionListener = new MouseMotionListener() {
+
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (parentListener.isDown) {
+                        java.awt.Component c = instance;
+                        int x = 0, y = 0;
+                        while (c != null && c != e.getSource()) {
+                            x += c.getX();
+                            y += c.getY();
+                            c = c.getParent();
+                        }
+                        MouseEvent evt = new MouseEvent((Block)instance, 0, 0, 0, e.getX() - x, e.getY() - y, 1, false, MouseEvent.BUTTON1);
+                        instance.mouseDragged(evt);
+                    }
+                }
+
+                @Override
+                public void mouseMoved(MouseEvent e) {}
+
+            };
+            c.addMouseMotionListener(parentMotionListener);
+        }
     }
+    
+
+    class MyMouseListener implements MouseListener {
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            isDown = true;
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            isDown = false;
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {}
+
+        @Override
+        public void mouseExited(MouseEvent e) {}
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            document.root.clearSelection();
+            document.root.forceRepaint();
+        }
+
+        public boolean isDown = false;
+
+    }
+
+    MyMouseListener parentListener = new MyMouseListener();
+    MouseMotionListener parentMotionListener;
+    
 
     public int getOffsetLeft() {
         if (positioning == Position.ABSOLUTE) {
