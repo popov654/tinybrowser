@@ -2082,35 +2082,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             b = b.parent;
         }
 
-        final Block instance = this;
-
         if (text_layer == null) {
-            text_layer = new JPanel() {
-                @Override
-                public void paintComponent(Graphics g) {
-                    if (document.inLayout) return;
-
-                    Shape oldClip = g.getClip();
-
-                    Block b = instance;
-                    boolean flag = true;
-                    while (b != null && b.bgcolor == null) {
-                        b = b.parent;
-                        if (b.bgImage != null || b.gradient != null) {
-                            flag = false;
-                            break;
-                        }
-                    }
-                    if ((b == null || b == document.root) && document.root.bgImage == null && document.root.gradient == null) {
-                        g.setColor(document.root.bgcolor);
-                        g.fillRect(0, 0, width, height);
-                    }
-                    
-                    g.setClip(oldClip);
-                    super.paintComponent(g);
-                    
-                }
-            };
+            text_layer = new JPanel();
             text_layer.setLayout(null);
             add(text_layer);
             text_layer.setBounds(0, 0, b.getWidth(), b.getHeight());
