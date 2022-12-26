@@ -58,7 +58,7 @@ public class MediaPlayer {
     public MediaPlayer(Block b, int width, int height) {
         container = b;
         
-        video = new Block(b.document, b, width, height-22, 0, 0, new Color(0, 0, 0));
+        video = new Block(b.document, b, width, height - 22 > 240 ? height-22 : 240, 0, 0, new Color(0, 0, 0));
         b.addElement(video);
         video.setBackgroundColor(Color.BLACK);
         if (height == 22) {
