@@ -3423,6 +3423,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return layouter;
     }
 
+    public int getContentMaxHeight() {
+        return content_y_max;
+    }
+
     @Override
     public void setLine(Line l) {
         this.line = l;
@@ -3638,7 +3642,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     protected BufferedImage buffer;
 
-    JPanel text_layer;
+    public JPanel text_layer;
 
     public int viewport_width;
     public int viewport_height;
