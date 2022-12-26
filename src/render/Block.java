@@ -152,14 +152,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (!document.ready || document.isPainting) return;
         document.isPainting = true;
         Block b = this;
-        while (b.parent != null) {
-            b.buffer = null;
-            b = b.parent;
-        }
         b.buffer = null;
         b.invalidate();
         b.draw();
-        b.repaint();
         document.isPainting = false;
     }
 
@@ -4060,7 +4055,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 content_y_max <= viewport_height - borderWidth[0] - borderWidth[2]) {
             if (text_layer != null) {
                 //text_layer.invalidate();
-                document.repaint();
+                //document.repaint();
             }
         }
         forceRepaint();
