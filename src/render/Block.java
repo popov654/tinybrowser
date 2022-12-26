@@ -1218,9 +1218,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             performLayout();
             return;
         }
-        document.inLayout = true;
+        if (this == document.root) document.inLayout = true;
         performLayout(false, false);
-        document.inLayout = false;
+        if (this == document.root) document.inLayout = false;
     }
 
     public synchronized void performLayout(boolean no_rec) {
