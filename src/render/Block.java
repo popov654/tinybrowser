@@ -214,21 +214,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public synchronized void forceRepaint() {
         if (!document.ready || document.isPainting) return;
         document.isPainting = true;
-        Block b = this;
-        b.buffer = null;
-        b.invalidate();
-        b.draw();
+        buffer = null;
+        invalidate();
+        draw();
         document.isPainting = false;
     }
 
     public synchronized void forceRepaint(Graphics g) {
         document.isPainting = true;
-        Block b = this;
-        while (b.parent != null) {
-            b = b.parent;
-        }
-        b.buffer = null;
-        b.draw();
+        buffer = null;
+        draw();
         document.isPainting = false;
     }
 
@@ -265,7 +260,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     @Override
     protected void paintComponent(Graphics g) {
         //g.clearRect(0, 0, width, height);
-        super.paintComponent(g);
 
         if (childDocument != null) {
             childDocument.getRoot().paintComponent(g);
@@ -307,6 +301,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             g.setClip(null);
             g.drawImage(buffer, _x_ - dx, _y_ - dy, this);
         }
+
+        setOpaque(false);
+        super.paintComponent(g);
     }
 
     public void clearBuffer() {
@@ -368,7 +365,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    protected void draw() {
+    public void draw() {
         if (auto_width && width == 0 && type == NodeTypes.TEXT) {
             int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             width = getFontMetrics(new Font(fontFamily, style, fontSize)).stringWidth(textContent);
@@ -664,27 +661,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         renderContent(g);
 
-        //if (this.getParent() != null) this.getParent().repaint();
-//        if (document != null && getX() < document.borderSize || getY() < document.borderSize ||
-//                getX() + width > document.width || getY() + height > document.height) {
-//            g2d.clipRect(Math.max(-document.borderSize, -getX()-document.borderSize), Math.max(-document.borderSize, -getY()-document.borderSize), document.width+2*document.borderSize, document.height+2*document.borderSize);
-//            if (document.borderSize == 0 || document.borderColor == null) return;
-//            g2d.setColor(document.borderColor);
-//            if (getX() < 0 && getX() + width > document.width) {
-//                int x = -getX();
-//                for (int i = 0; i < document.borderSize; i++) {
-//                    g2d.drawLine(x+i, 0, x+i, height);
-//                    g2d.drawLine(x+i+document.width-document.borderSize, 0, x+i+document.width-document.borderSize, height);
-//                }
-//            }
-//            if (getY() < 0 && getY() + height > document.height) {
-//                int y = -getY();
-//                for (int i = 0; i < document.borderSize; i++) {
-//                    g2d.drawLine(0, y+i, width, y+i);
-//                    g2d.drawLine(0, y+i+document.height-document.borderSize, width, y+i+document.height-document.borderSize);
-//                }
-//            }
-//        }
     }
 
     private void paintShadow(int x0, int y0) {
@@ -1676,26 +1652,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void renderContent(Graphics g) {
 
-        if (text_layer != null) {
-            text_layer.removeAll();
-        }
         last_list_index = 0;
 
         Block r = this;
         while (r.parent != null) r = r.parent;
 
-        renderText(g);
-        document.validate();
+        if (text_layer == null || list_item_type > 0 || sel != null && textRenderingMode == 1) {
+            renderText(g);
+        } else {
+            text_layer.repaint();
+        }
         for (int i = 0; i < lines.size(); i++) {
             Vector<Drawable> v = lines.get(i).elements;
             for (int j = 0; j < v.size(); j++) {
                 if (v.get(j) instanceof Block) {
-                    //if (((Block)v.get(j)).overflow == Block.Overflow.VISIBLE) {
-                        ((JPanel)v.get(j)).setBounds(0, 0, r.width, r.height);
-                    //} else {
-                    //    ((JPanel)v.get(j)).setBounds(((Block)v.get(j))._x_, ((Block)v.get(j))._y_, ((Block)v.get(j)).width, ((Block)v.get(j)).height);
-                    //}
-                    ((JPanel)v.get(j)).setOpaque(false);
                     ((Block)v.get(j)).draw();
                 }
             }
@@ -1705,13 +1675,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (d instanceof Block) {
                 Block b = (Block)d;
                 if (b.positioning == Block.Position.ABSOLUTE || b.float_type != Block.FloatType.NONE ||
-                        b.display_type == Display.TABLE_ROW || b.display_type == Display.TABLE_CELL) {
-                    //if (b.overflow == Block.Overflow.VISIBLE) {
-                        b.setBounds(0, 0, r.width, r.height);
-                    //} else {
-                    //    b.setBounds(b._x_, b._y_, b.width, b.height);
-                    //}
-                    ((JPanel)b).setOpaque(false);
+                      b.display_type == Display.TABLE_ROW || b.display_type == Display.TABLE_CELL) {
                     b.draw();
                 }
             }
@@ -1991,15 +1955,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             sel[1] = -1;
         }
 
-        int[] s = Arrays.copyOf(sel, 2);
+        boolean render_chars = text_layer == null || textRenderingMode == 1 && (sel != null || list_item_type > 0);
+
         int from_element = sel[0];
         int to_element = sel[1];
         if (from_element > to_element) {
-            int a = s[0];
-            s[0] = s[1];
-            s[1] = a;
-            from_element = s[0];
-            to_element = s[1];
+            int a = from_element;
+            from_element = to_element;
+            to_element = a;
         }
 
 
@@ -2044,7 +2007,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         g.drawPolygon(x, y, 4);
                     }
                 }
-                else processTextChar(g, c, false, 0, 0);
+                else if (render_chars) processTextChar(g, c, false, 0, 0);
             }
 
             else if (list_item_type >= 10 && list_item_type < 16) {
@@ -2078,23 +2041,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     offset += Math.round(getFontMetrics(font).getHeight() / 2);
                     c.setX(parent.list_max_offset - offset);
                     c.setY(paddings[0]);
-                    processTextChar(g, c, false, 0, 0);
+                    if (render_chars) processTextChar(g, c, false, 0, 0);
                 }
             }
         }
-        for (int i = 0; i < lines.size(); i++) {
-            for (int j = 0; j < lines.get(i).elements.size(); j++) {
-                if (lines.get(i).elements.get(j) instanceof Character) {
-                    Character c = (Character)lines.get(i).elements.get(j);
-                    processTextChar(g, c, true, from_element, to_element);
+        if (render_chars) {
+            for (int i = 0; i < lines.size(); i++) {
+                for (int j = 0; j < lines.get(i).elements.size(); j++) {
+                    if (lines.get(i).elements.get(j) instanceof Character) {
+                        Character c = (Character)lines.get(i).elements.get(j);
+                        processTextChar(g, c, true, from_element, to_element);
+                    }
                 }
             }
         }
-        invalidate();
-        document.repaint();
+        //invalidate();
+        //document.repaint();
     }
 
-    private void processTextChar(Graphics g, Character c, boolean selectable, int from_element, int to_element) {
+    private void processTextChar(Graphics g, Character c, boolean selectable, int selected_from, int selected_to) {
         if (textRenderingMode > 0) {
             c.draw(g);
             return;
@@ -2169,7 +2134,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (selectable) {
 
             for (int k = 0; k < v.size(); k++) {
-                if (c == v.get(k) && k >= from_element && k <= to_element) {
+                if (c == v.get(k) && k >= selected_from && k <= selected_to) {
                     label.setForeground(Color.WHITE);
                     if (!text_italic) {
                         label.setBackground(selection_color);
@@ -3418,16 +3383,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
         children.add(d);
-        Block b = this;
-        while (b.parent != null) b = b.parent;
-        //add(d);
+        
         document.root.add(d, 0);
         d.pos = getComponentCount()-1;
-        //if (d.overflow == Overflow.VISIBLE) {
-            d.setBounds(0, 0, b.width, b.height);
-        //} else {
-        //    d.setBounds(_x_, _y_, width, height);
-        //}
+
+        Block b = this;
+        while (b.parent != null) b = b.parent;
+        if (b.width <= 0 || b.height <= 0) {
+            b = document.root;
+        }
+        d.setBounds(0, 0, b.width, b.height);
+
         d.parent = this;
         d.alpha = alpha;
         d.text_bold = text_bold;
@@ -3984,6 +3950,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
                 forceRepaint();
+                document.repaint();
                 getSelectedText();
                 last_click = System.currentTimeMillis();
                 return;
@@ -3994,11 +3961,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (x >= c.getX() && x <= c.getX() + c.getWidth() &&
                     y >= c.getY() && y <= c.getY() + c.getHeight()) {
                     int i1 = i;
-                    while (i1 >= 0 && ((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) i1--;
-                    if (i1 < 0 || !((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) i1++;
+                    while (i1 >= 0 && ((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) {
+                        ((JLabel)text_layer.getComponents()[i1]).setBackground(selection_color);
+                        ((JLabel)text_layer.getComponents()[i1]).setForeground(Color.WHITE);
+                        ((JLabel)text_layer.getComponents()[i1]).setOpaque(true);
+                        i1--;
+                    }
+                    if (i1 < 0 || !((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) {
+                        i1++;
+                    }
                     int i2 = i;
-                    while (i2 <= text_layer.getComponents().length-1 && ((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) i2++;
-                    if (i2 > text_layer.getComponents().length-1 || !((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) i2--;
+                    while (i2 <= text_layer.getComponents().length-1 && ((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) {
+                        ((JLabel)text_layer.getComponents()[i2]).setBackground(selection_color);
+                        ((JLabel)text_layer.getComponents()[i2]).setForeground(Color.WHITE);
+                        ((JLabel)text_layer.getComponents()[i2]).setOpaque(true);
+                        i2++;
+                    }
+                    if (i2 > text_layer.getComponents().length-1 || !((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) {
+                        i2--;
+                    }
+
                     if (sel == null) {
                         sel = new int[2];
                     }
@@ -4123,7 +4105,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                     unselectCharacter((Character)line.elements.get(j));
                                 }
                                 javax.swing.JLabel glyph = ((Character)line.elements.get(j)).glyph;
-                                if (glyph != null && !glyph.isVisible()) {
+                                if (glyph != null && !glyph.isVisible() || glyph == null) {
                                     ((Character)line.elements.get(j)).line.parent.forceRepaint();
                                 }
                             }
@@ -4139,7 +4121,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                 unselectCharacter((Character)line.elements.get(j));
                             }
                             javax.swing.JLabel glyph = ((Character)line.elements.get(j)).glyph;
-                            if (glyph != null && !glyph.isVisible()) {
+                            if (glyph != null && !glyph.isVisible() || glyph == null) {
                                 ((Character)line.elements.get(j)).line.parent.forceRepaint();
                             }
                         }
@@ -4147,7 +4129,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
-        //document.repaint();
+        repaint();
         if (overflow != Overflow.HIDDEN || content_x_max <= viewport_width - borderWidth[3] - borderWidth[1] &&
                 content_y_max <= viewport_height - borderWidth[0] - borderWidth[2]) {
             if (text_layer != null) {
@@ -4155,7 +4137,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 //document.repaint();
             }
         }
-        forceRepaint();
     }
 
     private void selectCharacter(Character c) {

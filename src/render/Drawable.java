@@ -11,6 +11,7 @@ public interface Drawable {
     public int _getX();
     public int _getY();
 
+    public void draw();
     public void doPaint(Graphics g);
     public void forceRepaint();
     public void forceRepaint(Graphics g);

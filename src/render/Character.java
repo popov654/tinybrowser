@@ -52,7 +52,7 @@ public class Character extends JPanel implements Drawable {
         //draw(g);
     }
 
-    protected void draw() {
+    public void draw() {
         if (textContent == null) return;
         if (buffer == null && width > 0 && height > 0) {
             buffer = new BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);

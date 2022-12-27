@@ -860,6 +860,8 @@ public class MediaPlayer {
         @Override
         public void draw(Graphics g) {
 
+            super.draw(g);
+
             scroll_x = parent != null ? parent.scroll_x : 0;
             scroll_y = parent != null ? parent.scroll_y : 0;
 
@@ -946,7 +948,7 @@ public class MediaPlayer {
         Segments(Block b, Color col) {
             super(b.document);
             block = b;
-            bgcolor = col;
+            color = col;
             width = block.width;
             height = block.height;
             auto_width = false;
@@ -965,6 +967,8 @@ public class MediaPlayer {
 
         @Override
         public void draw(Graphics g) {
+
+            super.draw(g);
 
             scroll_x = parent != null ? parent.scroll_x : 0;
             scroll_y = parent != null ? parent.scroll_y : 0;
@@ -997,7 +1001,7 @@ public class MediaPlayer {
                 container.clipping_block = null;
             }
 
-            g.setColor(bgcolor);
+            g.setColor(color);
             ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             int count = (int)Math.floor((block.width - 1 + w) / (2 * w - 1));
