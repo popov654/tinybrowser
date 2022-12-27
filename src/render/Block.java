@@ -983,6 +983,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         bgImage = animation_frames[current_frame].getImage();
         last_frame_displayed = System.currentTimeMillis();
         forceRepaint();
+        repaint();
     }
 
     public int _getX() {

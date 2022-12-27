@@ -159,6 +159,7 @@ public class BackgroundModes extends JFrame {
                     image.setBackgroundContain();
                 }
                 image.draw();
+                image.repaint();
             }
 
         };
