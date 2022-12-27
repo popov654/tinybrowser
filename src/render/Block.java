@@ -2677,7 +2677,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(val);
         }
         else if (units == Units.percent) {
-            int bw = background_size_x < 0 ? bgImage.getWidth() : background_size_x;
+            int bw = background_size_x < 0 && bgImage != null ? bgImage.getWidth() : background_size_x;
             value = (int)Math.round((width-borderWidth[1]-borderWidth[3]-bw)*(val/100));
         }
         else if (units == Units.em) {
@@ -2693,7 +2693,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(val);
         }
         else if (units == Units.percent) {
-            int bh = background_size_y < 0 ? bgImage.getHeight() : background_size_y;
+            int bh = background_size_y < 0 && bgImage != null ? bgImage.getHeight() : background_size_y;
             value = (int)Math.round((height-borderWidth[0]-borderWidth[2]-bh)*(val/100));
         }
         else if (units == Units.em) {
@@ -2745,7 +2745,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         background_size_y = value;
         background_size_y_auto = false;
-        if (background_size_x_auto) {
+        if (background_size_x_auto && bgImage != null) {
             background_size_x = (int)Math.round(background_size_y * ((double) bgImage.getWidth() / bgImage.getHeight()));
         }
         forceRepaint();
