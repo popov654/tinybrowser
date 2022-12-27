@@ -16,6 +16,8 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseEvent;
@@ -47,6 +49,7 @@ import javax.imageio.metadata.IIOMetadataNode;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.Timer;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -4157,33 +4160,39 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void startWatcher() {
         if (w != null) return;
         w = new Watcher();
-        Thread th = new Thread(w);
-        th.setPriority(Thread.MIN_PRIORITY);
-        th.start();
+        w.start();
     }
 
     public void stopWatcher() {
         if (w != null) w.stop();
     }
 
-    class Watcher implements Runnable {
+    class Watcher {
 
-        @Override
-        public void run() {
-            while (!stop) {
+        public Watcher() {
+            timer = new Timer(50, listener);
+        }
+
+        public void start() {
+            timer.start();
+        }
+
+        public void stop() {
+            timer.stop();
+            stop = true;
+        }
+
+        ActionListener listener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 long time = System.currentTimeMillis();
                 if (has_animation && time > nextFrameDisplayTime()) {
                     displayNextFrame();
                 }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {}
             }
-        }
+        };
 
-        public void stop() {
-            stop = true;
-        }
+        private Timer timer;
 
         public volatile boolean stop = false;
 
