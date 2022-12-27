@@ -69,7 +69,7 @@ public class LayoutTests extends JFrame {
         //testAbsolutePositioning();
         //testAutoMargins(60, 15);
         //testZIndex();
-        //testLists(d2, 2);
+        //testLists(2);
         
 
         //testTextAlign(d, Block.TextAlign.ALIGN_CENTER);
@@ -533,11 +533,12 @@ public class LayoutTests extends JFrame {
         }
     }
 
-    public void testLists(Block b, int type) {
-        b.removeAllElements();
+    public void testLists(int type) {
+        prepareBlock();
 
         document.ready = false;
-        
+
+        Block b = document.root.getChildren().get(0);
         Block b1 = new Block(document);
         b1.addText("Item 1");
         Block b2 = new Block(document);
