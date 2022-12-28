@@ -633,8 +633,18 @@ public class LayoutTests extends JFrame {
                 UIManager.setLookAndFeel(
                     UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {}
-        LayoutTests lt = new LayoutTests();
+        final LayoutTests lt = new LayoutTests();
         lt.setVisible(true);
+
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                lt.document.root.getChildren().get(0).takeScreenshot("screenshot");
+            }
+            
+        });
+
         //lt.setPanelSize(474, 300);
 
         //lt.testAutoMargins(60, 15);

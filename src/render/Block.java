@@ -4157,6 +4157,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     }
 
+    public void takeScreenshot(String path) {
+        java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(document.root.width, document.root.height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gc = (Graphics2D) img.getGraphics();
+        gc.setBackground(bgcolor);
+        gc.clearRect(0, 0, width, height);
+        //gc.drawImage(buffer, 0, 0, width, height, _x_, _y_, _x_ + width, _y_ + height, null);
+        document.root.paint(gc);
+        try {
+            javax.imageio.ImageIO.write(img.getSubimage(_x_, _y_, width, height), "png", new File(path + ".png"));
+        } catch (IOException ex) {
+            System.err.println("Image output error!");
+        }
+    }
+
     public void startWatcher() {
         if (w != null) return;
         w = new Watcher();
