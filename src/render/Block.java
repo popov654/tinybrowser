@@ -1426,7 +1426,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
                 layouter.last_element = -1;
                 Line last = lines.lastElement();
-                height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
+                if (auto_height) {
+                    viewport_height = height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
+                }
                 if (is_table_cell && auto_width) width = pref_size;
             } else {
 
@@ -1661,7 +1663,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block r = this;
         while (r.parent != null) r = r.parent;
 
-        if (text_layer == null || list_item_type > 0 || sel != null && textRenderingMode == 1) {
+        if (text_layer == null || list_item_type > 0 || textRenderingMode == 1) {
             renderText(g);
         } else {
             text_layer.repaint();
@@ -1959,7 +1961,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             sel[1] = -1;
         }
 
-        boolean render_chars = text_layer == null || textRenderingMode == 1 && (sel != null || list_item_type > 0);
+        boolean render_chars = text_layer == null || textRenderingMode == 1;
 
         int from_element = sel[0];
         int to_element = sel[1];

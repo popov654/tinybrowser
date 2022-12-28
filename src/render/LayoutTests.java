@@ -42,6 +42,7 @@ public class LayoutTests extends JFrame {
         //bp.setBounds(9, 283, 474, 86);
 
         Block root = document.root;
+        root.setId("root");
 
         root.setBounds(1, 1, document.width, document.height);
 
@@ -50,6 +51,7 @@ public class LayoutTests extends JFrame {
         root.viewport_height = root.height;
         root.orig_height = root.height;
         root.max_height = root.height;
+        root.auto_height = false;
         //root.setBounds(root.getX(), root.getY(), root.width, root.height);
 
         //System.out.println();
@@ -106,7 +108,10 @@ public class LayoutTests extends JFrame {
     }
 
     public void prepareBlock() {
+        
         document.ready = false;
+
+        document.root.removeAllElements();
 
         Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
@@ -124,6 +129,8 @@ public class LayoutTests extends JFrame {
         p.add(0f);
         p.add(0.52f);
         d.setLinearGradient(c, p, -54);
+
+        document.root.setId("root");
 
         document.root.addElement(d);
 
@@ -150,6 +157,7 @@ public class LayoutTests extends JFrame {
         p.add(0f);
         p.add(0.52f);
         d.setLinearGradient(c, p, -54);
+        d.setId("d1");
         //d.setBackgroundColor(new Color(228, 223, 226));
 
 
@@ -189,6 +197,7 @@ public class LayoutTests extends JFrame {
         d2.setBorderWidth(2);
         d2.setTextColor(new Color(0, 0, 0));
         d2.setLinearGradient(c, p, -64);
+        d2.setId("d2");
 
         //Color col[] = {Color.RED, Color.GREEN, Color.RED, Color.GREEN};
         //d2.setBorderColor(col);
@@ -584,10 +593,10 @@ public class LayoutTests extends JFrame {
 
     public void testPreWrap() {
 
-        document.root.children.get(0).setDisplayType(Block.Display.NONE);
+        prepareBlock();
 
-        Block b = document.root.children.get(1);
-        b.removeAllElements();
+        Block b = document.root.children.get(0);
+
         b.setWidth(126);
         b.setHeight(-1);
         b.addText("Abra\n\ncadabra");
@@ -603,9 +612,9 @@ public class LayoutTests extends JFrame {
 
     public void testWordBreak() {
 
-        document.root.children.get(0).setDisplayType(Block.Display.NONE);
+        prepareBlock();
 
-        Block b = document.root.children.get(1);
+        Block b = document.root.children.get(0);
         b.removeAllElements();
         b.setWidth(126);
         b.setHeight(-1);
