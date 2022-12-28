@@ -1763,16 +1763,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setZIndices() {
         LinkedList<Block> list = document.root.getZIndexList();
         for (int i = list.size()-1; i >= 0; i--) {
-            java.awt.Container c = list.get(i).getParent();
             Block b = list.get(i);
-            if (c == null && list.get(i).parts.size() > 0) {
+            java.awt.Container c = b.getParent();
+            if (c == null && b.parts.size() > 0) {
                 c = b.parts.get(0).getParent();
                 list.remove(i);
                 for (int j = 0; j < b.parts.size(); j++) {
                     Block block = b.parts.get(j);
-                    list.add(i+j, b.parts.get(j));
+                    list.add(i+j, block);
                     try {
-                        c.setComponentZOrder(b.parts.get(j), list.size()-1-i+j);
+                        c.setComponentZOrder(block, list.size()-1-i+j);
                     } catch (Exception ex) {}
                 }
             }
@@ -3465,6 +3465,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         this.line = l;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        String[] types = new String[] {"block", "inline-block", "inline", "none", "table", "inline-table", "table-row", "table-cell"};
+        String s = "";
+        s += type == NodeTypes.ELEMENT ? ("Element (Display: " + types[display_type] + ") ") : "TextNode ";
+        s += "ID " + (id != null && id.length() > 0 ? id : "<none>") + " ";
+        s +=  "(" + width + "x" + height + ")";
+        return s;
+    }
+
     public void updateOnResize() {
         HashMap<String, String> rules = (HashMap<String, String>)rules_for_recalc.clone();
         if (parent != null && rules_for_recalc.size() > 0) {
@@ -4158,14 +4172,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void takeScreenshot(String path) {
-        java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(document.root.width, document.root.height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        BufferedImage img = new BufferedImage(document.root.width, document.root.height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         Graphics2D gc = (Graphics2D) img.getGraphics();
         gc.setBackground(bgcolor);
         gc.clearRect(0, 0, width, height);
         //gc.drawImage(buffer, 0, 0, width, height, _x_, _y_, _x_ + width, _y_ + height, null);
         document.root.paint(gc);
         try {
-            javax.imageio.ImageIO.write(img.getSubimage(_x_, _y_, width, height), "png", new File(path + ".png"));
+            ImageIO.write(img.getSubimage(_x_, _y_, width, height), "png", new File(path + ".png"));
         } catch (IOException ex) {
             System.err.println("Image output error!");
         }
