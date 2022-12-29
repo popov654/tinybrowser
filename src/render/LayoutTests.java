@@ -12,6 +12,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Vector;
+import mediaplayer.MediaController;
+import mediaplayer.NoMediaPlayerException;
 
 
 public class LayoutTests extends JFrame {
@@ -60,7 +62,8 @@ public class LayoutTests extends JFrame {
 
         document.debug = true;
 
-        basicTest();
+        //basicTest();
+        testReplacedContent();
         //testTables();
         //testInternalFrames();
         //testNormal();
@@ -238,6 +241,37 @@ public class LayoutTests extends JFrame {
 
         //d.display_type = Block.Display.NONE;
         //d.visibility = Block.Visibility.HIDDEN;
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
+    public void testReplacedContent() {
+        prepareBlock();
+
+        Block b = document.root.children.get(0);
+
+        //JLabel label = new JLabel("Test");
+        //label.setBorder(BorderFactory.createLineBorder(Color.BLUE, 1));
+        //Block replaced_player = new ReplacedBlock(document, label);
+
+        MediaController mc = new MediaController();
+        mc.setMediaPlayer(new mediaplayer.MediaPlayer());
+        try {
+            mc.openSource("http://popov654.pp.ru/xplayer/domestic_technology_-_miss_june.mp3");
+            mc.setSongTitle("Domestic Technology - Miss June");
+        } catch (NoMediaPlayerException ex) {
+            ex.printStackTrace();
+        }
+        Block replaced_player = new ReplacedBlock(document, mc);
+
+        replaced_player.width = 100;
+        replaced_player.height = 68;
+        b.addElement(replaced_player);
 
         document.ready = true;
 
