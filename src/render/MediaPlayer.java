@@ -237,7 +237,7 @@ public class MediaPlayer {
                     }
                     ps.clearBuffer();
                     ps.draw();
-                    ps.repaint();
+                    ps.document.repaint();
                     fader = new Fader(-1);
                     fader.run();
                     if (type == AUDIO) {
@@ -360,6 +360,7 @@ public class MediaPlayer {
             b = b.parent;
         }
         container.forceRepaint();
+        container.document.repaint();
 
         initPlayer();
     }
@@ -407,8 +408,8 @@ public class MediaPlayer {
 
             ps.bg_clip_x = (int)Math.round((double)new_time / mediaPlayer.getLength() * ps.width);
             ps.clearBuffer();
-            ps.draw();
-            ps.repaint();
+            ps.forceRepaint();
+            ps.document.repaint();
             if (new_time >= mediaPlayer.getLength()) {
                 mediaPlayer.stop();
             }
@@ -854,7 +855,7 @@ public class MediaPlayer {
         public void redraw() {
             clearBuffer();
             draw();
-            repaint();
+            document.repaint();
         }
 
         @Override
@@ -962,7 +963,7 @@ public class MediaPlayer {
         public void redraw() {
             clearBuffer();
             draw();
-            repaint();
+            document.repaint();
         }
 
         @Override
