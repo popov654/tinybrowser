@@ -32,7 +32,9 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -2275,8 +2277,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setBackgroundImage(String path) {
         try {
-            File f = new File(path);
-            bgImage = ImageIO.read(new File(path));
+            File f;
+            if (path.startsWith("http")) {
+                bgImage = ImageIO.read(new URL(path));
+                String[] str = path.split("/");
+                f = File.createTempFile("tmp_", str[str.length-1]);
+                ImageIO.write(bgImage, "png", f);
+            } else {
+                f = new File(path);
+                bgImage = ImageIO.read(f);
+            }
             ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
             ir.setInput(ImageIO.createImageInputStream(f));
             if (ir.getNumImages(true) > 1) {
@@ -2286,7 +2296,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             } else {
                 stopWatcher();
             }
-        } catch (IOException ex) {}
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void setLinearGradient(Vector<Color> colors, Vector<Float> positions, int angle) {

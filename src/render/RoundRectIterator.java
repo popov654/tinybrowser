@@ -26,7 +26,7 @@ public class RoundRectIterator implements PathIterator {
         this.r = rr;
 
         if (r.arcs[0] > 0.0f && r.arcs[1] > 0.0f && r.arcs[2] > 0.0f && r.arcs[3] > 0.0f) {
-            return;
+            //return;
         }
 
         for (int i = 0; i < 4; i++) {
