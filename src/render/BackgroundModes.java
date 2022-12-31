@@ -17,7 +17,7 @@ public class BackgroundModes extends JFrame {
         super("Simple component test");
         JPanel cp = new JPanel();
         document = new WebDocument();
-        cp.setLayout(null);
+        cp.setLayout(new BoxLayout(cp, BoxLayout.PAGE_AXIS));
         op = createOptionsPanel();
         bp = new JPanel();
         bp.setLayout(new BoxLayout(bp, BoxLayout.LINE_AXIS));
@@ -36,7 +36,8 @@ public class BackgroundModes extends JFrame {
         document.width = 478;
         document.height = 268;
 
-        document.setBounds(9, 10, document.width+2, document.height+2);
+        document.setPreferredSize(new Dimension(document.width+2, document.height+2));
+        //document.setBounds(9, 10, document.width+2, document.height+2);
         //op.setBounds(9, 282, 480, 36);
         //bp.setBounds(9, 303, 480, 86);
 
@@ -111,16 +112,6 @@ public class BackgroundModes extends JFrame {
 
             @Override
             public void componentResized(java.awt.event.ComponentEvent evt) {
-                int w = getWidth();
-                int h = getHeight();
-                Insets insets = getInsets();
-                if (insets != null) {
-                    w -= insets.left + insets.right;
-                    h -= insets.top + insets.bottom;
-                }
-                document.setBounds(pad[0], pad[1], w - pad[0] * 2, h - 93);
-                op.setBounds(pad[0], h - 82, w - pad[0] * 2, 30);
-                bp.setBounds(pad[0], h - 38, w - pad[0] * 2, 30);
                 document.resized();
             }
         });
