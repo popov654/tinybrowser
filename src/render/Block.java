@@ -25,6 +25,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
@@ -600,7 +601,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
                 adjustCorners(arcs, this);
                 RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                g2d.setClip(rect);
+                Shape clip = g2d.getClip();
+                if (clip != null) {
+                    Area clip_area = new Area(clip);
+                    clip_area.intersect(new Area(rect));
+                    g2d.setClip(clip_area);
+                } else {
+                    g2d.setClip(rect);
+                }
             }
             if (bg_alpha < 1.0f) {
                 int type = AlphaComposite.SRC_OVER;
@@ -1188,6 +1196,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (overflow == Overflow.SCROLL) {
             if (scrollbar_y != null) {
                 remove(scrollbar_y);
+                scrollbar_y = null;
                 viewport_height = height;
             }
             scrollbar_y = new JScrollBar();
@@ -1241,6 +1250,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             block.flushBuffersRecursively();
             block.forceRepaint();
+            document.repaint();
         }
 
         int type = 0;
@@ -1285,6 +1295,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (children.size() == 0 && getComponents().length == 1) {
             return;
+        }
+
+        if (children.size() == 1 && children.get(0).type == NodeTypes.ELEMENT && children.get(0).auto_y_margin) {
+            children.get(0).setAutoYMargin();
         }
 
         lines.clear();
@@ -1371,6 +1385,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             } else {
                 if (scrollbar_y != null) {
                     remove(scrollbar_y);
+                    scrollbar_y = null;
+                    scroll_y = 0;
+                    scroll_top = 0;
                     viewport_height = height;
                 }
             }
@@ -1463,6 +1480,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     performLayout(no_rec, true);
                     return;
                 }
+                if (scrollbar_y != null) {
+                    setComponentZOrder(scrollbar_y, 0);
+                }
             }
         }
         pref_size += paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1];
@@ -1524,10 +1544,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (content_x_max <= viewport_width - borderWidth[1] - borderWidth[3] && scrollbar_x != null) {
             remove(scrollbar_x);
+            scrollbar_x = null;
+            scroll_x = 0;
+            scroll_left = 0;
             viewport_width = width;
         }
         if (content_y_max <= viewport_height - borderWidth[0] - borderWidth[2] && scrollbar_y != null) {
             remove(scrollbar_y);
+            scrollbar_y = null;
+            scroll_y = 0;
+            scroll_top = 0;
             viewport_height = height;
         }
         if (text_align != TextAlign.ALIGN_LEFT) {
@@ -2572,7 +2598,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (parent != null) ph -= parent.borderWidth[0] + parent.borderWidth[2];
         margins[0] = Math.round((ph-height)/2);
         margins[2] = ph - height - margins[0];
-        updateMargins();
+        if (margins[0] < 0) {
+            margins[0] = margins[2] = 0;
+        }
+        if (!document.inLayout) updateMargins();
         rules_for_recalc.put("margin-top", "auto");
     }
 
