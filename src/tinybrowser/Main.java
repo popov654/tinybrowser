@@ -7,6 +7,9 @@ package tinybrowser;
 
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
+import java.io.File;
+import java.net.URL;
+import java.net.URLDecoder;
 import jsparser.Expression;
 import jsparser.JSParser;
 
@@ -698,11 +701,36 @@ public class Main {
                       (jsparser.Function)Expression.getVar("err", exp));*/
     }
 
+    public static void detectInstallPath() {
+        URL location = Main.class.getProtectionDomain().getCodeSource().getLocation();
+        String programPath = location.getPath().substring(1).replace('/', File.separatorChar);
+        try {
+            programPath = URLDecoder.decode(programPath, "utf8");
+        } catch (Exception e) {}
+        int slashes = 4;
+        if (programPath.endsWith(".jar")) {
+            slashes--;
+        }
+        for (int i = 0; i < slashes; i++) {
+            int index = programPath.lastIndexOf(File.separatorChar);
+            programPath = programPath.substring(0, index);
+        }
+        programPath += File.separatorChar;
+        installPath = programPath + "TinyBrowser";
+    }
+
+    public static String getInstallPath() {
+        if (installPath == null) detectInstallPath();
+        return installPath;
+    }
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         testHTMLParser();
     }
+
+    private static String installPath;
 
 }
