@@ -32,7 +32,7 @@ public class RoundedRect extends RectangularShape {
 	double rrx1 = rrx0 + getWidth();
 	double rry1 = rry0 + getHeight();
 	// Check for trivial rejection - bounding rectangles do not intersect
-	if (x + w <= rrx0 || x >= rrx1 || y + h <= rry0 || y >= rry1) {
+	if (x + w < rrx0 || x > rrx1 || y + h < rry0 || y > rry1) {
 	    return false;
 	}
 
@@ -44,8 +44,8 @@ public class RoundedRect extends RectangularShape {
         double xx = 0, yy = 0;
 
         if (x + w < rrx0 + r1 && y + h < rry0 + r1) {
-            xx = (x - (rrx0 + r1)) / r1;
-            yy = (y - (rry0 + r1)) / r1;
+            xx = (x + w - (rrx0 + r1)) / r1;
+            yy = (y + h - (rry0 + r1)) / r1;
             if (xx * xx + yy * yy > 1.0) return false;
         }
 
@@ -106,7 +106,7 @@ public class RoundedRect extends RectangularShape {
 	    return true;
 	}
         sw = Math.max(r1, r4);
-	if (y >= rry0+ r1 && y < rry1 - r4 && x < rrx0 + sw) {
+	if (y >= rry0 + r1 && y < rry1 - r4 && x < rrx0 + sw) {
 	    return true;
 	}
         sh = Math.max(r3, r4);
