@@ -23,6 +23,8 @@ import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
@@ -61,7 +63,7 @@ import org.w3c.dom.NodeList;
  *
  * @author Alex
  */
-public class Block extends JPanel implements Drawable, MouseListener, MouseMotionListener {
+public class Block extends JPanel implements Drawable, MouseListener, MouseMotionListener, MouseWheelListener {
 
     public Block(WebDocument document, Block parent, int width, int height, int borderWidth, int arc, Color borderColor) {
 
@@ -138,6 +140,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void addMouseListeners() {
         addMouseListener(this);
         addMouseMotionListener(this);
+        addMouseWheelListener(this);
         if (this == document.root && getParent() != null && getParent().getParent() != null) {
             java.awt.Component c = this;
             while (c.getParent() != null) {
@@ -169,6 +172,63 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             c.addMouseMotionListener(parentMotionListener);
         }
     }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        Block[] blocks = new Block[layer_list.size()];
+        blocks = layer_list.toArray(blocks);
+
+        int mouse_x = e.getX();
+        int mouse_y = e.getY();
+
+        if (mouse_x < _x_ || mouse_x > _x_ + viewport_width ||
+            mouse_y < _y_ || mouse_y > _y_ + viewport_height) {
+              return;
+        }
+
+        for (int i = blocks.length-1; i >= 0; i--) {
+            Block b = blocks[i].original != null ? blocks[i].original : blocks[i];
+            if (b.display_type == Display.INLINE || b.overflow != Overflow.SCROLL) continue;
+            if (children.contains(b) && b.isMouseInside(mouse_x, mouse_y)) {
+                b.mouseWheelMoved(e);
+                return;
+            }
+        }
+
+        if (e.isShiftDown() && this.scrollbar_x != null && this.scrollbar_y != null ||
+              this.scrollbar_x != null && this.scrollbar_y == null) {
+            scroll_left += e.getWheelRotation() * scroll_delta;
+            int parent_width = parent != null ? parent.viewport_width : document.width;
+            if (scroll_left < 0) {
+                scroll_left = 0;
+            }
+            if (scroll_left >= content_x_max - viewport_width) {
+                scroll_left = content_x_max - viewport_width;
+            }
+            scroll_x = scroll_left;
+            scrollbar_x.getModel().setValue(scroll_x);
+            forceRepaint();
+        } else if (this.scrollbar_y != null) {
+            scroll_top += e.getWheelRotation() * scroll_delta;
+            int parent_height = parent != null ? parent.viewport_height : document.height;
+            if (scroll_top < 0) {
+                scroll_top = 0;
+            }
+            if (scroll_top >= content_y_max - viewport_height) {
+                scroll_top = content_y_max - viewport_height;
+            }
+            scroll_y = scroll_top;
+            scrollbar_y.getModel().setValue(scroll_y);
+            forceRepaint();
+        }
+        document.repaint();
+    }
+
+    public boolean isMouseInside(int x, int y) {
+        return (x >= _x_ && x <= _x_ + viewport_width && y >= _y_ && y <= _y_ + viewport_height);
+    }
+
+    private int scroll_delta = 20;
     
 
     class MyMouseListener implements MouseListener {
@@ -506,6 +566,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (isPartlyHidden()) {
 
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
             int sx = clipping_block.parent != null ? clipping_block.parent.scroll_x : 0;
             int sy = clipping_block.parent != null ? clipping_block.parent.scroll_y : 0;
 
@@ -523,13 +585,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             adjustCorners(arcs, clipping_block);
 
             clip_rect = new RoundedRect(xc, yc, wc, hc, arcs[0], arcs[1], arcs[2], arcs[3]);
-            g.setClip(clip_rect);
+            g2d.setClip(clip_rect);
 
         }
 
         if (clipping_block == null && overflow != Overflow.VISIBLE) {
             clip_rect = new RoundedRect(0, 0, viewport_width, viewport_height, arc[0] / 3.24, arc[1] / 3.24, arc[2] / 3.24, arc[3] / 3.24);
-            g.setClip(clip_rect);
+            g2d.setClip(clip_rect);
         }
 
         if (bg_clip_x > -1 || bg_clip_y > 0) {
@@ -552,7 +614,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
             clip_rect = new RoundedRect(sx, sy, clip_x, clip_y, 0, 0, 0, 0);
-            g.setClip(clip_rect);
+            g2d.setClip(clip_rect);
         }
 
         int width = viewport_width > 0 ? viewport_width : this.width;
