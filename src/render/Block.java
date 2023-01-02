@@ -2570,7 +2570,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         borderWidth = value;
         this.border = new RoundedBorder(this, borderWidth, arc[0], borderColor, borderType);
-        updateAbsolutePositionedChildren();
+        document.root.performLayout();
         forceRepaint();
     }
 
