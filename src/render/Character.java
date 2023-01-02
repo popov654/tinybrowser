@@ -198,6 +198,16 @@ public class Character extends JPanel implements Drawable {
         this.line = l;
     }
 
+    @Override
+    public String toString() {
+        for (int i = 0; i < line.elements.size(); i++) {
+            if (line.elements.get(i) == this) {
+                return textContent + "[" + i + "]";
+            }
+        }
+        return textContent;
+    }
+
     public String textContent;
 
     public int left;
