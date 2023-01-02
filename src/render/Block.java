@@ -1166,18 +1166,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private void addScrollbarX() {
         if (overflow == Overflow.SCROLL) {
             if (scrollbar_x != null) {
-                remove(scrollbar_x);
+                document.panel.remove(scrollbar_x);
             }
-            scrollbar_x = new JScrollBar();
+            scrollbar_x = new ClippedScrollBar();
             scrollbar_x.setOrientation(JScrollBar.HORIZONTAL);
-            add(scrollbar_x, 0);
+            document.panel.add(scrollbar_x, 0);
             int sw = width - borderWidth[1] - borderWidth[3];
             if (scrollbar_y != null) sw -= scrollbar_y.getPreferredSize().width;
             scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + viewport_height - borderWidth[2] - scrollbar_x.getPreferredSize().height, sw, scrollbar_x.getPreferredSize().height);
             int w = content_x_max + borderWidth[1] + borderWidth[3];
-            scrollbar_x.getModel().setRangeProperties(0, 1, 0, w, false);
+            scrollbar_x.getModel().setRangeProperties(0, viewport_width, 0, w+1, false);
             scrollbar_x.setVisibleAmount(viewport_width - borderWidth[3]);
             scrollbar_x.addAdjustmentListener(new ScrollListener(this, 0));
+            if (content_y_max == viewport_height) {
+                content_y_max = viewport_height - scrollbar_x.getPreferredSize().height;
+                if (children.size() == 1 && children.get(0).type == NodeTypes.ELEMENT && children.get(0).auto_y_margin) {
+                    children.get(0).setAutoYMargin();
+                }
+            }
             viewport_height = viewport_height - scrollbar_x.getPreferredSize().height;
             if (scrollbar_y == null) {
                 viewport_width = width;
@@ -1197,18 +1203,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private void addScrollbarY() {
         if (overflow == Overflow.SCROLL) {
             if (scrollbar_y != null) {
-                remove(scrollbar_y);
+                document.panel.remove(scrollbar_y);
                 scrollbar_y = null;
                 viewport_height = height;
             }
-            scrollbar_y = new JScrollBar();
-            add(scrollbar_y, 0);
+            scrollbar_y = new ClippedScrollBar();
+            document.panel.add(scrollbar_y, 0);
             int sh = height - borderWidth[0] - borderWidth[2];
-            if (scrollbar_x != null) sh -= scrollbar_x.getPreferredSize().height;
+            if (scrollbar_x != null) {
+                sh -= scrollbar_x.getPreferredSize().height;
+                scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + height - borderWidth[2] - sh, width - borderWidth[1] - borderWidth[3] - sh, sh);
+            }
             scrollbar_y.setBounds(_x_ + width - borderWidth[1] - scrollbar_y.getPreferredSize().width, _y_ + borderWidth[0], scrollbar_y.getPreferredSize().width, sh);
             int h = Math.max(content_y_max, lines.size() > 0 ? lines.lastElement().getOffsetTop() + lines.lastElement().getHeight() + paddings[2] : 0);
             h += borderWidth[0] + borderWidth[2];
-            scrollbar_y.getModel().setRangeProperties(0, 1, 0, h, false);
+            scrollbar_y.getModel().setRangeProperties(0, viewport_height, 0, h, false);
             scrollbar_y.setVisibleAmount(height - borderWidth[0]);
             scrollbar_y.addAdjustmentListener(new ScrollListener(this, 1));
             viewport_width = width - scrollbar_y.getPreferredSize().width;
@@ -1386,7 +1395,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 return;
             } else {
                 if (scrollbar_y != null) {
-                    remove(scrollbar_y);
+                    document.panel.remove(scrollbar_y);
                     scrollbar_y = null;
                     scroll_y = 0;
                     scroll_top = 0;
@@ -1465,12 +1474,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
 
                 if (el.getOffsetLeft() - borderWidth[3] + el.viewport_width > content_x_max) {
+                    if (el.margins[1] < 0) {
+                        el.margins[1] = 0;
+                        el.margins[3] = 0;
+                    }
                     content_x_max = el.getOffsetLeft() - borderWidth[3] + el.viewport_width;
                     if (el.positioning != Position.ABSOLUTE) {
                         content_x_max += el.margins[1] + paddings[1];
                     }
                 }
                 if (el.getOffsetTop() - borderWidth[0] + el.viewport_height > content_y_max) {
+                    if (el.margins[0] < 0) {
+                        el.margins[0] = 0;
+                        el.margins[2] = 0;
+                    }
                     content_y_max = el.getOffsetTop() - borderWidth[0] + el.viewport_height;
                     if (el.positioning != Position.ABSOLUTE) {
                         content_y_max += el.margins[2] + paddings[2];
@@ -1483,7 +1500,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     return;
                 }
                 if (scrollbar_y != null) {
-                    setComponentZOrder(scrollbar_y, 0);
+                    document.panel.setComponentZOrder(scrollbar_y, 0);
                 }
             }
         }
@@ -1537,22 +1554,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 viewport_height += scrollbar_x.getPreferredSize().height;
                 height += scrollbar_x.getPreferredSize().height;
                 if (scrollbar_y != null) {
-                    remove(scrollbar_y);
+                    document.panel.remove(scrollbar_y);
                     viewport_height = height;
+                    scroll_y = 0;
+                    scroll_top = 0;
                 }
             }
             sortBlocks();
             return;
         }
         if (content_x_max <= viewport_width - borderWidth[1] - borderWidth[3] && scrollbar_x != null) {
-            remove(scrollbar_x);
+            document.panel.remove(scrollbar_x);
             scrollbar_x = null;
             scroll_x = 0;
             scroll_left = 0;
             viewport_width = width;
         }
         if (content_y_max <= viewport_height - borderWidth[0] - borderWidth[2] && scrollbar_y != null) {
-            remove(scrollbar_y);
+            document.panel.remove(scrollbar_y);
             scrollbar_y = null;
             scroll_y = 0;
             scroll_top = 0;
@@ -1564,11 +1583,43 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         sortBlocks();
         if (this == document.root && this.children.size() > 0) {
             setZIndices();
+            clipScrollbars();
         }
         
         if (document.debug) {
             System.out.println();
             System.out.println("Layount ended for block " + toString());
+        }
+    }
+
+    public void clipScrollbars() {
+        int size = 40;
+        for (int i = 0; i < layer_list.size(); i++) {
+            Block b = layer_list.get(i);
+            if (b.type == NodeTypes.ELEMENT && b.overflow == Overflow.SCROLL) {
+                if (b.scrollbar_x == null && b.scrollbar_y == null) continue;
+                Shape rect_sbx = new RoundedRect(b._x_, b._y_ + b.height - size, b.width, size, 0, 0, b.arc[2], b.arc[3]);
+                Area ax = new Area(rect_sbx);
+                Shape rect_sby = new RoundedRect(b._x_ + b.width - size, b._y_, size, b.height, 0, b.arc[1], b.arc[2], 0);
+                Area ay = new Area(rect_sby);
+                for (int j = i+1; j < layer_list.size(); j++) {
+                    Block b1 = layer_list.get(j);
+                    if (b1.type == NodeTypes.ELEMENT) {
+                        Shape rect1 = new RoundedRect(b1._x_, b1._y_, b1.width, b1.height, b1.arc[0], b1.arc[1], b1.arc[2], b1.arc[3]);
+                        ax.subtract(new Area(rect1));
+                        ay.subtract(new Area(rect1));
+                    }
+                }
+
+                AffineTransform at;
+                at = AffineTransform.getTranslateInstance(0, -(b._y_ + (b.height-size)));
+                ax.transform(at);
+                at = AffineTransform.getTranslateInstance(-(b._x_ + (b.width-size)), 0);
+                ay.transform(at);
+
+                if (b.scrollbar_x != null) ((ClippedScrollBar)b.scrollbar_x).setClip(ax);
+                if (b.scrollbar_y != null) ((ClippedScrollBar)b.scrollbar_y).setClip(ay);
+            }
         }
     }
 
