@@ -71,6 +71,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         this.document = document;
         this.parent = parent;
         setLayout(null);
+        setOpaque(false);
 
         this.ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96;
         //if (ratio >= 1.14) ratio *= 0.8;
@@ -383,8 +384,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             g.setClip(null);
             g.drawImage(buffer, _x_ - dx, _y_ - dy, this);
         }
+        
+        if (text_layer != null) {
+            text_layer.setBounds(-scroll_x, -scroll_y, text_layer.getWidth(), text_layer.getHeight());
+        }
 
-        setOpaque(false);
         super.paintComponent(g);
     }
 
