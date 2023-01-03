@@ -1545,6 +1545,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block el = blocks.get(i);
 
             if (el.type == NodeTypes.TEXT) {
+                if (el.white_space != WhiteSpace.PRE_WRAP && el.textContent.matches("^\\s*$")) {
+                    continue;
+                }
                 el.textContent = replaceEntities(el.textContent);
                 String[] w = el.textContent.split("((?<=\\s+)|(?=\\s+))");
                 int style = (el.parent.text_bold || el.parent.text_italic) ? ((el.parent.text_bold ? Font.BOLD : 0) | (el.parent.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
