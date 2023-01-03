@@ -1,0 +1,104 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package bridge;
+
+import htmlparser.Node;
+import java.util.Vector;
+import render.Block;
+
+/**
+ *
+ * @author Alex
+ */
+public class Builder {
+
+    public Builder() {
+        BlockElements.clear();
+        BlockElements.add("div");
+        BlockElements.add("p");
+        BlockElements.add("blockquote");
+        BlockElements.add("hr");
+        BlockElements.add("br");
+
+        InlineElements.clear();
+        InlineElements.add("span");
+        InlineElements.add("a");
+        InlineElements.add("img");
+        InlineElements.add("b");
+        InlineElements.add("i");
+        InlineElements.add("s");
+        InlineElements.add("u");
+        InlineElements.add("strong");
+        InlineElements.add("em");
+        InlineElements.add("cite");
+        InlineElements.add("font");
+    }
+
+    public Block buildSubtree(Node node) {
+        Block root = buildElement(node);
+        for (int i = 0; i < node.children.size(); i++) {
+            Block b = buildSubtree(node.children.get(i));
+            if (b != null) {
+                root.getChildren().add(b);
+                b.parent = root;
+            }
+        }
+        return root;
+    }
+
+    public Block buildElement(Node node) {
+        Block b = new Block();
+        if (node.nodeType == ELEMENT) {
+            b.type = Block.NodeTypes.ELEMENT;
+        } else if (node.nodeType == TEXT) {
+            b.type = Block.NodeTypes.TEXT;
+            return b;
+        } else if (node.nodeType == COMMENT) {
+            return null;
+        }
+        if (BlockElements.contains(node.tagName)) {
+            b.display_type = Block.Display.BLOCK;
+        } else if (InlineElements.contains(node.tagName)) {
+            b.display_type = Block.Display.INLINE;
+        } else if (node.tagName.equals("table")) {
+            b.display_type = Block.Display.TABLE;
+        } else if (node.tagName.equals("tr")) {
+            b.display_type = Block.Display.TABLE_ROW;
+        } else if (node.tagName.equals("td")) {
+            b.display_type = Block.Display.TABLE_CELL;
+        }
+        b.id = node.getAttribute("id");
+        b.setTextColor(node.getAttribute("color"));
+        b.setBackgroundColor(node.getAttribute("bgcolor"));
+        if (node.tagName.equals("a")) b.href = node.getAttribute("href");
+        else if (node.tagName.equals("img")) {
+            b.width = -1;
+            b.isImage = true;
+            b.setBackgroundImage(node.getAttribute("src"));
+        }
+        else if (node.tagName.equals("p")) {
+            b.setMargins(16, 0, 16, 0);
+        }
+        else if (node.tagName.equals("font")) {
+            if (node.getAttribute("size") != null) {
+                b.setFontSize(Integer.parseInt(node.getAttribute("size")));
+            }
+        }
+        else if (node.tagName.equals("li")) {
+            b.list_item_type = 2;
+        }
+
+        return b;
+    }
+
+    public final static Vector<String> BlockElements = new Vector<String>();
+    public final static Vector<String> InlineElements = new Vector<String>();
+
+    public final static int ELEMENT = 1;
+    public final static int TEXT = 3;
+    public final static int COMMENT = 8;
+
+}

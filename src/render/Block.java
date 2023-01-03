@@ -113,7 +113,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             no_draw = false;
         }
-        if (parent == null) {
+        if (document != null && parent == null) {
             setBounds(1, 1, document.width-document.borderSize*2, document.height-document.borderSize*2);
         }
 
@@ -294,7 +294,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void forceRepaint() {
-        if (!document.ready || document.isPainting) return;
+        if (document == null || !document.ready || document.isPainting) return;
         document.isPainting = true;
         buffer = null;
         invalidate();
@@ -1347,6 +1347,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void performLayout() {
+        if (document == null) return;
         if (document.inLayout && this == document.root) {
             try {
                 if (document.debug) System.out.println("Retrying layout...");
@@ -2539,14 +2540,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setTextColor(String value) {
-        Color col = parseColor(value);
+        Color col = value != null ? parseColor(value) : default_color;
         if (col != null) {
             setTextColor(col);
         }
     }
 
     public void setBackgroundColor(String value) {
-        Color col = parseColor(value);
+        Color col = value != null ? parseColor(value) : new Color(0, 0, 0, 0);
         if (col != null) {
             setBackgroundColor(col);
         }
@@ -4044,14 +4045,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public String id = "";
 
-    static class Cut {
+    public static class Cut {
         public static final int NONE = 0;
         public static final int LEFT = 1;
         public static final int RIGHT = 2;
         public static final int BOTH = 3;
     }
 
-    static class NodeTypes {
+    public static class NodeTypes {
         public static final int ELEMENT = 0;
         public static final int TEXT = 1;
     }

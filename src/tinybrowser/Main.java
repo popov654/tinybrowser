@@ -5,6 +5,7 @@
 
 package tinybrowser;
 
+import bridge.Builder;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
 import java.io.File;
@@ -12,6 +13,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import jsparser.Expression;
 import jsparser.JSParser;
+import render.Block;
 
 /**
  *
@@ -145,6 +147,20 @@ public class Main {
         qs = new QuerySelector("body a.link ~ a", hp);
         System.out.print("Result of matching body a.link ~ a is ");
         qs.printResults();
+    }
+
+    public static void testBuilder() {
+        HTMLParser hp = new HTMLParser("test.htm");
+        System.out.println("----------------------------------");
+        hp.traverseTree();
+        System.out.println();
+        System.out.println("----------------------------------");
+        Builder builder = new Builder();
+        Block root = builder.buildSubtree(hp.getRootNode().lastElementChild());
+        System.out.println(root);
+        System.out.println("----" + root.getChildren().get(0));
+        System.out.println("--------" + root.getChildren().get(0).getChildren().get(0));
+
     }
 
     public static void testJSParser() {
@@ -730,7 +746,8 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        testHTMLParser();
+        //testHTMLParser();
+        testBuilder();
     }
 
     private static String installPath;
