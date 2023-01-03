@@ -62,8 +62,9 @@ public class LayoutTests extends JFrame {
 
         document.debug = true;
 
-        //basicTest();
-        testReplacedContent();
+        basicTest();
+        //linksTest();
+        //testReplacedContent();
         //testTables();
         //testInternalFrames();
         //testNormal();
@@ -144,6 +145,8 @@ public class LayoutTests extends JFrame {
     public void basicTest() {
         document.ready = false;
 
+        document.root.removeAllElements();
+
         Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
@@ -170,6 +173,8 @@ public class LayoutTests extends JFrame {
         d01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d01.addText("Test ");
         d.addElement(d01);
+        //d01.setHref("http://popov654.pp.ru");
+        //d01.underlineLinksMode = 1;
 
         Block d02 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
         d02.setPositioning(Block.Position.STATIC);
@@ -248,6 +253,22 @@ public class LayoutTests extends JFrame {
             document.root.performLayout();
             document.root.forceRepaintAll();
         }
+    }
+
+    public void linksTest() {
+        prepareBlock();
+
+        Block b = document.root.children.get(0);
+
+        Block d01 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d01.setPositioning(Block.Position.STATIC);
+        d01.setDisplayType(Block.Display.INLINE);
+        d01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d01.addText("Site Link");
+        b.addElement(d01);
+        d01.setHref("http://popov654.pp.ru");
+        d01.linkColor = new Color(6, 66, 162);
+        d01.underlineLinksMode = 1;
     }
 
     public void testReplacedContent() {

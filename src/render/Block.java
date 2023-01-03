@@ -6,6 +6,7 @@ import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -99,6 +100,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         platform = Float.parseFloat(System.getProperties().getProperty("os.version"));
 
         rules_for_recalc = new HashMap<String, String>();
+        originalStyles = new HashMap<String, Object>();
 
         orig_width = width;
         orig_height = height;
@@ -225,7 +227,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public boolean isMouseInside(int x, int y) {
-        return (x >= _x_ && x <= _x_ + viewport_width && y >= _y_ && y <= _y_ + viewport_height);
+        boolean result = false;
+        if (display_type != Display.INLINE) {
+            result = (x >= _x_ && x <= _x_ + viewport_width && y >= _y_ && y <= _y_ + viewport_height);
+        } else {
+            if (x >= _x_ && x <= _x_ + viewport_width && y >= _y_ && y <= _y_ + viewport_height) {
+                result = true;
+            }
+            for (int i = 0; i < parts.size(); i++) {
+                if (parts.get(i).isMouseInside(x, y)) return true;
+            }
+            for (int i = 0; i < children.size(); i++) {
+                if (children.get(i).isMouseInside(x, y)) return true;
+            }
+        }
+        return result;
     }
 
     private int scroll_delta = 20;
@@ -2215,11 +2231,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Font font = new Font(fontFamily, style, fontSize);
 
         JLabel label = new JLabel(c.getText());
-        label.setForeground(new Color(color.getRed(), color.getGreen(), color.getBlue(), (int)Math.round(color.getAlpha() * alpha)));
-        if (text_underline || text_strikethrough) {
+
+        Color col = hasParentLink || href != null ? linkColor : color;
+        label.setForeground(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * alpha)));
+
+        boolean underline = text_underline || (hasParentLink || href != null) && underlineLinksMode == 0;
+        boolean strikethrough = text_strikethrough;
+
+        if (underline || strikethrough) {
             Map attributes = font.getAttributes();
-            if (text_underline) attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-            if (text_strikethrough) attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+            if (underline) attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+            if (strikethrough) attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
             label.setFont(font.deriveFont(attributes));
         } else {
             label.setFont(font);
@@ -3521,7 +3543,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         d.pos = getComponentCount()-1;
 
         Block b = this;
-        while (b.parent != null) b = b.parent;
+        while (b.parent != null) {
+            if (b.hasParentLink || b.href != null) {
+                d.hasParentLink = true;
+            }
+            b = b.parent;
+        }
         if (b.width <= 0 || b.height <= 0) {
             b = document.root;
         }
@@ -3557,6 +3584,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             System.err.println("Child not found");
             return;
         }
+        d.hasParentLink = false;
         d.removeTextLayers();
         d.removeAllElements();
         document.root.remove(d);
@@ -3581,6 +3609,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         children.clear();
         //performLayout();
         //forceRepaint();
+    }
+
+    public void setHref(String href, boolean force) {
+        this.href = href;
+        if (!this.hasParentLink && (href != null || force)) {
+            for (int i = 0; i < children.size(); i++) {
+                children.get(i).hasParentLink = true;
+                children.get(i).setHref("", true);
+            }
+        } else if (!this.hasParentLink) {
+            for (int i = 0; i < children.size(); i++) {
+                children.get(i).hasParentLink = false;
+                children.get(i).setHref(null);
+            }
+        }
+    }
+
+    public void setHref(String href) {
+        setHref(href, false);
     }
 
     public void setAlpha(float value) {
@@ -3840,6 +3887,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int zIndex = 0;
     private boolean zIndexAuto = true;
 
+    public String href;
+    
+    public Color linkColor = Color.BLUE;
+    public int underlineLinksMode = 0;
+
+    public boolean hasParentLink = false;
+    public Color default_color = Color.BLACK;
+
     public int list_item_type = 0;
     private static Vector<String> list_types = new Vector<String>();
 
@@ -3875,6 +3930,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean has_shadow = false;
 
     public HashMap<String, String> rules_for_recalc;
+    public HashMap<String, Object> originalStyles;
 
     public String selected_text;
     public Line line;
@@ -3933,6 +3989,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.top = this.top;
         b.bottom = this.bottom;
 
+        b.href = href;
+        b.hasParentLink = hasParentLink;
+        b.underlineLinksMode = underlineLinksMode;
+
         b.fontSize = this.fontSize;
         b.fontFamily = this.fontFamily;
         b.text_bold = this.text_bold;
@@ -3968,6 +4028,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.gradient = this.gradient;
         b.bgcolor = this.bgcolor;
         b.color = this.color;
+        b.linkColor = linkColor;
 
         b.margins = new int[4];
         b.margins[0] = margins[0];
@@ -3990,6 +4051,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.zIndexAuto = this.zIndexAuto;
 
         b.childDocument = this.childDocument;
+
+        b.originalStyles = originalStyles;
 
         if (original == null) {
             b.children = cloneChildren();
@@ -4060,6 +4123,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     blocks[i].mouseClicked(e);
                 }
             }
+        }
+        
+        if (isMouseInside(e.getX(), e.getY()) && href != null || hasParentLink) {
+            if (href != null) {
+                openBrowser(href);
+            } else {
+                Block b = this.parent;
+                while (b != null && b.href == null) {
+                    b = b.parent;
+                }
+                if (b != null && b.href != null) {
+                    openBrowser(b.href);
+                }
+            }
+            return;
         }
         if (textRenderingMode == 0 && (text_layer == null || text_layer.getComponents().length == 0)) {
             return;
@@ -4144,7 +4222,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void mousePressed(MouseEvent e) {
         Block d = this;
-        while (d.parent != null && d.document.getParentDocument() != null) {
+        while (d.parent != null || d.document.getParentDocument() != null) {
             if (d.parent != null) d = d.parent;
             else d = d.document.getParentDocumentBlock();
         }
@@ -4382,9 +4460,139 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     }
 
-    @Override
-    public void mouseMoved(MouseEvent e) {}
+    public void applyLinkStyles(boolean is_hovered) {
+        Color col = is_hovered && (hasParentLink || href.length() > 0) ? linkColor : default_color;
+        
+        if (children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
+            color = col;
+        }
+    }
 
+    @Override
+    public void mouseMoved(MouseEvent e) {
+
+        int x = e.getX();
+        int y = e.getY();
+
+        for (int i = 0; i < v.size(); i++) {
+            Drawable d = v.get(i);
+
+            Rectangle bounds = new Rectangle(d._getX() - scroll_x, d._getY() - scroll_y, d._getWidth(), d._getHeight());
+
+            if (d != null && d instanceof Block) {
+                Block b = (Block) d;
+                b.processLinks(x, y);
+            }
+        }
+        Block b = this.original == null ? this : this.original;
+        if (b.children.size() == 1 && (b.children.get(0).type == NodeTypes.TEXT || b.children.get(0) instanceof YouTubeThumb)) {
+            b.children.get(0).processLinks(x, y);
+        } else {
+            for (int i = 0; i < b.children.size(); i++) {
+                b.children.get(i).mouseMoved(e);
+            }
+        }
+        if (this == document.root) document.repaint();
+    }
+
+    private void processLinks(int x, int y) {
+        boolean flag = false;
+        if (parts.size() > 0) {
+            for (int j = 0; j < parts.size(); j++) {
+                Block p = parts.get(j);
+                if (x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height &&
+                      (p.hasParentLink || p.href != null) && !p.hovered) {
+                    p.hovered = true;
+                    p.originalStyles.put("text_underline", p.text_underline);
+                    p.originalStyles.put("text_color", p.color);
+                    p.text_underline = true;
+                    p.color = p.linkColor;
+                    document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    flag = true;
+                } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height) &&
+                        (!p.hasParentLink && p.href == null || p.underlineLinksMode == 1) && p.originalStyles.containsKey("text_underline")) {
+                     p.hovered = false;
+                     p.text_underline = (Boolean) (p.originalStyles.get("text_underline"));
+                     p.color = (Color) p.originalStyles.get("text_color");
+                     p.originalStyles.remove("text_underline");
+                     p.originalStyles.remove("text_color");
+                     document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                     flag = true;
+                }
+            }
+        } else {
+            if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height &&
+                  (hasParentLink || href != null) && !hovered) {
+                hovered = true;
+                originalStyles.put("text_underline", text_underline);
+                originalStyles.put("text_color", color);
+                text_underline = true;
+                color = linkColor;
+                document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                flag = true;
+            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) &&
+                    (!hasParentLink && href == null || underlineLinksMode == 1) && originalStyles.containsKey("text_underline")) {
+                 hovered = false;
+                 text_underline = (Boolean) (originalStyles.get("text_underline"));
+                 color = (Color) originalStyles.get("text_color");
+                 originalStyles.remove("text_underline");
+                 originalStyles.remove("text_color");
+                 document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                 flag = true;
+            }
+        }
+        if (flag) {
+            if (text_layer != null) {
+                Component[] c = text_layer.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    JLabel label = (JLabel) c[i];
+
+                    int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+                    Font font = new Font(fontFamily, style, fontSize);
+
+                    Color col = hasParentLink || href != null ? linkColor : color;
+                    label.setForeground(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * alpha)));
+
+                    boolean underline = text_underline || (hasParentLink || href != null) && underlineLinksMode == 0;
+                    boolean strikethrough = text_strikethrough;
+
+                    if (underline || strikethrough) {
+                        Map attributes = font.getAttributes();
+                        if (underline) attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+                        if (strikethrough) attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+                        label.setFont(font.deriveFont(attributes));
+                    } else {
+                        label.setFont(font);
+                    }
+                }
+                
+            }
+            if (textRenderingMode == 1) forceRepaint();
+        }
+    }
+
+    private void openBrowser(String url) {
+        String os = System.getProperty("os.name").toLowerCase();
+        Runtime rt = Runtime.getRuntime();
+        try {
+            if (os.indexOf("win") >= 0) rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+            else if (os.indexOf("mac") >= 0) rt.exec("open " + url);
+            else {
+                String[] browsers = { "google-chrome", "firefox", "mozilla", "epiphany", "konqueror",
+                                 "netscape", "opera", "links", "lynx" };
+                StringBuffer cmd = new StringBuffer();
+                for (int i = 0; i < browsers.length; i++)
+                    if(i == 0)
+                        cmd.append(String.format(    "%s \"%s\"", browsers[i], url));
+                    else
+                        cmd.append(String.format(" || %s \"%s\"", browsers[i], url));
+
+                rt.exec(new String[] { "sh", "-c", cmd.toString() });
+            }
+        } catch (IOException ex) {}
+    }
+
+    private boolean hovered;
     private Watcher w;
 
     Vector<Drawable> v = new Vector<Drawable>();

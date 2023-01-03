@@ -46,13 +46,13 @@ import service.WebpConverter;
  *
  * @author Alex
  */
-public class YouTubeThumb extends Href {
+public class YouTubeThumb extends Block {
     
     public YouTubeThumb(WebDocument document, String url, int w, int h) {
         super(document);
 
         String[] p = url.split("/");
-        setURL("https://www.youtube.com/watch?v=" + p[p.length-1]);
+        href = "https://www.youtube.com/watch?v=" + p[p.length-1];
 
         viewport_width = width = w;
         viewport_height = height = h;
@@ -343,6 +343,7 @@ public class YouTubeThumb extends Href {
         b.setAutoXMargin();
         b.setAutoYMargin();
         document.root.addElement(b);
+        document.root.addMouseListeners();
 
         document.ready = true;
 
@@ -374,7 +375,6 @@ public class YouTubeThumb extends Href {
     }
 
     String imageSrc;
-    String href;
 
     BufferedImage image;
     BufferedImage icon;

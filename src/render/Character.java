@@ -1,6 +1,7 @@
 package render;
 
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -84,7 +85,12 @@ public class Character extends JPanel implements Drawable {
             g2d.fillRect(left, top, width, height);
         }
 
-        g2d.setColor(color);
+        Block block = line.parent;
+        if (block.original != null) block = block.original;
+        Color col = block.hasParentLink || block.href != null ? block.linkColor : block.color;
+        g2d.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * block.alpha)));
+
+        //g2d.setColor(color);
         @SuppressWarnings("unchecked")
         Map<String, String> desktopHints = (Map<String, String>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
         if (font.getSize() >= 21) {
@@ -99,9 +105,19 @@ public class Character extends JPanel implements Drawable {
             g2d.addRenderingHints(desktopHints);
         }
         FontMetrics fn = this.getFontMetrics(font);
+        int cw = fn.stringWidth(textContent);
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                              RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-        g2d.drawString(textContent, left, top + fn.getHeight() - 3);
+        g2d.drawString(textContent, left, top + fn.getHeight() - 5);
+        if (block.text_underline || block.hasParentLink && block.underlineLinksMode == 0) {
+            if (line.elements.lastElement() == this) cw -= 1;
+            g2d.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+            g2d.drawLine(left, top + fn.getHeight() - 2, left + cw, top + fn.getHeight() - 2);
+        }
+        if (block.text_strikethrough) {
+            g2d.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+            g2d.drawLine(left, top + fn.getHeight() / 2 + 1, left + cw, top + fn.getHeight() / 2 + 1);
+        }
         //System.out.println(left + ", " + top);
     }
 
