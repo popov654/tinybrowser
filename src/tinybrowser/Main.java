@@ -8,12 +8,20 @@ package tinybrowser;
 import bridge.Builder;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.io.File;
 import java.net.URL;
 import java.net.URLDecoder;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import jsparser.Expression;
 import jsparser.JSParser;
 import render.Block;
+import render.WebDocument;
 
 /**
  *
@@ -161,6 +169,59 @@ public class Main {
         System.out.println("----" + root.getChildren().get(0));
         System.out.println("--------" + root.getChildren().get(0).getChildren().get(0));
 
+        JFrame frame = new JFrame("Render Test");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel panel = new JPanel();
+        final WebDocument document = new WebDocument();
+        document.root = root;
+        root.setId("root");
+
+        builder.setDocument(root, document);
+
+        document.setPreferredSize(new Dimension(460, 240));
+        document.width = 460;
+        document.height = 240;
+
+        document.ready = false;
+
+        root.setBounds(1, 1, document.width, document.height);
+        root.setWidth(-1);
+        root.height = document.height-2;
+        root.viewport_height = root.height;
+        root.orig_height = root.height;
+        root.max_height = root.height;
+        root.auto_height = false;
+
+        try {
+            UIManager.setLookAndFeel(
+                UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {}
+
+        document.ready = true;
+
+        document.panel.setBackground(Color.WHITE);
+        document.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+
+        panel.add(document);
+        frame.add(panel);
+
+        //panel.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
+        panel.setPreferredSize(new Dimension(document.width + 18, document.height + 18));
+
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        frame.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentMoved(java.awt.event.ComponentEvent evt) {}
+
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                document.resized();
+            }
+        });
+        
     }
 
     public static void testJSParser() {

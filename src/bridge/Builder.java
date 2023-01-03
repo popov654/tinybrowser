@@ -8,6 +8,7 @@ package bridge;
 import htmlparser.Node;
 import java.util.Vector;
 import render.Block;
+import render.WebDocument;
 
 /**
  *
@@ -53,8 +54,12 @@ public class Builder {
         Block b = new Block();
         if (node.nodeType == ELEMENT) {
             b.type = Block.NodeTypes.ELEMENT;
+            b.width = -1;
+            b.height = -1;
+            b.auto_width = true;
         } else if (node.nodeType == TEXT) {
             b.type = Block.NodeTypes.TEXT;
+            b.textContent = node.nodeValue;
             return b;
         } else if (node.nodeType == COMMENT) {
             return null;
@@ -92,6 +97,13 @@ public class Builder {
         }
 
         return b;
+    }
+
+    public void setDocument(Block block, WebDocument document) {
+        block.document = document;
+        for (int i = 0; i < block.getChildren().size(); i++) {
+            setDocument(block.getChildren().get(i), document);
+        }
     }
 
     public final static Vector<String> BlockElements = new Vector<String>();

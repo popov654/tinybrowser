@@ -47,7 +47,6 @@ public class LayoutTests extends JFrame {
         root.setId("root");
 
         root.setBounds(1, 1, document.width, document.height);
-
         root.setWidth(-1);
         root.height = document.height-2;
         root.viewport_height = root.height;
@@ -81,8 +80,8 @@ public class LayoutTests extends JFrame {
 
         //testTextAlign(d, Block.TextAlign.ALIGN_CENTER);
 
-        document.getParent().invalidate();
-        document.repaint();
+        //document.getParent().invalidate();
+        //document.repaint();
         btn = new JButton("Close");
         btn.addActionListener(new ActionListener(){
             @Override
@@ -572,9 +571,9 @@ public class LayoutTests extends JFrame {
         b.addElement(block);
         //block.id = "test";
 
-        //WebDocument child = new WebDocument("");
-        //block.addChildDocument(child);
-        //child.root.addText("test");
+        WebDocument child = new WebDocument();
+        block.addChildDocument(child);
+        child.root.addText("test");
 
         document.ready = true;
 
