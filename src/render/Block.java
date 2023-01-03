@@ -1408,7 +1408,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block root = childDocument.getRoot();
             root.width = root.viewport_width = width;
             root.height = root.viewport_height = height;
-            root.setBounds(0, 0, width, height);
+            root.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
+            root.setBounds(_x_, _y_, width, height);
             root.performLayout(false, false);
             return;
         }

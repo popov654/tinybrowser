@@ -642,10 +642,11 @@ public class Layouter {
                 }
                 d.setY(p.borderWidth[0] + d.margins[0] + d.top);
             }
-            last_line.elements.remove(d);
             if (last_line.elements.size() == 1 && last_line.elements.lastElement() instanceof Block &&
                     (Block)last_line.elements.lastElement() == d) {
                 block.lines.remove(block.lines.size()-1);
+            } else {
+                last_line.elements.remove(d);
             }
             last_line = block.lines.size() > 0 ? block.lines.lastElement() : null;
             if (last_line != null) {
