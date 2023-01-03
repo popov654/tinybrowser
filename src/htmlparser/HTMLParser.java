@@ -87,7 +87,23 @@ public class HTMLParser {
             root.tagName = "html";
         }
         char ch = data.charAt(pos);
-        if (state == READY) {
+        if (state == READY && data.substring(pos, pos + 4).equals("<!--")) {
+            state = READ_COMMENT;
+            last_start = pos+4;
+            cur_tag = "";
+            cur_text = "";
+            pos += 3;
+        } else if (state == READ_COMMENT && data.substring(pos, pos + 3).equals("-->")) {
+            state = READY;
+            last_start = pos+3;
+            cur_tag = "";
+            pos += 2;
+            if (last_start >= 0 && cur_text.length() > 0) {
+                Node text = new Node(curNode, 8);
+                text.nodeValue = cur_text;
+            }
+            cur_text = "";
+        } else if (state == READY || state == READ_COMMENT) {
             cur_text += ch;
         }
         if (state == READY && ch == '<') {
@@ -173,7 +189,7 @@ public class HTMLParser {
                     }
                 }
             }
-            curNode.tagName = cur_tag;
+            curNode.tagName = cur_tag.toLowerCase();
             curNode.attributes = (Hashtable<String, String>)attrs.clone();
             if (cur_tag.toLowerCase().equals("html")) {
                 root = curNode;
@@ -376,6 +392,7 @@ public class HTMLParser {
     private int READ_TAGNAME = 2;
     private int READ_ATTRIBUTE_NAME = 3;
     private int READ_ATTRIBUTE_VALUE = 4;
+    private int READ_COMMENT = 5;
 
     private int pos = 0;
     private String cur_tag = "";

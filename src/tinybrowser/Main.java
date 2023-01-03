@@ -25,6 +25,8 @@ public class Main {
         hp.traverseTree();
         System.out.println();
         System.out.println("----------------------------------");
+        System.out.println("Removing first child in <body> element");
+        hp.getRootNode().nthElementChild(2).removeChild(1);
         System.out.println("Replacing innerHTML of <p> element");
         hp.getRootNode().nthElementChild(2).firstElementChild().replaceInnerHTML("This is a paragraph with a <a href=\"#\" class=\"link red\" id=\"link\">link</a> inside and <span>another</span> <a href=\"#\">one</a>.");
         System.out.println("----------------------------------");
