@@ -1370,7 +1370,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (no_layout || !document.ready || display_type == Display.NONE) return;
 
         if (document.debug) {
-            System.out.println("Layount started for block " + toString());
+            System.out.println("Layout started for block " + toString());
             System.out.println();
         }
 
@@ -1701,7 +1701,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         
         if (document.debug) {
             System.out.println();
-            System.out.println("Layount ended for block " + toString());
+            System.out.println("Layout ended for block " + toString());
         }
     }
 
