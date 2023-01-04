@@ -134,13 +134,13 @@ public class WebDocument extends JPanel {
         //panel.repaint();
         width = getWidth();
         height = getHeight();
-        panel.setBounds(borderSize, borderSize, getWidth() - borderSize * 2, getHeight() - borderSize * 2);
         borderSize = this.getBorder().getBorderInsets(this).left;
+        panel.setBounds(borderSize, borderSize, getWidth() - borderSize * 2, getHeight() - borderSize * 2);
         if (getWidth() != last_width || getHeight() != last_height) {
             //System.err.println("Size updated");
-            root.setBounds(borderSize, borderSize, width - borderSize * 2 - root.getScrollbarYSize(), height - borderSize * 2 - root.getScrollbarXSize());
-            root.width = width - borderSize * 2 - 2;
-            root.height = height - borderSize * 2 - 2;
+            root.setBounds(0, 0, width - borderSize * 2 - root.getScrollbarYSize(), height - borderSize * 2 - root.getScrollbarXSize());
+            root.width = width - borderSize * 2;
+            root.height = height - borderSize * 2;
             root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
             root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
             root.orig_height = (int) (root.height / root.ratio);
