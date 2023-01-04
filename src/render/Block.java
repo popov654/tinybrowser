@@ -31,7 +31,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.RoundRectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -74,23 +73,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setOpaque(false);
 
         this.ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96;
-        //if (ratio >= 1.14) ratio *= 0.8;
 
         fontSize = (int)Math.round(fontSize * ratio);
 
-        this.width = (int)Math.round(width*ratio);
+        this.width = width > 0 ? (int)Math.round(width * ratio) : -1;
+        if (this.width < 0) this.auto_width = true;
         if (height >= 0) {
             auto_height = false;
-            this.height = (int)Math.round(height*ratio);
+            this.height = (int)Math.round(height * ratio);
+        } else {
+            this.height = -1;
+            auto_height = true;
         }
-        arc = WebDocument.scale_borders ? (int)Math.round(arc*2.45*ratio) : (int)Math.round(arc*2.45);
+        arc = WebDocument.scale_borders ? (int)Math.round(arc * 2.45 * ratio) : (int)Math.round(arc * 2.45);
         this.arc = new int[4];
         this.arc[0] = arc;
         this.arc[1] = arc;
         this.arc[2] = arc;
         this.arc[3] = arc;
 
-        int bw = WebDocument.scale_borders ? (int)Math.floor(borderWidth*ratio) : borderWidth;
+        int bw = WebDocument.scale_borders ? (int)Math.floor(borderWidth * ratio) : borderWidth;
         for (int i = 0; i < 4; i++) {
             this.borderWidth[i] = bw;
         }
@@ -106,13 +108,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         orig_width = width;
         orig_height = height;
 
-        if (width < 0 && document != null) {
-            no_draw = true;
-            setWidth(-1);
-            if (parent == null) {
-                width = document.width;
-            }
-            no_draw = false;
+        if (width < 0 && document != null && parent == null) {
+            width = document.width;
         }
         if (document != null && parent == null) {
             setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
@@ -295,7 +292,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void forceRepaint() {
-        if (document == null || !document.ready || document.isPainting) return;
+        if (document == null || document.root.width < 0 || !document.ready || document.isPainting) return;
         document.isPainting = true;
         buffer = null;
         invalidate();
@@ -1124,7 +1121,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
-        if (!no_draw) {
+        if (!document.inLayout && !no_draw) {
             forceRepaint();
         }
     }
@@ -2841,23 +2838,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (auto_x_margin && !auto_width) {
             setAutoXMargin();
         }
-        viewport_width = 0;
-        int w0 = viewport_width;
-        int h0 = viewport_height;
-        performLayout();
-        if (this.parent != null && !no_recalc) {
-            Block b = this;
-            w0 = -1;
-            h0 = -1;
-            while (b.parent != null && (w0 != b.viewport_width || h0 != b.viewport_height) && !no_recalc) {
-                w0 = b.parent.viewport_width;
-                h0 = b.parent.viewport_height;
-                b.parent.performLayout(true);
-                b = b.parent;
+        if (document != null && document.ready && parent != null) {
+            viewport_width = 0;
+            int w0 = viewport_width;
+            int h0 = viewport_height;
+            performLayout();
+            if (parent != null && !no_recalc) {
+                Block b = this;
+                w0 = -1;
+                h0 = -1;
+                while (b.parent != null && (w0 != b.viewport_width || h0 != b.viewport_height) && !no_recalc) {
+                    w0 = b.parent.viewport_width;
+                    h0 = b.parent.viewport_height;
+                    b.parent.performLayout(true);
+                    b = b.parent;
+                }
             }
-        }
-        if (!no_draw) {
-            forceRepaint();
+            if (!no_draw) {
+                forceRepaint();
+            }
         }
     }
 

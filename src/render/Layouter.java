@@ -228,8 +228,7 @@ public class Layouter {
             }
 
             if (b0.children.size() == 0) {
-                int i = b0.parent.getLayouter().last_line.elements.lastIndexOf(b0);
-                b0.parent.getLayouter().last_line.elements.remove(i);
+                b0.parent.getLayouter().last_line.elements.remove(b0);
             }
 
             if (index < stack.size() - 1) {
