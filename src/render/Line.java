@@ -130,6 +130,11 @@ public class Line {
         height = value;
     }
 
+    @Override
+    public String toString() {
+        return "(" + left + "," + top + ") [" + width + "x" + height + "]" + elements.toString();
+    }
+
     public int cur_pos = 0;
 
     public int left;

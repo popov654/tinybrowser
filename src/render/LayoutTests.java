@@ -27,6 +27,7 @@ public class LayoutTests extends JFrame {
         bp.setLayout(new BoxLayout(bp, BoxLayout.LINE_AXIS));
 
         document.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+        document.setBorderSize(1);
 
         document.panel.setBackground(Color.WHITE);
         setContentPane(cp);
