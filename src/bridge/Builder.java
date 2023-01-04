@@ -38,10 +38,10 @@ public class Builder {
         InlineElements.add("font");
     }
 
-    public Block buildSubtree(Node node) {
-        Block root = buildElement(node);
+    public Block buildSubtree(WebDocument document, Node node) {
+        Block root = buildElement(document, node);
         for (int i = 0; i < node.children.size(); i++) {
-            Block b = buildSubtree(node.children.get(i));
+            Block b = buildSubtree(document, node.children.get(i));
             if (b != null) {
                 root.getChildren().add(b);
                 b.parent = root;
@@ -50,13 +50,14 @@ public class Builder {
         return root;
     }
 
-    public Block buildElement(Node node) {
-        Block b = new Block();
+    public Block buildElement(WebDocument document, Node node) {
+        Block b = new Block(document);
         if (node.nodeType == ELEMENT) {
             b.type = Block.NodeTypes.ELEMENT;
             b.width = -1;
             b.height = -1;
             b.auto_width = true;
+            b.auto_height = true;
         } else if (node.nodeType == TEXT) {
             b.type = Block.NodeTypes.TEXT;
             b.textContent = node.nodeValue;
@@ -85,7 +86,7 @@ public class Builder {
             b.setBackgroundImage(node.getAttribute("src"));
         }
         else if (node.tagName.equals("p")) {
-            b.setMargins(16, 0, 16, 0);
+            b.setMargins(0, 0, 12, 0);
         }
         else if (node.tagName.equals("font")) {
             if (node.getAttribute("size") != null) {

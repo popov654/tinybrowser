@@ -86,6 +86,50 @@ public class WebDocument extends JPanel {
         });
     }
 
+    public void insertSubtree(Block b, Block insert) {
+        insert.parent = b.parent;
+        if (b.parent != null) {
+            int index = b.parent.children.indexOf(b);
+            b.parent.children.set(index, insert);
+        }
+        processSubtree(insert);
+    }
+
+    private void processSubtree(Block b) {
+        b.document = this;
+        if (b.width < 0) {
+            b.setWidth(-1);
+            if (b.parent == null) {
+                b.width = width;
+            }
+        }
+        if (b.parent != null) {
+            int index = b.parent.children.indexOf(b);
+            b.parent.children.remove(b);
+            if (b.type == Block.NodeTypes.ELEMENT) {
+                b.parent.addElement(b, index);
+                if (debug) System.err.println("Added element, index: " + index);
+            } else {
+                b.parent.addText(b.textContent);
+                if (debug) System.err.println("Added text, content: " + b.textContent);
+            }
+        } else {
+            //b.setBounds(0, 0, root.width, root.height);
+            b.width = width;
+            b.setBounds(borderSize, borderSize, width-borderSize*2, height-borderSize*2);
+            panel.remove(root);
+            root = b;
+            b.pos = 0;
+            layouter.setCurrentBlock(root);
+            root.setBackgroundColor(new Color(255, 255, 255));
+            root.overflow = Block.Overflow.SCROLL;
+            panel.add(root);
+        }
+        for (int i = 0; i < b.children.size(); i++) {
+            processSubtree(b.children.get(i));
+        }
+    }
+
     public void resized() {
         //panel.repaint();
         width = getWidth();
@@ -176,6 +220,11 @@ public class WebDocument extends JPanel {
 
     public Block getParentDocumentBlock() {
         return parent_document_block;
+    }
+
+    public void setBorderSize(int size) {
+        borderSize = size;
+        setBounds(borderSize, borderSize, width - borderSize*2, height - borderSize*2);
     }
 
     protected Layouter layouter = new Layouter(this);

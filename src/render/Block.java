@@ -106,7 +106,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         orig_width = width;
         orig_height = height;
 
-        if (width < 0) {
+        if (width < 0 && document != null) {
             no_draw = true;
             setWidth(-1);
             if (parent == null) {
@@ -115,7 +115,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             no_draw = false;
         }
         if (document != null && parent == null) {
-            setBounds(1, 1, document.width-document.borderSize*2, document.height-document.borderSize*2);
+            setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
         }
 
     }
@@ -2312,7 +2312,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         label.setBounds(_x_ + c.getX() - scroll_x, _y_ + c.getY() - scroll_y, text_italic ? c.getWidth() + 2 : c.getWidth(), c.getHeight());
 
-        if (selectable) {
+        if (selectable && selected_from > -1 && selected_to > -1) {
 
             for (int k = 0; k < v.size(); k++) {
                 if (c == v.get(k) && k >= selected_from && k <= selected_to) {
@@ -2823,7 +2823,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     width = line.getWidth()-margins[1]-margins[3];
                 }
                 orig_width = (int)Math.round(width / ratio);
-            } else {
+            } else if (document != null) {
                 _x_ = margins[3];
                 width = document.width-document.borderSize*2-margins[1]-_x_;
                 orig_width = (int)Math.round(width / ratio);
@@ -3694,8 +3694,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         d.hasParentLink = false;
         d.removeTextLayers();
         d.removeAllElements();
-        document.root.remove(d);
-        document.root.forceRepaint();
+        if (document != null) {
+            document.root.remove(d);
+            document.root.forceRepaint();
+        }
         children.remove(d);
         //performLayout();
         //forceRepaint();

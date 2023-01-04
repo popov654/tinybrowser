@@ -10,13 +10,27 @@ import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import jsparser.Expression;
 import jsparser.JSParser;
@@ -163,34 +177,131 @@ public class Main {
         hp.traverseTree();
         System.out.println();
         System.out.println("----------------------------------");
+        
         Builder builder = new Builder();
-        Block root = builder.buildSubtree(hp.getRootNode().lastElementChild());
+        final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
         System.out.println(root);
         System.out.println("----" + root.getChildren().get(0));
         System.out.println("--------" + root.getChildren().get(0).getChildren().get(0));
 
+        root.removeElement(1);
+        visualBuilderTest(root);
+
+        System.out.println();
+        
+        final Block root2 = visualBuilderSyntheticTest();
+
+        //getSyntheticTree();
+
+        Timer t = new Timer(300, new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                ArrayList<String> exclude = new ArrayList(Arrays.asList("lm", "parentListener", "border", "document", "layouter"));
+
+                HashMap<String, String> fields1 = getFields(root, exclude);
+                HashMap<String, String> fields2 = getFields(root2, exclude);
+
+                compareFieldsets(fields1, fields2);
+
+            }
+
+        });
+        t.setRepeats(false);
+        t.start();
+        
+    }
+
+    private static HashMap<String, String> getFields(Block block, List<String> exclude) {
+        HashMap<String, String> result = new HashMap<String, String>();
+        for (Field field : block.getClass().getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+                Object value = field.get(block);
+                if (value != null && !exclude.contains(field.getName())) {
+                    //System.out.println(field.getName() + "=" + value);
+                    String str = value.toString();
+                    if (value != null && value.getClass().isArray()) {
+                        if (value instanceof int[]) {
+                            int[] a = (int[]) value;
+                            str = "";
+                            for (int i = 0; i < a.length; i++) {
+                                if (i > 0) str += ", ";
+                                str += a[i];
+                            }
+                            str = "[" + str + "]";
+                        }
+                        if (value instanceof Color[]) {
+                            Color[] a = (Color[]) value;
+                            str = "";
+                            for (int i = 0; i < a.length; i++) {
+                                if (i > 0) str += ", ";
+                                Color col = (Color) a[i];
+                                str = "color[" + col.getRed() + ", " + col.getGreen() + ", " + col.getBlue() + ", " + col.getAlpha() + "]";
+                            }
+                            str = "[" + str + "]";
+                        }
+                        //System.out.println(value.getClass().getComponentType());
+                    }
+                    if (value instanceof Color) {
+                        Color col = (Color) value;
+                        str = "color[" + col.getRed() + ", " + col.getGreen() + ", " + col.getBlue() + ", " + col.getAlpha() + "]";
+                    }
+                    if (value instanceof BufferedImage && value != null) {
+                        BufferedImage img = (BufferedImage) value;
+                        str = "BufferedImage[" + img.getWidth() + "x" + img.getHeight() + "]";
+                    }
+                    result.put(field.getName(), str);
+                }
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+            } catch (IllegalAccessException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    private static void compareFieldsets(HashMap<String, String> fields1, HashMap<String, String> fields2) {
+        String result = "";
+        Set keys = fields1.keySet();
+        Iterator it = keys.iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            if (!fields1.get(key).equals(fields2.get(key))) {
+                result += key + ": " + fields1.get(key) + " <-> " + fields2.get(key) + "\n";
+            }
+        }
+        System.out.println(result.length() > 0 ? result : "Objects are equal");
+    }
+
+    public static void visualBuilderTest(Block root) {
         JFrame frame = new JFrame("Render Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         JPanel panel = new JPanel();
         final WebDocument document = new WebDocument();
-        document.root = root;
-        root.setId("root");
 
-        builder.setDocument(root, document);
+        document.insertSubtree(document.root, root);
+        root.setId("root");
 
         document.setPreferredSize(new Dimension(460, 240));
         document.width = 460;
         document.height = 240;
 
-        document.ready = false;
+        document.panel.setBackground(Color.WHITE);
+        document.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+        document.setBorderSize(1);
 
-        root.setBounds(1, 1, document.width, document.height);
+        root.setBounds(0, 0, document.width, document.height);
         root.setWidth(-1);
-        root.height = document.height-2;
+        root.height = document.height;
         root.viewport_height = root.height;
         root.orig_height = root.height;
         root.max_height = root.height;
         root.auto_height = false;
+
+        document.root.getChildren().get(0).setBackgroundColor(Color.CYAN);
 
         try {
             UIManager.setLookAndFeel(
@@ -198,9 +309,6 @@ public class Main {
         } catch (Exception e) {}
 
         document.ready = true;
-
-        document.panel.setBackground(Color.WHITE);
-        document.setBorder(BorderFactory.createLineBorder(Color.black, 1));
 
         panel.add(document);
         frame.add(panel);
@@ -210,7 +318,6 @@ public class Main {
 
         frame.pack();
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
 
         frame.addComponentListener(new java.awt.event.ComponentAdapter() {
             @Override
@@ -221,7 +328,103 @@ public class Main {
                 document.resized();
             }
         });
+
+        frame.setVisible(true);
+    }
+
+    public static Block visualBuilderSyntheticTest() {
+        JFrame frame = new JFrame("Render Test");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel panel = new JPanel();
+        final WebDocument document = new WebDocument();
+
+        Block root = document.root;
+        root.setId("root");
+
+        document.setPreferredSize(new Dimension(460, 240));
+        document.width = 460;
+        document.height = 240;
+
+        document.panel.setBackground(Color.WHITE);
+        document.setBorder(BorderFactory.createLineBorder(Color.black, 1));
+        document.setBorderSize(1);
+
+        //document.ready = false;
+
+        root.setBounds(0, 0, document.width, document.height);
+        root.setWidth(-1);
+        root.height = document.height;
+        root.viewport_height = root.height;
+        root.orig_height = root.height;
+        root.max_height = root.height;
+        root.auto_height = false;
+
+        Block paragraph = new Block(document, root, -1, -1, 0, 0, Color.BLACK);
+        paragraph.setMargins(0, 0, 12, 0);
+        paragraph.addText("This is a paragraph");
+        root.addElement(paragraph);
+
+        root.getChildren().get(0).setBackgroundColor(Color.CYAN);
+
+        try {
+            UIManager.setLookAndFeel(
+                UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {}
+
+        document.ready = true;
+
+        panel.add(document);
+        frame.add(panel);
+
+        //panel.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
+        panel.setPreferredSize(new Dimension(document.width + 18, document.height + 18));
+
+        frame.pack();
+        //frame.setLocationRelativeTo(null);
+
+        frame.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentMoved(java.awt.event.ComponentEvent evt) {}
+
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                document.resized();
+            }
+        });
+
+        frame.setVisible(true);
         
+        return root;
+    }
+
+    private static Block getSyntheticTree() {
+        final WebDocument document = new WebDocument();
+
+        Block root = document.root;
+        root.setId("root");
+
+        document.setPreferredSize(new Dimension(460, 240));
+        document.width = 460;
+        document.height = 240;
+
+        //document.ready = false;
+
+        root.setBounds(1, 1, document.width, document.height);
+        root.setWidth(-1);
+        root.height = document.height-2;
+        root.viewport_height = root.height;
+        root.orig_height = root.height;
+        root.max_height = root.height;
+        root.auto_height = false;
+
+        Block paragraph = new Block(document, root, -1, -1, 0, 0, Color.BLACK);
+        paragraph.setMargins(0, 0, 12, 0);
+        paragraph.addText("This is a paragraph");
+        root.addElement(paragraph);
+
+        root.getChildren().get(0).setBackgroundColor(Color.CYAN);
+
+        return root;
     }
 
     public static void testJSParser() {
