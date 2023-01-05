@@ -506,11 +506,14 @@ public class Layouter {
             return;
         } else if (d.display_type == Block.Display.INLINE) {
 
-            for (Block part: d.parts) {
-                d.document.root.remove(part);
+            int index = 0;
+            if (d.document != null) {
+                for (Block part: d.parts) {
+                    d.document.root.remove(part);
+                }
+                index = d.document.root.getComponentCount() - d.pos - 1;
+                if (d.parts.size() > 0) d.document.root.add(d, index);
             }
-            int index = d.document.root.getComponentCount() - d.pos - 1;
-            if (d.parts.size() > 0) d.document.root.add(d, index);
             d.parts.clear();
 
             Block b = d.clone();

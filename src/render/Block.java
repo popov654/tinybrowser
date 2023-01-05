@@ -1101,7 +1101,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
-        if (!no_draw) {
+        if (document != null && !document.inLayout && !no_draw) {
             forceRepaint();
         }
     }
@@ -1121,7 +1121,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
-        if (!document.inLayout && !no_draw) {
+        if (document != null && !document.inLayout && !no_draw) {
             forceRepaint();
         }
     }
@@ -3723,7 +3723,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void removeAllElements() {
         for (int i = 0; i < children.size(); i++) {
-            document.root.remove(children.get(i));
+            if (document != null) document.root.remove(children.get(i));
             if (children.get(i).text_layer != null) {
                 children.get(i).text_layer.removeAll();
             }
