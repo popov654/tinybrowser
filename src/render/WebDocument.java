@@ -2,6 +2,7 @@ package render;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -12,6 +13,7 @@ import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -86,6 +88,33 @@ public class WebDocument extends JPanel {
         });
     }
 
+    public void setWidth(int value) {
+        setBounds(getX(), getY(), value, this.height);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                resized();
+            }
+        });
+    }
+
+    public void setHeight(int value) {
+        setBounds(getX(), getY(), this.width, value);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                resized();
+            }
+        });
+    }
+
+    @Override
+    public void setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
+        setPreferredSize(new Dimension(width, height));
+    }
+
     public void insertSubtree(Block b, Block insert) {
         insert.parent = b.parent;
         if (b.parent != null) {
@@ -93,6 +122,14 @@ public class WebDocument extends JPanel {
             b.parent.children.set(index, insert);
         }
         processSubtree(insert);
+    }
+
+    public void insertSubtreeWithoutRoot(Block b, Block insert) {
+        b.removeAllElements();
+        for (int i = 0; i < insert.children.size(); i++) {
+            b.addElement(insert.children.get(i));
+            processSubtree(insert.children.get(i));
+        }
     }
 
     private void processSubtree(Block b) {
@@ -154,6 +191,7 @@ public class WebDocument extends JPanel {
                 root.performLayout();
                 root.forceRepaint();
                 resizing = false;
+                getParent().repaint();
             }
         }
         last_width = getWidth();

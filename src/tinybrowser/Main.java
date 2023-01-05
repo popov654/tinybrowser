@@ -8,18 +8,16 @@ package tinybrowser;
 import bridge.Builder;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +25,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -277,16 +276,22 @@ public class Main {
     }
 
     public static void visualBuilderTest(Block root) {
-        JFrame frame = new JFrame("Render Test");
+        final JFrame frame = new JFrame("Render Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        JPanel panel = new JPanel();
+        final JPanel panel = new JPanel();
+        panel.setLayout(new CardLayout());
         final WebDocument document = new WebDocument();
 
         document.setPreferredSize(new Dimension(460, 240));
         document.width = 460;
         document.height = 240;
 
-        document.insertSubtree(document.root, root);
+        document.root.width = document.width;
+        document.root.height = document.height;
+        document.root.auto_height = false;
+        document.root.setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
+        
+        document.insertSubtreeWithoutRoot(document.root, root);
         root.setId("root");
 
         //document.debug = true;
@@ -306,10 +311,10 @@ public class Main {
 
         document.ready = true;
 
-        panel.add(document);
-        frame.add(panel);
+        panel.add(document, "main");
+        frame.setContentPane(panel);
 
-        //panel.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
         panel.setPreferredSize(new Dimension(document.width + 18, document.height + 18));
 
         frame.pack();
@@ -326,6 +331,8 @@ public class Main {
         });
 
         frame.setVisible(true);
+
+        //documentResizeTest(frame, panel, document, 1000, 400);
     }
 
     public static Block visualBuilderSyntheticTest() {
@@ -423,6 +430,25 @@ public class Main {
         root.getChildren().get(0).setBackgroundColor(Color.CYAN);
 
         return root;
+    }
+
+    private static void documentResizeTest(final JFrame frame, final JPanel panel, final WebDocument document, int timeout, final int width) {
+        Timer t = new Timer(timeout, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                document.setWidth(width);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        panel.setPreferredSize(new Dimension(document.width + 18, document.height + 18));
+                        frame.pack();
+                        frame.setLocationRelativeTo(null);
+                    }
+                });
+            }
+        });
+        t.setRepeats(false);
+        t.start();
     }
 
     public static void testJSParser() {
