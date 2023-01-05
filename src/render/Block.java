@@ -1559,6 +1559,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     layouter.last_word = j;
                     layouter.addWord(w[j], f);
                     layouter.last_word = -1;
+
+                    if (original != null && original.parts.size() > 1) {
+                        int h = original.parts.lastElement().lines.get(0).getHeight();
+                        original.parts.lastElement().height = original.parts.lastElement().viewport_height = h;
+                        lines.lastElement().height = h;
+                    }
+
                     content_y_max = lines.lastElement().getY() - borderWidth[0] + lines.lastElement().getHeight() + paddings[2];
                     if (parent != null && content_y_max > parent.height && !parent.auto_height) {
                         addScrollbarY();

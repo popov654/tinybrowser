@@ -251,11 +251,11 @@ public class Layouter {
         for (int i = s.size()-1; i >= 0; i--) {
             d = s.get(i);
             Block b = (index < stack.size()-1 ? stack.get(index+1) : block.original).parts.lastElement();
-            Block b0 = b.parent;
-            b0.getLayouter().last_line = b0.getLayouter().startNewLine(0, 0, b);
-            b.width = b0.getLayouter().last_line.getWidth();
+            Block p = b.parent;
+            p.getLayouter().last_line = p.getLayouter().startNewLine(0, 0, b);
+            b.width = p.getLayouter().last_line.getWidth();
             b.viewport_width = b.width;
-            b0.getLayouter().last_line.addElement(b);
+            p.getLayouter().last_line.addElement(b);
             index++;
         }
     }
@@ -528,7 +528,7 @@ public class Layouter {
 
             b.width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
 
-            if (b.width <= 0) {
+            if (b.width <= 0 && block.white_space == Block.WhiteSpace.NORMAL) {
                 Line new_line = startNewLine(0, 0, b);
                 cur_x = new_line.getX();
                 cur_y = new_line.getY();
@@ -595,14 +595,21 @@ public class Layouter {
                 last_block.fontSize = block.fontSize;
             }
 
-            if (last_block != null && last_block.line == last_line) {
-                applyVerticalAlignment(b);
+            last_block = null;
+            Line line = null;
+            for (int i = 0; i < d.parts.size(); i++) {
+                Block part = d.parts.get(i);
+                if (part.line != line) last_block = null;
+                line = part.line;
+                applyVerticalAlignment(part);
+                // set line height to the new maximum height
+                int h = b.height + b.margins[0] + b.margins[2];
+                if (h > line.getHeight()) {
+                    line.setHeight(h);
+                }
+                last_block = part;
             }
-            // set line height to the new maximum height
-            int h = b.height + b.margins[0] + b.margins[2];
-            if (h > last_line.getHeight()) {
-                last_line.setHeight(h);
-            }
+            
             b.no_draw = false;
             last_block = b;
 
@@ -666,7 +673,7 @@ public class Layouter {
         else if (d.vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
             offset = line.height - d.height;
         }
-        else if (d.vertical_align == Block.VerticalAlign.ALIGN_BASELINE) {
+        else if (d.vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null) {
             int st1 = (last_block.text_bold || last_block.text_italic) ? ((last_block.text_bold ? Font.BOLD : 0) | (last_block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             int st2 = (d.text_bold || d.text_italic) ? ((d.text_bold ? Font.BOLD : 0) | (d.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             Font f1 = new Font(last_block.fontFamily, st1, last_block.fontSize);
