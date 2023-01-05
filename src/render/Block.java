@@ -3795,7 +3795,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         s += "ID " + (id != null && id.length() > 0 ? id : "<none>") + " ";
         s +=  "(" + width + "x" + height + ")";
         if (textContent != null && textContent.length() > 0) {
-            s += "content: \"" + textContent + "\"";
+            s += " content: \"" + textContent + "\"";
         }
         return s;
     }
