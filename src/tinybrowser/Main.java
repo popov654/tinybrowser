@@ -187,29 +187,29 @@ public class Main {
         root.removeElement(1);
         visualBuilderTest(root);
 
-        System.out.println();
+        //System.out.println();
         
-        final Block root2 = visualBuilderSyntheticTest();
+        //final Block root2 = visualBuilderSyntheticTest();
 
         //getSyntheticTree();
 
-        Timer t = new Timer(300, new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                ArrayList<String> exclude = new ArrayList(Arrays.asList("lm", "parentListener", "border", "document", "layouter"));
-
-                HashMap<String, String> fields1 = getFields(root, exclude);
-                HashMap<String, String> fields2 = getFields(root2, exclude);
-
-                compareFieldsets(fields1, fields2);
-
-            }
-
-        });
-        t.setRepeats(false);
-        t.start();
+//        Timer t = new Timer(300, new ActionListener() {
+//
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//
+//                ArrayList<String> exclude = new ArrayList(Arrays.asList("lm", "parentListener", "border", "document", "layouter"));
+//
+//                HashMap<String, String> fields1 = getFields(root, exclude);
+//                HashMap<String, String> fields2 = getFields(root2, exclude);
+//
+//                compareFieldsets(fields1, fields2);
+//
+//            }
+//
+//        });
+//        t.setRepeats(false);
+//        t.start();
         
     }
 
@@ -282,23 +282,19 @@ public class Main {
         JPanel panel = new JPanel();
         final WebDocument document = new WebDocument();
 
-        document.insertSubtree(document.root, root);
-        root.setId("root");
-
         document.setPreferredSize(new Dimension(460, 240));
         document.width = 460;
         document.height = 240;
+
+        document.insertSubtree(document.root, root);
+        root.setId("root");
+
+        //document.debug = true;
 
         document.panel.setBackground(Color.WHITE);
         document.setBorder(BorderFactory.createLineBorder(Color.black, 1));
         document.setBorderSize(1);
 
-        root.setBounds(0, 0, document.width, document.height);
-        root.setWidth(-1);
-        root.height = document.height;
-        root.viewport_height = root.height;
-        root.orig_height = root.height;
-        root.max_height = root.height;
         root.auto_height = false;
 
         document.root.getChildren().get(0).setBackgroundColor(Color.CYAN);
@@ -340,6 +336,8 @@ public class Main {
 
         Block root = document.root;
         root.setId("root");
+
+        document.debug = true;
 
         document.setPreferredSize(new Dimension(460, 240));
         document.width = 460;

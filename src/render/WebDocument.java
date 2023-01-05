@@ -107,6 +107,7 @@ public class WebDocument extends JPanel {
             int index = b.parent.children.indexOf(b);
             b.parent.children.remove(b);
             if (b.type == Block.NodeTypes.ELEMENT) {
+                if (b.width == 0) b.width = b.parent.width;
                 b.parent.addElement(b, index);
                 if (debug) System.err.println("Added element, index: " + index);
             } else {
