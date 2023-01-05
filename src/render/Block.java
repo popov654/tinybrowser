@@ -3637,10 +3637,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void addElement(Block d) {
-        addElement(d, children.size());
+        addElement(d, children.size(), false);
     }
 
-    public void addElement(Block d, int pos) {
+    public void addElement(Block d, boolean preserve_style) {
+        addElement(d, children.size(), preserve_style);
+    }
+
+    public void addElement(Block d, int pos, boolean preserve_style) {
         type = NodeTypes.ELEMENT;
         if (children.contains(d)) {
             System.err.println("Duplicate block insert");
@@ -3667,12 +3671,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         d.setBounds(0, 0, b.width, b.height);
 
+        d.document = document;
+
         d.parent = this;
         d.alpha = alpha;
-        d.text_bold = text_bold;
-        d.text_italic = text_italic;
-        d.text_underline = text_underline;
-        d.text_strikethrough = text_strikethrough;
+        if (!preserve_style) {
+            d.text_bold = text_bold;
+            d.text_italic = text_italic;
+            d.text_underline = text_underline;
+            d.text_strikethrough = text_strikethrough;
+        }
         //performLayout();
         //forceRepaint();
     }

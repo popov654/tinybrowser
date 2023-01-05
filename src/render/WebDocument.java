@@ -133,19 +133,20 @@ public class WebDocument extends JPanel {
     }
 
     private void processSubtree(Block b) {
-        b.document = this;
+        b.document = null;
         if (b.width < 0) {
             b.setWidth(-1);
             if (b.parent == null) {
                 b.width = width;
             }
         }
+        b.document = this;
         if (b.parent != null) {
             int index = b.parent.children.indexOf(b);
             b.parent.children.remove(b);
             if (b.type == Block.NodeTypes.ELEMENT) {
                 if (b.width == 0) b.width = b.parent.width;
-                b.parent.addElement(b, index);
+                b.parent.addElement(b, index, true);
                 if (debug) System.err.println("Added element, index: " + index);
             } else {
                 b.parent.addText(b.textContent);

@@ -58,9 +58,17 @@ public class Builder {
             b.height = -1;
             b.auto_width = true;
             b.auto_height = true;
+            b.text_bold = node.tagName.equals("b") || node.tagName.equals("strong");
+            b.text_italic = node.tagName.equals("i") || node.tagName.equals("em");
+            b.text_underline = node.tagName.equals("u");
+            b.text_strikethrough = node.tagName.equals("s");
         } else if (node.nodeType == TEXT) {
             b.type = Block.NodeTypes.TEXT;
             b.textContent = node.nodeValue;
+            b.text_bold = node.parent.tagName.equals("b") || node.parent.tagName.equals("strong");
+            b.text_italic = node.parent.tagName.equals("i") || node.parent.tagName.equals("em");
+            b.text_underline = node.parent.tagName.equals("u");
+            b.text_strikethrough = node.parent.tagName.equals("s");
             return b;
         } else if (node.nodeType == COMMENT) {
             return null;
@@ -75,6 +83,8 @@ public class Builder {
             b.display_type = Block.Display.TABLE_ROW;
         } else if (node.tagName.equals("td")) {
             b.display_type = Block.Display.TABLE_CELL;
+            b.colspan = Integer.parseInt(node.getAttribute("colspan"));
+            b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
         }
         b.id = node.getAttribute("id");
         b.setTextColor(node.getAttribute("color"));
