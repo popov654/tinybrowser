@@ -109,8 +109,19 @@ public class Builder {
         else if (node.tagName.equals("li")) {
             b.list_item_type = 2;
         }
+        applyInlineStyles(node, b);
 
         return b;
+    }
+
+    public void applyInlineStyles(Node node, Block b) {
+        if (node.getAttribute("style") != null) {
+            String[] styles = node.getAttribute("style").split("\\s*;\\s*");
+            for (String style: styles) {
+                String[] p = style.trim().split("\\s*:\\s*");
+                if (!p[0].trim().isEmpty()) b.setProp(p[0].trim(), p[1].trim());
+            }
+        }
     }
 
     public void setDocument(Block block, WebDocument document) {
