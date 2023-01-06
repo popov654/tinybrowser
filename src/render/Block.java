@@ -1284,10 +1284,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (content_y_max == viewport_height) {
                 content_y_max = viewport_height - scrollbar_x.getPreferredSize().height;
                 if (children.size() == 1 && children.get(0).type == NodeTypes.ELEMENT && children.get(0).auto_y_margin) {
+                    viewport_height = viewport_height - scrollbar_x.getPreferredSize().height;
                     children.get(0).setAutoYMargin();
+                    if (children.get(0).margins[0] < 0) {
+                        children.get(0).margins[0] = children.get(0).margins[2] = 0;
+                        children.get(0)._y_ = 0;
+                        lines.lastElement().top = 0;
+                        content_y_max = children.get(0).height;
+                    }
                 }
+            } else {
+                viewport_height = viewport_height - scrollbar_x.getPreferredSize().height;
             }
-            viewport_height = viewport_height - scrollbar_x.getPreferredSize().height;
             if (scrollbar_y == null) {
                 viewport_width = width;
             } else {
@@ -1297,7 +1305,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 scrollbar_y.setVisibleAmount(viewport_height - borderWidth[0]);
             }
             //setBounds(_x_, _y_, width, height);
-            width = Math.max(viewport_width + (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0), w);
+            width = viewport_width + (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0);
             //width = Math.max(width, w);
             //width = w;
         }
@@ -1309,24 +1317,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 document.panel.remove(scrollbar_y);
                 scrollbar_y = null;
                 viewport_height = height;
+                if (scrollbar_x != null) {
+                    viewport_height -= scrollbar_x.getPreferredSize().height;
+                }
             }
             scrollbar_y = new ClippedScrollBar();
             document.panel.add(scrollbar_y, 0);
             int sh = height - borderWidth[0] - borderWidth[2];
             if (scrollbar_x != null) {
                 sh -= scrollbar_x.getPreferredSize().height;
-                scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + height - borderWidth[2] - sh, width - borderWidth[1] - borderWidth[3] - sh, sh);
+                scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + height - borderWidth[2] - scrollbar_x.getPreferredSize().height, width - borderWidth[1] - borderWidth[3], scrollbar_x.getPreferredSize().height);
             }
-            scrollbar_y.setBounds(_x_ + width - borderWidth[1] - scrollbar_y.getPreferredSize().width, _y_ + borderWidth[0], scrollbar_y.getPreferredSize().width, sh);
+            scrollbar_y.setBounds(_x_ + width - scrollbar_y.getPreferredSize().width, _y_ + borderWidth[0], scrollbar_y.getPreferredSize().width, sh);
             int h = Math.max(content_y_max, lines.size() > 0 ? lines.lastElement().getOffsetTop() + lines.lastElement().getHeight() + paddings[2] : 0);
-            h += borderWidth[0] + borderWidth[2];
+            //h += borderWidth[0] + borderWidth[2];
             scrollbar_y.getModel().setRangeProperties(0, viewport_height, 0, h, false);
-            scrollbar_y.setVisibleAmount(height - borderWidth[0]);
+            scrollbar_y.setVisibleAmount(viewport_height);
             scrollbar_y.addAdjustmentListener(new ScrollListener(this, 1));
             viewport_width = width - scrollbar_y.getPreferredSize().width;
             viewport_height = height;
+            if (scrollbar_x != null) {
+                viewport_height -= scrollbar_x.getPreferredSize().height;
+            }
             //setBounds(_x_, _y_, width, height);
-            height = Math.max(viewport_height + (scrollbar_x != null ? scrollbar_x.getPreferredSize().height : 0), h);
+            //height = viewport_height + (scrollbar_x != null ? scrollbar_x.getPreferredSize().height : 0);
             //height = Math.max(height, h);
             //height = h;
         }
@@ -1480,7 +1494,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             else height = parent.parent.fontSize + borderWidth[0] + borderWidth[2] + paddings[0] + paddings[2];
         }
 
-        if (viewport_width == 0 || !no_viewport_reset) viewport_width = width;
+        if (viewport_width == 0) viewport_width = width;
         if (viewport_height == 0 || !no_viewport_reset) viewport_height = height;
 
         Vector<Block> floats = new Vector<Block>();
@@ -1641,9 +1655,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
 
                 if (content_y_max > height - borderWidth[0] - borderWidth[2] && !auto_height && overflow == Overflow.SCROLL) {
+                    boolean had_scroll = scrollbar_y != null;
                     addScrollbarY();
-                    performLayout(no_rec, true);
-                    return;
+                    if (!had_scroll) {
+                        performLayout(no_rec, true);
+                        return;
+                    }
                 }
                 if (scrollbar_y != null) {
                     document.panel.setComponentZOrder(scrollbar_y, 0);
@@ -1693,10 +1710,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (content_x_max > viewport_width - borderWidth[1] - borderWidth[3]) {
             addScrollbarX();
             if (content_y_max > viewport_height - borderWidth[0] - borderWidth[2] && !auto_height) {
-                if (scrollbar_y == null) {
-                    addScrollbarY();
-                }
-            } else if (content_y_max > viewport_height - borderWidth[0] - borderWidth[2]) {
+                addScrollbarY();
+            } else if (content_y_max > viewport_height - borderWidth[0] - borderWidth[2] && auto_height) {
                 viewport_height += scrollbar_x.getPreferredSize().height;
                 height += scrollbar_x.getPreferredSize().height;
                 if (scrollbar_y != null) {
@@ -1705,6 +1720,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     scroll_y = 0;
                     scroll_top = 0;
                 }
+            } else if (content_y_max <= viewport_height - borderWidth[0] - borderWidth[2]) {
+                if (scrollbar_y != null) {
+                    document.panel.remove(scrollbar_y);
+                    scrollbar_y = null;
+                    viewport_width = width;
+                    scroll_y = 0;
+                    scroll_top = 0;
+                    if (scrollbar_x != null) {
+                        scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + borderWidth[0] + viewport_height, width - borderWidth[3] - borderWidth[1], scrollbar_x.getPreferredSize().height);
+                    }
+                }
+            }
+            if (text_align != TextAlign.ALIGN_LEFT) {
+                Layouter.applyHorizontalAlignment(this);
             }
             sortBlocks();
             return;
@@ -1714,14 +1743,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             scrollbar_x = null;
             scroll_x = 0;
             scroll_left = 0;
-            viewport_width = width;
+            viewport_height = height;
+            if (children.size() == 1 && children.get(0).type == NodeTypes.ELEMENT && children.get(0).auto_y_margin) {
+                children.get(0).setAutoYMargin();
+                children.get(0)._y_ = children.get(0).margins[0];
+                lines.lastElement().top = children.get(0).margins[0];
+                if (children.get(0).margins[0] < 0) {
+                    children.get(0).margins[0] = children.get(0).margins[2] = 0;
+                    children.get(0)._y_ = 0;
+                    lines.lastElement().top = 0;
+                    content_y_max = children.get(0).height;
+                }
+            }
+            if (scrollbar_y != null) {
+                scrollbar_y.setBounds(viewport_width, 0, scrollbar_y.getPreferredSize().width, height);
+            }
         }
         if (content_y_max <= viewport_height - borderWidth[0] - borderWidth[2] && scrollbar_y != null) {
             document.panel.remove(scrollbar_y);
             scrollbar_y = null;
             scroll_y = 0;
             scroll_top = 0;
-            viewport_height = height;
+            viewport_width = width;
+            performLayout(no_rec, true);
+            return;
         }
         if (text_align != TextAlign.ALIGN_LEFT) {
             Layouter.applyHorizontalAlignment(this);
@@ -2817,13 +2862,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setAutoYMargin() {
         auto_y_margin = true;
-        int ph = parent != null ? parent.height : document.height;
+        int ph = parent != null ? parent.viewport_height : document.height;
         if (parent != null) ph -= parent.borderWidth[0] + parent.borderWidth[2];
         margins[0] = Math.round((ph-height)/2);
         margins[2] = ph - height - margins[0];
-        if (margins[0] < 0) {
-            margins[0] = margins[2] = 0;
-        }
         if (!document.inLayout) updateMargins();
         rules_for_recalc.put("margin-top", "auto");
     }
