@@ -149,7 +149,7 @@ public class WebDocument extends JPanel {
                 b.parent.addElement(b, index, true);
                 if (debug) System.err.println("Added element, index: " + index);
             } else {
-                b.parent.addText(b.textContent);
+                b.parent.addText(b.textContent, index);
                 if (debug) System.err.println("Added text, content: " + b.textContent);
             }
         } else {
@@ -287,6 +287,8 @@ public class WebDocument extends JPanel {
 
     protected int last_width = 0;
     protected int last_height = 0;
+
+    public boolean prevent_mixed_content = true;
 
     public String selected_text;
     public static boolean scale_borders = true;

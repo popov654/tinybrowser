@@ -171,7 +171,7 @@ public class Main {
     }
 
     public static void testBuilder() {
-        HTMLParser hp = new HTMLParser("test.htm");
+        HTMLParser hp = new HTMLParser("test2.htm");
         System.out.println("----------------------------------");
         hp.traverseTree();
         System.out.println();
@@ -179,11 +179,9 @@ public class Main {
         
         Builder builder = new Builder();
         final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
-        System.out.println(root);
-        System.out.println("----" + root.getChildren().get(0));
-        System.out.println("--------" + root.getChildren().get(0).getChildren().get(0));
+        root.printTree();
 
-        root.removeElement(1);
+        //root.removeElement(1);
         visualBuilderTest(root);
 
         //System.out.println();

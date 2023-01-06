@@ -3109,8 +3109,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (height < 0 || display_type == Display.INLINE) {
                 height = fontSize + borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
             }
-            forceRepaint();
-            if (document != null) {
+            if (document != null && document.ready) {
+                forceRepaint();
                 document.validate();
             }
         }
@@ -3623,15 +3623,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void addText(String text) {
-        Block dr = new Block(document, this, 0, 0, 0, 0, Color.BLACK);
-        dr.setDisplayType(Display.INLINE);
-        dr.textContent = text;
-        dr.type = NodeTypes.TEXT;
-        dr.text_bold = text_bold;
-        dr.text_italic = text_italic;
-        dr.text_underline = text_underline;
-        dr.text_strikethrough = text_strikethrough;
-        children.add(dr);
+        addText(text, children.size());
+    }
+
+    public void addText(String text, int pos) {
+        Block tb = new Block(document, this, 0, 0, 0, 0, Color.BLACK);
+        tb.display_type = 2;
+        tb.textContent = text;
+        tb.type = NodeTypes.TEXT;
+        tb.text_bold = text_bold;
+        tb.text_italic = text_italic;
+        tb.text_underline = text_underline;
+        tb.text_strikethrough = text_strikethrough;
+        if (pos < children.size()) {
+            children.add(pos, tb);
+        } else {
+            children.add(tb);
+        }
+        if (document.prevent_mixed_content) {
+            normalizeContent();
+        }
         //if (!no_layout) performLayout();
         //forceRepaint();
     }
@@ -3642,6 +3653,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void addElement(Block d, boolean preserve_style) {
         addElement(d, children.size(), preserve_style);
+    }
+
+    public void addElement(Block d, int pos) {
+        addElement(d, children.size(), false);
     }
 
     public void addElement(Block d, int pos, boolean preserve_style) {
@@ -3681,8 +3696,31 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             d.text_underline = text_underline;
             d.text_strikethrough = text_strikethrough;
         }
+        if (document.prevent_mixed_content) {
+            normalizeContent();
+        }
         //performLayout();
         //forceRepaint();
+    }
+
+    public void normalizeContent() {
+        boolean text = false, elements = false;
+        for (int i = 0; i < children.size(); i++) {
+            if (children.get(i).type == NodeTypes.TEXT) text = true;
+            else elements = true;
+            if (text && elements) break;
+        }
+        if (text && elements) {
+            for (int i = 0; i < children.size(); i++) {
+                if (children.get(i).type == NodeTypes.TEXT) {
+                    Block b = new Block(document, parent, -1, -1, 0, 0, Color.BLACK);
+                    b.display_type = Display.INLINE;
+                    b.addText(children.get(i).textContent);
+                    children.remove(i);
+                    addElement(b, i, true);
+                }
+            }
+        }
     }
 
     public void addChildDocument(WebDocument d) {
@@ -3806,6 +3844,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             s += " content: \"" + textContent + "\"";
         }
         return s;
+    }
+
+    public String toStringRecursive(int level) {
+        String result = "";
+        for (int i = 0; i < level; i++) {
+            result += "----";
+        }
+        result += toString() + "\n";
+
+        for (int i = 0; i < children.size(); i++) {
+            result += children.get(i).toStringRecursive(level+1);
+        }
+
+        return result;
+    }
+
+    public String toStringRecursive() {
+        return toStringRecursive(0);
+    }
+
+    public void printTree() {
+        System.out.println(toStringRecursive());
     }
 
     public void updateOnResize() {

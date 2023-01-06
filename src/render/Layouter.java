@@ -270,6 +270,19 @@ public class Layouter {
         while (b.parent != null) {
             //First child cannot be a character since we don't have blocks with mixed content
             if (b.parent.lines.get(0).elements.size() == 0) return true;
+            if (b.parent.lines.get(0).elements.get(0) instanceof Character) {
+                Drawable end = b.parent.lines.get(0).elements.lastElement();
+                if (end == b) {
+                    Line line = b.parent.lines.get(0);
+                    if (line.elements.size() == 1) return true;
+                    end = line.elements.get(line.elements.size()-2);
+                }
+                if (end instanceof Block) {
+                    return endsWithWhitespace((Block)end);
+                } else {
+                    return ((Character)end).textContent.matches("\\s+");
+                }
+            }
             Block d = (Block)b.parent.lines.get(0).elements.get(0);
             if (b == d) return true;
 
