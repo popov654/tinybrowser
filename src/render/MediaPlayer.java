@@ -58,7 +58,7 @@ public class MediaPlayer {
     public MediaPlayer(Block b, int width, int height) {
         container = b;
         
-        video = new Block(b.document, b, width, height - 22 > 240 ? height-22 : 240, 0, 0, new Color(0, 0, 0));
+        video = new Block(b.document, b, width, height - 22 > min_height ? height-22 : min_height-22, 0, 0, new Color(0, 0, 0));
         b.addElement(video);
         video.setBackgroundColor(Color.BLACK);
         if (height == 22) {
@@ -353,14 +353,17 @@ public class MediaPlayer {
         if (type == VIDEO) {
             panel.addElement(fullscreen_btn);
         }
+        
+        if (container.document != null && container.document.ready) {
+            container.performLayout();
+            while (b.parent != null && (b.parent.overflow == Block.Overflow.SCROLL || b.parent.auto_height) && b.getOffsetTop() + b.height + b.margins[2] + b.parent.paddings[2] > b.parent.height - b.parent.borderWidth[2]) {
+                b.parent.performLayout(true);
+                b = b.parent;
+            }
 
-        container.performLayout();
-        while (b.parent != null && (b.parent.overflow == Block.Overflow.SCROLL || b.parent.auto_height) && b.getOffsetTop() + b.height + b.margins[2] + b.parent.paddings[2] > b.parent.height - b.parent.borderWidth[2]) {
-            b.parent.performLayout(true);
-            b = b.parent;
+            container.forceRepaint();
+            container.document.repaint();
         }
-        container.forceRepaint();
-        container.document.repaint();
 
         initPlayer();
     }
@@ -769,6 +772,8 @@ public class MediaPlayer {
     private int default_volume = 80;
     private int volume = default_volume;
 
+    public static int min_height = 140;
+
     private static final String NATIVE_LIBRARY_SEARCH_PATH = "C:/Program Files/VideoLAN/VLC";
     private static final String LOCAL_PATH = "vlc";
 
@@ -849,7 +854,7 @@ public class MediaPlayer {
             auto_height = false;
             //_x_ = button._x_ + button.borderWidth[3];
             //_y_ = button._y_ + button.borderWidth[0];
-            b.addElement(this);
+            b.addElement(this, true);
         }
 
         public void redraw() {
@@ -957,7 +962,7 @@ public class MediaPlayer {
             _x_ = block._x_;
             _y_ = block._y_;
             w = (int)Math.round(w * block.ratio);
-            b.addElement(this);
+            b.addElement(this, true);
         }
 
         public void redraw() {
