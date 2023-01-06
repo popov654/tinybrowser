@@ -1401,7 +1401,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (isImage) {
             if (bgImage == null) {
-                width = height = 16;
+                width = viewport_width = 16;
+                height = viewport_height = 16;
                 bgcolor = new Color(245, 245, 245);
             } else {
                 if (width < 0 && height < 0) {
@@ -2843,10 +2844,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setWidth(int w, boolean no_recalc) {
         if (isImage) {
-            width = (int)Math.round(w*ratio);
+            width = w >= 0 ? (int)Math.round(w*ratio) : -1;
             orig_width = w;
-            if (max_width > 0 && width > max_width) width = max_width;
-            auto_width = false;
+            if (max_width > 0 && width > max_width) {
+                width = max_width;
+            }
+            auto_width = width < 0;
             performLayout();
             return;
         }
@@ -2915,6 +2918,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(14 * ratio * w);
         }
         setWidth(value, false);
+    }
+
+    public void setWidthHeight(int w, int h) {
+        width = viewport_width = w;
+        height = viewport_height = h;
+        auto_width = w < 0;
+        auto_height = h < 0;
     }
 
     public boolean no_draw = false;

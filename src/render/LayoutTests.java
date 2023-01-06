@@ -280,7 +280,9 @@ public class LayoutTests extends JFrame {
         img.isImage = true;
         img.setBackgroundImage("image.jpg");
         document.root.addElement(img);
-        img.setHeight(170, false);
+        //img.setWidth(230, false);
+        //img.setHeight(170, false);
+        img.setWidthHeight(230, 170);
         img.auto_x_margin = true;
         img.auto_y_margin = true;
 
