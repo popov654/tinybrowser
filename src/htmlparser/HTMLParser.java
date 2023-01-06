@@ -79,13 +79,27 @@ public class HTMLParser {
         System.out.println(data);
     }
 
-    private void scan() {
+    private void addTextNode() {
+        if (!cur_text.isEmpty()) {
+            Node text = new Node(curNode, 3);
+            text.nodeValue = cur_text;
+        }
+        cur_text = "";
+        last_start = pos+1;
+    }
+
+    private void scanNext() {
         if (pos == 0) {
             TagLibrary.init();
             curNode = root;
             root.document = this;
             root.tagName = "html";
         }
+        if (pos == 0 && data.substring(pos, pos+2).equals("<!")) {
+            while (pos < data.length() && data.charAt(pos) != '>') pos++;
+            pos++;
+        }
+        if (pos >= data.length()) return;
         char ch = data.charAt(pos);
         if (state == READY && data.substring(pos, pos + 4).equals("<!--")) {
             state = READ_COMMENT;
@@ -98,17 +112,16 @@ public class HTMLParser {
             last_start = pos+3;
             cur_tag = "";
             pos += 2;
-            if (last_start >= 0 && cur_text.length() > 0) {
+            if (last_start >= 0 && !cur_text.isEmpty()) {
                 Node text = new Node(curNode, 8);
                 text.nodeValue = cur_text;
             }
             cur_text = "";
-        } else if (state == READY || state == READ_COMMENT) {
+        } else if (state == READY && ch != '<' || state == READ_COMMENT) {
             cur_text += ch;
-        }
-        if (state == READY && ch == '<') {
+        } else if (state == READY && ch == '<') {
+            cur_text += ch;
             state = READ_TAGNAME;
-            last_start = pos;
             cur_tag = "";
         } else if (state == READ_TAGNAME && (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z')) {
             cur_tag += ch;
@@ -118,18 +131,16 @@ public class HTMLParser {
         } else if (state == READ_TAGNAME) {
             state = SEEK_END;
             if (ch != ' ' && ch != '	' && ch != '>') {
+                // Malformed HTML tag of false positive
                 cur_tag = "";
                 state = READY;
                 cur_text += ch;
-            } else if (ch != '>') {
-                cur_text = cur_text.substring(0, cur_text.length()-(pos-last_start));
-                if (last_start >= 0 && cur_text.length() > 0) {
-                    if (curNode != root || !cur_text.startsWith("<!")) {
-                        Node text = new Node(curNode, 3);
-                        text.nodeValue = cur_text;
-                    }
+            } else {
+                // Add accumulated text before <
+                if (cur_text.length() >= cur_tag.length() + 1) {
+                    cur_text = cur_text.substring(0, cur_text.length() - cur_tag.length() - 1);
                 }
-                cur_text = "";
+                addTextNode();
             }
         } else if (state == SEEK_END && !cur_tag.isEmpty()) {
             if (state == SEEK_END && (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z')) {
@@ -152,7 +163,7 @@ public class HTMLParser {
         } else if (state == READ_ATTRIBUTE_VALUE && !cur_attr_name.isEmpty()) {
             if (ch == '"' && cur_attr_value.isEmpty()) {
                 quotes = true;
-            } else if (ch != '"' && ch != '	' && ch != '=') {
+            } else if (ch != '"' && ch != '	' && (quotes || ch != '=')) {
                 cur_attr_value += ch;
             } else if (!cur_attr_value.isEmpty() && (!quotes && ch == '>' || quotes && ch == '"')) {
                 attrs.put(cur_attr_name, cur_attr_value);
@@ -199,15 +210,13 @@ public class HTMLParser {
                 curNode = parentNode;
             }
             cur_text = "";
+            last_start = pos+1;
         } else if (state == SEEK_END && !cur_tag.isEmpty() && ch == '>' && closing) {
-            if (!cur_text.isEmpty() && last_start >= 0) {
-                cur_text = cur_text.substring(0, cur_text.length()-(pos-last_start-1));
-                if (!cur_text.isEmpty()) {
-                    Node text = new Node(curNode, 3);
-                    text.nodeValue = cur_text;
-                }
+            // Add inner text fragment
+            if (cur_text.length() >= cur_tag.length() + 1) {
+                cur_text = cur_text.substring(0, cur_text.length() - cur_tag.length() - 1);
             }
-            cur_text = "";
+            addTextNode();
 
             Node p = curNode;
             while (p != null && !p.tagName.toLowerCase().equals(cur_tag.toLowerCase())) {
@@ -220,17 +229,18 @@ public class HTMLParser {
             state = READY;
         }
         pos++;
-        if (pos < data.length()-1) scan();
-        else {
-            if (state != READY && !cur_tag.isEmpty()) {
-                data += '>';
-                scan();
-            }
-            if (!cur_text.isEmpty()) {
-                Node text = new Node(curNode, 3);
-                text.nodeValue = cur_text;
-                cur_text = "";
-            }
+    }
+
+    public void scan() {
+        while (pos < data.length()-1) scanNext();
+        if (state != READY && !cur_tag.isEmpty()) {
+            data += '>';
+            scan();
+        }
+        if (!cur_text.isEmpty()) {
+            Node text = new Node(curNode, 3);
+            text.nodeValue = cur_text;
+            cur_text = "";
         }
     }
 

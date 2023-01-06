@@ -63,6 +63,9 @@ public class Builder {
             b.text_underline = node.tagName.equals("u");
             b.text_strikethrough = node.tagName.equals("s");
         } else if (node.nodeType == TEXT) {
+            if (node.nodeValue.matches("\\s*")) {
+                return null;
+            }
             b.type = Block.NodeTypes.TEXT;
             b.textContent = node.nodeValue;
             b.text_bold = node.parent.tagName.equals("b") || node.parent.tagName.equals("strong");
