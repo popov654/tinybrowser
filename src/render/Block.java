@@ -1373,6 +1373,36 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             System.out.println();
         }
 
+        if (isImage) {
+            if (bgImage == null) {
+                width = height = 16;
+                bgcolor = new Color(245, 245, 245);
+            } else {
+                if (width < 0 && height < 0) {
+                    width = viewport_width = bgImage.getWidth();
+                    height = viewport_height = bgImage.getHeight();
+                    auto_width = true;
+                    auto_height = true;
+                } else {
+                    double aspect_ratio = (double) bgImage.getWidth() / bgImage.getHeight();
+                    if (width < 0) {
+                        width = viewport_width = (int) (height * aspect_ratio);
+                        auto_width = true;
+                        auto_height = false;
+                    } else if (height < 0) {
+                        height = viewport_height = (int) ((double) width / aspect_ratio);
+                        auto_width = false;
+                        auto_height = true;
+                    }
+                }
+            }
+            background_pos_x = 0;
+            background_pos_y = 0;
+            background_size_x = viewport_width;
+            background_size_y = viewport_height;
+            return;
+        }
+
         if (childDocument != null) {
             Block root = childDocument.getRoot();
             root.width = root.viewport_width = width;
@@ -2767,6 +2797,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setWidth(int w, boolean no_recalc) {
+        if (isImage) {
+            width = (int)Math.round(w*ratio);
+            orig_width = w;
+            if (max_width > 0 && width > max_width) width = max_width;
+            auto_width = false;
+            performLayout();
+            return;
+        }
         if (w < 0) {
             if (parent != null) {
                 if (line == null) {
@@ -2818,10 +2856,38 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setWidth(w, false);
     }
 
+    public void setWidth(int w, int units) {
+        int value = 0;
+        if (units == Units.px) {
+            value = w;
+        }
+        else if (units == Units.percent) {
+            value = (int)Math.round((double) viewport_width / 100 * w);
+        }
+        else if (units == Units.em) {
+            value = (int)Math.round(14 * ratio * w);
+        }
+        setWidth(value, false);
+    }
+
     public boolean no_draw = false;
     public boolean no_layout = false;
 
     public void setHeight(int h, boolean no_recalc) {
+        if (isImage) {
+            height = (int)Math.round(h*ratio);
+            viewport_height = height;
+            orig_height = h;
+            max_height = height;
+            auto_height = false;
+            performLayout();
+            return;
+        }
+        int old_height = viewport_height;
+        double old_pos_x = (double) background_pos_x / viewport_width;
+        double old_pos_y = (double) background_pos_y / viewport_height;
+        double old_size_x = (double) background_size_x / viewport_width;
+        double old_size_y = (double) background_size_y / viewport_height;
         if (h < 0 && document != null) {
             if (textContent == null) {
                 height = borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
@@ -2832,6 +2898,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             auto_height = true;
         } else {
             height = (int)Math.round(h*ratio);
+            viewport_height = height;
             orig_height = h;
             max_height = height;
             auto_height = false;
@@ -2839,10 +2906,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (auto_y_margin) {
             setAutoYMargin();
         }
-        viewport_height = 0;
-        performLayout(true);
-        if (parent != null && !no_recalc) {
-            parent.performLayout(true);
+        
+        if (children.size() > 0) {
+            performLayout(true);
+            if (parent != null && !no_recalc) {
+                parent.performLayout(true);
+            }
+        }
+        if (viewport_height != old_height && bgImage != null) {
+            background_pos_x = (int) (old_pos_x * viewport_width);
+            background_pos_y = (int) (old_pos_y * viewport_height);
+            background_size_x = (int) Math.max(0, old_size_x * viewport_width);
+            background_size_y = (int) Math.max(0, old_size_y * viewport_height);
         }
         if (!no_draw) {
             forceRepaint();
@@ -2851,6 +2926,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setHeight(int h) {
         setHeight(h, false);
+    }
+
+    public void setHeight(int h, int units) {
+        int value = 0;
+        if (units == Units.px) {
+            value = h;
+        }
+        else if (units == Units.percent) {
+            value = (int)Math.round((double) viewport_width / 100 * h);
+        }
+        else if (units == Units.em) {
+            value = (int)Math.round(14 * ratio * h);
+        }
+        setHeight(value, false);
     }
 
     public void setBackgroundPositionX(double val, int units) {
@@ -2960,6 +3049,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundContain() {
+        if (width < 0 || height < 0) return;
         double r1 = (bgImage != null && bgImage.getHeight() > 0) ? (double) bgImage.getWidth() / bgImage.getHeight() : 0;
         double r2 = height > 0 ? (double) width / height : 0;
         if (r1 > r2) {
@@ -3847,16 +3937,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Color[] borderColor = {Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK};
     public String fontFamily = "Tahoma";
     public int fontSize = 14;
+
     public boolean text_bold = false;
     public boolean text_italic = false;
     public boolean text_underline = false;
     public boolean text_strikethrough = false;
+
     public int text_align = 0;
     public int positioning = 0;
     public int overflow = 0;
     public int vertical_align = 2;
     public boolean sharp = false;
     public float alpha = 1.0f;
+    
     public float bg_alpha = 1.0f;
     public BufferedImage bgImage = null;
     public int background_repeat = 0;
@@ -3867,6 +3960,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int background_pos_x = 0;
     public int background_pos_y = 0;
     public Gradient gradient = null;
+    public boolean isImage = false;
+
     public boolean has_animation = false;
     private ImageFrame[] animation_frames;
     private int current_frame = 0;
@@ -3974,6 +4069,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.type = this.type;
         b.textContent = this.textContent;
+        b.isImage = isImage;
 
         b._x_ = this._x_;
         b._y_ = this._y_;

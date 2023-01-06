@@ -64,6 +64,7 @@ public class LayoutTests extends JFrame {
 
         basicTest();
         //linksTest();
+        //testImages();
         //testReplacedContent();
         //testTables();
         //testInternalFrames();
@@ -269,6 +270,26 @@ public class LayoutTests extends JFrame {
         d01.setHref("http://popov654.pp.ru");
         d01.linkColor = new Color(6, 66, 162);
         d01.underlineLinksMode = 1;
+    }
+
+    public void testImages() {
+        document.root.removeAllElements();
+
+        Block img = new Block(document, document.root, -1, -1, 0, 0, Color.BLACK);
+        img.width = -1;
+        img.isImage = true;
+        img.setBackgroundImage("image.jpg");
+        document.root.addElement(img);
+        img.setHeight(170, false);
+        img.auto_x_margin = true;
+        img.auto_y_margin = true;
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
     }
 
     public void testReplacedContent() {
@@ -704,7 +725,9 @@ public class LayoutTests extends JFrame {
 
             @Override
             public void run() {
-                lt.document.root.getChildren().get(0).takeScreenshot("screenshot");
+                if (lt.document.root != null && lt.document.root.getChildren().size() >= 1){
+                    lt.document.root.getChildren().get(0).takeScreenshot("screenshot");
+                }
             }
             
         });
