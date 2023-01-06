@@ -43,7 +43,7 @@ import render.WebDocument;
 public class Main {
 
     public static void testHTMLParser() {
-        HTMLParser hp = new HTMLParser("test.htm");
+        HTMLParser hp = new HTMLParser(getInstallPath() + "test.htm");
         System.out.println("----------------------------------");
         hp.printTree();
         System.out.println();
@@ -171,7 +171,8 @@ public class Main {
     }
 
     public static void testBuilder() {
-        HTMLParser hp = new HTMLParser("test2.htm");
+        System.out.println(getInstallPath() + "test2.htm");
+        HTMLParser hp = new HTMLParser(getInstallPath() + "test2.htm");
         System.out.println("----------------------------------");
         hp.printTree();
         System.out.println();
@@ -1011,7 +1012,7 @@ public class Main {
         try {
             programPath = URLDecoder.decode(programPath, "utf8");
         } catch (Exception e) {}
-        int slashes = 4;
+        int slashes = 3;
         if (programPath.endsWith(".jar")) {
             slashes--;
         }
@@ -1020,7 +1021,7 @@ public class Main {
             programPath = programPath.substring(0, index);
         }
         programPath += File.separatorChar;
-        installPath = programPath + "TinyBrowser";
+        installPath = programPath;
     }
 
     public static String getInstallPath() {
