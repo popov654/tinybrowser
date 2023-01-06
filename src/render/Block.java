@@ -314,7 +314,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void forceRepaint() {
-        if (document == null || document.root.width < 0 || !document.ready || document.isPainting) return;
+        if (document == null || document.root.width < 0 || !document.ready || document.inLayout || document.isPainting) {
+            return;
+        }
         document.isPainting = true;
         buffer = null;
         invalidate();
@@ -1124,9 +1126,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
-        if (document != null && !document.inLayout && !no_draw) {
-            forceRepaint();
-        }
+        forceRepaint();
     }
 
     public void setY(int value) {
@@ -1144,9 +1144,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
-        if (document != null && !document.inLayout && !no_draw) {
-            forceRepaint();
-        }
+        forceRepaint();
     }
 
     class ImageFrame {
