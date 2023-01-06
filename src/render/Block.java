@@ -173,8 +173,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    @Override
-    public void mouseWheelMoved(MouseWheelEvent e) {
+    public void mouseWheel(MouseWheelEvent e) {
         Block[] blocks = new Block[layer_list.size()];
         blocks = layer_list.toArray(blocks);
 
@@ -186,12 +185,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
               return;
         }
 
+        if (this == e.getSource()) {
+            document.scroll_intercepted = false;
+        }
+
         for (int i = blocks.length-1; i >= 0; i--) {
             Block b = blocks[i].original != null ? blocks[i].original : blocks[i];
             if (b.display_type == Display.INLINE || b.overflow != Overflow.SCROLL) continue;
-            if (children.contains(b) && b.isMouseInside(mouse_x, mouse_y)) {
-                b.mouseWheelMoved(e);
-                return;
+            if (b.isMouseInside(mouse_x, mouse_y)) {
+                b.mouseWheel(e);
+                if (document.scroll_intercepted) {
+                    document.scroll_intercepted = false;
+                    return;
+                }
             }
         }
 
@@ -208,6 +214,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             scroll_x = scroll_left;
             scrollbar_x.getModel().setValue(scroll_x);
             forceRepaint();
+            document.scroll_intercepted = true;
         } else if (this.scrollbar_y != null) {
             scroll_top += e.getWheelRotation() * scroll_delta;
             int parent_height = parent != null ? parent.viewport_height : document.height;
@@ -220,8 +227,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             scroll_y = scroll_top;
             scrollbar_y.getModel().setValue(scroll_y);
             forceRepaint();
+            document.scroll_intercepted = true;
         }
         document.repaint();
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        Block b0 = this;
+        while (b0.parent != null) {
+            b0 = b0.parent;
+        }
+        if (b0 != this) {
+            b0.mouseWheelMoved(e);
+            return;
+        }
+
+        mouseWheel(e);
     }
 
     public boolean isMouseInside(int x, int y) {
@@ -4288,7 +4310,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return viewport_height;
     }
 
-    private LinkedList<Block> layer_list = null;
+    private LinkedList<Block> layer_list = new LinkedList<Block>();
 
     private int isFullySelected(Rectangle sel, Rectangle el) {
         if (sel.contains(el)) return 1;

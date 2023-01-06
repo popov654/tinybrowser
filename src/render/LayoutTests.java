@@ -62,9 +62,9 @@ public class LayoutTests extends JFrame {
 
         document.debug = true;
 
-        basicTest();
+        //basicTest();
         //linksTest();
-        //testImages();
+        testImages();
         //testReplacedContent();
         //testTables();
         //testInternalFrames();

@@ -277,6 +277,7 @@ public class WebDocument extends JPanel {
     public boolean ready = true;
 
     public volatile boolean resizing = false;
+    public boolean scroll_intercepted = false;
 
     public boolean debug = false;
 
