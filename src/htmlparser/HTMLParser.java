@@ -30,8 +30,29 @@ public class HTMLParser {
         return root;
     }
 
-    public void traverseTree() {
+    public void printTree() {
         printNode(root, 0);
+    }
+
+    public void traverseTree(Callback callback) {
+        processNode(root, 0, callback);
+    }
+
+    private void processNode(Node node, int level, Callback callback) {
+        if (!(node.nodeType == 3 && node.nodeValue.matches("^\\s+$"))) {
+            try {
+                callback.process(node);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        for (int i = 0; i < node.children.size(); i++) {
+            processNode(node.children.get(i), level+1, callback);
+        }
+    }
+
+    public interface Callback {
+        public void process(Node node);
     }
 
     private void printNode(Node node, int level) {

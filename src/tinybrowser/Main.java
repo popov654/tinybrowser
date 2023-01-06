@@ -45,7 +45,7 @@ public class Main {
     public static void testHTMLParser() {
         HTMLParser hp = new HTMLParser("test.htm");
         System.out.println("----------------------------------");
-        hp.traverseTree();
+        hp.printTree();
         System.out.println();
         System.out.println("----------------------------------");
         System.out.println("Removing first child in <body> element");
@@ -54,7 +54,7 @@ public class Main {
         hp.getRootNode().nthElementChild(2).firstElementChild().replaceInnerHTML("This is a paragraph with a <a href=\"#\" class=\"link red\" id=\"link\">link</a> inside and <span>another</span> <a href=\"#\">one</a>.");
         System.out.println("----------------------------------");
         System.out.println();
-        hp.traverseTree();
+        hp.printTree();
         System.out.println("\r\nChecking index:");
         System.out.println("First element with class \"link\" has tag <" + hp.getClassIndex().get("link").get(0).tagName + ">");
         System.out.println();
@@ -173,7 +173,7 @@ public class Main {
     public static void testBuilder() {
         HTMLParser hp = new HTMLParser("test2.htm");
         System.out.println("----------------------------------");
-        hp.traverseTree();
+        hp.printTree();
         System.out.println();
         System.out.println("----------------------------------");
         
