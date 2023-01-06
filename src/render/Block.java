@@ -36,6 +36,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
@@ -2454,6 +2457,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return new Color(Integer.parseInt(s[0]), Integer.parseInt(s[1]), Integer.parseInt(s[2]), (int)Math.round(255 * Double.parseDouble(s[3])));
         }
         if (!value.matches("#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}")) {
+            if (value.matches("^[A-Za-z]+$")) {
+                try {
+                    Field f = Color.class.getDeclaredField(value);
+                    if (f.getType() == Color.class) {
+                        return (Color) f.get(Color.class);
+                    }
+                } catch (Exception ex) {}
+            }
             return null;
         }
         if (value.matches("#[0-9a-fA-F]{3}")) {
@@ -3341,6 +3352,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (prop.matches("border(-left|-right|-bottom|-top)?")) {
             String[] s = value.split("\\s+");
+            HashMap<String, Integer> types = new HashMap<String, Integer>();
+            types.put("solid", 0);
+            types.put("dashed", 1);
+            types.put("dotted", 2);
             for (int i = 0; i < s.length; i++) {
                 if (s[i].matches("^[0-9]+.*(px|em)$")) {
                     String ch = s[i].substring(0, 1);
@@ -3360,20 +3375,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (prop.contains("-right") || prop.equals("border")) this.borderWidth[1] = val;
                     if (prop.contains("-bottom") || prop.equals("border")) this.borderWidth[2] = val;
                     if (prop.contains("-top") || prop.equals("border")) this.borderWidth[0] = val;
-                } else if (s[i].matches("^(#|rgba?).*")) {
+                } else if (s[i].matches("^(#|rgba?).*") || !types.containsKey(s[i])) {
                     Color col = parseColor(s[i]);
-
                     if (prop.contains("-left") || prop.equals("border")) this.borderColor[3] = col;
                     if (prop.contains("-right") || prop.equals("border")) this.borderColor[1] = col;
                     if (prop.contains("-bottom") || prop.equals("border")) this.borderColor[2] = col;
                     if (prop.contains("-top") || prop.equals("border")) this.borderColor[0] = col;
                 } else {
-                    HashMap<String, Integer> m = new HashMap<String, Integer>();
-                    m.put("solid", 0);
-                    m.put("dashed", 1);
-                    m.put("dotted", 2);
-                    if (m.containsKey(s[i])) {
-                        int t = m.get(s[i]);
+                    if (types.containsKey(s[i])) {
+                        int t = types.get(s[i]);
                         if (prop.contains("-left") || prop.equals("border")) this.borderType[3] = t;
                         if (prop.contains("-right") || prop.equals("border")) this.borderType[1] = t;
                         if (prop.contains("-bottom") || prop.equals("border")) this.borderType[2] = t;
