@@ -3292,6 +3292,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+        if (prop.equals("color")) {
+            setTextColor(value);
+            forceRepaint();
+            return;
+        }
+
         if (prop.equals("background-color")) {
             setBackgroundColor(value);
             forceRepaint();
