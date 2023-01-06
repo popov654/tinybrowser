@@ -2300,7 +2300,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Color col = hasParentLink || href != null ? linkColor : color;
         label.setForeground(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * alpha)));
 
-        boolean underline = text_underline || (hasParentLink || href != null) && underlineLinksMode == 0;
+        boolean underline = text_underline || (hasParentLink || href != null) && linksUnderlineMode == 0;
         boolean strikethrough = text_strikethrough;
 
         if (underline || strikethrough) {
@@ -3713,10 +3713,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         d.parent = this;
         d.alpha = alpha;
         if (!preserve_style) {
+            d.color = color;
+            d.fontSize = fontSize;
+            d.fontFamily = fontFamily;
             d.text_bold = text_bold;
             d.text_italic = text_italic;
             d.text_underline = text_underline;
             d.text_strikethrough = text_strikethrough;
+            d.linksUnderlineMode = linksUnderlineMode;
         }
         if (document.prevent_mixed_content) {
             normalizeContent();
@@ -4103,7 +4107,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public String href;
     
     public Color linkColor = Color.BLUE;
-    public int underlineLinksMode = 0;
+    public int linksUnderlineMode = 0;
 
     public boolean hasParentLink = false;
     public Color default_color = Color.BLACK;
@@ -4205,7 +4209,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.href = href;
         b.hasParentLink = hasParentLink;
-        b.underlineLinksMode = underlineLinksMode;
+        b.linksUnderlineMode = linksUnderlineMode;
 
         b.fontSize = this.fontSize;
         b.fontFamily = this.fontFamily;
@@ -4724,7 +4728,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
                     flag = true;
                 } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height) &&
-                        (!p.hasParentLink && p.href == null || p.underlineLinksMode == 1) && p.originalStyles.containsKey("text_underline")) {
+                        (!p.hasParentLink && p.href == null || p.linksUnderlineMode == 1) && p.originalStyles.containsKey("text_underline")) {
                      p.hovered = false;
                      p.text_underline = (Boolean) (p.originalStyles.get("text_underline"));
                      p.color = (Color) p.originalStyles.get("text_color");
@@ -4745,7 +4749,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 flag = true;
             } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) &&
-                    (!hasParentLink && href == null || underlineLinksMode == 1) && originalStyles.containsKey("text_underline")) {
+                    (!hasParentLink && href == null || linksUnderlineMode == 1) && originalStyles.containsKey("text_underline")) {
                  hovered = false;
                  text_underline = (Boolean) (originalStyles.get("text_underline"));
                  color = (Color) originalStyles.get("text_color");
@@ -4767,7 +4771,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     Color col = hasParentLink || href != null ? linkColor : color;
                     label.setForeground(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * alpha)));
 
-                    boolean underline = text_underline || (hasParentLink || href != null) && underlineLinksMode == 0;
+                    boolean underline = text_underline || (hasParentLink || href != null) && linksUnderlineMode == 0;
                     boolean strikethrough = text_strikethrough;
 
                     if (underline || strikethrough) {

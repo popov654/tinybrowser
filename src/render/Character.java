@@ -109,7 +109,7 @@ public class Character extends JPanel implements Drawable {
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                              RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         g2d.drawString(textContent, left, top + fn.getHeight() - 5);
-        if (block.text_underline || block.hasParentLink && block.underlineLinksMode == 0) {
+        if (block.text_underline || block.hasParentLink && block.linksUnderlineMode == 0) {
             if (line.elements.lastElement() == this) cw -= 1;
             g2d.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
             g2d.drawLine(left, top + fn.getHeight() - 2, left + cw, top + fn.getHeight() - 2);

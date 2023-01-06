@@ -269,7 +269,7 @@ public class LayoutTests extends JFrame {
         b.addElement(d01);
         d01.setHref("http://popov654.pp.ru");
         d01.linkColor = new Color(6, 66, 162);
-        d01.underlineLinksMode = 1;
+        d01.linksUnderlineMode = 1;
     }
 
     public void testImages() {
