@@ -416,8 +416,8 @@ public class Layouter {
             d.no_draw = true;
             
             if (d.auto_x_margin) {
-                d.margins[3] = (int)Math.round((new_line.getWidth() - d.viewport_width) / 2);
-                d.margins[1] = new_line.getWidth() - d.viewport_width - d.margins[3];
+                d.margins[3] = Math.max(0, Math.round((new_line.getWidth() - d.viewport_width) / 2));
+                d.margins[1] = Math.max(0, new_line.getWidth() - d.viewport_width - d.margins[3]);
             }
 
             new_line.addElement(d);
