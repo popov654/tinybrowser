@@ -3558,6 +3558,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (prop.endsWith("user-select")) {
+            setSelectionEnabled(!value.equals("none"));
+        }
+
         String ch = value.substring(0, 1);
         String n = "";
         int index = 0;
@@ -4299,6 +4303,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int zIndex = 0;
     private boolean zIndexAuto = true;
 
+    public boolean select_enabled = true;
+
     public String href;
     
     public Color linkColor = Color.BLUE;
@@ -4442,6 +4448,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.bgcolor = this.bgcolor;
         b.color = this.color;
         b.linkColor = linkColor;
+        b.select_enabled = select_enabled;
 
         b.margins = new int[4];
         b.margins[0] = margins[0];
@@ -4555,7 +4562,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (textRenderingMode == 0 && (text_layer == null || text_layer.getComponents().length == 0)) {
             return;
         }
-        if (System.currentTimeMillis() - last_click < 320) {
+        if (System.currentTimeMillis() - last_click < 320 && select_enabled) {
             int x = e.getX();
             int y = e.getY();
             if (textRenderingMode == 1) {
@@ -4721,7 +4728,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             } else if (d instanceof Character) {
                 Block b = ((Character)d).line.parent;
-
+                if (!b.select_enabled) return;
                 for (int k = 0; k < b.lines.size(); k++) {
                     Line line = b.lines.get(k);
                     if (!e.isShiftDown()) {
