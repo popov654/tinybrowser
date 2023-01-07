@@ -275,6 +275,7 @@ public class Node {
     public Node parent;
     public Vector<Node> children = new Vector<Node>();
     public Hashtable<String, String> attributes = new Hashtable<String, String>();
+    public Hashtable<String, String> styles = new Hashtable<String, String>();
     public Node previousSibling;
     public Node nextSibling;
     public String tagName = "";

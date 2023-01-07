@@ -6,6 +6,7 @@
 package bridge;
 
 import htmlparser.Node;
+import java.util.Set;
 import java.util.Vector;
 import render.Block;
 import render.WebDocument;
@@ -109,9 +110,17 @@ public class Builder {
         else if (node.tagName.equals("li")) {
             b.list_item_type = 2;
         }
+        applyStyles(node, b);
         applyInlineStyles(node, b);
 
         return b;
+    }
+
+    public void applyStyles(Node node, Block b) {
+        Set<String> keys = node.styles.keySet();
+        for (String key: keys) {
+            if (!key.trim().isEmpty()) b.setProp(key.trim(), node.styles.get(key).trim());
+        }
     }
 
     public void applyInlineStyles(Node node, Block b) {

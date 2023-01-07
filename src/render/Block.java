@@ -3122,10 +3122,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundSizeXY(double val_x, double val_y, int units) {
+        if (val_x < 0) background_size_x_auto = true;
+        if (val_y < 0) background_size_y_auto = true;
+
         int value_x = 0, value_y = 0;
         if (units == Units.px) {
-            value_x = (int)Math.round(val_x);
-            value_y = (int)Math.round(val_y);
+            value_x = val_x > 0 ? (int)Math.round(val_x) : -1;
+            value_y = val_y > 0 ? (int)Math.round(val_y) : -1;
         }
         else if (units == Units.percent) {
             value_x = (int)Math.ceil((height-borderWidth[0]-borderWidth[2])*(val_x/100));
@@ -3137,8 +3140,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         background_size_x = value_x;
         background_size_y = value_y;
-        background_size_x_auto = false;
-        background_size_y_auto = false;
+        background_size_x_auto = val_x < 0;
+        background_size_y_auto = val_y < 0;
+
+        if (!background_size_x_auto && background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
+            background_size_y = (int)Math.round(background_size_x / ((double) bgImage.getWidth() / bgImage.getHeight()));
+        }
+        else if (background_size_x_auto && !background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
+            background_size_x = (int)Math.round(background_size_y * ((double) bgImage.getWidth() / bgImage.getHeight()));
+        }
+        else if (background_size_x_auto && background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
+            background_size_x = bgImage.getWidth();
+            background_size_y = bgImage.getHeight();
+        }
 
         forceRepaint();
     }
@@ -3361,6 +3375,48 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (prop.equals("background")) {
+            String[] parts = value.split("\\s+");
+            int pos = -1;
+            int size = -1;
+            int slash = -1;
+            for (int i = 0; i < parts.length; i++) {
+                if (parts[i].matches("[0-9.]+[0-9]+(px|%)$")) {
+                    if (pos == -1 && slash == -1) {
+                        setProp("background-position-x", parts[i]);
+                        pos = i;
+                    }
+                    if (pos == i-1 && slash == -1) {
+                        setProp("background-position-y", parts[i]);
+                        pos = i;
+                    }
+                    if (slash == i-1 && size == -1) {
+                        setProp("background-size-x", parts[i]);
+                        size = i;
+                    }
+                    if (slash == i-2 && size == i-1) {
+                        setProp("background-size-y", parts[i]);
+                        size = i;
+                    }
+                }
+                else if (parts[i].equals("/")) {
+                    slash = i;
+                }
+                else if (parseColor(parts[i]) != null) {
+                    setProp("background-color", parts[i]);
+                }
+                else if (parts[i].startsWith("url(")) {
+                    setProp("background-image", parts[i]);
+                }
+                else if (slash == i-1 && parts[i].matches("^(cover|contain|auto)$")) {
+                    if (parts[i].equals("cover")) setBackgroundCover();
+                    else if (parts[i].equals("contain")) setBackgroundContain();
+                    else if (parts[i].equals("auto")) setBackgroundSizeAuto();
+                }
+            }
+            return;
+        }
+
         if (prop.equals("background-color")) {
             setBackgroundColor(value);
             forceRepaint();
@@ -3379,6 +3435,34 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setBackgroundImage(value.substring(pos+1, pos2));
             forceRepaint();
             return;
+        }
+
+        if (prop.equals("background-position-x")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+                int[] val = parseValueString(value);
+                setBackgroundPositionX(val[0], val[1]);
+            }
+        }
+
+        if (prop.equals("background-position-y")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+                int[] val = parseValueString(value);
+                setBackgroundPositionY(val[0], val[1]);
+            }
+        }
+
+        if (prop.equals("background-size-x")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+                int[] val = parseValueString(value);
+                setBackgroundSizeX(val[0], val[1]);
+            }
+        }
+
+        if (prop.equals("background-size-y")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+                int[] val = parseValueString(value);
+                setBackgroundSizeY(val[0], val[1]);
+            }
         }
 
         if (prop.equals("box-shadow")) {
@@ -3529,6 +3613,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             forceRepaint();
             return;
         }
+    }
+
+    private int[] parseValueString(String value) {
+        if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+            String ch = value.substring(0, 1);
+            String n = "";
+            int index = 0;
+            while (ch.matches("[0-9.]")) {
+                n += ch;
+                index++;
+                ch = value.substring(index, index+1);
+            }
+            String u = value.substring(index);
+            int val = (int)Math.round(Float.parseFloat(n) * ratio);
+            int units = u.equals("px") ? Units.px : (u.equals("em") ? Units.em : Units.percent);
+            return new int[] {val, units};
+        }
+        return null;
     }
 
     public void setLeft(double val, int units) {

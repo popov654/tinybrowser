@@ -6,8 +6,10 @@
 package tinybrowser;
 
 import bridge.Builder;
+import cssparser.CSSParser;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
+import htmlparser.Node;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -22,10 +24,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Vector;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -43,7 +43,7 @@ import render.WebDocument;
 public class Main {
 
     public static void testHTMLParser() {
-        HTMLParser hp = new HTMLParser(getInstallPath() + "test.htm");
+        HTMLParser hp = new HTMLParser(getInstallPath() + "test1.htm");
         System.out.println("----------------------------------");
         hp.printTree();
         System.out.println();
@@ -139,10 +139,10 @@ public class Main {
         System.out.print("Result of matching a[id^=\"nk\"] is ");
         qs.printResults();
         qs = new QuerySelector("a[id$=\"nk\"]", hp);
-        System.out.print("Result of matching a[id^=\"nk\"] is ");
+        System.out.print("Result of matching a[id$=\"nk\"] is ");
         qs.printResults();
         qs = new QuerySelector("a[id$=\"li\"]", hp);
-        System.out.print("Result of matching a[id^=\"li\"] is ");
+        System.out.print("Result of matching a[id$=\"li\"] is ");
         qs.printResults();
         qs = new QuerySelector("a[id~=\"in\"]", hp);
         System.out.print("Result of matching a[id~=\"in\"] is ");
@@ -179,6 +179,14 @@ public class Main {
         System.out.println("----------------------------------");
         
         Builder builder = new Builder();
+        
+        Node style = hp.getRootNode().firstElementChild().lastElementChild();
+        CSSParser parser = new CSSParser(hp);
+        Vector<QuerySelector> qs = parser.parseString(style.firstChild().nodeValue);
+        for (int i = 0; i < qs.size(); i++) {
+            qs.get(i).apply();
+        }
+
         final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
         root.printTree();
 
@@ -301,7 +309,7 @@ public class Main {
 
         root.auto_height = false;
 
-        document.root.getChildren().get(0).setBackgroundColor(Color.CYAN);
+        //document.root.getChildren().get(0).setBackgroundColor(Color.CYAN);
 
         try {
             UIManager.setLookAndFeel(

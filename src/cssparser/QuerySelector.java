@@ -8,7 +8,10 @@ package cssparser;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,17 +22,35 @@ import java.util.regex.Pattern;
  * @author Alex
  */
 public class QuerySelector {
-    public QuerySelector(String query, HTMLParser hp) {
+    public QuerySelector(String query, HTMLParser hp, String rules) {
         if (query.contains(",")) {
             String[] a = query.split(",\\s*");
-            QuerySelector q = new QuerySelector(a[0], hp);
+            QuerySelector q = new QuerySelector(a[0], hp, "");
             for (int i = 1; i < a.length; i++) {
-                q.combine(new QuerySelector(a[i], hp));
+                q.combine(new QuerySelector(a[i], hp, ""));
+            }
+            resultSet = q.resultSet;
+        } else {
+            parseRules(rules);
+            this.query = query;
+            this.hp = hp;
+            parse();
+        }
+    }
+
+    public QuerySelector(String query, HTMLParser hp) {
+        this(query, hp, "");
+    }
+
+    private void parseRules(String rules) {
+        this.rules = new HashMap<String, String>();
+        String[] r = rules.split("\\s*;\\s*");
+        for (String rule: r) {
+            String[] p = rule.split("\\s*:\\s*");
+            if (p[0].trim().matches("^[a-z-]{2,}[a-z]$") && !p[1].trim().isEmpty()) {
+                this.rules.put(p[0].trim(), p[1].trim());
             }
         }
-        this.query = query;
-        this.hp = hp;
-        parse();
     }
 
     public void combine(QuerySelector q) {
@@ -427,9 +448,16 @@ public class QuerySelector {
         }
     }
 
+    public void apply() {
+        for (int i = 0; i < resultSet.size(); i++) {
+            resultSet.get(i).styles.putAll(rules);
+        }
+    }
+
     private String[] parts;
     private String query;
     private String orig_query = query;
     private Vector<Node> resultSet;
+    HashMap<String, String> rules;
     HTMLParser hp;
 }
