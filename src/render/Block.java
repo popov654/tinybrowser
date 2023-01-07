@@ -2591,12 +2591,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setFontFamily(String value) {
         fontFamily = value;
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setFontFamily(value);
+        }
         performLayout();
         forceRepaint();
     }
 
     public void setFontSize(int value) {
         fontSize = (int)Math.round(value * ratio);
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setFontSize(value);
+        }
         performLayout();
         forceRepaint();
     }
@@ -2606,6 +2612,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setBold(value);
         }
+        performLayout();
+        forceRepaint();
     }
 
     public void setItalic(boolean value) {
@@ -2613,6 +2621,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setItalic(value);
         }
+        performLayout();
+        forceRepaint();
     }
 
     public void setUnderline(boolean value) {
@@ -2620,12 +2630,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setUnderline(value);
         }
+        performLayout();
+        forceRepaint();
     }
 
     public void setStrikeThrough(boolean value) {
         text_strikethrough = value;
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setStrikeThrough(value);
+        }
+        performLayout();
+        forceRepaint();
+    }
+
+    public void setSelectionEnabled(boolean value) {
+        select_enabled = value;
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setSelectionEnabled(value);
         }
     }
 
@@ -2634,6 +2655,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (col != null) {
             setTextColor(col);
         }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setTextColor(col);
+        }
+        forceRepaint();
     }
 
     public void setBackgroundColor(String value) {
@@ -2641,6 +2666,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (col != null) {
             setBackgroundColor(col);
         }
+        forceRepaint();
     }
 
     public void setBorderColor(String value) {
@@ -2963,8 +2989,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setWidthHeight(int w, int h) {
-        width = viewport_width = w;
-        height = viewport_height = h;
+        width = viewport_width = (int) (w * ratio);
+        height = viewport_height = (int) (h * ratio);
         auto_width = w < 0;
         auto_height = h < 0;
     }
