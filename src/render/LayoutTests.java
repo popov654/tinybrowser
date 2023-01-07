@@ -62,9 +62,9 @@ public class LayoutTests extends JFrame {
 
         document.debug = true;
 
-        //basicTest();
+        basicTest();
         //linksTest();
-        testImages();
+        //testImages();
         //testReplacedContent();
         //testTables();
         //testInternalFrames();
@@ -173,7 +173,7 @@ public class LayoutTests extends JFrame {
         d01.setDisplayType(Block.Display.INLINE);
         d01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d01.addText("Test ");
-        d.addElement(d01);
+        d.addElement(d01, true);
         //d01.setHref("http://popov654.pp.ru");
         //d01.underlineLinksMode = 1;
 
@@ -185,14 +185,14 @@ public class LayoutTests extends JFrame {
         d02.setBackgroundColor(new Color(255, 210, 0));
         d02.setFontSize(24);
         //d02.setMargins(0, 4);
-        d.addElement(d02);
+        d.addElement(d02, true);
 
         Block d03 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
         d03.setPositioning(Block.Position.STATIC);
         d03.setDisplayType(Block.Display.INLINE);
         d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d03.addText(" and some more");
-        d.addElement(d03);
+        d.addElement(d03, true);
 
         document.root.addElement(d);
 
