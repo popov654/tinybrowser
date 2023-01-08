@@ -1404,6 +1404,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (no_layout || !document.ready || display_type == Display.NONE) return;
 
+        if (!no_viewport_reset && auto_width) viewport_width = 0;
+
         if (document.debug) {
             System.out.println("Layout started for block " + toString());
             System.out.println();
@@ -2966,7 +2968,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (auto_x_margin && !auto_width) {
             setAutoXMargin();
         }
-        if (document != null && document.ready && parent != null) {
+        if (document != null && document.ready && !document.inLayout && parent != null) {
             viewport_width = 0;
             int w0 = viewport_width;
             int h0 = viewport_height;

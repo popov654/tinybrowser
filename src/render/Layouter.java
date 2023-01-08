@@ -429,7 +429,11 @@ public class Layouter {
 
             if (d.display_type != Block.Display.TABLE) {
                 if (d.auto_width && !d.no_layout && !(d.parent != null && d.parent.parent != null && (d.parent.parent.display_type == Block.Display.TABLE || d.parent.parent.display_type == Block.Display.INLINE_TABLE))) {
+                    boolean old_value = d.document.inLayout;
+                    d.document.inLayout = true;
                     d.setWidth(-1, true);
+                    d.document.inLayout = old_value;
+                    d.performLayout();
                 } else {
                     d.performLayout();
                     if (block.pref_size < d.width + d.margins[3] + d.margins[1]) {
@@ -472,10 +476,12 @@ public class Layouter {
             int w = getFullLineSize(d);
 
             if (d.display_type != Block.Display.INLINE_TABLE) {
-                
+                boolean old_value = d.document.inLayout;
+                d.document.inLayout = true;
                 d.setWidth(d.width > 0 ? d.orig_width : -1, true);
-
-                if (d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
+                d.document.inLayout = old_value;
+                d.performLayout();
+                if (d.width < 0 && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
                     int line_width = d.lines.get(0).cur_pos;
                     d.lines.get(0).setWidth(line_width);
                     d.width = d.borderWidth[3] + d.paddings[3] + line_width + d.paddings[1] + d.borderWidth[1];
