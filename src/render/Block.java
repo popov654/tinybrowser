@@ -2910,6 +2910,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setMaxWidth(int w) {
+        w = (int) (w * ratio);
         max_width = w;
         if (width > w) {
             setWidth(w);
@@ -2957,6 +2958,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (max_width > 0 && width > max_width) width = max_width;
             rules_for_recalc.remove("width");
             auto_width = false;
+            viewport_width = width;
+            if (scrollbar_y != null) {
+                viewport_width = width - scrollbar_y.getPreferredSize().width;
+            }
         }
         if (auto_x_margin && !auto_width) {
             setAutoXMargin();
@@ -3006,6 +3011,31 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         height = viewport_height = (int) (h * ratio);
         auto_width = w < 0;
         auto_height = h < 0;
+
+        orig_width = w;
+        if (max_width > 0 && width > max_width) width = max_width;
+        rules_for_recalc.remove("width");
+        auto_width = false;
+
+        if (auto_x_margin && !auto_width) {
+            setAutoXMargin();
+        }
+
+        orig_height = h;
+        max_height = height;
+        auto_height = false;
+
+        if (auto_y_margin) {
+            setAutoYMargin();
+        }
+
+        if (parent != null) {
+            parent.performLayout();
+        }
+
+        if (!no_draw) {
+            forceRepaint();
+        }
     }
 
     public boolean no_draw = false;
@@ -3040,6 +3070,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             orig_height = h;
             max_height = height;
             auto_height = false;
+            viewport_height = height;
+            if (scrollbar_x != null) {
+                viewport_height = height - scrollbar_x.getPreferredSize().height;
+            }
         }
         if (auto_y_margin) {
             setAutoYMargin();
