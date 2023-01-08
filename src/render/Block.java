@@ -419,6 +419,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void clearBuffer() {
 
+        if (buffer == null) return;
+
         Shape rect = new RoundedRect(0, 0, width, height, arc[0], arc[1], arc[2], arc[3]);
 
         Graphics g = buffer.getGraphics();
