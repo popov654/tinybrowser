@@ -45,23 +45,8 @@ public class MediaTest extends JFrame {
         document.root.setWidth(-1);
         document.root.setHeight(document.height-2);
         document.root.addMouseListeners();
-        document.repaint();
         
-        document.ready = false;
-        Block d = new Block(document, null, -1, -1, 1, 7, Color.MAGENTA);
-        d.setPositioning(Block.Position.STATIC);
-        //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
-        d.setMargins(4);
-        d.setPaddings(15, 17, 15, 17);
-        d.setWidth(-1);
-        d.setHeight(-1);
-        //d.setHeight(80);
-        d.setBorderWidth(2);
-        d.setTextColor(new Color(0, 0, 0));
-        d.setBackgroundColor(new Color(127, 186, 241));
-        d.overflow = Block.Overflow.SCROLL;
-
-        document.root.addElement(d);
+        prepareBlock();
         
         //d.has_shadow = true;
         //d.shadow_x = 1;
@@ -76,43 +61,15 @@ public class MediaTest extends JFrame {
         //root.setBackgroundImage("400.jpg");
         //root.setBackgroundRepeat(Block.BackgroundRepeat.REPEAT_XY);
 
-        document.root.height = document.height-2;
+        document.root.height = document.height;
         document.root.viewport_height = document.root.height;
         document.root.orig_height = document.root.height;
         document.root.max_height = document.root.height;
         document.root.setBounds(document.root.getX(), document.root.getY(), document.root.width, document.root.height);
-        
-        document.ready = true;
-        document.root.performLayout();
 
-        document.root.forceRepaintAll();
+        testVideoPlayer();
+        //testAudioPlayer();
 
-        Block pc = new Block(document);
-        //MediaPlayer mp = new MediaPlayer(pc);
-        //mp.open("sound.wav");
-        int player_width = 404 - d.borderWidth[3] - d.borderWidth[1];
-        int player_height = 210 - d.borderWidth[0] - d.borderWidth[2];
-        pc.width = pc.max_width = player_width;
-        pc.height = -1;
-        //pc.height = pc.max_height = Math.max(MediaPlayer.min_height, player_height);
-        pc.auto_height = false;
-        pc.auto_width = true;
-        pc.margins[0] = 10;
-        pc.margins[1] = 10;
-        pc.margins[2] = 10;
-        pc.margins[3] = 10;
-        d.addElement(pc);
-        pc.setAutoXMargin();
-        MediaPlayer mp = new MediaPlayer(pc, player_width, player_height);
-        mp.container.children.get(0).width = player_width;
-        //mp.container.children.get(0).height = pc.height + 100;
-        mp.container.children.get(0).viewport_width = player_width;
-        mp.container.children.get(0).max_width = player_width;
-        pc.performLayout();
-        document.root.forceRepaintAll();
-        mp.open("file:///D:/Inception_trailer_48fps.mkv");
-        
-        document.panel.repaint();
         btn = new JButton("Close");
         btn.addActionListener(new ActionListener(){
             @Override
@@ -135,53 +92,59 @@ public class MediaTest extends JFrame {
 
             @Override
             public void componentResized(java.awt.event.ComponentEvent evt) {
-                //System.err.println("Resize triggered");
                 document.resized();
             }
         });
     }
 
-    public void testRelativePositioning(Block b) {
-        b.setPositioning(Block.Position.RELATIVE);
-        b.removeAllElements();
-
-        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
-        block.setPositioning(Block.Position.STATIC);
-        block.setDisplayType(Block.Display.INLINE_BLOCK);
-        block.addText("Text");
-        b.addElement(block);
-
-        block.setPositioning(Block.Position.RELATIVE);
-        block.setLeft(10, Block.Units.px);
-        block.setTop(10, Block.Units.px);
-
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+    private void prepareBlock() {
+        document.root.removeAllElements();
+        document.ready = false;
+        Block d = new Block(document, null, -1, -1, 1, 7, Color.MAGENTA);
+        d.setPositioning(Block.Position.STATIC);
+        //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
+        d.setMargins(4);
+        d.setPaddings(15, 17, 15, 17);
+        d.setWidth(-1);
+        d.setHeight(-1);
+        //d.setHeight(80);
+        d.setBorderWidth(2);
+        d.setTextColor(new Color(0, 0, 0));
+        d.setBackgroundColor(new Color(127, 186, 241));
+        d.overflow = Block.Overflow.SCROLL;
+        document.root.addElement(d);
+        document.ready = true;
     }
 
-    public void testAbsolutePositioning(Block b) {
-        b.setPositioning(Block.Position.RELATIVE);
-        b.removeAllElements();
-
-        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
-        block.setPositioning(Block.Position.STATIC);
-        block.setDisplayType(Block.Display.INLINE_BLOCK);
-        block.addText("Text");
-        b.addElement(block);
-
-        block.setPositioning(Block.Position.ABSOLUTE);
-        block.setLeft(50, Block.Units.percent);
-        block.setTop(50, Block.Units.percent);
-        block.performLayout();
-        block.setProp("margin-left", -block.width / 2, Block.Units.px);
-        block.setProp("margin-top", -block.height / 2, Block.Units.px);
-
-        document.root.performLayout();
-        document.root.forceRepaintAll();
+    public void testAudioPlayer() {
+        Block b = document.root.children.get(0);
+        Block pc = new Block(document);
+        pc.setWidth(160);
+        pc.setHeight(22);
+        pc.auto_height = true;
+        pc.height = -1;
+        b.addElement(pc);
+        MediaPlayer mp = new MediaPlayer(pc);
+        mp.open("sound.wav");
+        //mp.open("file:///D:/Inception_trailer_48fps.mkv");
     }
 
-    public void testTextAlign(Block b, int value) {
-        b.setTextAlign(value);
+    public void testVideoPlayer() {
+        Block b = document.root.children.get(0);
+        Block pc = new Block(document);
+        int player_width = 320 - b.borderWidth[3] - b.borderWidth[1];
+        int player_height = 206 - b.borderWidth[0] - b.borderWidth[2];
+        pc.setWidth(player_width);
+        pc.auto_height = true;
+        pc.height = -1;
+        //pc.height = pc.max_height = Math.max(MediaPlayer.min_height, player_height);
+        b.addElement(pc);
+        pc.setAutoXMargin();
+        pc.setAutoYMargin();
+        MediaPlayer mp = new MediaPlayer(pc, player_width, player_height);
+        mp.open("file:///D:/Inception_trailer_48fps.mkv");
+        //pc.setWidth(300);
+        //mp.open("sound.wav");
     }
 
     public void updateUI(int last_width, int last_height, int width, int height) {

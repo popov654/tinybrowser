@@ -1453,6 +1453,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (children.size() == 0 && getComponents().length == 1) {
+            if (getComponents()[0] instanceof MediaPlayer.VideoRenderer) {
+                int delta = parent.width - width;
+                width = parent.width;
+                height = parent.height - parent.children.get(1).height;
+                Block progress = parent.children.get(1).children.get(1);
+                progress.width = progress.max_width = progress.children.get(0).width = progress.width + delta;
+                getComponents()[0].setBounds(_x_ - scroll_x, _y_ - scroll_y, width, height);
+            }
             return;
         }
 

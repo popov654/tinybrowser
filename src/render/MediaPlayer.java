@@ -29,6 +29,8 @@ import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.TrackInfo;
+import uk.co.caprica.vlcj.player.TrackType;
 import uk.co.caprica.vlcj.player.direct.BufferFormat;
 import uk.co.caprica.vlcj.player.direct.BufferFormatCallback;
 import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
@@ -48,7 +50,7 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 public class MediaPlayer {
 
     public MediaPlayer(Block b) {
-        this(b, 200, 22);
+        this(b, b.width > 0 ? (int) ((double) b.width / b.ratio) : 230, 22);
     }
 
     public MediaPlayer(Block b, int width) {
@@ -57,25 +59,40 @@ public class MediaPlayer {
 
     public MediaPlayer(Block b, int width, int height) {
         container = b;
-        
-        video = new Block(b.document, b, width, height - 22 > min_height ? height-22 : min_height-22, 0, 0, new Color(0, 0, 0));
+
+        b.document.ready = false;
+
+        int h = height - 22 > min_height ? height - 22 : min_height - 22;
+        video = new Block(b.document, b, width, h, 0, 0, new Color(0, 0, 0));
         b.addElement(video);
         video.setBackgroundColor(Color.BLACK);
         if (height == 22) {
             video.display_type = Block.Display.NONE;
         }
+        if (width == -1) {
+            width = b.width >= 0 ? b.width : (b.parent != null && b.parent.viewport_width > 0 ? b.parent.viewport_width : default_width);
+        }
+        if (height == -1) {
+            height = (int) (width / ((double)16 / 9));
+            video.height = (int) ((height - 22) * b.ratio);
+        }
         panel = new Block(b.document, b, width, 22, 0, 0, new Color(0, 0, 0));
         b.addElement(panel);
 
-        b.setWidth(width);
-        if (height > 22) {
-            b.setHeight(height);
+        if (height > 22 * b.ratio) {
+            b.setWidthHeight(width, height);
             type = VIDEO;
         } else {
             b.setHeight(22);
         }
 
-        Block play_btn = new Block(b.document, panel, 22, 22, 1, 0, new Color(190, 200, 203));
+        int scaled_width = (int) (width * b.ratio);
+
+        video.width = scaled_width;
+        video.viewport_width = scaled_width;
+        video.max_width = scaled_width;
+
+        play_btn = new Block(b.document, panel, 22, 22, 1, 0, new Color(190, 200, 203));
         b.setBackgroundColor(new Color(230, 230, 230));
         play_btn.display_type = Block.Display.INLINE_BLOCK;
         Vector<Color> c = new Vector<Color>();
@@ -91,24 +108,20 @@ public class MediaPlayer {
         
         icon1 = new IconLayer(play_btn, "play");
 
-        Block fullscreen_btn = null;
-
-        if (type == VIDEO) {
-            fullscreen_btn = new Block(b.document, panel, 28, 22, 0, 0, new Color(190, 200, 203));
-            fullscreen_btn.display_type = Block.Display.INLINE_BLOCK;
-            fullscreen_btn.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-            icon2 = new IconLayer(fullscreen_btn, "fullscreen");
-            c = new Vector<Color>();
-            c.add(new Color(192, 223, 234, 7));
-            c.add(new Color(238, 238, 238, 245));
-            c.add(new Color(193, 213, 232, 180));
-            p = new Vector<Float>();
-            p.add(0f);
-            p.add(0.14f);
-            p.add(1f);
-            //fullscreen_btn.setLinearGradient(c, p, 90);
-            fullscreen_btn.setMargins(0, 0, 0, 8);
-        }
+        fullscreen_btn = new Block(b.document, panel, 28, 22, 0, 0, new Color(190, 200, 203));
+        fullscreen_btn.display_type = (type == VIDEO) ? Block.Display.INLINE_BLOCK : Block.Display.NONE;
+        fullscreen_btn.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        icon2 = new IconLayer(fullscreen_btn, "fullscreen");
+        c = new Vector<Color>();
+        c.add(new Color(192, 223, 234, 7));
+        c.add(new Color(238, 238, 238, 245));
+        c.add(new Color(193, 213, 232, 180));
+        p = new Vector<Float>();
+        p.add(0f);
+        p.add(0.14f);
+        p.add(1f);
+        //fullscreen_btn.setLinearGradient(c, p, 90);
+        fullscreen_btn.setMargins(0, 0, 0, 8);
         
         b.addMouseListener(new MouseListener() {
 
@@ -179,20 +192,23 @@ public class MediaPlayer {
                 } else if (icon1 != null) {
                     icon1.bgr_state = 0;
                 }
-                if (icon2 != null && e.getX() >= icon2._x_ - icon2.scroll_x && e.getX() <= icon2._x_ - icon2.scroll_x + icon2.width &&
-                       e.getY() >= icon2._y_ - icon2.scroll_y && e.getY() <= icon2._y_ - icon2.scroll_y + icon2.height) {
-                    icon2.bgr_state = 1;
-                } else if (icon2 != null) {
-                    icon2.bgr_state = 0;
-                }
                 if (icon1 != null) icon1.redraw();
-                if (icon2 != null) icon2.redraw();
+                if (fullscreen_btn.display_type != Block.Display.NONE) {
+                    if (icon2 != null && e.getX() >= icon2._x_ - icon2.scroll_x && e.getX() <= icon2._x_ - icon2.scroll_x + icon2.width &&
+                           e.getY() >= icon2._y_ - icon2.scroll_y && e.getY() <= icon2._y_ - icon2.scroll_y + icon2.height) {
+                        icon2.bgr_state = 1;
+                    } else if (icon2 != null) {
+                        icon2.bgr_state = 0;
+                    }
+                    if (icon2 != null) icon2.redraw();
+                }
+                
                 //System.err.println(e.getX() + ", " + e.getY());
                 container.document.root.mouseMoved(e);
             }
 
         });
-        int progress_width = b.width - play_btn.width - (fullscreen_btn != null ? fullscreen_btn.width + (int)Math.round(4 * b.ratio) : 0) - (int)Math.round(67 * b.ratio);
+        int progress_width = b.width - play_btn.width - (fullscreen_btn.display_type != Block.Display.NONE ? fullscreen_btn.width + (int)Math.round(4 * b.ratio) : 0) - (int)Math.round(67 * b.ratio);
         progress = new Block(b.document, panel, progress_width, 6, 1, 3, new Color(190, 200, 203));
         progress.display_type = Block.Display.INLINE_BLOCK;
         progress.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
@@ -350,17 +366,17 @@ public class MediaPlayer {
 
         });
 
-        if (type == VIDEO) {
-            panel.addElement(fullscreen_btn);
+        panel.addElement(fullscreen_btn);
+
+        b.document.ready = true;
+
+        if (container.getLayouter() != null) {
+            container.performLayout();
+            container.document.repaint();
         }
         
-        if (container.document != null && container.document.ready) {
-            container.performLayout();
-            while (b.parent != null && (b.parent.overflow == Block.Overflow.SCROLL || b.parent.auto_height) && b.getOffsetTop() + b.height + b.margins[2] + b.parent.paddings[2] > b.parent.height - b.parent.borderWidth[2]) {
-                b.parent.performLayout(true);
-                b = b.parent;
-            }
-
+        else if (container.document != null && container.document.ready && container.document.isVisible()) {
+            container.document.root.performLayout();
             container.forceRepaint();
             container.document.repaint();
         }
@@ -443,8 +459,11 @@ public class MediaPlayer {
         mediaPlayerComponent = new AudioMediaPlayerComponent();
         mediaPlayerComponent.getMediaPlayer().prepareMedia(url);
 
-        if (type == VIDEO && mediaPlayerComponent.getMediaPlayer().getVideoTrackCount() == -1) {
+        if (mediaPlayerComponent.getMediaPlayer().getVideoTrackCount() == -1 && url.matches(".*\\.(avi|mp4|m2ts|ts|mkv|m4v|flv|3gp|ogv)$")) {
 
+            if (container.height == panel.height) {
+                switchToVideoMode();
+            }
 
             BufferFormatCallback bufferFormatCallback = new BufferFormatCallback() {
                 @Override
@@ -608,6 +627,7 @@ public class MediaPlayer {
                 mediaPlayerComponent.release();
                 mediaPlayerComponent = null;
             }
+
         } else if (avPlayerComponent != null && avPlayerComponent.getMediaPlayer().getVideoTrackCount() == 0 && type == VIDEO) {
             if (avPlayerComponent != null) {
                 avPlayerComponent.release();
@@ -616,13 +636,79 @@ public class MediaPlayer {
             mediaPlayerComponent = new AudioMediaPlayerComponent();
             mediaPlayerComponent.getMediaPlayer().prepareMedia(url);
             setListeners(mediaPlayerComponent.getMediaPlayer());
+
+            switchToAudioMode();
         } else {
             if (mediaPlayerComponent == null) {
                 mediaPlayerComponent = new AudioMediaPlayerComponent();
                 mediaPlayerComponent.getMediaPlayer().prepareMedia(url);
             }
             setListeners(mediaPlayerComponent.getMediaPlayer());
+
+            switchToAudioMode();
         }
+    }
+
+    private void switchToVideoMode() {
+        video.display_type = Block.Display.BLOCK;
+        if (container.width < default_width) {
+            container.width = container.viewport_width = default_width;
+            panel.width = panel.viewport_width = default_width;
+            video.width = video.viewport_width = container.width;
+            video.height = video.viewport_height = (int) (video.width / ((double) 16 / 9));
+        }
+        container.height = container.viewport_height = video.height + panel.height;
+        int width = (int) ((double)(container.width - play_btn.width - (fullscreen_btn.width + (int)Math.round(4 * container.ratio)) - (int)Math.round(67 * container.ratio)) / container.ratio);
+
+        container.document.ready = false;
+        progress.setMaxWidth(width);
+        progress.setWidth(width);
+        ps.setWidth(width);
+        container.document.ready = true;
+
+        fullscreen_btn.display_type = Block.Display.INLINE_BLOCK;
+        type = VIDEO;
+
+        container.document.root.performLayout();
+        container.forceRepaint();
+        container.document.repaint();
+    }
+
+    private void switchToAudioMode() {
+        video.display_type = Block.Display.NONE;
+        container.height = container.viewport_height = panel.height;
+
+        if (container.width > default_width) {
+            container.width = container.viewport_width = default_width;
+            panel.width = panel.viewport_width = default_width;
+            video.width = video.viewport_width = container.width;
+            video.height = video.viewport_height = (int) (video.width / ((double) 16 / 9));
+        }
+
+        int width = (int) ((double)(container.width - play_btn.width - ((int)Math.round(4 * container.ratio)) - (int)Math.round(67 * container.ratio)) / container.ratio);
+
+        container.document.ready = false;
+        progress.setMaxWidth(width);
+        progress.setWidth(width);
+        ps.setWidth(width);
+        container.document.ready = true;
+
+        fullscreen_btn.display_type = Block.Display.NONE;
+        type = AUDIO;
+
+        container.forceRepaint();
+        container.document.repaint();
+    }
+
+    private void createNewPlayer(String url) {
+        container.removeAllElements();
+        int width = (int) Math.max((double) default_width / container.ratio, (double) video.width / container.ratio);
+        MediaPlayer mp = new MediaPlayer(container, width, -1);
+        mp.open(url);
+        container.document.root.performLayout();
+        container.forceRepaint();
+        container.document.repaint();
+        type = VIDEO;
     }
 
     public void play() {
@@ -772,6 +858,7 @@ public class MediaPlayer {
     private int default_volume = 80;
     private int volume = default_volume;
 
+    public static int default_width = 380;
     public static int min_height = 140;
 
     private static final String NATIVE_LIBRARY_SEARCH_PATH = "C:/Program Files/VideoLAN/VLC";
@@ -782,6 +869,8 @@ public class MediaPlayer {
     private Segments s;
     private Block ps;
     private Block progress;
+    private Block play_btn;
+    private Block fullscreen_btn;
 
     class Fader extends Thread {
 
