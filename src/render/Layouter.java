@@ -399,6 +399,11 @@ public class Layouter {
             return;
         }
         if (d.display_type == Block.Display.BLOCK || d.display_type == Block.Display.TABLE) {
+            if (d.auto_y_margin) {
+                d.margins[0] = 0;
+                d.margins[2] = 0;
+            }
+
             offset = d.margins[0];
             
             if (last_line != null && last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
