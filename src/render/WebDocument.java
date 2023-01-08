@@ -184,6 +184,12 @@ public class WebDocument extends JPanel {
             root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
             root.orig_height = (int) (root.height / root.ratio);
             root.max_height = root.height;
+
+            Component[] c = root.getComponents();
+            for (int i = 0; i < c.length; i++) {
+                c[i].setBounds(0, 0, root.width, root.height);
+            }
+
             //System.err.println("Root width: " + root.width);
             //System.err.println("Viewport width: " + root.viewport_width);
             if (root.document.ready && !resizing) {
