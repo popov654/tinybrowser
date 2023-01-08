@@ -2935,16 +2935,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setWidth(int w, boolean no_recalc) {
+        int old_width = viewport_width;
+        int old_height = viewport_height;
+
         if (isImage) {
-            width = w >= 0 ? (int)Math.round(w*ratio) : -1;
+            width = viewport_width = w >= 0 ? (int)Math.round(w*ratio) : -1;
             orig_width = w;
             if (max_width > 0 && width > max_width) {
                 width = max_width;
             }
             auto_width = width < 0;
-            performLayout();
+            doIncrementLayout(old_width, old_height, no_recalc);
             return;
         }
+
         if (w < 0) {
             if (parent != null) {
                 if (line == null) {
@@ -2976,25 +2980,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (auto_x_margin && !auto_width) {
             setAutoXMargin();
         }
-        if (document != null && document.ready && !document.inLayout && parent != null) {
-            viewport_width = 0;
-            int w0 = viewport_width;
-            int h0 = viewport_height;
-            performLayout();
-            if (parent != null && !no_recalc) {
-                Block b = this;
-                w0 = -1;
-                h0 = -1;
-                while (b.parent != null && (w0 != b.viewport_width || h0 != b.viewport_height) && !no_recalc) {
-                    w0 = b.parent.viewport_width;
-                    h0 = b.parent.viewport_height;
-                    b.parent.performLayout(true);
-                    b = b.parent;
-                }
-            }
-            if (!no_draw) {
-                forceRepaint();
-            }
+
+        doIncrementLayout(old_width, old_height, no_recalc);
+
+        if (!no_draw) {
+            forceRepaint();
         }
     }
 
@@ -3017,6 +3007,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setWidthHeight(int w, int h) {
+        int old_width = viewport_width;
+        int old_height = viewport_height;
+
         width = viewport_width = (int) (w * ratio);
         height = viewport_height = (int) (h * ratio);
         auto_width = w < 0;
@@ -3039,9 +3032,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setAutoYMargin();
         }
 
-        if (parent != null) {
-            parent.performLayout();
-        }
+        doIncrementLayout(old_width, old_height, false);
 
         if (!no_draw) {
             forceRepaint();
@@ -3052,20 +3043,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean no_layout = false;
 
     public void setHeight(int h, boolean no_recalc) {
+        int old_width = viewport_width;
+        int old_height = viewport_height;
+
         if (isImage) {
-            height = (int)Math.round(h*ratio);
+            height = viewport_height = (int)Math.round(h*ratio);
             viewport_height = height;
             orig_height = h;
             max_height = height;
             auto_height = false;
-            performLayout();
+            doIncrementLayout(old_width, old_height, no_recalc);
             return;
         }
-        int old_height = viewport_height;
-        double old_pos_x = (double) background_pos_x / viewport_width;
-        double old_pos_y = (double) background_pos_y / viewport_height;
-        double old_size_x = (double) background_size_x / viewport_width;
-        double old_size_y = (double) background_size_y / viewport_height;
+        
         if (h < 0 && document != null) {
             if (textContent == null) {
                 height = borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
@@ -3089,18 +3079,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setAutoYMargin();
         }
         
-        if (children.size() > 0) {
-            performLayout(true);
-            if (parent != null && !no_recalc) {
-                parent.performLayout(true);
-            }
-        }
-        if (viewport_height != old_height && bgImage != null) {
-            background_pos_x = (int) (old_pos_x * viewport_width);
-            background_pos_y = (int) (old_pos_y * viewport_height);
-            background_size_x = (int) Math.max(0, old_size_x * viewport_width);
-            background_size_y = (int) Math.max(0, old_size_y * viewport_height);
-        }
+        doIncrementLayout(old_width, old_height, no_recalc);
+        
         if (!no_draw) {
             forceRepaint();
         }
@@ -3122,6 +3102,40 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(14 * ratio * h);
         }
         setHeight(value, false);
+    }
+
+    public void doIncrementLayout(int old_width, int old_height, boolean no_recalc) {
+        if (document == null || document.inLayout) return;
+
+        double old_pos_x = old_width > 0 ? (double) background_pos_x / old_width : 0;
+        double old_pos_y = old_height > 0 ? (double) background_pos_y / old_height : 0;
+        double old_size_x = old_width > 0 ? (double) background_size_x / old_width : 1;
+        double old_size_y = old_height > 0 ? (double) background_size_y / old_height : 1;
+
+        if (layouter != null) {
+            performLayout(true);
+            if (viewport_height != old_height && bgImage != null) {
+                background_pos_x = (int) (old_pos_x * viewport_width);
+                background_pos_y = (int) (old_pos_y * viewport_height);
+                background_size_x = (int) Math.max(0, old_size_x * viewport_width);
+                background_size_y = (int) Math.max(0, old_size_y * viewport_height);
+            }
+            Block b = this;
+            while (old_width != b.viewport_width && old_height != b.viewport_height && b != null && !no_recalc) {
+                b = b.parent;
+                old_width = b.viewport_width;
+                old_height = b.viewport_height;
+                b.performLayout(true);
+            }
+        } else if (document.ready) {
+            document.root.performLayout();
+            if (viewport_height != old_height && bgImage != null) {
+                background_pos_x = (int) (old_pos_x * viewport_width);
+                background_pos_y = (int) (old_pos_y * viewport_height);
+                background_size_x = (int) Math.max(0, old_size_x * viewport_width);
+                background_size_y = (int) Math.max(0, old_size_y * viewport_height);
+            }
+        }
     }
 
     public void setBackgroundPositionX(double val, int units) {
