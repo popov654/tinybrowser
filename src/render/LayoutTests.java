@@ -54,35 +54,9 @@ public class LayoutTests extends JFrame {
         root.orig_height = root.height;
         root.max_height = root.height;
         root.auto_height = false;
-        //root.setBounds(root.getX(), root.getY(), root.width, root.height);
-
-        //System.out.println();
-        //d.getLayouter().printLines(d, 0);
-        //System.out.println();
 
         document.debug = true;
 
-        basicTest();
-        //linksTest();
-        //testImages();
-        //testReplacedContent();
-        //testTables();
-        //testInternalFrames();
-        //testNormal();
-        //testPreWrap();
-        //testWordBreak();
-        //testInlineBlocks();
-        //testRelativePositioning();
-        //testAbsolutePositioning();
-        //testAutoMargins(60, 15);
-        //testZIndex();
-        //testLists(2);
-        
-
-        //testTextAlign(d, Block.TextAlign.ALIGN_CENTER);
-
-        //document.getParent().invalidate();
-        //document.repaint();
         btn = new JButton("Close");
         btn.addActionListener(new ActionListener(){
             @Override
@@ -115,7 +89,6 @@ public class LayoutTests extends JFrame {
     public void prepareBlock() {
         
         document.ready = false;
-
         document.root.removeAllElements();
 
         Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
@@ -136,11 +109,9 @@ public class LayoutTests extends JFrame {
         d.setLinearGradient(c, p, -54);
 
         document.root.setId("root");
-
         document.root.addElement(d);
-
         document.ready = true;
-        
+
     }
 
     public void basicTest() {
@@ -559,7 +530,7 @@ public class LayoutTests extends JFrame {
 
         document.ready = false;
 
-        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        Block block = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.ABSOLUTE);
         block.setDisplayType(Block.Display.BLOCK);
 
@@ -567,16 +538,21 @@ public class LayoutTests extends JFrame {
         block.setHeight(100);
         block.setLeft(50, Block.Units.percent);
         block.setTop(50, Block.Units.percent);
-        block.setProp("margin-left", -block.width / 2, Block.Units.px);
-        block.setProp("margin-top", -block.height / 2, Block.Units.px);
+        block.setProp("margin-left", Math.floor(-block.width / 2 / block.ratio), Block.Units.px);
+        block.setProp("margin-top", Math.floor(-block.height / 2 / block.ratio), Block.Units.px);
         block.setBackgroundColor(Color.WHITE);
 
         b.addElement(block);
-        //block.id = "test";
+        block.id = "test";
 
-        WebDocument child = new WebDocument();
-        block.addChildDocument(child);
-        child.root.addText("test");
+//        WebDocument child = new WebDocument();
+//        child.width = block.width;
+//        child.height = block.height;
+//        child.root.width = block.width;
+//        child.root.height = block.height;
+//        child.setBounds(block._x_ - block.width / 2, block._y_ - block.height / 2, block.width, block.height);
+//        block.addChildDocument(child);
+//        child.root.addText("test");
 
         document.ready = true;
 
@@ -608,9 +584,9 @@ public class LayoutTests extends JFrame {
         b3.display_type = Block.Display.INLINE;
         b3.addText("test");
         //b.setWidth(120);
-        b.addElement(b1);
-        b.addElement(b2);
-        b.addElement(b3);
+        b.addElement(b1, true);
+        b.addElement(b2, true);
+        b.addElement(b3, true);
 
         document.ready = true;
 
@@ -715,12 +691,33 @@ public class LayoutTests extends JFrame {
         //btn.setBounds((bp.getWidth() - btn.getPreferredSize().width) / 2, (bp.getHeight() - btn.getPreferredSize().height)-10, btn.getPreferredSize().width, btn.getPreferredSize().height);
     }
 
+    public WebDocument getDocument() {
+        return document;
+    }
+
     public static void main(String[] args) {
         try {
                 UIManager.setLookAndFeel(
                     UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {}
         final LayoutTests lt = new LayoutTests();
+
+        lt.basicTest();
+        //lt.linksTest();
+        //lt.testImages();
+        //lt.testReplacedContent();
+        //lt.testTables();
+        //lt.testInternalFrames();
+        //lt.testNormal();
+        //lt.testPreWrap();
+        //lt.testWordBreak();
+        //lt.testInlineBlocks();
+        //lt.testRelativePositioning();
+        //lt.testAbsolutePositioning();
+        //lt.testAutoMargins(60, 15);
+        //lt.testZIndex();
+        //lt.testLists(2);
+
         lt.setVisible(true);
 
         SwingUtilities.invokeLater(new Runnable() {
