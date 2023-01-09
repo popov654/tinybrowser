@@ -222,51 +222,58 @@ public class Builder {
     }
 
     public void applyStateStyles(Block b, boolean no_update) {
-        //int old_width = b.viewport_width;
-        //int old_height = b.viewport_height;
+        int old_width = b.viewport_width;
+        int old_height = b.viewport_height;
 
         b.document.ready = false;
         applyStateStyles(b);
         b.document.ready = true;
 
         if (!no_update) {
-            //b.doIncrementLayout(old_width, old_height, true);
-            b.document.root.performLayout();
-            b.document.root.forceRepaint();
+            b.doIncrementLayout(old_width, old_height, true);
+            b.forceRepaint();
+            b.document.repaint();
+        }
+    }
+
+    public void applyStateStylesRecursive(Block b, boolean no_rec) {
+        int old_width = b.viewport_width;
+        int old_height = b.viewport_height;
+
+        applyStateStyles(b, true);
+        for (int i = 0; i < b.getChildren().size(); i++) {
+            applyStateStylesRecursive(b.getChildren().get(i), true);
+        }
+
+        if (b == b.document.root || !no_rec) {
+            b.doIncrementLayout(old_width, old_height, false);
+            b.forceRepaint();
             b.document.repaint();
         }
     }
 
     public void applyStateStylesRecursive(Block b) {
-        //int old_width = b.viewport_width;
-        //int old_height = b.viewport_height;
+        applyStateStylesRecursive(b, false);
+    }
 
-        applyStateStyles(b, true);
+    public void resetStylesRecursive(Block b, boolean no_rec) {
+        int old_width = b.viewport_width;
+        int old_height = b.viewport_height;
+
+        resetStyles(b, true);
         for (int i = 0; i < b.getChildren().size(); i++) {
-            applyStateStylesRecursive(b.getChildren().get(i));
+            resetStylesRecursive(b.getChildren().get(i), true);
         }
 
-        if (b == b.document.root) {
-            b.document.root.performLayout();
-            b.document.root.forceRepaint();
+        if (b == b.document.root || !no_rec) {
+            b.doIncrementLayout(old_width, old_height, false);
+            b.forceRepaint();
             b.document.repaint();
         }
     }
 
     public void resetStylesRecursive(Block b) {
-        //int old_width = b.viewport_width;
-        //int old_height = b.viewport_height;
-
-        resetStyles(b, true);
-        for (int i = 0; i < b.getChildren().size(); i++) {
-            resetStylesRecursive(b.getChildren().get(i));
-        }
-
-        if (b == b.document.root) {
-            b.document.root.performLayout();
-            b.document.root.forceRepaint();
-            b.document.repaint();
-        }
+        resetStylesRecursive(b, false);
     }
 
     public void setDocument(Block block, WebDocument document) {

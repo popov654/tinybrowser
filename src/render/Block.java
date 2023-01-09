@@ -3148,6 +3148,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 old_height = b.viewport_height;
                 b.performLayout(true);
             }
+
+            document.root.setZIndices();
+            document.root.clipScrollbars();
+
         } else if (document.ready) {
             document.root.performLayout();
             document.root.forceRepaint();
@@ -4117,13 +4121,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void applyStateStyles() {
         if (builder != null && node != null) {
-            builder.applyStateStylesRecursive(document.root);
+            //builder.applyStateStylesRecursive(document.root);
+            builder.applyStateStylesRecursive(this);
         }
     }
 
     public void resetStyles() {
         if (builder != null && node != null) {
-            builder.resetStylesRecursive(document.root);
+            //builder.resetStylesRecursive(document.root);
+            builder.resetStylesRecursive(this);
         }
     }
 
