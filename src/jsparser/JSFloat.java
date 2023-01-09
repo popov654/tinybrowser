@@ -10,7 +10,7 @@ public class JSFloat extends JSObject implements Comparable {
     public JSFloat(String val) {
         items.put("__proto__", NumberProto.getInstance());
         try {
-            value = Float.parseFloat(val);
+            value = Double.parseDouble(val);
         } catch(NumberFormatException e) {
             value = 0;
         }

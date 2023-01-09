@@ -1182,7 +1182,7 @@ public class ExpressionTest {
         System.out.println("Math.tan(-Math.PI / 2)");
         exp = Expression.create(jp.getHead());
         exp.eval();
-       assertEquals("-Infinity", exp.getValue().toString());
+        assertEquals("-Infinity", exp.getValue().toString());
         jp = new JSParser("Math.tan(Math.PI / 4)");
         System.out.println("Math.tan(Math.PI / 4)");
         exp = Expression.create(jp.getHead());

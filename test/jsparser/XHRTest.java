@@ -43,8 +43,8 @@ public class XHRTest {
         exp.eval();
         assertEquals("\"doctype\"", Expression.getVar("result", exp).toString());
 
-        jp = new JSParser("var xhr = new XMLHttpRequest(); xhr.open(\"POST\", \"https://www.w3schools.com/jquery/demo_test_post.asp\", false);  var result = \"\"; xhr.onload = function() { result = this.response }; xhr.send(\"name=John Smith&city=London\")");
-        System.out.println("var xhr = new XMLHttpRequest(); xhr.open(\"POST\", \"https://www.w3schools.com/jquery/demo_test_post.asp\", false); var result = \"\"; xhr.onload = function() { result = this.response }; xhr.send(\"name=John Smith&city=London\")");
+        jp = new JSParser("var xhr = new XMLHttpRequest(); xhr.open(\"POST\", \"http://popov654.pp.ru/demo_post.php\", false);  var result = \"\"; xhr.onload = function() { result = this.response }; xhr.send(\"name=John Smith&city=London\")");
+        System.out.println("var xhr = new XMLHttpRequest(); xhr.open(\"POST\", \"http://popov654.pp.ru/demo_post.php\", false); var result = \"\"; xhr.onload = function() { result = this.response }; xhr.send(\"name=John Smith&city=London\")");
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"Dear John Smith. Hope you live well in London.\"", Expression.getVar("result", exp).toString());

@@ -93,9 +93,11 @@ public class JSDate extends JSObject implements Comparable {
         return type;
     }
 
+    @Override
     public int compareTo(Object obj) {
         JSDate d = (obj instanceof JSDate) ? (JSDate)obj : new JSDate(((JSValue)obj).asInt().getValue());
-        return (int)(value - d.getValue());
+        long delta = (long)(value - d.getValue());
+        return delta < 0 ? -1 : (delta > 0 ? 1 : 0);
     }
 
     public String format(String f) {

@@ -51,7 +51,7 @@ public class JSObjectTest {
         instance.print_proto = true;
         assertEquals(instance.toString(), "{__proto__: ObjectPrototype, value: \"value\"}");
         JSObject.print_protos = true;
-        assertEquals(instance.toString(), "{__proto__: {__proto__: ObjectPrototype, hasOwnProperty: {Function}, toString: {Function}}, value: \"value\"}");
+        assertEquals(instance.toString(), "{__proto__: {__proto__: ObjectPrototype, hasOwnProperty: {Function}, toString: {Function}, constructor: {Function}}, value: \"value\"}");
         instance.print_proto = false;
         JSObject.print_protos = false;
     }

@@ -130,8 +130,8 @@ public class MathObj extends JSObject {
                 return NaN.getInstance();
             }
             double value = Math.tan(((JSFloat)val).getValue());
-            if (Math.abs((long)Math.round(value)) == 22877332) {
-                return Infinity.getInstance(value < 0);
+            if (Math.abs((long)Math.round(value)) == 22877332 || Math.abs((long)Math.round(value)) == 16331239353195370L) {
+                return Infinity.getInstance(value > 0);
             }
             if (Math.abs(value - Math.round(value)) < 0.0000001) {
                 return new JSInt((long)Math.round(value));

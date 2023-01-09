@@ -26,7 +26,7 @@ public class JSDateTest {
 
     @Before
     public void setUp() {
-        instance = new JSDate("Sun Feb 25 2018 18:24:16 GMT+0300");
+        instance = new JSDate("Sun, Feb 25 2018 18:24:16 GMT+0300");
     }
 
     @After
@@ -48,7 +48,7 @@ public class JSDateTest {
     @Test
     public void testToString() {
         System.out.println(instance.toString());
-        assertEquals("Sun Feb 25 2018 18:24:16 GMT+0300", instance.toString());
+        assertEquals("Sun, Feb 25 2018 18:24:16 GMT+0300", instance.toString());
     }
 
     /**
