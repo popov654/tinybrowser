@@ -428,7 +428,7 @@ public class Layouter {
             new_line.addElement(d);
 
             if (d.display_type != Block.Display.TABLE) {
-                if (d.auto_width && !d.no_layout && !(d.parent != null && d.parent.parent != null && (d.parent.parent.display_type == Block.Display.TABLE || d.parent.parent.display_type == Block.Display.INLINE_TABLE))) {
+                if (d.auto_width && !d.isImage && !d.no_layout && !(d.parent != null && d.parent.parent != null && (d.parent.parent.display_type == Block.Display.TABLE || d.parent.parent.display_type == Block.Display.INLINE_TABLE))) {
                     boolean old_value = d.document.inLayout;
                     d.document.inLayout = true;
                     d.setWidth(-1, true);
