@@ -4525,8 +4525,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     private RoundedBorder border;
 
-    private volatile Layouter layouter;
+    private Layouter layouter;
     volatile TableLayout table;
+
+    private LinkedList<Block> layer_list = new LinkedList<Block>();
 
     public int border_spacing = 2;
     public boolean border_collapse = false;
@@ -4553,6 +4555,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public int pos = 0;
     public Vector<Block> parts = new Vector<Block>();
+    public Block original;
 
     public String id = "";
 
@@ -4698,8 +4701,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return ch;
     }
 
-    public Block original;
-
     @Override
     public int _getWidth() {
         return viewport_width;
@@ -4709,8 +4710,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int _getHeight() {
         return viewport_height;
     }
-
-    private LinkedList<Block> layer_list = new LinkedList<Block>();
 
     private int isFullySelected(Rectangle sel, Rectangle el) {
         if (sel.contains(el)) return 1;
