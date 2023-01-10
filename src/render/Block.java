@@ -553,18 +553,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (parent != null) {
-            Shape rect = new RoundedRect(x0, y0, width, height, arc[0], arc[1], arc[2], arc[3]);
-            if (!has_shadow) rect = new Rectangle2D.Double(x0, y0, viewport_width, viewport_height);
-
             g = buffer.getGraphics();
             g2d = (Graphics2D) g;
 
-            AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.CLEAR, 1f);
-            g2d.setComposite(composite);
+            //AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.CLEAR, 1f);
+            //g2d.setComposite(composite);
 
-            g2d.fill(rect);
+            //g2d.fill(rect);
 
-            composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+            AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
             g2d.setComposite(composite);
 
         }
