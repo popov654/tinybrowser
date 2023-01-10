@@ -209,7 +209,7 @@ public class Builder {
         for (int i = 0; i < stateStyles.size(); i++) {
             if (!stateStyles.get(i).getElements().contains(b.node)) continue;
             boolean flag = true;
-            String[] states = {"hover", "focus", "active"};
+            String[] states = {"hover", "focus", "active", "visited"};
             start:
             for (String state: states) {
                 for (Node node: stateStyles.get(i).getControlElements().get(state)) {

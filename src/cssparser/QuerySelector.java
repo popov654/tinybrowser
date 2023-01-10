@@ -59,6 +59,7 @@ public class QuerySelector {
         result.put("hover", hoverNodes);
         result.put("focus", focusNodes);
         result.put("active", activeNodes);
+        result.put("visited", visitedNodes);
         return result;
     }
 
@@ -74,6 +75,7 @@ public class QuerySelector {
         hoverNodes = new Vector<Node>();
         focusNodes = new Vector<Node>();
         activeNodes = new Vector<Node>();
+        visitedNodes = new Vector<Node>();
 
         int pos = -1;
         pos = tryToFindID();
@@ -177,6 +179,11 @@ public class QuerySelector {
                             activeNodes.add(resultSet.get(j));
                         }
                     }
+                    else if (pseudoclasses[i].equals("visited")) {
+                        if (!visitedNodes.contains(resultSet.get(j))) {
+                            visitedNodes.add(resultSet.get(j));
+                        }
+                    }
                 }
             }
         }
@@ -248,6 +255,11 @@ public class QuerySelector {
                     else if (pseudoclasses[i].equals("active")) {
                         if (!activeNodes.contains(resultSet.get(j))) {
                             activeNodes.add(resultSet.get(j));
+                        }
+                    }
+                    else if (pseudoclasses[i].equals("visited")) {
+                        if (!visitedNodes.contains(resultSet.get(j))) {
+                            visitedNodes.add(resultSet.get(j));
                         }
                     }
                 }
@@ -485,7 +497,7 @@ public class QuerySelector {
 
     public void apply() {
         for (int i = 0; i < resultSet.size(); i++) {
-            if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0) {
+            if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0 || visitedNodes.size() > 0) {
                 resultSet.get(i).addStateSelector(this);
             } else {
                 resultSet.get(i).styles.putAll(rules);
@@ -504,6 +516,7 @@ public class QuerySelector {
     private Vector<Node> hoverNodes;
     private Vector<Node> focusNodes;
     private Vector<Node> activeNodes;
+    private Vector<Node> visitedNodes;
     HashMap<String, String> rules;
     HTMLParser hp;
 }
