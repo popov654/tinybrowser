@@ -485,7 +485,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             width = getFontMetrics(new Font(fontFamily, style, fontSize)).stringWidth(textContent);
         }
         if (buffer == null && width > 0 && height > 0) {
-            buffer = new BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+            int w = width;
+            int h = height;
+            if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) w += 2;
+            buffer = new BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         }
         if (buffer == null) return;
         Graphics g = buffer.getGraphics();
@@ -638,7 +641,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (clipping_block == null && overflow != Overflow.VISIBLE) {
-            clip_rect = new RoundedRect(0, 0, viewport_width, viewport_height, arc[0] / 3.24, arc[1] / 3.24, arc[2] / 3.24, arc[3] / 3.24);
+            int vw = viewport_width;
+            if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) vw += 2;
+            clip_rect = new RoundedRect(0, 0, vw, viewport_height, arc[0] / 3.24, arc[1] / 3.24, arc[2] / 3.24, arc[3] / 3.24);
             g2d.setClip(clip_rect);
         }
 
@@ -667,6 +672,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         int width = viewport_width > 0 ? viewport_width : this.width;
         int height = viewport_height > 0 ? viewport_height : this.height;
+
+        if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
 
         if (gradient != null) {
             Point2D[] p = Gradient.getPoints(gradient.getPositions(), gradient.getAngle(), 0, 0, width, height);
