@@ -107,6 +107,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         rules_for_recalc = new HashMap<String, String>();
         originalStyles = new HashMap<String, Object>();
+        cssStyles = new HashMap<String, String>();
 
         orig_width = width;
         orig_height = height;
@@ -496,7 +497,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
         if (childDocument != null) {
-            childDocument.getRoot().draw(g);
+            childDocument.getRoot().draw();
             return;
         }
         if (parts.size() > 0) {
@@ -1446,9 +1447,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block root = childDocument.getRoot();
             root.width = root.viewport_width = width;
             root.height = root.viewport_height = height;
-            root.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
-            root.setBounds(_x_, _y_, width, height);
-            root.performLayout(false, false);
+            document.panel.add(childDocument, 0);
+            childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
+            //childDocument.setOpaque(true);
+            childDocument.setBackground(Color.RED);
+            childDocument.root.setBounds(0, 0, width, height);
+            root.performLayout();
             return;
         }
 
@@ -1776,6 +1780,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             scroll_top = 0;
             viewport_width = width;
             performLayout(no_rec, true);
+            return;
+        }
+        if (childDocument != null) {
+            childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
+            childDocument.setBounds(_x_, _y_, viewport_width, viewport_height);
+            childDocument.root.setBounds(0, 0, viewport_width, viewport_height);
             return;
         }
         if (text_align != TextAlign.ALIGN_LEFT) {
@@ -2542,6 +2552,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundImage(String path) {
+        if (path == null || path.isEmpty()) {
+            bgImage = null;
+            return;
+        }
         try {
             File f;
             if (path.startsWith("http")) {
@@ -3129,6 +3143,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         } else if (document.ready) {
             document.root.performLayout();
+            document.root.forceRepaint();
             if (viewport_height != old_height && bgImage != null) {
                 background_pos_x = (int) (old_pos_x * viewport_width);
                 background_pos_y = (int) (old_pos_y * viewport_height);
@@ -3136,6 +3151,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 background_size_y = (int) Math.max(0, old_size_y * viewport_height);
             }
         }
+        document.repaint();
     }
 
     public void setBackgroundPositionX(double val, int units) {
@@ -3349,6 +3365,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setProp(String prop, String value) {
+        if (original != null) {
+            original.setProp(prop, value);
+        }
         if (prop.equals("margin")) {
             String[] s = value.split("\\s");
             if (s.length > 0) {
@@ -4068,6 +4087,39 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         //forceRepaint();
     }
 
+    public void applyHoverStyles() {
+        if (builder != null && node != null) {
+            node.states.add("hover");
+            builder.applyStateStyles(this);
+        }
+    }
+
+    public void applyFocusStyles() {
+        if (builder != null && node != null) {
+            node.states.add("focus");
+            builder.applyStateStyles(this);
+        }
+    }
+
+    public void applyActiveStyles() {
+        if (builder != null && node != null) {
+            node.states.add("active");
+            builder.applyStateStyles(this);
+        }
+    }
+
+    public void applyStateStyles() {
+        if (builder != null && node != null) {
+            builder.applyStateStylesRecursive(document.root);
+        }
+    }
+
+    public void resetStyles() {
+        if (builder != null && node != null) {
+            builder.resetStylesRecursive(document.root);
+        }
+    }
+
     public void setHref(String href, boolean force) {
         this.href = href;
         if (!this.hasParentLink && (href != null || force)) {
@@ -4238,6 +4290,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private int content_x_max = 0;
     private int content_y_min = Integer.MAX_VALUE;
     private int content_y_max = 0;
+
+    public htmlparser.Node node;
+    public bridge.Builder builder;
 
 
     public static class FloatType {
@@ -4420,6 +4475,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public HashMap<String, String> rules_for_recalc;
     public HashMap<String, Object> originalStyles;
+    public HashMap<String, String> cssStyles;
 
     public String selected_text;
     public Line line;
@@ -4544,6 +4600,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.childDocument = this.childDocument;
 
         b.originalStyles = originalStyles;
+        b.cssStyles = cssStyles;
+
+        b.node = node;
+        b.builder = builder;
 
         if (original == null) {
             b.children = cloneChildren();
@@ -4975,11 +5035,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (d != null && d instanceof Block) {
                 Block b = (Block) d;
                 b.processLinks(x, y);
+                b.updateStates(x, y);
             }
         }
         Block b = this.original == null ? this : this.original;
         if (b.children.size() == 1 && (b.children.get(0).type == NodeTypes.TEXT || b.children.get(0) instanceof YouTubeThumb)) {
             b.children.get(0).processLinks(x, y);
+            b.children.get(0).updateStates(x, y);
         } else {
             for (int i = 0; i < b.children.size(); i++) {
                 b.children.get(i).mouseMoved(e);
@@ -5083,6 +5145,47 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 rt.exec(new String[] { "sh", "-c", cmd.toString() });
             }
         } catch (IOException ex) {}
+    }
+
+    private void updateStates(int x, int y) {
+        if (parts.size() > 0) {
+            for (int j = 0; j < parts.size(); j++) {
+                Block p = parts.get(j);
+                if (x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height) {
+                    p.hovered = true;
+                    if (p.node != null && !p.node.states.contains("hover")) {
+                        p.node.states.add("hover");
+                        p.applyStateStyles();
+                        //System.err.println(node.tagName + " Hovered!");
+                    }
+                } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height)) {
+                     p.hovered = false;
+                     if (p.node != null && p.node.states.contains("hover")) {
+                         p.node.states.remove("hover");
+                         p.resetStyles();
+                         p.applyStateStyles();
+                         //System.err.println(node.tagName + " Out!");
+                     }
+                }
+            }
+        } else {
+            if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) {
+                hovered = true;
+                if (node != null && !node.states.contains("hover")) {
+                    node.states.add("hover");
+                    applyStateStyles();
+                    //System.err.println(node.tagName + " Hovered!");
+                }
+            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height)) {
+                 hovered = false;
+                 if (node != null && node.states.contains("hover")) {
+                     node.states.remove("hover");
+                     resetStyles();
+                     applyStateStyles();
+                     //System.err.println(node.tagName + " Out!");
+                 }
+            }
+        }
     }
 
     private boolean hovered;

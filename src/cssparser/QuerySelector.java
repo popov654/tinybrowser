@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package cssparser;
 
 import htmlparser.HTMLParser;
@@ -10,8 +5,6 @@ import htmlparser.Node;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +54,14 @@ public class QuerySelector {
         return resultSet;
     }
 
+    public HashMap<String, Vector<Node>> getControlElements() {
+        HashMap<String, Vector<Node>> result = new HashMap<String, Vector<Node>>();
+        result.put("hover", hoverNodes);
+        result.put("focus", focusNodes);
+        result.put("active", activeNodes);
+        return result;
+    }
+
     private void parse() {
         query = query.trim().replaceAll("\\s{2,}", " ");
         orig_query = query;
@@ -69,7 +70,11 @@ public class QuerySelector {
         query = query.replaceAll(" ~ ", "~");
         query = query.replaceAll("::", ":");
         parts = query.split("((?<=[> +~](?!\\=))|(?=[> +~](?!\\=)))");
-        
+
+        hoverNodes = new Vector<Node>();
+        focusNodes = new Vector<Node>();
+        activeNodes = new Vector<Node>();
+
         int pos = -1;
         pos = tryToFindID();
         if (pos >= 0) {
@@ -135,19 +140,19 @@ public class QuerySelector {
                         resultSet.remove(j);
                         break;
                     }
-                    if (pseudoclasses[i].equals("last-child") && !resultSet.get(j).isLastElementChild()) {
+                    else if (pseudoclasses[i].equals("last-child") && !resultSet.get(j).isLastElementChild()) {
                         resultSet.remove(j--);
                         break;
                     }
-                    if (pseudoclasses[i].equals("nth-child(odd)") && !resultSet.get(j).isOddElementChild()) {
+                    else if (pseudoclasses[i].equals("nth-child(odd)") && !resultSet.get(j).isOddElementChild()) {
                         resultSet.remove(j--);
                         break;
                     }
-                    if (pseudoclasses[i].equals("nth-child(even)") && !resultSet.get(j).isEvenElementChild()) {
+                    else if (pseudoclasses[i].equals("nth-child(even)") && !resultSet.get(j).isEvenElementChild()) {
                         resultSet.remove(j--);
                         break;
                     }
-                    if (pseudoclasses[i].startsWith("nth-child(")) {
+                    else if (pseudoclasses[i].startsWith("nth-child(")) {
                         Matcher m = Pattern.compile("\\(([1-9][0-9]*)\\)$").matcher(pseudoclasses[i]);
                         if (m.find()) {
                             int num = Integer.parseInt(m.group(1));
@@ -155,6 +160,21 @@ public class QuerySelector {
                                 resultSet.remove(j--);
                                 break;
                             }
+                        }
+                    }
+                    else if (pseudoclasses[i].equals("hover")) {
+                        if (!hoverNodes.contains(resultSet.get(j))) {
+                            hoverNodes.add(resultSet.get(j));
+                        }
+                    }
+                    else if (pseudoclasses[i].equals("focus")) {
+                        if (!focusNodes.contains(resultSet.get(j))) {
+                            focusNodes.add(resultSet.get(j));
+                        }
+                    }
+                    else if (pseudoclasses[i].equals("active")) {
+                        if (!activeNodes.contains(resultSet.get(j))) {
+                            activeNodes.add(resultSet.get(j));
                         }
                     }
                 }
@@ -197,22 +217,37 @@ public class QuerySelector {
                     if (pseudoclasses[i].equals("first-child") && !ancestor.isFirstElementChild()) {
                         return false;
                     }
-                    if (pseudoclasses[i].equals("last-child") && !ancestor.isLastElementChild()) {
+                    else if (pseudoclasses[i].equals("last-child") && !ancestor.isLastElementChild()) {
                         return false;
                     }
-                    if (pseudoclasses[i].equals("nth-child(odd)") && !ancestor.isOddElementChild()) {
+                    else if (pseudoclasses[i].equals("nth-child(odd)") && !ancestor.isOddElementChild()) {
                         return false;
                     }
-                    if (pseudoclasses[i].equals("nth-child(even)") && !ancestor.isEvenElementChild()) {
+                    else if (pseudoclasses[i].equals("nth-child(even)") && !ancestor.isEvenElementChild()) {
                         return false;
                     }
-                    if (pseudoclasses[i].startsWith("nth-child(")) {
+                    else if (pseudoclasses[i].startsWith("nth-child(")) {
                         Matcher m = Pattern.compile("\\(([1-9][0-9]*)\\)$").matcher(pseudoclasses[i]);
                         if (m.find()) {
                             int num = Integer.parseInt(m.group(1));
                             if (!ancestor.isNthElementChild(num)) {
                                 return false;
                             }
+                        }
+                    }
+                    else if (pseudoclasses[i].equals("hover")) {
+                        if (!hoverNodes.contains(resultSet.get(j))) {
+                            hoverNodes.add(resultSet.get(j));
+                        }
+                    }
+                    else if (pseudoclasses[i].equals("focus")) {
+                        if (!focusNodes.contains(resultSet.get(j))) {
+                            focusNodes.add(resultSet.get(j));
+                        }
+                    }
+                    else if (pseudoclasses[i].equals("active")) {
+                        if (!activeNodes.contains(resultSet.get(j))) {
+                            activeNodes.add(resultSet.get(j));
                         }
                     }
                 }
@@ -450,14 +485,25 @@ public class QuerySelector {
 
     public void apply() {
         for (int i = 0; i < resultSet.size(); i++) {
-            resultSet.get(i).styles.putAll(rules);
+            if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0) {
+                resultSet.get(i).addStateSelector(this);
+            } else {
+                resultSet.get(i).styles.putAll(rules);
+            }
         }
+    }
+
+    public HashMap<String, String> getRules() {
+        return rules;
     }
 
     private String[] parts;
     private String query;
     private String orig_query = query;
     private Vector<Node> resultSet;
+    private Vector<Node> hoverNodes;
+    private Vector<Node> focusNodes;
+    private Vector<Node> activeNodes;
     HashMap<String, String> rules;
     HTMLParser hp;
 }

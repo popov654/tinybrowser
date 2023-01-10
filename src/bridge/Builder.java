@@ -1,14 +1,13 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package bridge;
 
+import cssparser.QuerySelector;
 import htmlparser.Node;
+import java.awt.Color;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
 import render.Block;
+import render.RoundedBorder;
 import render.WebDocument;
 
 /**
@@ -41,11 +40,16 @@ public class Builder {
 
     public Block buildSubtree(WebDocument document, Node node) {
         Block root = buildElement(document, node);
+        if (root == null) return root;
+        root.node = node;
+        root.builder = this;
         for (int i = 0; i < node.children.size(); i++) {
             Block b = buildSubtree(document, node.children.get(i));
             if (b != null) {
                 root.getChildren().add(b);
                 b.parent = root;
+                b.node = node.children.get(i);
+                b.builder = this;
             }
         }
         return root;
@@ -63,6 +67,7 @@ public class Builder {
             b.text_italic = node.tagName.equals("i") || node.tagName.equals("em");
             b.text_underline = node.tagName.equals("u");
             b.text_strikethrough = node.tagName.equals("s");
+
         } else if (node.nodeType == TEXT) {
             if (node.nodeValue.matches("\\s*")) {
                 return null;
@@ -93,7 +98,21 @@ public class Builder {
         b.id = node.getAttribute("id");
         b.setTextColor(node.getAttribute("color"));
         b.setBackgroundColor(node.getAttribute("bgcolor"));
-        if (node.tagName.equals("a")) b.href = node.getAttribute("href");
+
+        applyDefaultStyles(node, b);
+
+        applyStyles(node, b);
+        applyInlineStyles(node, b);
+
+        return b;
+    }
+
+    public void applyDefaultStyles(Node node, Block b) {
+        if (node == null) return;
+        if (node.tagName.equals("a")) {
+            b.href = node.getAttribute("href");
+            b.color = b.linkColor;
+        }
         else if (node.tagName.equals("img")) {
             b.width = -1;
             b.isImage = true;
@@ -101,6 +120,10 @@ public class Builder {
         }
         else if (node.tagName.equals("p")) {
             b.setMargins(0, 0, 12, 0);
+        }
+        else if (node.tagName.equals("body")) {
+            b.setPaddings(8);
+            b.setBackgroundColor(Color.WHITE);
         }
         else if (node.tagName.equals("font")) {
             if (node.getAttribute("size") != null) {
@@ -110,16 +133,15 @@ public class Builder {
         else if (node.tagName.equals("li")) {
             b.list_item_type = 2;
         }
-        applyStyles(node, b);
-        applyInlineStyles(node, b);
-
-        return b;
     }
 
     public void applyStyles(Node node, Block b) {
         Set<String> keys = node.styles.keySet();
         for (String key: keys) {
-            if (!key.trim().isEmpty()) b.setProp(key.trim(), node.styles.get(key).trim());
+            if (!key.trim().isEmpty()) {
+                b.setProp(key.trim(), node.styles.get(key).trim());
+                b.cssStyles.put(key.trim(), node.styles.get(key).trim());
+            }
         }
     }
 
@@ -128,8 +150,122 @@ public class Builder {
             String[] styles = node.getAttribute("style").split("\\s*;\\s*");
             for (String style: styles) {
                 String[] p = style.trim().split("\\s*:\\s*");
-                if (!p[0].trim().isEmpty()) b.setProp(p[0].trim(), p[1].trim());
+                if (!p[0].trim().isEmpty()) {
+                    b.setProp(p[0].trim(), p[1].trim());
+                    b.cssStyles.put(p[0].trim(), p[1].trim());
+                }
             }
+        }
+    }
+
+    public void resetStyles(Block b, boolean no_update) {
+        //int old_width = b.viewport_width;
+        //int old_height = b.viewport_height;
+        
+        b.document.ready = false;
+        b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
+        b.setBackgroundColor(new Color(0, 0, 0, 0));
+        b.setBackgroundImage(null);
+        b.setMargins(0);
+        b.setPaddings(0);
+        b.setBorderWidth(0);
+        b.setBorderType(RoundedBorder.SOLID);
+        b.setBorderColor(Color.BLACK);
+        b.setBorderRadius(0);
+        applyDefaultStyles(b.node, b);
+        
+        // This will be faster than full scan
+        if (b.cssStyles.size() > 0) {
+            Set<String> keys = b.cssStyles.keySet();
+            for (String key: keys) {
+                b.setProp(key, b.cssStyles.get(key));
+            }
+        } else if (b.node != null) {
+            applyStyles(b.node, b);
+            applyInlineStyles(b.node, b);
+        }
+        b.document.ready = true;
+
+        if (!no_update) {
+            //b.doIncrementLayout(old_width, old_height, true);
+            b.document.root.performLayout();
+            b.document.root.forceRepaint();
+            b.document.repaint();
+        }
+    }
+
+    public void applyStateStyles(Block b) {
+        if (b.node == null) {
+            return;
+        }
+        Vector<QuerySelector> stateStyles = b.node.getStateStyles();
+        for (int i = 0; i < stateStyles.size(); i++) {
+            if (!stateStyles.get(i).getElements().contains(b.node)) continue;
+            boolean flag = true;
+            String[] states = {"hover", "focus", "active"};
+            for (String state: states) {
+                for (Node node: stateStyles.get(i).getControlElements().get(state)) {
+                    if (!node.states.contains(state)) {
+                        flag = false;
+                        break;
+                    }
+                }
+            }
+            if (flag) {
+                HashMap<String, String> styles = stateStyles.get(i).getRules();
+                Set<String> keys = styles.keySet();
+                for (String key: keys) {
+                    b.setProp(key, styles.get(key));
+                }
+            }
+        }
+    }
+
+    public void applyStateStyles(Block b, boolean no_update) {
+        //int old_width = b.viewport_width;
+        //int old_height = b.viewport_height;
+
+        b.document.ready = false;
+        applyStateStyles(b);
+        b.document.ready = true;
+
+        if (!no_update) {
+            //b.doIncrementLayout(old_width, old_height, true);
+            b.document.root.performLayout();
+            b.document.root.forceRepaint();
+            b.document.repaint();
+        }
+    }
+
+    public void applyStateStylesRecursive(Block b) {
+        //int old_width = b.viewport_width;
+        //int old_height = b.viewport_height;
+
+        applyStateStyles(b, true);
+        for (int i = 0; i < b.getChildren().size(); i++) {
+            applyStateStylesRecursive(b.getChildren().get(i));
+        }
+
+        if (b == b.document.root) {
+            b.document.root.performLayout();
+            b.document.root.forceRepaint();
+            b.document.repaint();
+        }
+    }
+
+    public void resetStylesRecursive(Block b) {
+        //int old_width = b.viewport_width;
+        //int old_height = b.viewport_height;
+
+        resetStyles(b, true);
+        for (int i = 0; i < b.getChildren().size(); i++) {
+            resetStylesRecursive(b.getChildren().get(i));
+        }
+
+        if (b == b.document.root) {
+            b.document.root.performLayout();
+            b.document.root.forceRepaint();
+            b.document.repaint();
         }
     }
 

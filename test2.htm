@@ -22,10 +22,19 @@ p {
      border-bottom: 1px solid red;
 }
 
+p:hover > i {
+     background-color: rgb(183, 238, 152);
+}
+
+p > i:hover {
+     background-color: rgb(38, 217, 26);
+     color: #433c38;
+}
+
 </style>
 </head>
 <body onload="init()">
 <!-- Comment -->
-<p>This is a <i style="background-color: rgb(220, 216, 25); color: #8848a7">paragraph</i></p>
+<p>This is a <i style="background-color: rgb(223, 216, 45); color: #8848a7">paragraph</i></p>
 </body>
 </html>

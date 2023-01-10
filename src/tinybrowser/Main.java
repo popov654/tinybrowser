@@ -236,7 +236,15 @@ public class Main {
         document.root.setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
         
         document.insertSubtreeWithoutRoot(document.root, root);
-        root.setId("root");
+        document.root.setId("root");
+
+        if (document.root.getChildren().size() > 0) {
+            document.root.setPaddings(8);
+            document.root.node = document.root.getChildren().get(0).node.parent;
+            document.root.builder = document.root.getChildren().get(0).builder;
+        }
+
+        document.root.addMouseListeners();
 
         //document.debug = true;
 

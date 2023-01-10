@@ -1,6 +1,9 @@
 package htmlparser;
 
+import cssparser.QuerySelector;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 /**
@@ -271,11 +274,21 @@ public class Node {
         }
         return false;
     }
+
+    public void addStateSelector(QuerySelector selector) {
+        stateStyles.add(selector);
+    }
+
+    public Vector<QuerySelector> getStateStyles() {
+        return stateStyles;
+    }
     
     public Node parent;
     public Vector<Node> children = new Vector<Node>();
     public Hashtable<String, String> attributes = new Hashtable<String, String>();
     public Hashtable<String, String> styles = new Hashtable<String, String>();
+    public Vector<QuerySelector> stateStyles = new Vector<QuerySelector>();
+    public Vector<String> states = new Vector<String>();
     public Node previousSibling;
     public Node nextSibling;
     public String tagName = "";
