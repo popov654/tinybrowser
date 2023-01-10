@@ -471,6 +471,7 @@ public class Layouter {
             cur_x = last_line.cur_pos;
             cur_y = last_line.getY();
             d.no_draw = true;
+            d.line = null;
 
             int x = getFullLinePos(d);
             int w = getFullLineSize(d);
@@ -478,10 +479,10 @@ public class Layouter {
             if (d.display_type != Block.Display.INLINE_TABLE) {
                 boolean old_value = d.document.inLayout;
                 d.document.inLayout = true;
-                d.setWidth(d.width > 0 ? d.orig_width : -1, true);
+                d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
                 d.document.inLayout = old_value;
                 d.performLayout();
-                if (d.width < 0 && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
+                if (d.auto_width && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
                     int line_width = d.lines.get(0).cur_pos;
                     d.lines.get(0).setWidth(line_width);
                     d.width = d.borderWidth[3] + d.paddings[3] + line_width + d.paddings[1] + d.borderWidth[1];
