@@ -318,7 +318,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void forceRepaint() {
-        if (document == null || document.root.width < 0 || !document.ready || document.inLayout || document.isPainting) {
+        if (document == null || document.root.width < 0 || !document.ready || document.inLayout || this == document.root && document.isPainting) {
             return;
         }
         document.isPainting = true;
@@ -1957,9 +1957,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         last_list_index = 0;
 
-        Block r = this;
-        while (r.parent != null) r = r.parent;
-
         if (text_layer == null || list_item_type > 0 || textRenderingMode == 1) {
             renderText(g);
         } else {
@@ -1969,7 +1966,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Vector<Drawable> v = lines.get(i).elements;
             for (int j = 0; j < v.size(); j++) {
                 if (v.get(j) instanceof Block) {
-                    ((Block)v.get(j)).draw();
+                    ((Block)v.get(j)).forceRepaint();
                 }
             }
         }
@@ -1979,7 +1976,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Block b = (Block)d;
                 if (b.positioning == Block.Position.ABSOLUTE || b.float_type != Block.FloatType.NONE ||
                       b.display_type == Display.TABLE_ROW || b.display_type == Display.TABLE_CELL) {
-                    b.draw();
+                    b.forceRepaint();
                 }
             }
         }
@@ -2060,7 +2057,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setZIndices() {
-        LinkedList<Block> list = document.root.getZIndexList();
+        LinkedList<Block> list = getZIndexList();
+        int offset = (this == document.root) ? list.size()-1 : getParent().getComponentZOrder(this);
         for (int i = list.size()-1; i >= 0; i--) {
             Block b = list.get(i);
             java.awt.Container c = b.getParent();
@@ -2071,13 +2069,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     Block block = b.parts.get(j);
                     list.add(i+j, block);
                     try {
-                        c.setComponentZOrder(block, list.size()-1-i+j);
+                        c.setComponentZOrder(block, offset-i+j);
                     } catch (Exception ex) {}
                 }
             }
             else {
                 try {
-                    c.setComponentZOrder(b, list.size()-1-i);
+                    c.setComponentZOrder(b, offset-i);
                 } catch (Exception ex) {}
             }
         }
@@ -2561,6 +2559,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setBackgroundImage(String path) {
         if (path == null || path.isEmpty()) {
             bgImage = null;
+            forceRepaint();
             return;
         }
         try {
@@ -2586,6 +2585,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        forceRepaint();
     }
 
     public void setLinearGradient(Vector<Color> colors, Vector<Float> positions, int angle) {
@@ -2676,6 +2676,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setSelectionEnabled(boolean value) {
         select_enabled = value;
+        for (Block part: parts) {
+            part.select_enabled = value;
+        }
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setSelectionEnabled(value);
         }
@@ -2684,6 +2687,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setTextColor(String value) {
         Color col = value != null ? parseColor(value) : default_color;
         if (col != null) {
+            for (Block part: parts) {
+                part.setBackgroundColor(col);
+            }
             setTextColor(col);
         }
         for (int i = 0; i < children.size(); i++) {
@@ -2695,6 +2701,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setBackgroundColor(String value) {
         Color col = value != null ? parseColor(value) : new Color(0, 0, 0, 0);
         if (col != null) {
+            for (Block part: parts) {
+                part.setBackgroundColor(col);
+            }
             setBackgroundColor(col);
         }
         forceRepaint();
@@ -2708,6 +2717,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBorderColor(Color col) {
+        for (Block part: parts) {
+            for (int i = 0; i < 4; i++) {
+                part.borderColor[i] = col;
+            }
+        }
         for (int i = 0; i < 4; i++) {
             borderColor[i] = col;
         }
@@ -2717,6 +2731,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setBorderWidth(int value) {
         int bw = WebDocument.scale_borders ? (int)Math.round(value*ratio) : value;
+        for (Block part: parts) {
+            for (int i = 0; i < 4; i++) {
+                part.borderWidth[i] = bw;
+            }
+        }
         for (int i = 0; i < 4; i++) {
             borderWidth[i] = bw;
         }
@@ -3148,8 +3167,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 old_height = b.viewport_height;
                 b.performLayout(true);
             }
+            // This will be called inside performLayout() for root element
+            if (b != document.root) b.setZIndices();
 
-            document.root.setZIndices();
+            //document.root.setZIndices();
             document.root.clipScrollbars();
 
         } else if (document.ready) {
@@ -3469,36 +3490,35 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     borderColor[1] = parseColor(s[1]);
                     borderColor[2] = parseColor(s[2]);
                     borderColor[3] = parseColor(s[3]);
-                    forceRepaint();
-                    return;
                 } else if (s.length == 3) {
                     borderColor[0] = parseColor(s[0]);
                     borderColor[1] = parseColor(s[1]);
                     borderColor[2] = parseColor(s[2]);
                     borderColor[3] = borderColor[1];
-                    forceRepaint();
-                    return;
                 } else if (s.length == 2) {
                     borderColor[0] = parseColor(s[0]);
                     borderColor[1] = parseColor(s[1]);
                     borderColor[2] = borderColor[0];
                     borderColor[3] = borderColor[1];
-                    forceRepaint();
-                    return;
                 } else {
                     borderColor[0] = parseColor(s[0]);
                     borderColor[1] = borderColor[0];
                     borderColor[2] = borderColor[0];
                     borderColor[3] = borderColor[0];
-                    forceRepaint();
-                    return;
                 }
+                for (Block part: parts) {
+                    part.borderColor[0] = borderColor[0];
+                    part.borderColor[1] = borderColor[1];
+                    part.borderColor[2] = borderColor[2];
+                    part.borderColor[3] = borderColor[3];
+                }
+                forceRepaint();
+                return;
             }
         }
 
         if (prop.equals("color")) {
             setTextColor(value);
-            forceRepaint();
             return;
         }
 
@@ -3546,7 +3566,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (prop.equals("background-color")) {
             setBackgroundColor(value);
-            forceRepaint();
             return;
         }
 
@@ -3560,7 +3579,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             if (pos < 0 && pos2 < 0 || pos == pos2) return;
             setBackgroundImage(value.substring(pos+1, pos2));
-            forceRepaint();
             return;
         }
 

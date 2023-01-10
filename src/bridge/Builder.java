@@ -4,6 +4,7 @@ import cssparser.QuerySelector;
 import htmlparser.Node;
 import java.awt.Color;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 import render.Block;
@@ -141,6 +142,9 @@ public class Builder {
             if (!key.trim().isEmpty()) {
                 b.setProp(key.trim(), node.styles.get(key).trim());
                 b.cssStyles.put(key.trim(), node.styles.get(key).trim());
+                if (b.document != null && b.document.lastSetProperties != null) {
+                    b.document.lastSetProperties.add(key.trim());
+                }
             }
         }
     }
@@ -153,14 +157,17 @@ public class Builder {
                 if (!p[0].trim().isEmpty()) {
                     b.setProp(p[0].trim(), p[1].trim());
                     b.cssStyles.put(p[0].trim(), p[1].trim());
+                    if (b.document != null && b.document.lastSetProperties != null) {
+                        b.document.lastSetProperties.add(p[0].trim());
+                    }
                 }
             }
         }
     }
 
     public void resetStyles(Block b, boolean no_update) {
-        //int old_width = b.viewport_width;
-        //int old_height = b.viewport_height;
+        int old_width = b.viewport_width;
+        int old_height = b.viewport_height;
         
         b.document.ready = false;
         b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
@@ -179,6 +186,9 @@ public class Builder {
             Set<String> keys = b.cssStyles.keySet();
             for (String key: keys) {
                 b.setProp(key, b.cssStyles.get(key));
+                if (b.document != null && b.document.lastSetProperties != null) {
+                    b.document.lastSetProperties.add(key);
+                }
             }
         } else if (b.node != null) {
             applyStyles(b.node, b);
@@ -187,10 +197,7 @@ public class Builder {
         b.document.ready = true;
 
         if (!no_update) {
-            //b.doIncrementLayout(old_width, old_height, true);
-            b.document.root.performLayout();
-            b.document.root.forceRepaint();
-            b.document.repaint();
+            b.document.smartUpdate(b, old_width, old_height);
         }
     }
 
@@ -203,11 +210,12 @@ public class Builder {
             if (!stateStyles.get(i).getElements().contains(b.node)) continue;
             boolean flag = true;
             String[] states = {"hover", "focus", "active"};
+            start:
             for (String state: states) {
                 for (Node node: stateStyles.get(i).getControlElements().get(state)) {
                     if (!node.states.contains(state)) {
                         flag = false;
-                        break;
+                        break start;
                     }
                 }
             }
@@ -216,6 +224,9 @@ public class Builder {
                 Set<String> keys = styles.keySet();
                 for (String key: keys) {
                     b.setProp(key, styles.get(key));
+                    if (b.document.lastSetProperties != null) {
+                        b.document.lastSetProperties.add(key);
+                    }
                 }
             }
         }
@@ -230,15 +241,19 @@ public class Builder {
         b.document.ready = true;
 
         if (!no_update) {
-            b.doIncrementLayout(old_width, old_height, true);
-            b.forceRepaint();
-            b.document.repaint();
+            b.document.smartUpdate(b, old_width, old_height);
         }
     }
 
     public void applyStateStylesRecursive(Block b, boolean no_rec) {
+        if (b.type != Block.NodeTypes.ELEMENT) return;
+        
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
+
+        if (b == b.document.root || !no_rec) {
+            b.document.lastSetProperties = new java.util.HashSet<String>();
+        }
 
         applyStateStyles(b, true);
         for (int i = 0; i < b.getChildren().size(); i++) {
@@ -246,9 +261,7 @@ public class Builder {
         }
 
         if (b == b.document.root || !no_rec) {
-            b.doIncrementLayout(old_width, old_height, false);
-            b.forceRepaint();
-            b.document.repaint();
+            b.document.smartUpdate(b, old_width, old_height);
         }
     }
 
@@ -257,8 +270,14 @@ public class Builder {
     }
 
     public void resetStylesRecursive(Block b, boolean no_rec) {
+        if (b.type != Block.NodeTypes.ELEMENT) return;
+        
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
+
+        if (b == b.document.root || !no_rec) {
+            b.document.lastSetProperties = new java.util.HashSet<String>();
+        }
 
         resetStyles(b, true);
         for (int i = 0; i < b.getChildren().size(); i++) {
@@ -266,9 +285,7 @@ public class Builder {
         }
 
         if (b == b.document.root || !no_rec) {
-            b.doIncrementLayout(old_width, old_height, false);
-            b.forceRepaint();
-            b.document.repaint();
+            b.document.smartUpdate(b, old_width, old_height);
         }
     }
 

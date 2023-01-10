@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.Action;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -272,6 +274,28 @@ public class WebDocument extends JPanel {
         borderSize = size;
         setBounds(borderSize, borderSize, width - borderSize*2, height - borderSize*2);
     }
+
+    public void smartUpdate(Block b, int old_width, int old_height) {
+        Set<String> onlyRepaint = new java.util.HashSet<String>();
+        onlyRepaint.add("background");
+        onlyRepaint.add("linear-gradient");
+        onlyRepaint.add("background-color");
+        onlyRepaint.add("border-color");
+        onlyRepaint.add("color");
+        Set<String> diff = new HashSet<String>(lastSetProperties);
+        diff.removeAll(onlyRepaint);
+
+        if (b.document.lastSetProperties == null || diff.size() > 0) {
+            b.doIncrementLayout(old_width, old_height, false);
+        }
+        b.forceRepaint();
+        b.document.repaint();
+
+        b.document.lastSetProperties.clear();
+        b.document.lastSetProperties = null;
+    }
+
+    public Set<String> lastSetProperties;
 
     protected Layouter layouter = new Layouter(this);
 

@@ -532,10 +532,15 @@ public class Layouter {
 
             int index = 0;
             if (d.document != null) {
+                if (d.parts.size() > 0) {
+                    Block p = d.parts.get(0);
+                    index = p.getParent().getComponentZOrder(p) - d.parts.size() + 1;
+                } else {
+                    index = d.document.root.getComponentCount() - d.pos - 1;
+                }
                 for (Block part: d.parts) {
                     d.document.root.remove(part);
                 }
-                index = d.document.root.getComponentCount() - d.pos - 1;
                 if (d.parts.size() > 0) d.document.root.add(d, index);
             }
             d.parts.clear();
@@ -601,9 +606,9 @@ public class Layouter {
             }
 
             if (d.getParent() != null) {
-                index = d.getParent().getComponentCount() - d.pos - 1;
+                //index = d.getParent().getComponentCount() - d.pos - 1;
                 for (int i = 0; i < d.parts.size(); i++) {
-                    d.document.root.add(d.parts.get(i), index);
+                    d.document.root.add(d.parts.get(i), index++);
                 }
                 d.document.root.remove(d);
             }
