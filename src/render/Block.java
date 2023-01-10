@@ -4987,17 +4987,39 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     }
 
+    private void drawSubtree(Graphics g, int x, int y) {
+        forceRepaint();
+        if (parts.size() > 0) {
+            for (int i = 0; i < parts.size(); i++) {
+                g.drawImage(parts.get(i).buffer, parts.get(i)._x_ - x, parts.get(i)._y_ - y, parts.get(i).width, parts.get(i).height, null);
+                if (parts.get(i).text_layer != null) {
+                    Graphics2D g2d = (Graphics2D) g;
+                    AffineTransform t = AffineTransform.getTranslateInstance(-x, -y);
+                    g2d.setTransform(t);
+                    parts.get(i).text_layer.paint(g2d);
+                    g2d.setTransform(AffineTransform.getTranslateInstance(0, 0));
+                }
+            }
+        } else {
+            g.drawImage(buffer, _x_ - x, _y_ - y, width, height, null);
+            if (text_layer != null) {
+                text_layer.paint(g);
+            }
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).drawSubtree(g, x, y);
+        }
+    }
+
     public void takeScreenshot(String path) {
-        BufferedImage img = new BufferedImage(document.root.width, document.root.height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        BufferedImage img = new BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         Graphics2D gc = (Graphics2D) img.getGraphics();
         gc.setBackground(bgcolor);
         gc.clearRect(0, 0, document.root.width, document.root.height);
-        //gc.drawImage(buffer, 0, 0, width, height, _x_, _y_, _x_ + width, _y_ + height, null);
-        document.root.paint(gc);
+        drawSubtree(gc, _x_, _y_);
+        
         try {
-            int w = Math.min(width, document.root.viewport_width - _x_);
-            int h = Math.min(height, document.root.viewport_height - _y_);
-            ImageIO.write(img.getSubimage(_x_, _y_, w, h), "png", new File(path + ".png"));
+            ImageIO.write(img, "png", new File(path + ".png"));
         } catch (IOException ex) {
             System.err.println("Image output error!");
         }
