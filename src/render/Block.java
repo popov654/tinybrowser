@@ -2,6 +2,7 @@ package render;
 
 import com.sun.imageio.plugins.gif.GIFImageReader;
 import com.sun.imageio.plugins.gif.GIFImageReaderSpi;
+import java.awt.AWTException;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -2684,6 +2685,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setCursor(String value) {
+        if (value.equals("pointer")) value = "hand";
+        value = value.toUpperCase() + "_CURSOR";
+        Field field;
+        int cursor_id = -1;
+        try {
+            field = Cursor.class.getDeclaredField(value);
+            cursor_id = field.getInt(Cursor.class);
+        } catch (Exception ex) {}
+        if (cursor_id >= 0) {
+            for (Block part: parts) {
+                part.cursor = Cursor.getPredefinedCursor(cursor_id);
+            }
+            cursor = Cursor.getPredefinedCursor(cursor_id);
+        }
+    }
+
     public void setTextColor(String value) {
         Color col = value != null ? parseColor(value) : default_color;
         if (col != null) {
@@ -3677,8 +3695,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (prop.endsWith("z-index")) {
+            setZIndex(value);
+            return;
+        }
+
         if (prop.endsWith("user-select")) {
             setSelectionEnabled(!value.equals("none"));
+            return;
+        }
+
+        if (prop.endsWith("cursor")) {
+            setCursor(value);
+            return;
         }
 
         String ch = value.substring(0, 1);
@@ -4445,6 +4474,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private int current_frame = 0;
     private long last_frame_displayed = 0;
 
+    public Cursor cursor;
+
     public int colspan = 1;
     public int rowspan = 1;
 
@@ -4607,6 +4638,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.color = this.color;
         b.linkColor = linkColor;
         b.select_enabled = select_enabled;
+        b.cursor = cursor;
 
         b.margins = new int[4];
         b.margins[0] = margins[0];
@@ -5209,6 +5241,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (p.node != null && !p.node.states.contains("hover")) {
                         p.node.states.add("hover");
                         p.applyStateStyles();
+                        if (cursor != null) {
+                            document.panel.setCursor(cursor);
+                            //System.out.println("Cursor set");
+                        }
                         //System.err.println(node.tagName + " Hovered!");
                     }
                 } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height)) {
@@ -5217,6 +5253,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                          p.node.states.remove("hover");
                          p.resetStyles();
                          p.applyStateStyles();
+                         if (cursor != null) {
+                             document.panel.setCursor(Cursor.getDefaultCursor());
+                             //System.out.println("Cursor unset");
+                         }
                          //System.err.println(node.tagName + " Out!");
                      }
                 }
@@ -5227,6 +5267,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (node != null && !node.states.contains("hover")) {
                     node.states.add("hover");
                     applyStateStyles();
+                    if (cursor != null) {
+                        document.panel.setCursor(cursor);
+                        //System.out.println("Cursor set");
+                    }
                     //System.err.println(node.tagName + " Hovered!");
                 }
             } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height)) {
@@ -5235,6 +5279,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                      node.states.remove("hover");
                      resetStyles();
                      applyStateStyles();
+                     if (cursor != null) {
+                         document.panel.setCursor(Cursor.getDefaultCursor());
+                         //System.out.println("Cursor unset");
+                     }
                      //System.err.println(node.tagName + " Out!");
                  }
             }
