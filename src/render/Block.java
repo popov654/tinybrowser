@@ -1427,6 +1427,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 this.background_size_x_auto = false;
                 this.background_size_y_auto = false;
                 setBackgroundRepeat(BackgroundRepeat.NONE);
+                special = true;
                 return;
                 //forceRepaint();
             } else {
@@ -2101,6 +2102,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         list.removeAll(list2);
+
         it = list.listIterator();
         while (it.hasNext()) {
             Block b = (Block)it.next();
@@ -2110,6 +2112,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         list.removeAll(list2);
+        
         it = list.listIterator();
         while (it.hasNext()) {
             Block b = (Block)it.next();
@@ -2119,6 +2122,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         list.removeAll(list2);
+        
+        it = list.listIterator();
+        while (it.hasNext()) {
+            Block b = (Block)it.next();
+            if (!b.text_italic) {
+                List l = b.reorderList(getSubtree(b));
+                list2.addAll(l);
+            }
+        }
+        list.removeAll(list2);
+        
         it = list.listIterator();
         while (it.hasNext()) {
             Block b = (Block)it.next();
@@ -4510,6 +4524,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Vector<Block> parts = new Vector<Block>();
     public Block original;
 
+    public boolean special = false;
+
     public String id = "";
 
     public static class Cut {
@@ -4626,6 +4642,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.node = node;
         b.builder = builder;
+        b.special = special;
 
         if (original == null) {
             b.children = cloneChildren();

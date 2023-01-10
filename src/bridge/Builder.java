@@ -114,7 +114,7 @@ public class Builder {
             b.href = node.getAttribute("href");
             b.color = b.linkColor;
         }
-        else if (node.tagName.equals("img")) {
+        else if (node.tagName.equals("img") && !b.special) {
             b.auto_width = false;
             b.width = -1;
             b.isImage = true;
@@ -172,17 +172,15 @@ public class Builder {
         
         b.document.ready = false;
         b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
-        if (!(b.isImage && b.bgImage == null)) {
+        if (!b.special) {
             b.setBackgroundColor(new Color(0, 0, 0, 0));
-        }
-        b.setBackgroundImage(null);
-        b.setMargins(0);
-        b.setPaddings(0);
-        if (!(b.isImage && b.bgImage == null)) {
+            b.setBackgroundImage(null);
             b.setBorderWidth(0);
             b.setBorderType(RoundedBorder.SOLID);
             b.setBorderColor(Color.BLACK);
         }
+        b.setMargins(0);
+        b.setPaddings(0);
         b.setBorderRadius(0);
         applyDefaultStyles(b.node, b);
         
