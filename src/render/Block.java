@@ -2839,68 +2839,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    public void updateMargins() {
-        if (this.parent == null) return;
-        Block b = this.parent;
-        int w0 = b.viewport_width;
-        int h0 = b.viewport_height;
-        b.performLayout(true);
-        while (b.parent != null && (w0 != b.viewport_width || h0 != b.viewport_height)) {
-            b = b.parent;
-            w0 = b.viewport_width;
-            h0 = b.viewport_height;
-            b.performLayout(true);
-        }
-        if (!no_draw) {
-            b = this;
-            while (b.parent != null) b = b.parent;
-            b.forceRepaint();
-        }
-    }
-
     public void setMargins(int a, int b, int c, int d) {
         margins[0] = (int)Math.round(a*ratio);
         margins[1] = (int)Math.round(b*ratio);
         margins[2] = (int)Math.round(c*ratio);
         margins[3] = (int)Math.round(d*ratio);
-        if (parent == null) {
-            updateMargins();
-        } else {
-            parent.forceRepaint();
-        }
+
+        doIncrementLayout(viewport_width, viewport_height, false);
+        forceRepaint();
     }
 
     public void setMargins(int a, int b, int c) {
-        margins[0] = (int)Math.round(a*ratio);
-        margins[1] = (int)Math.round(b*ratio);
-        margins[2] = (int)Math.round(c*ratio);
-        margins[3] = (int)Math.round(b*ratio);
-        Block block = this;
-        while (block.parent != null) block = block.parent;
-        block.performLayout();
-        block.forceRepaint();
+        setMargins(a, b, c, b);
     }
 
     public void setMargins(int a, int b) {
-        margins[0] = (int)Math.round(a*ratio);
-        margins[1] = (int)Math.round(b*ratio);
-        margins[2] = (int)Math.round(a*ratio);
-        margins[3] = (int)Math.round(b*ratio);
-        Block block = this;
-        while (block.parent != null) block = block.parent;
-        block.performLayout();
-        block.forceRepaint();
+        setMargins(a, b, a, b);
     }
 
     public void setMargins(int a) {
-        margins[0] = (int)Math.round(a*ratio);
-        margins[1] = (int)Math.round(a*ratio);
-        margins[2] = (int)Math.round(a*ratio);
-        margins[3] = (int)Math.round(a*ratio);
-        Block block = this;
-        while (block.parent != null) block = block.parent;
-        if (!no_layout) block.performLayout();
-        if (!no_draw) block.forceRepaint();
+        setMargins(a, a, a, a);
     }
 
     public void setPaddings(int a, int b, int c, int d) {
@@ -2908,33 +2866,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         paddings[1] = (int)Math.round(b*ratio);
         paddings[2] = (int)Math.round(c*ratio);
         paddings[3] = (int)Math.round(d*ratio);
-    }
 
-    public void setPaddings(int a, int b, int c) {
-        paddings[0] = (int)Math.round(a*ratio);
-        paddings[1] = (int)Math.round(b*ratio);
-        paddings[2] = (int)Math.round(c*ratio);
-        paddings[3] = (int)Math.round(b*ratio);
-        performLayout();
+        doIncrementLayout(viewport_width, viewport_height, false);
         forceRepaint();
     }
 
+    public void setPaddings(int a, int b, int c) {
+        setPaddings(a, b, c, b);
+    }
+
     public void setPaddings(int a, int b) {
-        paddings[0] = (int)Math.round(a*ratio);
-        paddings[1] = (int)Math.round(b*ratio);
-        paddings[2] = (int)Math.round(a*ratio);
-        paddings[3] = (int)Math.round(b*ratio);
-        if (!no_layout) performLayout();
-        if (!no_draw) forceRepaint();
+        setPaddings(a, b, a, b);
     }
 
     public void setPaddings(int a) {
-        paddings[0] = (int)Math.round(a*ratio);
-        paddings[1] = (int)Math.round(a*ratio);
-        paddings[2] = (int)Math.round(a*ratio);
-        paddings[3] = (int)Math.round(a*ratio);
-        if (!no_layout) performLayout();
-        if (!no_draw) forceRepaint();
+        setPaddings(a, a, a, a);
     }
 
     public void setAutoXMargin() {
@@ -3354,10 +3300,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setBackgroundRepeat(int value) {
         background_repeat = value;
+        forceRepaint();
     }
 
     public void setPositioning(int value) {
         positioning = value;
+        doIncrementLayout(viewport_width, viewport_height, false);
     }
 
     public void setDisplayType(int value) {
@@ -3367,10 +3315,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (height < 0 || display_type == Display.INLINE) {
                 height = fontSize + borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
             }
-            if (document != null && document.ready) {
-                forceRepaint();
-                document.validate();
-            }
         }
         if (display_type == Display.INLINE_BLOCK && auto_width) {
             width = 0;
@@ -3378,6 +3322,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (display_type == Display.NONE) {
             removeTextLayers();
+        }
+        if (document != null && document.ready) {
+            doIncrementLayout(viewport_width, viewport_height, false);
+            forceRepaint();
+            document.validate();
         }
     }
 
@@ -3771,7 +3720,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (prop.matches("margin(-bottom)?")) {
                 margins[2] = (int)Math.round(value * ratio);
             }
-            updateMargins();
+            doIncrementLayout(viewport_width, viewport_height, false);
             return;
         }
         if (prop.matches("border(-left|-right|-top|-bottom)-width")) {
