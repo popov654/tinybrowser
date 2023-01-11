@@ -1434,7 +1434,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 borderWidth = new int[] {1, 1, 1, 1};
                 this.border = new RoundedBorder(this, this.borderWidth, this.arc[0], this.borderColor, this.borderType);
                 if (bgcolor == null || bgcolor.equals(new Color(0, 0, 0, 0))) bgcolor = new Color(85, 85, 85, 75);
-                setBackgroundImage(Util.getInstallPath() + File.separatorChar + "res" + File.separatorChar + "image_16.png");
+                setBackgroundImage(Util.getInstallPath() + File.separatorChar + "res" + File.separatorChar + "photo_16.png");
+                this.background_pos_x = 1;
                 this.background_size_x = 16;
                 this.background_size_y = 16;
                 this.background_size_x_auto = false;
@@ -1442,7 +1443,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 setBackgroundRepeat(BackgroundRepeat.NONE);
                 special = true;
                 return;
-                //forceRepaint();
             } else {
                 if (width < 0 && height < 0) {
                     width = viewport_width = bgImage.getWidth();
