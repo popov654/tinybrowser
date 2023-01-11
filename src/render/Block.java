@@ -3763,7 +3763,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             width = right - left;
         }
         auto_left = false;
-        left = (int)Math.round(value * ratio);
+        left = units != Units.percent ? (int)Math.round(value * ratio) : value;
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -3774,7 +3774,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (parent != null) {
                     setX(parent.borderWidth[3] + margins[3] + left);
                 } else {
-                    setX(document.borderSize + left);
+                    setX(left);
                 }
             }
             while (b.parent != null) b = b.parent;
@@ -3811,7 +3811,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             width = right - left;
         }
         auto_right = false;
-        right = (int)Math.round(value * ratio);
+        right = units != Units.percent ? (int)Math.round(value * ratio) : value;
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -3821,7 +3821,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (parent != null) {
                     setX(parent.borderWidth[3] + margins[3] + left);
                 } else {
-                    setX(document.borderSize + left);
+                    setX(left);
                 }
             }
             forceRepaint();
@@ -3853,7 +3853,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.remove("top");
         }
         auto_top = false;
-        top = (int)Math.round(value * ratio);
+        top = units != Units.percent ? (int)Math.round(value * ratio) : value;
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -3863,7 +3863,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (parent != null) {
                     setY(parent.borderWidth[0] + margins[0] + top);
                 } else {
-                    setY(document.borderSize + top);
+                    setY(top);
                 }
             }
             forceRepaint();
@@ -3895,7 +3895,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.remove("bottom");
         }
         auto_bottom = false;
-        bottom = (int)Math.round(value * ratio);
+        bottom = units != Units.percent ? (int)Math.round(value * ratio) : value;
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -3905,7 +3905,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (parent != null) {
                     setY(parent.borderWidth[0] + margins[0] + top);
                 } else {
-                    setY(document.borderSize + top);
+                    setY(top);
                 }
             }
             forceRepaint();
