@@ -375,6 +375,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             dx += parent.scroll_x;
             dy += parent.scroll_y;
         }
+        if (display_type == 2) dy += 1;
 //        Block b = this;
 //        while (b != null) {
 //            if (b.overflow != Overflow.VISIBLE) {
