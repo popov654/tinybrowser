@@ -275,6 +275,10 @@ public class WebDocument extends JPanel {
         setBounds(borderSize, borderSize, width - borderSize*2, height - borderSize*2);
     }
 
+    public void setBaseUrl(String path) {
+        baseUrl = path;
+    }
+
     public void smartUpdate(Block b, int old_width, int old_height) {
         Set<String> onlyRepaint = new java.util.HashSet<String>();
         onlyRepaint.add("background");
@@ -297,6 +301,8 @@ public class WebDocument extends JPanel {
         b.document.lastSetProperties.clear();
         b.document.lastSetProperties = null;
     }
+
+    public String baseUrl = "";
 
     public Set<String> lastSetProperties;
 

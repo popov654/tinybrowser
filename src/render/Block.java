@@ -1441,7 +1441,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 borderWidth = new int[] {1, 1, 1, 1};
                 this.border = new RoundedBorder(this, this.borderWidth, this.arc[0], this.borderColor, this.borderType);
                 if (bgcolor == null || bgcolor.equals(new Color(0, 0, 0, 0))) bgcolor = new Color(85, 85, 85, 75);
-                setBackgroundImage(Util.getInstallPath() + File.separatorChar + "res" + File.separatorChar + "photo_16.png");
+                setBackgroundImage("res" + File.separatorChar + "photo_16.png");
                 this.background_pos_x = 1;
                 this.background_size_x = 16;
                 this.background_size_y = 16;
@@ -2627,6 +2627,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         try {
             File f;
+            path = (document != null ? document.baseUrl : "") + path;
             if (path.startsWith("http")) {
                 bgImage = ImageIO.read(new URL(path));
                 String[] str = path.split("/");

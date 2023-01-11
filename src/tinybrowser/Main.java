@@ -173,6 +173,7 @@ public class Main {
         System.out.println("----------------------------------");
         
         Builder builder = new Builder();
+        builder.setBaseUrl(getInstallPath());
         
         Node style = hp.getRootNode().firstElementChild().lastElementChild();
         CSSParser parser = new CSSParser(hp);
@@ -219,6 +220,7 @@ public class Main {
         final JPanel panel = new JPanel();
         panel.setLayout(new CardLayout());
         final WebDocument document = new WebDocument();
+        document.setBaseUrl(getInstallPath());
 
         document.setPreferredSize(new Dimension(460, 240));
         document.width = 460;

@@ -95,6 +95,7 @@ public class Util {
                 int index = programPath.lastIndexOf(File.separatorChar);
                 programPath = programPath.substring(0, index);
             }
+            programPath += File.separatorChar;
             installPath = programPath;
         }
         return installPath;

@@ -39,6 +39,11 @@ public class Builder {
         InlineElements.add("font");
     }
 
+    public Builder(WebDocument document) {
+        this();
+        setDocument(document);
+    }
+
     public Block buildSubtree(WebDocument document, Node node) {
         Block root = buildElement(document, node);
         if (root == null) return root;
@@ -57,6 +62,7 @@ public class Builder {
     }
 
     public Block buildElement(WebDocument document, Node node) {
+        if (document == null) document = this.document;
         Block b = new Block(document);
         if (node.nodeType == ELEMENT) {
             b.type = Block.NodeTypes.ELEMENT;
@@ -111,14 +117,14 @@ public class Builder {
     public void applyDefaultStyles(Node node, Block b) {
         if (node == null) return;
         if (node.tagName.equals("a")) {
-            b.href = node.getAttribute("href");
+            b.href = baseUrl + node.getAttribute("href");
             b.color = b.linkColor;
         }
         else if (node.tagName.equals("img") && !b.special) {
             b.auto_width = false;
             b.width = -1;
             b.isImage = true;
-            b.setBackgroundImage(node.getAttribute("src"));
+            b.setBackgroundImage(baseUrl + node.getAttribute("src"));
         }
         else if (node.tagName.equals("p")) {
             b.setMargins(0, 0, 12, 0);
@@ -306,6 +312,20 @@ public class Builder {
             setDocument(block.getChildren().get(i), document);
         }
     }
+
+    public void setDocument(WebDocument document) {
+        this.document = document;
+        if (baseUrl.length() > 0 && document.baseUrl.length() == 0) {
+            document.setBaseUrl(baseUrl);
+        }
+    }
+
+    public void setBaseUrl(String url) {
+        baseUrl = url;
+    }
+
+    public String baseUrl = "";
+    public WebDocument document;
 
     public final static Vector<String> BlockElements = new Vector<String>();
     public final static Vector<String> InlineElements = new Vector<String>();
