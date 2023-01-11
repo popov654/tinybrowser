@@ -115,6 +115,7 @@ public class Builder {
             b.color = b.linkColor;
         }
         else if (node.tagName.equals("img")) {
+            b.auto_width = false;
             b.width = -1;
             b.isImage = true;
             b.setBackgroundImage(node.getAttribute("src"));
@@ -171,13 +172,17 @@ public class Builder {
         
         b.document.ready = false;
         b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
-        b.setBackgroundColor(new Color(0, 0, 0, 0));
+        if (!(b.isImage && b.bgImage == null)) {
+            b.setBackgroundColor(new Color(0, 0, 0, 0));
+        }
         b.setBackgroundImage(null);
         b.setMargins(0);
         b.setPaddings(0);
-        b.setBorderWidth(0);
-        b.setBorderType(RoundedBorder.SOLID);
-        b.setBorderColor(Color.BLACK);
+        if (!(b.isImage && b.bgImage == null)) {
+            b.setBorderWidth(0);
+            b.setBorderType(RoundedBorder.SOLID);
+            b.setBorderColor(Color.BLACK);
+        }
         b.setBorderRadius(0);
         applyDefaultStyles(b.node, b);
         

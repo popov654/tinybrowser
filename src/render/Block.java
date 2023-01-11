@@ -2,7 +2,6 @@ package render;
 
 import com.sun.imageio.plugins.gif.GIFImageReader;
 import com.sun.imageio.plugins.gif.GIFImageReaderSpi;
-import java.awt.AWTException;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -35,7 +34,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -49,8 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
@@ -1419,9 +1415,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (isImage) {
             if (bgImage == null) {
-                width = viewport_width = 16;
-                height = viewport_height = 16;
-                bgcolor = new Color(245, 245, 245);
+                if (width < 0) width = viewport_width = (int) Math.round(16 * ratio);
+                if (height < 0) height = viewport_height = (int) Math.round(16 * ratio);
+                setBorderColor("#8a8a9f");
+                borderWidth = new int[] {1, 1, 1, 1};
+                this.border = new RoundedBorder(this, this.borderWidth, this.arc[0], this.borderColor, this.borderType);
+                if (bgcolor == null || bgcolor.equals(new Color(0, 0, 0, 0))) bgcolor = new Color(85, 85, 85, 75);
+                setBackgroundImage(Util.getInstallPath() + File.separatorChar + "res" + File.separatorChar + "image_16.png");
+                this.background_size_x = 16;
+                this.background_size_y = 16;
+                this.background_size_x_auto = false;
+                this.background_size_y_auto = false;
+                setBackgroundRepeat(BackgroundRepeat.NONE);
+                return;
+                //forceRepaint();
             } else {
                 if (width < 0 && height < 0) {
                     width = viewport_width = bgImage.getWidth();
@@ -4581,6 +4588,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             b.background_pos_y = this.background_pos_y;
             b.background_size_x = this.background_size_x;
             b.background_size_y = this.background_size_y;
+
+            b.has_animation = has_animation;
+            b.animation_frames = animation_frames;
         }
         b.gradient = this.gradient;
         b.bgcolor = this.bgcolor;

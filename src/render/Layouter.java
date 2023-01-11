@@ -547,8 +547,9 @@ public class Layouter {
             d.parts.clear();
 
             Block b = d.clone();
-            d.width = 0;
-            d.height = 0;
+            d.stopWatcher();
+            //d.width = 0;
+            //d.height = 0;
             d.parts.add(b);
             b.pos = d.pos;
 
@@ -559,9 +560,13 @@ public class Layouter {
             cur_x = last_line.cur_pos;
             cur_y = last_line.getY();
 
-            b.width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
+            if (!b.isImage) {
+                b.width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
+            } else {
+                b.performLayout();
+            }
 
-            if (b.width <= 0 && block.white_space == Block.WhiteSpace.NORMAL) {
+            if (b.width <= 0 && b.isImage && last_line.getWidth() - last_line.cur_pos - b.margins[3] < b.width) {
                 Line new_line = startNewLine(0, 0, b);
                 cur_x = new_line.getX();
                 cur_y = new_line.getY();
@@ -577,7 +582,7 @@ public class Layouter {
 
             last_line.cur_pos -= b.margins[1];
 
-            b.performLayout();
+            if (!b.isImage) b.performLayout();
 
             if (b.lines.size() > 0 && b.lines.get(0).cur_pos < b.lines.get(0).getWidth()) {
                 int line_width = b.lines.get(0).cur_pos;
@@ -588,7 +593,7 @@ public class Layouter {
                 last_line.cur_pos = b._getX() + b.width - last_line.getX() + b.margins[1];
             }
 
-            if (b.lines.size() == 0) {
+            if (b.lines.size() == 0 && !b.isImage) {
                 b.width = b.borderWidth[3] + b.paddings[3] + b.paddings[1] + b.borderWidth[1];
                 b.viewport_width = b.width;
                 int st = (b.text_bold || b.text_italic) ? ((b.text_bold ? Font.BOLD : 0) | (b.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
@@ -612,6 +617,10 @@ public class Layouter {
                     d.document.root.add(d.parts.get(i), index++);
                 }
                 d.document.root.remove(d);
+            }
+
+            if (b.bgImage != null) {
+                b.startWatcher();
             }
 
             if (b.positioning == Block.Position.RELATIVE) {
