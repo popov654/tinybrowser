@@ -628,9 +628,10 @@ public class LayoutTests extends JFrame {
 
     public void testNormal() {
 
-        document.root.children.get(0).setDisplayType(Block.Display.NONE);
+        prepareBlock();
 
-        Block b = document.root.children.get(1);
+        Block b = document.root.children.get(0);
+        
         b.removeAllElements();
         b.setWidth(126);
         b.setHeight(-1);
@@ -702,11 +703,12 @@ public class LayoutTests extends JFrame {
         } catch (Exception e) {}
         final LayoutTests lt = new LayoutTests();
 
-        //lt.basicTest();
+        lt.basicTest();
         //lt.linksTest();
         //lt.testImages();
         //lt.testReplacedContent();
-        lt.testTables();
+        //lt.testTables();
+        //lt.testForms();
         //lt.testInternalFrames();
         //lt.testNormal();
         //lt.testPreWrap();
