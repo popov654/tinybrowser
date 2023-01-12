@@ -26,5 +26,6 @@ public interface Drawable {
     public void setHeight(int value);
 
     public void setLine(Line line);
+    public void selected(boolean value);
 
 }

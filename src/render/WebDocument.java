@@ -325,6 +325,7 @@ public class WebDocument extends JPanel {
     protected int last_height = 0;
 
     public boolean prevent_mixed_content = true;
+    public boolean preserve_layout_on_copy = true;
 
     public String selected_text;
     public static boolean scale_borders = true;

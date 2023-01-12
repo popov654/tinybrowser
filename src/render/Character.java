@@ -149,6 +149,11 @@ public class Character extends JPanel implements Drawable {
     }
 
     @Override
+    public void selected(boolean value) {
+        selected = value;
+    }
+
+    @Override
     public Font getFont() {
         return font;
     }
@@ -225,6 +230,8 @@ public class Character extends JPanel implements Drawable {
     }
 
     public String textContent;
+
+    public boolean selected = false;
 
     public int left;
     public int top;

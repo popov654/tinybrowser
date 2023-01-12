@@ -1235,16 +1235,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         String result = "";
         try {
-            for (int i = from_element; i <= to_element; i++) {
+            for (int i = 0; i < v.size(); i++) {
                 Drawable d = v.get(i);
                 if (d instanceof Block) {
                     Block b = (Block)d;
                     b.getSelectedText(true);
                     result += b.selected_text;
-                    if (b.display_type == Display.BLOCK || b.display_type == Display.TABLE_CELL) {
-                        result += "\n";
+                    if (!b.selected_text.isEmpty() && (b.display_type == Display.BLOCK || b.display_type == Display.TABLE_CELL)) {
+                        if (document.preserve_layout_on_copy && b.display_type == Display.TABLE_CELL &&
+                              i < v.size()-1 && ((Block)v.get(i+1)).display_type == Display.TABLE_CELL && ((Block)v.get(i+1)).getOffsetTop() == b.getOffsetTop()) {
+                            result += "\t";
+                        } else {
+                            result += "\n";
+                        }
                     }
-                } else {
+                } else if (((Character)d).selected) {
                     result += ((Character)d).getText();
                 }
             }
@@ -1268,6 +1273,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 } else if (lines.get(i).elements.get(j) instanceof Character) {
                     unselectCharacter((Character)lines.get(i).elements.get(j));
                 }
+                lines.get(i).elements.get(j).selected(false);
             }
         }
         if (original != null) {
@@ -1277,6 +1283,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (children.get(i).positioning != Position.STATIC ||
                     children.get(i).display_type == Display.TABLE_ROW || children.get(i).display_type == Display.TABLE_CELL) {
                 children.get(i).clearSelection();
+                children.get(i).selected(false);
             }
         }
         //forceRepaint();
@@ -2500,9 +2507,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (from_element > -1 && to_element > -1) {
 
-            for (int k = from_element; k <= to_element; k++) {
+            for (int k = 0; k < v.size(); k++) {
                 if (!(v.get(k) instanceof Character)) continue;
                 Character c = (Character)v.get(k);
+                if (!c.selected) continue;
                 JLabel label = c.glyph;
 
                 if (label != null) {
@@ -2557,8 +2565,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             children.get(i).transform = value;
         }
         buffer = null;
-        //updateSize();
-        repaint();
+        forceRepaint();
     }
 
     public int getTransformedSize() {
@@ -4806,10 +4813,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                             while (sel[0] > 0 && !((Character)l.elements.get(sel[0]-1)).getText().matches("\\s+")) {
                                 sel[0]--;
                                 selectCharacter((Character)l.elements.get(sel[0]));
+                                l.elements.get(sel[0]).selected(true);
                             }
                             while (sel[1] < l.elements.size()-1 && !((Character)l.elements.get(sel[1]+1)).getText().matches("\\s+")) {
                                 sel[1]++;
                                 selectCharacter((Character)l.elements.get(sel[1]));
+                                l.elements.get(sel[1]).selected(true);
                             }
                             //System.err.println("From: " + sel[0] + ", To: " + sel[1]);
                         }
@@ -4852,6 +4861,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                     sel[0] = i1;
                     sel[1] = i2;
+                    for (int j = i1; j <= i2; j++) {
+                        v.get(j).selected(true);
+                    }
                     needToRestoreSelection = true;
                     forceRepaint();
                     text_layer.repaint();
@@ -4965,6 +4977,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                     if (sel[0] > j || sel[0] == -1) sel[0] = j;
                                     if (sel[1] < j || sel[1] == -1) sel[1] = j;
                                     selectCharacter((Character)line.elements.get(j));
+                                    line.elements.get(j).selected(true);
                                 } else {
                                     if (sel[0] <= j && sel[1] >= j) sel[0] = j+1;
                                     if (sel[1] >= j && sel[0] <= j) sel[1] = j-1;
@@ -4972,6 +4985,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                         sel[0] = sel[1] = -1;
                                     }
                                     unselectCharacter((Character)line.elements.get(j));
+                                    line.elements.get(j).selected(false);
                                 }
                                 javax.swing.JLabel glyph = ((Character)line.elements.get(j)).glyph;
                                 if (glyph != null && !glyph.isVisible() || glyph == null) {
@@ -4986,8 +5000,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                     y2 > b._y_ + line.getY() - scroll_y;
                             if (contains) {
                                 selectCharacter((Character)line.elements.get(j));
+                                line.elements.get(j).selected(true);
                             } else {
                                 unselectCharacter((Character)line.elements.get(j));
+                                line.elements.get(j).selected(false);
                             }
                             javax.swing.JLabel glyph = ((Character)line.elements.get(j)).glyph;
                             if (glyph != null && !glyph.isVisible() || glyph == null) {
@@ -4997,6 +5013,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
             }
+        }
+        if (v.size() > 0 && v.get(0) instanceof Character && sel[0] == 0 && sel[1] == v.size()-1) {
+            selected = true;
         }
         if (original != null) {
             original.sel = sel;
@@ -5036,6 +5055,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             c.glyph.setOpaque(false);
             c.glyph.setForeground(color);
             c.glyph.setBackground(null);
+        }
+    }
+
+    @Override
+    public void selected(boolean value) {
+        selected = value;
+        if (original != null) {
+            original.selected = value;
+        }
+        for (Block part: parts) {
+            part.selected = value;
+        }
+        for (int i = 0; i < lines.size(); i++) {
+            for (int j = 0; j < lines.get(i).elements.size(); j++) {
+                lines.get(i).elements.get(j).selected(value);
+            }
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).selected(value);
         }
     }
 
@@ -5322,6 +5360,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+
+    public boolean selected = false;
     private boolean hovered;
     private Watcher w;
 
