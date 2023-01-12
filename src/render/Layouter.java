@@ -289,7 +289,7 @@ public class Layouter {
             Block prev = null;
             int i = 0; int j = 0;
             while (i < b.parent.lines.size()) {
-                if ((Block)b.parent.lines.get(i).elements.get(j) == block) {
+                if ((Block)b.parent.lines.get(i).elements.get(j) == block && prev != null) {
                     if (prev.display_type != Block.Display.INLINE) return true;
                     return endsWithWhitespace(prev.parts.size() > 0 ? prev.parts.lastElement() : prev);
                 }
