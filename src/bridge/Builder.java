@@ -167,6 +167,8 @@ public class Builder {
     }
 
     public void resetStyles(Block b, boolean no_update) {
+        if (b.node == null || b.node.stateStyles.size() == 0) return;
+
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
         
@@ -236,6 +238,8 @@ public class Builder {
     }
 
     public void applyStateStyles(Block b, boolean no_update) {
+        if (b.node == null || b.node.stateStyles.size() == 0) return;
+
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
 

@@ -282,14 +282,17 @@ public class WebDocument extends JPanel {
         onlyRepaint.add("background-color");
         onlyRepaint.add("border-color");
         onlyRepaint.add("color");
+        onlyRepaint.add("cursor");
         Set<String> diff = new HashSet<String>(lastSetProperties);
         diff.removeAll(onlyRepaint);
 
         if (b.document.lastSetProperties == null || diff.size() > 0) {
             b.doIncrementLayout(old_width, old_height, false);
+            b.setNeedRestoreSelection(true);
         }
         b.forceRepaint();
         b.document.repaint();
+        b.setNeedRestoreSelection(false);
 
         b.document.lastSetProperties.clear();
         b.document.lastSetProperties = null;

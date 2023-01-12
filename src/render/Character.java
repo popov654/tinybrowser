@@ -45,7 +45,7 @@ public class Character extends JPanel implements Drawable {
 
     public void forceRepaint() {
         buffer = null;
-        //draw();
+        draw();
     }
 
     public void forceRepaint(Graphics g) {
@@ -87,7 +87,7 @@ public class Character extends JPanel implements Drawable {
 
         Block block = line.parent;
         if (block.original != null) block = block.original;
-        Color col = block.hasParentLink || block.href != null ? block.linkColor : block.color;
+        Color col = block.hasParentLink || block.href != null ? block.linkColor : color;
         g2d.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * block.alpha)));
 
         //g2d.setColor(color);

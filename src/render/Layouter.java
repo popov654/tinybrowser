@@ -540,6 +540,9 @@ public class Layouter {
                     index = d.document.root.getComponentCount() - d.pos - 1;
                 }
                 for (Block part: d.parts) {
+                    if (part.bgImage != null && part.has_animation) {
+                        part.stopWatcher();
+                    }
                     d.document.root.remove(part);
                 }
                 if (d.parts.size() > 0) d.document.root.add(d, index);
@@ -619,7 +622,7 @@ public class Layouter {
                 d.document.root.remove(d);
             }
 
-            if (b.bgImage != null) {
+            if (b.bgImage != null && b.has_animation) {
                 b.startWatcher();
             }
 
