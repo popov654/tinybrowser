@@ -405,7 +405,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int y0 = -shadow_y + shadow_blur + shadow_size;
             g.drawImage(buffer, _x_ - x0 - dx, _y_ - y0 - dy, this);
         } else {
-            g.setClip(null);
+            //g.setClip(null);
             g.drawImage(buffer, _x_ - dx, _y_ - dy, this);
         }
         
@@ -631,7 +631,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             adjustCorners(arcs, clipping_block);
 
             clip_rect = new RoundedRect(xc, yc, wc, hc, arcs[0], arcs[1], arcs[2], arcs[3]);
-            g2d.setClip(clip_rect);
+            if (clipping_block.overflow != Overflow.VISIBLE) {
+                g2d.setClip(clip_rect);
+            } else {
+                g2d.setClip(null);
+            }
 
         }
 

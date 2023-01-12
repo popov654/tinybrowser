@@ -115,7 +115,7 @@ public class YouTubeThumb extends Block {
                 if (-parent.scroll_y + _y_ + getY() + getHeight() > parent.viewport_height) {
                     h -= -parent.scroll_y + _y_ + getY() + getHeight() - parent.viewport_height;
                 }
-                g.setClip(new Rectangle(x, y, w, h));
+                //g.setClip(new Rectangle(x, y, w, h));
                 super.paintComponent(g);
             }
         };

@@ -179,11 +179,17 @@ public class WebDocument extends JPanel {
         panel.setBounds(borderSize, borderSize, getWidth() - borderSize * 2, getHeight() - borderSize * 2);
         if (getWidth() != last_width || getHeight() != last_height) {
             //System.err.println("Size updated");
-            root.setBounds(0, 0, width - borderSize * 2 - root.getScrollbarYSize(), height - borderSize * 2 - root.getScrollbarXSize());
-            root.width = width - borderSize * 2;
-            root.height = height - borderSize * 2;
-            root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
-            root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
+            if (keep_root_scrollbars_outside) {
+                root.setBounds(0, 0, width - root.getScrollbarYSize(), height - root.getScrollbarXSize());
+                root.width = root.viewport_width = width - root.getScrollbarYSize();
+                root.height = root.viewport_height = height - root.getScrollbarXSize();
+            } else {
+                root.setBounds(0, 0, width, height);
+                root.width = width;
+                root.height = height;
+                root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
+                root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
+            }
             root.orig_height = (int) (root.height / root.ratio);
             root.max_height = root.height;
 
@@ -332,6 +338,8 @@ public class WebDocument extends JPanel {
 
     public boolean prevent_mixed_content = true;
     public boolean preserve_layout_on_copy = true;
+    public boolean use_native_inputs = false;
+    public boolean keep_root_scrollbars_outside = false;
 
     public String selected_text;
     public static boolean scale_borders = true;
