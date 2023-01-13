@@ -112,6 +112,7 @@ public class HTMLParser {
     private void scanNext() {
         if (pos == 0) {
             TagLibrary.init();
+            root.document = this;
             curNode = root;
             root.document = this;
             root.tagName = "html";
@@ -217,7 +218,7 @@ public class HTMLParser {
                         classes.put(classNames[i], v);
                     } else {
                         Vector<Node> v = classes.get(classNames[i]);
-                        v.add(curNode);
+                        if (!v.contains(curNode)) v.add(curNode);
                     }
                 }
             }
@@ -229,7 +230,7 @@ public class HTMLParser {
                     names.put(name, v);
                 } else {
                     Vector<Node> v = names.get(name);
-                    v.add(curNode);
+                    if (!v.contains(curNode)) v.add(curNode);
                 }
             }
             curNode.tagName = cur_tag.toLowerCase();
@@ -294,7 +295,7 @@ public class HTMLParser {
                         classes.put(classNames[i], v);
                     } else {
                         Vector<Node> v = classes.get(classNames[i]);
-                        v.add(node);
+                        if (!v.contains(node)) v.add(node);
                     }
                 }
             }
@@ -306,7 +307,7 @@ public class HTMLParser {
                     names.put(name, v);
                 } else {
                     Vector<Node> v = names.get(name);
-                    v.add(node);
+                    if (!v.contains(node)) v.add(node);
                 }
             }
         }
@@ -335,10 +336,23 @@ public class HTMLParser {
                     }
                 }
             }
+            if (node.attributes.containsKey("name")) {
+                String name = node.attributes.get("name");
+                if (names.containsKey(name)) {
+                    names.get(name).remove(node);
+                    if (names.get(name).size() == 0) {
+                        names.remove(name);
+                    }
+                }
+            }
         }
         for (int i = 0; i < node.children.size(); i++) {
             removeNodeIndex(node.children.get(i));
         }
+    }
+
+    public Hashtable<String, Vector<Node>> getNamesIndex() {
+        return names;
     }
 
     public Hashtable<String, Vector<Node>> getClassIndex() {
@@ -412,6 +426,18 @@ public class HTMLParser {
         }
     }
 
+    public Vector<Node> getElementsByName(String name) {
+        if (name == null) return new Vector<Node>();
+        Vector<Node> v = names.get(name);
+        if (v == null) v = new Vector<Node>();
+        for (int i = 0; i < v.size(); i++) {
+            if (v.get(i).getAttribute("name") == null || !v.get(i).getAttribute("name").equals(name)) {
+                v.remove(i--);
+            }
+        }
+        return v;
+    }
+
     public Node getElementById(String str) {
         str = str.replaceAll("^\\#", "");
         return getElementById(null, str, true);
@@ -435,30 +461,8 @@ public class HTMLParser {
                 if (!flag) return null;
             }
         }
-        return result;
+        return result.getAttribute("id").equals(str) ? result : null;
     }
-
-    public class NodeIndex {
-
-        public Node getNodeById(String id) {
-            return ids.get(id);
-        }
-
-        public Vector<Node> getNodesByClassName(String className) {
-            return classes.get(className);
-        }
-
-        public Vector<Node> getNodesByName(String name) {
-            return names.get(name);
-        }
-        
-    }
-
-    public NodeIndex getIndex() {
-        return index;
-    }
-
-    private NodeIndex index = new NodeIndex();
 
     private int state;
 

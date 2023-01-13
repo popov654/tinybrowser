@@ -5082,7 +5082,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             if (formType >= 4 && formType <= 5) {
                 if (node.getAttribute("name") != null && formType == 4) {
-                    //Vector<Node> nodes = node.document.getIndex().getNodesByName(node.getAttribute("name"));
                     Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
                     for (int i = 0; i < group.size(); i++) {
                         group.get(i).node.states.remove("checked");

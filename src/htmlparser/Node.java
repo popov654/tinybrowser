@@ -1,8 +1,11 @@
 package htmlparser;
 
 import cssparser.QuerySelector;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Vector;
 
@@ -14,7 +17,11 @@ public class Node {
     public Node() {
     }
     public Node(Node parent_node) {
-        parent = parent_node;
+        if (parent_node.nodeType == 1) {
+            parent = parent_node;
+            parent_node.addChild(this);
+        }
+        document = parent.document;
     }
 
     public Node(int node_type) {
@@ -27,6 +34,7 @@ public class Node {
             parent_node.addChild(this);
         }
         nodeType = node_type;
+        document = parent.document;
     }
 
     public boolean addChild(Node node) {
@@ -197,6 +205,9 @@ public class Node {
     public boolean removeChild(int index) {
         if (index >= 1 && index <= children.size()) {
             children.remove(index - 1);
+            if (document != null) {
+                document.removeSubtreeIndex(this);
+            }
             return true;
         }
         return false;
@@ -267,7 +278,88 @@ public class Node {
     }
 
     public String setAttribute(String attr, String val) {
+        if (attr.equals("id") && document != null) {
+            document.getIdIndex().remove(attributes.get("id"));
+            document.getIdIndex().put(val, this);
+        }
+        if (attr.equals("class") && document != null) {
+            String[] oldClassNames = attributes.get("class").split("\\s+");
+            String[] newClassNames = val.split("\\s+");
+            List<String> old_list = Arrays.asList(oldClassNames);
+            List<String> new_list = Arrays.asList(newClassNames);
+            List<String> l1 = (List<String>)(new ArrayList<String>(old_list)).clone();
+            l1.removeAll(new_list);
+            List<String> l2 = (List<String>)(new ArrayList<String>(new_list)).clone();
+            l2.removeAll(old_list);
+            replaceValues(document.getClassIndex(), l1, l2);
+        }
+        if (attr.equals("name") && document != null) {
+            replaceValue(document.getNamesIndex(), attributes.get("name"), val);
+        }
         return attributes.put(attr, val);
+    }
+
+    public void setId(String id) {
+        setAttribute("id", id);
+    }
+
+    public void addClass(String value) {
+        String[] classNames = attributes.get("class").split("\\s+");
+        for (String val: classNames) {
+            if (val.equals(value)) return;
+        }
+        String new_value = attributes.get("class") + "" + value;
+        setAttribute("class", new_value);
+    }
+
+    public void removeClass(String value) {
+        String[] classNames = attributes.get("class").split("\\s+");
+        boolean found = false;
+        for (String val: classNames) {
+            if (val.equals(value)) found = true;
+        }
+        if (!found) return;
+        String new_value = attributes.get("class").replaceAll("(^|\\s+)" + value + "(\\s+|$)", "");
+        setAttribute("class", new_value);
+    }
+
+    private void replaceValue(Hashtable<String, Vector<Node>> index, String oldValue, String newValue) {
+        Vector<Node> v = oldValue != null ?
+            index.get(oldValue) : new Vector<Node>();
+        if (v != null) v.remove(this);
+        if (oldValue != null && v != null && v.size() > 0) {
+            index.put(oldValue, v);
+        } else if (oldValue != null) {
+            index.remove(oldValue);
+        }
+        v = index.get(newValue);
+        if (v == null) {
+            v = new Vector<Node>();
+        }
+        v.add(this);
+        index.put(newValue, v);
+    }
+
+    private void replaceValues(Hashtable<String, Vector<Node>> index, List<String> oldValues, List<String> newValues) {
+        for (String oldValue: oldValues) {
+            Vector<Node> v = oldValue != null ?
+                index.get(oldValue) : new Vector<Node>();
+            if (v != null) v.remove(this);
+            if (oldValue != null && v != null && v.size() > 0) {
+                index.put(oldValue, v);
+            } else if (oldValue != null) {
+                index.remove(oldValue);
+            }
+        }
+
+        for (String newValue: newValues) {
+            Vector<Node> v = index.get(newValue);
+            if (v == null) {
+                v = new Vector<Node>();
+            }
+            v.add(this);
+            index.put(newValue, v);
+        }
     }
 
     public boolean removeAttribute(String attr) {

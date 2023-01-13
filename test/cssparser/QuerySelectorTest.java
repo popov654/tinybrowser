@@ -5,7 +5,6 @@
 
 package cssparser;
 
-import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -230,4 +229,3 @@ public class QuerySelectorTest {
     private HTMLParser hp;
 
 }
-
