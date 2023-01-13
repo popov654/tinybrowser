@@ -5243,13 +5243,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     flag = true;
                 } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height) &&
                         (!p.hasParentLink && p.href == null || p.linksUnderlineMode == 1) && p.originalStyles.containsKey("text_underline")) {
-                     p.hovered = false;
-                     p.text_underline = (Boolean) (p.originalStyles.get("text_underline"));
-                     p.color = (Color) p.originalStyles.get("text_color");
-                     p.originalStyles.remove("text_underline");
-                     p.originalStyles.remove("text_color");
-                     document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                     flag = true;
+                    p.hovered = false;
+                    p.text_underline = (Boolean) (p.originalStyles.get("text_underline"));
+                    p.color = (Color) p.originalStyles.get("text_color");
+                    p.originalStyles.remove("text_underline");
+                    p.originalStyles.remove("text_color");
+                    if (!hasParentLink && href == null) {
+                        document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    }
+                    flag = true;
+                } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered) {
+                    hovered = false;
+                    document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 }
             }
         } else {
@@ -5264,13 +5269,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 flag = true;
             } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) &&
                     (!hasParentLink && href == null || linksUnderlineMode == 1) && originalStyles.containsKey("text_underline")) {
-                 hovered = false;
-                 text_underline = (Boolean) (originalStyles.get("text_underline"));
-                 color = (Color) originalStyles.get("text_color");
-                 originalStyles.remove("text_underline");
-                 originalStyles.remove("text_color");
-                 document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                 flag = true;
+                hovered = false;
+                text_underline = (Boolean) (originalStyles.get("text_underline"));
+                color = (Color) originalStyles.get("text_color");
+                originalStyles.remove("text_underline");
+                originalStyles.remove("text_color");
+                if (!hasParentLink && href == null) {
+                    document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                }
+                flag = true;
+            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered) {
+                hovered = false;
+                document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
         }
         if (flag) {
