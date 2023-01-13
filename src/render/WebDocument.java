@@ -180,13 +180,13 @@ public class WebDocument extends JPanel {
         if (getWidth() != last_width || getHeight() != last_height) {
             //System.err.println("Size updated");
             if (keep_root_scrollbars_outside) {
-                root.setBounds(0, 0, width - root.getScrollbarYSize(), height - root.getScrollbarXSize());
-                root.width = root.viewport_width = width - root.getScrollbarYSize();
-                root.height = root.viewport_height = height - root.getScrollbarXSize();
+                root.setBounds(0, 0, width - root.getScrollbarYSize() - borderSize * 2, height - root.getScrollbarXSize() - borderSize * 2);
+                root.width = root.viewport_width = width - root.getScrollbarYSize() - borderSize * 2;
+                root.height = root.viewport_height = height - root.getScrollbarXSize() - borderSize * 2;
             } else {
-                root.setBounds(0, 0, width, height);
-                root.width = width;
-                root.height = height;
+                root.setBounds(0, 0, width - borderSize * 2, height - borderSize * 2);
+                root.width = width - borderSize * 2;
+                root.height = height - borderSize * 2;
                 root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
                 root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
             }
