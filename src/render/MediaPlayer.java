@@ -213,6 +213,7 @@ public class MediaPlayer {
         progress.display_type = Block.Display.INLINE_BLOCK;
         progress.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         progress.width = progress.max_width = progress_width;
+        progress.orig_width = (int) ((double)progress_width / progress.ratio);
         progress.setMargins(4, 7, 4, 10);
         progress.setBackgroundColor(new Color(241, 243, 245, 234));
         panel.addElement(progress);
@@ -221,6 +222,7 @@ public class MediaPlayer {
         //ps.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         progress.addElement(ps);
         ps.width = progress.width;
+        ps.orig_width = progress.orig_width;
         ps.setPositioning(Block.Position.RELATIVE);
         ps.top = -progress.borderWidth[0];
         ps.left = -progress.borderWidth[3];
@@ -370,16 +372,16 @@ public class MediaPlayer {
 
         b.document.ready = true;
 
-        if (container.getLayouter() != null) {
-            container.performLayout();
-            container.document.repaint();
-        }
-        
-        else if (container.document != null && container.document.ready && container.document.isVisible()) {
-            container.document.root.performLayout();
-            container.forceRepaint();
-            container.document.repaint();
-        }
+//        if (container.getLayouter() != null) {
+//            container.performLayout();
+//            container.document.repaint();
+//        }
+//
+//        else if (container.document != null && container.document.ready && container.document.isVisible()) {
+//            container.document.root.performLayout();
+//            container.forceRepaint();
+//            container.document.repaint();
+//        }
 
         initPlayer();
     }
@@ -825,7 +827,7 @@ public class MediaPlayer {
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2d = (Graphics2D)g;
-            g2d.setClip(clip_rect);
+            //g2d.setClip(clip_rect);
             g2d.drawImage(image, 0, 0, null);
         }
 
@@ -1048,6 +1050,7 @@ public class MediaPlayer {
             color = col;
             width = block.width;
             height = block.height;
+            orig_width = (int) ((double)width / block.ratio);
             auto_width = false;
             auto_height = false;
             _x_ = block._x_;

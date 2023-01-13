@@ -162,8 +162,8 @@ public class MediaTest extends JFrame {
 
     public static void main(String[] args) {
         try {
-                UIManager.setLookAndFeel(
-                    UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel(
+                UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {}
         MediaTest lt = new MediaTest();
         lt.setVisible(true);
