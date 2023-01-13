@@ -55,11 +55,14 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.swing.ButtonModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
@@ -423,14 +426,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (text_layer != null) {
             text_layer.setBounds(-scroll_x, -scroll_y, text_layer.getWidth(), text_layer.getHeight());
         }
-
         Component[] c = getComponents();
         for (int i = 0; i < c.length; i++) {
-            if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JButton))) continue;
+            if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox))) continue;
             if (formType < 3) {
                 c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
             } else if (formType == 3) {
                 c[i].setBounds(_x_ + borderWidth[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
+            } else if (formType == 4 || formType == 5) {
+                c[i].setBounds(_x_ + width / 2 - c[i].getPreferredSize().width / 2 - 1 - scroll_x, _y_ + height / 2 - c[i].getPreferredSize().height / 2 - scroll_y, height, height);
+                c[i].repaint();
             }
         }
 
@@ -643,6 +648,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int wc = clipping_block.viewport_width - clipping_block.borderWidth[3] - clipping_block.borderWidth[1];
             int hc = clipping_block.viewport_height - clipping_block.borderWidth[0] - clipping_block.borderWidth[2];
 
+
             double[] arcs = new double[4];
             arcs[0] = clipping_block.arc[0] / 2 - 1;
             arcs[1] = clipping_block.arc[1] / 2 - 1;
@@ -717,7 +723,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
             }
         }
-        else if (bgcolor != null) {
+        else if (bgcolor != null && !(formType >= 4 && formType <= 5)) {
             g2d.setColor(bgcolor);
             if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
                 double[] arcs = new double[4];
@@ -1643,6 +1649,112 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 } else {
                     btn.setBounds(_x_ + borderWidth[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
                 }
+            }
+        }
+        if (formType >= 4 && formType <= 5) {
+            removeAllElements();
+            final Block instance = this;
+            final JToggleButton rb;
+            if (formType == 4) {
+                rb = new JRadioButton() {
+                    @Override
+                    public void paintComponent(Graphics g) {
+                        if (instance.document.use_native_inputs) {
+                            super.paintComponent(g);
+                            return;
+                        }
+
+                        int size = (int) Math.round(12 * ratio);
+                        //Graphics2D g2d = (Graphics2D) g;
+                        instance.clearBuffer();
+                        Graphics2D g2d = (Graphics2D) instance.buffer.getGraphics();
+
+                        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        g2d.setColor(new Color(13, 13, 13, 18));
+                        int x0 = Math.max(0, (int)((getWidth() - size) / 2) - 2);
+                        int y0 = Math.max(0, (int)((getHeight() - size) / 2) - 2);
+                        g2d.drawOval(x0, y0, size, size);
+                        g2d.setColor(new Color(13, 13, 13, 48));
+                        g2d.drawOval(x0 + 1, y0 + 1, size - 2, size - 2);
+                        g2d.setColor(new Color(45, 47, 58, 153));
+                        g2d.setStroke(new BasicStroke(1));
+                        g2d.drawOval(x0 + 2, y0 + 2, size - 4, size - 4);
+                        g2d.setColor(instance.bgcolor != null ? instance.bgcolor : new Color(245, 245, 245));
+                        g2d.fillOval(x0 + 3, y0 + 3, size - 6, size - 6);
+
+                        if (this.getModel().isSelected()) {
+                            g2d.setColor(new Color(45, 47, 58, 153));
+                            g2d.fillOval(x0 + 5, y0 + 5, size - 9, size - 9);
+                            g2d.setColor(new Color(83, 97, 115, 203));
+                            g2d.fillOval(x0 + 6, y0 + 6, size - 11, size - 11);
+                            g2d.setColor(new Color(183, 187, 195, 47));
+                            g2d.fillOval(x0 + 7, y0 + 7, 2, 2);
+                            g2d.setColor(new Color(183, 187, 195, 38));
+                            g2d.fillOval(x0 + 9, y0 + 7, 1, 1);
+                        }
+                    }
+                };
+            } else {
+                rb = new JCheckBox() {
+                    @Override
+                    public void paintComponent(Graphics g) {
+                        if (instance.document.use_native_inputs) {
+                            super.paintComponent(g);
+                            return;
+                        }
+
+                        int size = (int) Math.round(12 * ratio);
+                        //Graphics2D g2d = (Graphics2D) g;
+                        instance.clearBuffer();
+                        Graphics2D g2d = (Graphics2D) instance.buffer.getGraphics();
+
+                        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        //g2d.setColor(new Color(13, 13, 13, 18));
+                        int x0 = Math.max(0, (int)((getWidth() - size) / 2) - 2);
+                        int y0 = Math.max(0, (int)((getHeight() - size) / 2) - 2);
+                        //g2d.drawRoundRect(x0, y0, size, size, 2, 2);
+                        g2d.setColor(new Color(13, 13, 13, 26));
+                        g2d.drawRoundRect(x0 + 1, y0 + 1, size - 2, size - 2, 2, 2);
+                        g2d.setColor(new Color(75, 78, 85, 153));
+                        g2d.setStroke(new BasicStroke(1));
+                        g2d.drawRoundRect(x0 + 2, y0 + 2, size - 4, size - 4, 2, 2);
+                        g2d.setColor(instance.bgcolor != null ? instance.bgcolor : new Color(245, 245, 245));
+                        g2d.fillRoundRect(x0 + 3, y0 + 3, size - 6, size - 6, 2, 2);
+
+                        if (this.getModel().isSelected()) {
+                            g2d.setColor(new Color(65, 67, 78, 23));
+                            g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
+                            g2d.drawLine(x0 + 3, y0 + 8, x0 + 7, y0 + 14);
+                            g2d.drawLine(x0 + 7, y0 + 14, x0 + 14, y0 + 2);
+                            
+                            g2d.setColor(new Color(96, 103, 125));
+
+                            g2d.setStroke(new BasicStroke(3, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
+                            g2d.drawLine(x0 + 2, y0 + 10, x0 + 6, y0 + 14);
+                            g2d.drawLine(x0 + 6, y0 + 14, x0 + 14, y0 + 3);
+
+                            g2d.setColor(new Color(83, 97, 115, 35));
+                            g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
+                            g2d.drawLine(x0 + 2, y0 + 12, x0 + 6, y0 + 15);
+                            g2d.drawLine(x0 + 6, y0 + 15, x0 + 14, y0 + 4);
+                        }
+                    }
+                };
+            }
+            if (!document.use_native_inputs) rb.setOpaque(false);
+            add(rb);
+            int size = (int) Math.round(12 * ratio);
+            rb.setPreferredSize(new Dimension(size, size));
+            if (width < rb.getPreferredSize().width) width = viewport_width = rb.getPreferredSize().width;
+            height = viewport_height = rb.getPreferredSize().height;
+            rb.setBounds(_x_ + width / 2 - rb.getPreferredSize().width / 2 - 1, _y_ + height / 2 - rb.getPreferredSize().height / 2, height, height);
+            if (checked || node != null && node.states.contains("checked")) {
+                checked = true;
+                if (node != null && !node.states.contains("checked")) {
+                    node.states.add("checked");
+                    node.attributes.put("selected", "");
+                }
+                rb.getModel().setSelected(true);
             }
         }
         if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
@@ -4967,6 +5079,32 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             
             node.states.add("active");
+
+            if (formType >= 4 && formType <= 5) {
+                if (node.getAttribute("name") != null && formType == 4) {
+                    //Vector<Node> nodes = node.document.getIndex().getNodesByName(node.getAttribute("name"));
+                    Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
+                    for (int i = 0; i < group.size(); i++) {
+                        group.get(i).node.states.remove("checked");
+                        if (group.get(i) == this) continue;
+                        if (group.get(i).formType >= 4 && group.get(i).formType <= 5) {
+                            Component[] c = group.get(i).getComponents();
+                            if (c.length > 0 && c[0] instanceof JToggleButton) {
+                                ((JToggleButton)c[0]).getModel().setSelected(false);
+                            }
+                            ((Block)c[i]).checked = false;
+                        }
+                    }
+                }
+
+                checked = formType == 5 ? !checked : true;
+                if (checked) node.states.add("checked");
+                else node.states.remove("checked");
+            }
+            if (formType == 4 && getComponents().length > 0) {
+                ((JToggleButton)getComponents()[0]).getModel().setSelected(true);
+            }
+
             document.active_block = this;
 
             if (href != null) {
@@ -5588,6 +5726,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public final Color DEFAULT_INPUT_TEXT_COLOR = new Color(34, 34, 36);
 
     public boolean selected = false;
+    public boolean checked = false;
     private boolean hovered;
     private Watcher w;
     private MediaPlayer mp;

@@ -323,23 +323,46 @@ public class LayoutTests extends JFrame {
 
         Block d03 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
         d03.setPositioning(Block.Position.STATIC);
+        d03.setDisplayType(Block.Display.INLINE_BLOCK);
         d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-        d03.setWidth(60);
-        d03.setHeight(18);
-        d03.setMargins(8, 0, 2);
-        d03.setPaddings(3);
-        //d03.setBackgroundColor(new Color(207, 210, 218));
-
-        d03.setTextColor(new Color(35, 35, 43));
-        d03.setScaleBorder(false);
-        d03.setBorderWidth(1);
-        d03.setBorderRadius(2);
-        d03.setBorderColor(new Color(108, 108, 113));
-        d03.setFontSize(12);
-        d03.addText("Submit");
-        d03.formType = 3;
+        d03.setBackgroundColor(new Color(209, 217, 213, 168));
+        d03.setWidth(13);
+        d03.setHeight(13);
+        d03.setMargins(10, 0, 6);
+        d03.formType = 5;
+        d03.checked = true;
 
         b.addElement(d03, true);
+
+        Block l03 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        l03.setDisplayType(Block.Display.INLINE_BLOCK);
+        l03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        l03.setFontSize(12);
+        l03.setMargins(0, 2, 0, 5);
+        l03.addText("Label");
+
+        b.addElement(l03, true);
+
+        Block d04 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d04.setPositioning(Block.Position.STATIC);
+        //d04.setDisplayType(Block.Display.INLINE_BLOCK);
+        d04.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d04.setWidth(60);
+        d04.setHeight(18);
+        d04.setMargins(7, 0, 2);
+        d04.setPaddings(3);
+        //d04.setBackgroundColor(new Color(207, 210, 218));
+
+        d04.setTextColor(new Color(35, 35, 43));
+        d04.setScaleBorder(false);
+        d04.setBorderWidth(1);
+        d04.setBorderRadius(2);
+        d04.setBorderColor(new Color(108, 108, 113));
+        d04.setFontSize(12);
+        d04.addText("Submit");
+        d04.formType = 3;
+
+        b.addElement(d04, true);
 
         document.ready = true;
 
