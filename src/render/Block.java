@@ -113,7 +113,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             width = document.width;
         }
         if (document != null && parent == null) {
-            setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
+            setBounds(0, 0, document.width, document.height);
         }
 
     }
@@ -378,7 +378,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             dx += parent.scroll_x;
             dy += parent.scroll_y;
         }
-        if (display_type == 2) dy += 1;
+
+//        if (display_type == 2) dy += 1;
 //        Block b = this;
 //        while (b != null) {
 //            if (b.overflow != Overflow.VISIBLE) {
@@ -1332,6 +1333,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private void addScrollbarY() {
         if (overflow == Overflow.SCROLL) {
             if (scrollbar_y != null) {
+                if (width == viewport_width && this == document.root) {
+                    viewport_width += scrollbar_y.getPreferredSize().width;
+                    width = viewport_width;
+                }
                 document.panel.remove(scrollbar_y);
                 scrollbar_y = null;
                 viewport_height = height;
@@ -1563,8 +1568,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 el.parts.get(j).sortBlocks();
             }
 
-            if (el.getOffsetLeft() - borderWidth[3] + el.viewport_width > content_x_max) {
-                content_x_max = el.getOffsetLeft() - borderWidth[3] + el.viewport_width;
+            int w = Math.max(el.getOffsetLeft() - borderWidth[3] + el.viewport_width, el.content_x_max);
+            if (el.getOffsetLeft() - borderWidth[3] + w > content_x_max) {
+                content_x_max = el.getOffsetLeft() - borderWidth[3] + w;
                 if (el.positioning != Position.ABSOLUTE && el.margins[1] > 0) {
                     content_x_max += el.margins[1];
                 }
@@ -1572,8 +1578,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     content_x_max += paddings[1];
                 }
             }
-            if (el.getOffsetTop() - borderWidth[0] + el.viewport_height > content_y_max) {
-                content_y_max = el.getOffsetTop() - borderWidth[0] + el.viewport_height;
+            int h = Math.max(el.getOffsetTop() - borderWidth[0] + el.viewport_height, el.content_y_max);
+            if (el.getOffsetTop() - borderWidth[0] + h > content_y_max) {
+                content_y_max = el.getOffsetTop() - borderWidth[0] + h;
                 if (el.positioning != Position.ABSOLUTE && el.margins[2] > 0) {
                     content_y_max += el.margins[2];
                 }
@@ -1583,9 +1590,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
 
             if (content_y_max > height - borderWidth[0] - borderWidth[2] && !auto_height && overflow == Overflow.SCROLL) {
+                boolean had_scroll = scrollbar_y != null;
                 addScrollbarY();
-                performLayout(no_rec, true);
-                return;
+                if (!had_scroll) {
+                    performLayout(no_rec, true);
+                    return;
+                }
             } else {
                 if (scrollbar_y != null) {
                     document.panel.remove(scrollbar_y);
@@ -1650,9 +1660,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                     content_y_max = lines.lastElement().getY() - borderWidth[0] + lines.lastElement().getHeight() + paddings[2];
                     if (parent != null && content_y_max > parent.height && !parent.auto_height) {
+                        boolean had_scroll = scrollbar_y != null;
                         addScrollbarY();
-                        performLayout(no_rec, true);
-                        return;
+                        if (!had_scroll && overflow == Overflow.SCROLL) {
+                            performLayout(no_rec, true);
+                            return;
+                        }
                     }
                 }
                 layouter.last_element = -1;
@@ -1676,22 +1689,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     el.parts.get(j).sortBlocks();
                 }
 
-                if (el.getOffsetLeft() - borderWidth[3] + el.viewport_width > content_x_max) {
-                    if (el.margins[1] < 0) {
+                int w = Math.max(el.viewport_width - borderWidth[1] - borderWidth[3], el.content_x_max);
+                if (el.getOffsetLeft() - borderWidth[3] + w > content_x_max) {
+                    if (el.float_type == FloatType.NONE && el.margins[1] < 0) {
                         el.margins[1] = 0;
                         el.margins[3] = 0;
                     }
-                    content_x_max = el.getOffsetLeft() - borderWidth[3] + el.viewport_width;
+                    content_x_max = el.getOffsetLeft() - borderWidth[3] + w;
                     if (el.positioning != Position.ABSOLUTE) {
                         content_x_max += el.margins[1] + paddings[1];
                     }
                 }
-                if (el.getOffsetTop() - borderWidth[0] + el.viewport_height > content_y_max) {
-                    if (el.auto_y_margin && el.margins[0] < 0) {
+                int h = Math.max(el.viewport_height - borderWidth[0] - borderWidth[2], el.content_y_max);
+                if (el.getOffsetTop() - borderWidth[0] + h > content_y_max) {
+                    if (el.float_type == FloatType.NONE && el.auto_y_margin && el.margins[0] < 0) {
                         el.margins[0] = 0;
                         el.margins[2] = 0;
                     }
-                    content_y_max = el.getOffsetTop() - borderWidth[0] + el.viewport_height;
+                    content_y_max = el.getOffsetTop() - borderWidth[0] + h;
                     if (el.positioning != Position.ABSOLUTE) {
                         content_y_max += el.margins[2] + paddings[2];
                     }
@@ -1700,7 +1715,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (content_y_max > height - borderWidth[0] - borderWidth[2] && !auto_height && overflow == Overflow.SCROLL) {
                     boolean had_scroll = scrollbar_y != null;
                     addScrollbarY();
-                    if (!had_scroll) {
+                    if (!had_scroll && overflow == Overflow.SCROLL) {
                         performLayout(no_rec, true);
                         return;
                     }
@@ -1729,9 +1744,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 height = borderWidth[0] + paddings[0] + last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
                 viewport_width = width;
                 viewport_height = height;
-                /*if (overflow != Overflow.VISIBLE) {
-                    setBounds(_x_, _y_, width, height);
-                }*/
             }
         }
         if (auto_height) {
@@ -1745,9 +1757,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
             orig_height = (int)Math.round(height / ratio);
-            /*if (overflow != Overflow.VISIBLE) {
-                setBounds(_x_, _y_, width, height);
-            }*/
             viewport_height = height;
         } else {
             if (children.size() == 1 && children.get(0).auto_y_margin) {
@@ -1783,9 +1792,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Layouter.applyHorizontalAlignment(this);
             }
             sortBlocks();
+            if (document.debug) {
+                System.out.println();
+                System.out.println("Layout ended for block " + toString());
+            }
             return;
         }
         if (content_x_max <= viewport_width - borderWidth[1] - borderWidth[3] && scrollbar_x != null) {
+            if (this == document.root) {
+                document.root.setBounds(0, 0, document.width, document.height);
+            }
             document.panel.remove(scrollbar_x);
             scrollbar_x = null;
             scroll_x = 0;
@@ -1807,6 +1823,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         if (content_y_max <= viewport_height - borderWidth[0] - borderWidth[2] && scrollbar_y != null) {
+            if (this == document.root) {
+                document.root.setBounds(document.borderSize, document.borderSize, document.width, document.height);
+            }
             document.panel.remove(scrollbar_y);
             scrollbar_y = null;
             scroll_y = 0;
@@ -2463,8 +2482,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 int sx = clipping_block.parent != null ? clipping_block.parent.scroll_x : 0;
                 int sy = clipping_block.parent != null ? clipping_block.parent.scroll_y : 0;
 
-                int xc = clipping_block._x_ - _x_ + clipping_block.borderWidth[3] + parent.scroll_x;
-                int yc = clipping_block._y_ - _y_ + clipping_block.borderWidth[0] + parent.scroll_y;
+                int xc = clipping_block._x_ - sx - _x_ + clipping_block.borderWidth[3] + parent.scroll_x;
+                int yc = clipping_block._y_ - sy - _y_ + clipping_block.borderWidth[0] + parent.scroll_y;
                 int wc = clipping_block.viewport_width - clipping_block.borderWidth[3] - clipping_block.borderWidth[1];
                 int hc = clipping_block.viewport_height - clipping_block.borderWidth[0] - clipping_block.borderWidth[2];
 
@@ -5365,6 +5384,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean selected = false;
     private boolean hovered;
     private Watcher w;
+    private MediaPlayer mp;
 
     Vector<Drawable> v = new Vector<Drawable>();
     public int textRenderingMode = 0;

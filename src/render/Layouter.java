@@ -607,11 +607,11 @@ public class Layouter {
                 b.orig_width = (int)Math.round(b.width / b.ratio);
             }
 
-            if (block.pref_size < last_line.cur_pos + b.width + b.margins[3] + b.margins[1]) {
-                block.pref_size = last_line.cur_pos + b.width + b.margins[3] + b.margins[1];
+            if (block.pref_size < last_line.cur_pos) {
+                block.pref_size = last_line.cur_pos;
             }
-            if (block.min_size < b.width + b.margins[3] + b.margins[1]) {
-                block.min_size = b.width + b.margins[3] + b.margins[1];
+            if (block.min_size < last_line.cur_pos) {
+                block.min_size = last_line.cur_pos;
             }
 
             if (d.getParent() != null) {

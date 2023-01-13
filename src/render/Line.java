@@ -58,6 +58,7 @@ public class Line {
             }
         }
         d.setX(left + cur_pos);
+        d.setY(top);
         if (d instanceof Block && ((Block)d).display_type != Block.Display.BLOCK) {
             Block b = (Block)d;
             //b.setY(b.margins[0] + top);
@@ -74,7 +75,13 @@ public class Line {
             }
             d.setY(offset + top);
         }
-        else d.setY(top);
+        else if (d instanceof Block) {
+            Block b = (Block)d;
+            if (b.auto_width) {
+                b.width = width - b.margins[3] - b.margins[1];
+            }
+        }
+        
         if (parent.document.debug) {
             System.out.println((d instanceof Character ? "Letter " : "Element ") + "positioned at (" + d._getX() + ", " + d._getY() + ")");
         }
