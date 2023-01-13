@@ -80,13 +80,14 @@ public class JSParser {
     }
 
     private void scan() {
+        data.replace("\r\n", "\n");
         while (pos < data.length()) {
             if (pos == 0) {
                 head = new Token("");
                 cur = head;
                 state = READY;
             }
-            data.replaceAll("\r\n", "\n");
+            
             char ch = data.charAt(pos);
 
             sign = false;
@@ -100,7 +101,7 @@ public class JSParser {
                 continue;
             }
 
-            if (state != READ_COMMENT && pos < data.length()-1 && data.substring(pos, pos+2).equals("//")) {
+            if (state != READ_STRING && state != READ_COMMENT && pos < data.length()-1 && data.substring(pos, pos+2).equals("//")) {
                 state = READ_COMMENT;
                 comment_multiline = false;
                 pos += 2;
@@ -448,7 +449,7 @@ public class JSParser {
             if (state != READY) last_token += ch;
 
             pos++;
-            if (last_token.length() > 0) {
+            if (last_token.length() > 0 && pos == data.length()) {
                 data += " ";
             }
         }
