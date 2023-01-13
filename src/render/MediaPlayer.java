@@ -750,6 +750,7 @@ public class MediaPlayer {
     }
 
     public void enterFullScreen() {
+        container.document.is_video_fullscreen = true;
         fullscreen_window.setVisible(true);
         strategy.enterFullScreenMode();
         if (is_fullscreen) return;
@@ -767,6 +768,7 @@ public class MediaPlayer {
     }
 
     public void exitFullScreen() {
+        container.document.is_video_fullscreen = false;
         strategy.exitFullScreenMode();
         if (!is_fullscreen) return;
         //avPlayerComponent.getMediaPlayer().setTime(avPlayerComponentFullScreen.getMediaPlayer().getTime() - correction_delta);
