@@ -5677,8 +5677,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (p.node != null && !p.node.states.contains("hover")) {
                         p.node.states.add("hover");
                         p.applyStateStyles();
-                        if (cursor != null) {
-                            document.panel.setCursor(cursor);
+                        if (p.cursor != null) {
+                            document.panel.setCursor(p.cursor);
+                            if (p.text_layer != null) p.text_layer.setCursor(p.cursor);
                             //System.out.println("Cursor set");
                         }
                         //System.err.println(node.tagName + " Hovered!");
@@ -5689,8 +5690,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                          p.node.states.remove("hover");
                          p.resetStyles();
                          p.applyStateStyles();
-                         if (cursor != null) {
+                         if (p.cursor != null) {
                              document.panel.setCursor(Cursor.getDefaultCursor());
+                             if (p.text_layer != null) p.text_layer.setCursor(Cursor.getDefaultCursor());
                              //System.out.println("Cursor unset");
                          }
                          //System.err.println(node.tagName + " Out!");
@@ -5705,6 +5707,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     applyStateStyles();
                     if (cursor != null) {
                         document.panel.setCursor(cursor);
+                        if (text_layer != null) text_layer.setCursor(cursor);
                         //System.out.println("Cursor set");
                     }
                     //System.err.println(node.tagName + " Hovered!");
@@ -5717,6 +5720,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                      applyStateStyles();
                      if (cursor != null) {
                          document.panel.setCursor(Cursor.getDefaultCursor());
+                         if (text_layer != null) text_layer.setCursor(Cursor.getDefaultCursor());
                          //System.out.println("Cursor unset");
                      }
                      //System.err.println(node.tagName + " Out!");
