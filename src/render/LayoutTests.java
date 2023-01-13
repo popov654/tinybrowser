@@ -265,6 +265,90 @@ public class LayoutTests extends JFrame {
         }
     }
 
+    public void testForms() {
+        prepareBlock();
+
+        Block b = document.root.children.get(0);
+
+        document.ready = false;
+
+        b.setHeight(-1);
+
+        Block l01 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        l01.setPositioning(Block.Position.STATIC);
+        l01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        l01.addText("Your name:");
+        l01.setFontSize(12);
+        l01.setMargins(0, 0, 2);
+        Block d01 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d01.setPositioning(Block.Position.STATIC);
+        d01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d01.setWidth(160);
+        d01.setHeight(18);
+        d01.setPaddings(1, 2, 2, 2);
+        d01.setBackgroundColor(new Color(209, 217, 213, 160));
+        d01.setBorderColor(new Color(118, 118, 123));
+        d01.setScaleBorder(false);
+        d01.setBorderWidth(1);
+        d01.setBorderRadius(2);
+        d01.setTextColor(new Color(35, 35, 43));
+        d01.setFontSize(12);
+        d01.formType = 1;
+        b.addElement(l01, true);
+        b.addElement(d01, true);
+
+        Block l02 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        l02.setPositioning(Block.Position.STATIC);
+        l02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        l02.addText("About you:");
+        l02.setFontSize(12);
+        l02.setMargins(8, 0, 2);
+        Block d02 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d02.setPositioning(Block.Position.STATIC);
+        d02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d02.setWidth(200);
+        d02.setHeight(48);
+        d02.setPaddings(1, 2, 2, 2);
+        d02.setBackgroundColor(new Color(209, 217, 213, 160));
+        d02.setBorderColor(new Color(118, 118, 123));
+        d02.setScaleBorder(false);
+        d02.setBorderWidth(1);
+        d02.setBorderRadius(2);
+        d02.setTextColor(new Color(35, 35, 43));
+        d02.setFontSize(12);
+        d02.formType = 2;
+
+        b.addElement(l02, true);
+        b.addElement(d02, true);
+
+        Block d03 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d03.setPositioning(Block.Position.STATIC);
+        d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d03.setWidth(60);
+        d03.setHeight(18);
+        d03.setMargins(8, 0, 2);
+        d03.setPaddings(3);
+        //d03.setBackgroundColor(new Color(207, 210, 218));
+
+        d03.setTextColor(new Color(35, 35, 43));
+        d03.setScaleBorder(false);
+        d03.setBorderWidth(1);
+        d03.setBorderRadius(2);
+        d03.setBorderColor(new Color(108, 108, 113));
+        d03.setFontSize(12);
+        d03.addText("Submit");
+        d03.formType = 3;
+
+        b.addElement(d03, true);
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
     public void testReplacedContent() {
         prepareBlock();
 
@@ -703,12 +787,12 @@ public class LayoutTests extends JFrame {
         } catch (Exception e) {}
         final LayoutTests lt = new LayoutTests();
 
-        lt.basicTest();
+        //lt.basicTest();
         //lt.linksTest();
         //lt.testImages();
         //lt.testReplacedContent();
         //lt.testTables();
-        //lt.testForms();
+        lt.testForms();
         //lt.testInternalFrames();
         //lt.testNormal();
         //lt.testPreWrap();
