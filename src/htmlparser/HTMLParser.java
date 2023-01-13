@@ -221,6 +221,17 @@ public class HTMLParser {
                     }
                 }
             }
+            if (attrs.containsKey("name")) {
+                String name = attrs.get("name");
+                if (!names.contains(name)) {
+                    Vector<Node> v = new Vector<Node>();
+                    v.add(curNode);
+                    names.put(name, v);
+                } else {
+                    Vector<Node> v = names.get(name);
+                    v.add(curNode);
+                }
+            }
             curNode.tagName = cur_tag.toLowerCase();
             curNode.attributes = (Hashtable<String, String>)attrs.clone();
             if (cur_tag.toLowerCase().equals("html")) {
@@ -269,7 +280,7 @@ public class HTMLParser {
         indexNode(node);
     }
 
-    private void indexNode(Node node) {
+    public void indexNode(Node node) {
         if (node.nodeType == 1) {
             if (node.attributes.containsKey("id")) {
                 ids.put(node.attributes.get("id"), node);
@@ -285,6 +296,17 @@ public class HTMLParser {
                         Vector<Node> v = classes.get(classNames[i]);
                         v.add(node);
                     }
+                }
+            }
+            if (node.attributes.containsKey("name")) {
+                String name = node.attributes.get("name");
+                if (!names.containsKey(name)) {
+                    Vector<Node> v = new Vector<Node>();
+                    v.add(node);
+                    names.put(name, v);
+                } else {
+                    Vector<Node> v = names.get(name);
+                    v.add(node);
                 }
             }
         }
@@ -416,6 +438,28 @@ public class HTMLParser {
         return result;
     }
 
+    public class NodeIndex {
+
+        public Node getNodeById(String id) {
+            return ids.get(id);
+        }
+
+        public Vector<Node> getNodesByClassName(String className) {
+            return classes.get(className);
+        }
+
+        public Vector<Node> getNodesByName(String name) {
+            return names.get(name);
+        }
+        
+    }
+
+    public NodeIndex getIndex() {
+        return index;
+    }
+
+    private NodeIndex index = new NodeIndex();
+
     private int state;
 
     private int READY = 0;
@@ -438,6 +482,7 @@ public class HTMLParser {
     private Node root = new Node(1);
     private Hashtable<String, Node> ids = new Hashtable<String, Node>();
     private Hashtable<String, Vector<Node>> classes = new Hashtable<String, Vector<Node>>();
+    private Hashtable<String, Vector<Node>> names = new Hashtable<String, Vector<Node>>();
 
     public String data = "";
 }

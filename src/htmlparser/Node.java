@@ -32,6 +32,9 @@ public class Node {
     public boolean addChild(Node node) {
         if (nodeType == 1) {
             children.add(node);
+            if (document != null) {
+                document.indexNode(this);
+            }
             return true;
         }
         return false;

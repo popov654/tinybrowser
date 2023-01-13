@@ -2162,6 +2162,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public Vector<Block> findBlocksByName(Block b, String name) {
+        Vector<Block> result = new Vector<Block>();
+
+        if (b.node.getAttribute("name").equals(name)) {
+            result.add(b);
+        }
+        for (int i = 0; i < children.size(); i++) {
+            if (children.get(i).type == NodeTypes.ELEMENT) {
+                result.addAll(findBlocksByName(children.get(i), name));
+            }
+        }
+
+        return result;
+    }
+
     class BlockSort implements Comparator<Block> {
 
         @Override
