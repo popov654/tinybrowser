@@ -132,8 +132,8 @@ public class MediaTest extends JFrame {
     public void testVideoPlayer() {
         Block b = document.root.children.get(0);
         Block pc = new Block(document);
-        int player_width = 320 - b.borderWidth[3] - b.borderWidth[1];
-        int player_height = 206 - b.borderWidth[0] - b.borderWidth[2];
+        int player_width = 320;
+        int player_height = 205;
         pc.setWidth(player_width);
         pc.auto_height = true;
         pc.height = -1;

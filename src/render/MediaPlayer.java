@@ -50,11 +50,11 @@ import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 public class MediaPlayer {
 
     public MediaPlayer(Block b) {
-        this(b, b.width > 0 ? (int) ((double) b.width / b.ratio) : 230, 22);
+        this(b, b.width > 0 ? (int) ((double) b.width / b.ratio) : default_audio_width, panel_height);
     }
 
     public MediaPlayer(Block b, int width) {
-        this(b, width, 22);
+        this(b, width, panel_height);
     }
 
     public MediaPlayer(Block b, int width, int height) {
@@ -62,11 +62,11 @@ public class MediaPlayer {
 
         b.document.ready = false;
 
-        int h = height - 22 > min_height ? height - 22 : min_height - 22;
+        int h = height - panel_height > min_height ? height - panel_height : min_height - panel_height;
         video = new Block(b.document, b, width, h, 0, 0, new Color(0, 0, 0));
         b.addElement(video);
         video.setBackgroundColor(Color.BLACK);
-        if (height == 22) {
+        if (height == panel_height) {
             video.display_type = Block.Display.NONE;
         }
         if (width == -1) {
@@ -74,16 +74,16 @@ public class MediaPlayer {
         }
         if (height == -1) {
             height = (int) (width / ((double)16 / 9));
-            video.height = (int) ((height - 22) * b.ratio);
+            video.height = (int) ((height - panel_height) * b.ratio);
         }
-        panel = new Block(b.document, b, width, 22, 0, 0, new Color(0, 0, 0));
+        panel = new Block(b.document, b, width, panel_height, 0, 0, new Color(0, 0, 0));
         b.addElement(panel);
 
-        if (height > 22 * b.ratio) {
+        if (height > panel_height * b.ratio) {
             b.setWidthHeight(width, height);
             type = VIDEO;
         } else {
-            b.setHeight(22);
+            b.setHeight(panel_height);
         }
 
         int scaled_width = (int) (width * b.ratio);
@@ -92,7 +92,7 @@ public class MediaPlayer {
         video.viewport_width = scaled_width;
         video.max_width = scaled_width;
 
-        play_btn = new Block(b.document, panel, 22, 22, 1, 0, new Color(190, 200, 203));
+        play_btn = new Block(b.document, panel, panel_height, panel_height, 1, 0, new Color(190, 200, 203));
         b.setBackgroundColor(new Color(230, 230, 230));
         play_btn.display_type = Block.Display.INLINE_BLOCK;
         Vector<Color> c = new Vector<Color>();
@@ -108,7 +108,7 @@ public class MediaPlayer {
         
         icon1 = new IconLayer(play_btn, "play");
 
-        fullscreen_btn = new Block(b.document, panel, 28, 22, 0, 0, new Color(190, 200, 203));
+        fullscreen_btn = new Block(b.document, panel, 28, panel_height, 0, 0, new Color(190, 200, 203));
         fullscreen_btn.display_type = (type == VIDEO) ? Block.Display.INLINE_BLOCK : Block.Display.NONE;
         fullscreen_btn.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         icon2 = new IconLayer(fullscreen_btn, "fullscreen");
@@ -852,14 +852,16 @@ public class MediaPlayer {
 
     private int type = AUDIO;
 
-    private static final int AUDIO = 0;
-    private static final int VIDEO = 1;
+    public static final int AUDIO = 0;
+    public static final int VIDEO = 1;
 
     private int default_volume = 80;
     private int volume = default_volume;
 
     public static int default_width = 380;
+    public static int default_audio_width = 230;
     public static int min_height = 140;
+    public static int panel_height = 22;
 
     private static final String NATIVE_LIBRARY_SEARCH_PATH = "C:/Program Files/VideoLAN/VLC";
     private static final String LOCAL_PATH = "vlc";
