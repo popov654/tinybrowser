@@ -1,5 +1,6 @@
 package render;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
@@ -7,6 +8,8 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.PathIterator;
 import javax.swing.border.Border;
 
 /**
@@ -109,26 +112,41 @@ public class RoundedBorder implements Border {
     }
 
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+        Graphics2D g2d = (Graphics2D) g;
         width = block.viewport_width > 0 ? block.viewport_width + (block.scrollbar_y != null ? block.scrollbar_y.getPreferredSize().width : 0) : block.width;
         height = block.viewport_height > 0 ? block.viewport_height + (block.scrollbar_x != null ? block.scrollbar_x.getPreferredSize().height : 0): block.height;
-        ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         boolean flag = false;
         boolean flag2 = false;
         int last_w = w[0];
+        int last_arc = block.arc[0];
         Color last_c = col[0];
         for (int i = 0; i < 4; i++) {
             if (w[i] > 0) {
                 flag = true;
             }
-            if (w[i] != last_w || !col[i].equals(last_c)) {
+            if (w[i] != last_w || !col[i].equals(last_c) || block.arc[i] != last_arc) {
                 flag2 = true;
             }
         }
+
         if (!flag) return;
 
         if (!flag2) {
-            paintBorder2(c, g, x, y, width, height);
-            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            g2d.setColor(col[0]);
+            g2d.setStroke(new java.awt.BasicStroke(w[0]));
+            g2d.drawRoundRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), radius, radius);
+            //paintBorder2(c, g, x, y, width, height);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            return;
+        }
+
+        if ((block.arc[0] != block.arc[1] || block.arc[1] != block.arc[2] || block.arc[2] != block.arc[3] || block.arc[3] != block.arc[0]) &&
+              w[0] == w[1] && w[1] == w[2] && w[2] == w[3] && col[0] == col[1] && col[1] == col[2] && col[2] == col[3]) {
+            RoundedRect rect = new RoundedRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), (double) block.arc[0] / 1.75, (double) block.arc[1] / 1.75, (double) block.arc[2] / 1.75, (double) block.arc[3] / 1.75);
+            g2d.setColor(col[0]);
+            g2d.setStroke(new java.awt.BasicStroke(w[0]));
+            g2d.draw(rect);
             return;
         }
 
@@ -137,28 +155,38 @@ public class RoundedBorder implements Border {
             return;
         }
 
-        int r = (int)Math.round(radius / Math.sqrt(2));
+        if (block.arc[0] > width / 4 || block.arc[1] > width / 4 || block.arc[2] > width / 4 || block.arc[3] > width / 4 ||
+              block.arc[0] > height / 2 || block.arc[1] > height / 2 || block.arc[2] > height / 2 || block.arc[3] > height / 2) {
+            
+        }
+
+        int r = (int)Math.round(radius / Math.sqrt(2) / 2);
 
         int w0 = Math.max(w[0], r);
         int w1 = Math.max(w[1], r);
         int w2 = Math.max(w[2], r);
         int w3 = Math.max(w[3], r);
 
+        //int r1 = (int) Math.sqrt(w0 * w0 + w3 * w3);
+        //int r2 = (int) Math.sqrt(w0 * w0 + w1 * w1);
+        //int r3 = (int) Math.sqrt(w1 * w1 + w2 * w2);
+        //int r4 = (int) Math.sqrt(w2 * w2 + w3 * w3);
+
         int[][][] d = new int[4][2][4];
-        int[] arrayX1 = {x, x+w3, x+width-w1, x+width};
-        int[] arrayY1 = {y, y+w0, y+w0, y};
+        int[] arrayX1 = {x, x+w[3], x+width-w[1], x+width};
+        int[] arrayY1 = {y, y+w[0], y+w[0], y};
         d[0][0] = arrayX1;
         d[0][1] = arrayY1;
-        int[] arrayX2 = {x+width, x+width-w1, x+width-w1, x+width};
-        int[] arrayY2 = {y, y+w0, y+height-w2, y+height};
+        int[] arrayX2 = {x+width, x+width-w[1], x+width-w[1], x+width};
+        int[] arrayY2 = {y, y+w[0], y+height-w[2], y+height};
         d[1][0] = arrayX2;
         d[1][1] = arrayY2;
-        int[] arrayX3 = {x+width, x+width-w1, x+w3, x};
-        int[] arrayY3 = {y+height, y+height-w2, y+height-w2, y+height};
+        int[] arrayX3 = {x+width, x+width-w[1], x+w[3], x};
+        int[] arrayY3 = {y+height, y+height-w[2], y+height-w[2], y+height};
         d[2][0] = arrayX3;
         d[2][1] = arrayY3;
-        int[] arrayX4 = {x, x+w3, x+w3, x};
-        int[] arrayY4 = {y+height, y+height-w2, y+w0, y};
+        int[] arrayX4 = {x, x+w[3], x+w[3], x};
+        int[] arrayY4 = {y+height, y+height-w[2], y+w[0], y};
         d[3][0] = arrayX4;
         d[3][1] = arrayY4;
 
@@ -166,11 +194,11 @@ public class RoundedBorder implements Border {
 
         for (int j = 0; j < 4; j++) {
             Polygon poly = new Polygon(d[j][0], d[j][1], 4);
-            g.setClip(poly);
+            g2d.setClip(poly);
             color = col[j];
-            g.setColor(color);
+            g2d.setColor(color);
             color2 = new Color(color.getRed(), color.getGreen(), color.getBlue(), 88);
-            color3 = new Color(color.getRed(), color.getGreen(), color.getBlue(), 58);
+            color3 = new Color(color.getRed(), color.getGreen(), color.getBlue(), 56);
             //RoundedRect rect = new RoundedRect(x, y, width-1, height-1, block.arc[0] / 2, block.arc[1] / 2, block.arc[2] / 2, block.arc[3] / 2);
             //((Graphics2D)g).fill(rect);
             RoundedRect rect = null;
@@ -181,156 +209,161 @@ public class RoundedBorder implements Border {
 
                     if (i == w[j]-1) g.setColor(color2);
                     rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2, block.arc[1] / 2, block.arc[2] / 2, block.arc[3] / 2);
-                    ((Graphics2D)g).draw(rect);
+                    if (w[j] > 2 && i < w[j]-2) {
+                        ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                        g2d.setStroke(new BasicStroke(w[j] > 2 && i < w[j]-2 ? 2 : 1));
+                    }
+                    g2d.draw(rect);
 
                     if (i > 0) {
                         if (i < w[j]-1) {
-                            g.setColor(color2);
+                            g2d.setColor(color2);
                         } else {
-                            g.setColor(color3);
+                            g2d.setColor(color3);
                         }
                         if (i > 1) {
-                            g.setColor(color);
+                            g2d.setColor(color);
                             rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 1, block.arc[1] / 2 - 1, block.arc[2] / 2 - 1, block.arc[3] / 2 - 1);
-                            ((Graphics2D)g).fill(rect);
+                            g2d.fill(rect);
                             break;
                         } else {
-                            g.setColor(color3);
+                            g2d.setColor(color3);
                             rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 1, block.arc[1] / 2 - 1, block.arc[2] / 2 - 1, block.arc[3] / 2 - 1);
-                            ((Graphics2D)g).draw(rect);
+                            g2d.draw(rect);
                             rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 2, block.arc[1] / 2 - 2, block.arc[2] / 2 - 2, block.arc[3] / 2 - 2);
-                            ((Graphics2D)g).draw(rect);
-                            g.setColor(color);
+                            g2d.draw(rect);
+                            g2d.setColor(color);
                         }
                     } else {
-                        g.setColor(color3);
+                        g2d.setColor(color3);
                         rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 1, block.arc[1] / 2 - 1, block.arc[2] / 2 - 1, block.arc[3] / 2 - 1);
-                        ((Graphics2D)g).draw(rect);
+                        g2d.draw(rect);
                         rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 2, block.arc[1] / 2 - 2, block.arc[2] / 2 - 2, block.arc[3] / 2 - 2);
-                        ((Graphics2D)g).draw(rect);
+                        g2d.draw(rect);
                         rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 3, block.arc[1] / 2 - 3, block.arc[2] / 2 - 3, block.arc[3] / 2 - 3);
-                        ((Graphics2D)g).draw(rect);
-                        g.setColor(color);
+                        g2d.draw(rect);
+                        g2d.setColor(color);
                     }
 
                     
                 } else {
-                    g.fillRect(x, y, width, height);
+                    g2d.fillRect(x, y, width, height);
                 }
             }
-            g.setClip(null);
+            g2d.setClip(null);
 
-            if (block.arc[0] != 0 || block.arc[1] != 0 || block.arc[2] != 0 || block.arc[3] != 0) {
-
-                if (w[0] >= 5) {
-                    g.setColor(col[0]);
-
-                    g.fillRect((int)(block.arc[0]/2)-2, 1, 2, 1);
-                    g.fillRect(w[3]-3, 2, (int)(w[3]*1.2), w[0]-4);
-                    g.fillRect(w[3]-2, 3, (int)(w[3]*1.2), w[0]-4);
-
-                    g.fillRect(width - (int)(block.arc[1]/2), 1, 2, 1);
-                    g.fillRect(width-w[1]*2, 2, (int)(w[1]*1.2), w[0]-5);
-                    g.fillRect(width-w[1]*2-1, 3, (int)(w[1]*1.2), w[0]-5);
-                }
-                if (w[2] >= 5) {
-                    g.setColor(col[2]);
-
-                    g.fillRect((int)(block.arc[3]/2)-2, height-2, 2, 1);
-                    g.fillRect(w[3]-2, height-2-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
-                    g.fillRect(w[3]-1, height-3-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
-
-                    g.fillRect(width - (int)(block.arc[2]/2), height-2, 2, 1);
-                    g.fillRect(width-w[1]*2, height-2-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
-                    g.fillRect(width-w[1]*2-1, height-3-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
-                }
-                if (w[3] >= 5) {
-                    g.setColor(col[3]);
-
-                    g.fillRect(1, (int)(block.arc[3]/2) - 1, 1, 4);
-                    g.fillRect(2, (int)(block.arc[3]/2) - 2, 1, 4);
-                    g.fillRect(3, (int)(block.arc[3]/2) - 3, 1, 4);
-
-                    g.fillRect(1, height - (int)(block.arc[3]/2), 1, 3);
-                    g.fillRect(2, height - (int)(block.arc[3]/2) + 1, 1, 3);
-                    g.fillRect(3, height - (int)(block.arc[3]/2) + 2, 1, 3);
-                }
-
-                if (w[1] >= 5) {
-                    g.setColor(col[1]);
-
-                    g.fillRect(width-2, (int)(block.arc[1]/2) - 1, 1, 4);
-                    g.fillRect(width-3, (int)(block.arc[1]/2) - 2, 1, 4);
-                    g.fillRect(width-4, (int)(block.arc[1]/2) - 3, 1, 4);
-
-                    g.fillRect(width-2, height - (int)(block.arc[1]/2), 1, 3);
-                    g.fillRect(width-3, height - (int)(block.arc[1]/2) + 1, 1, 3);
-                    g.fillRect(width-4, height - (int)(block.arc[1]/2) + 2, 1, 3);
-                }
-                
-            }
+//            if (block.arc[0] != 0 || block.arc[1] != 0 || block.arc[2] != 0 || block.arc[3] != 0) {
+//
+//                if (w[0] >= 5) {
+//                    g2d.setColor(col[0]);
+//
+//                    g2d.fillRect((int)(block.arc[0]/2)-2, 1, 2, 1);
+//                    g2d.fillRect(w[3]-3, 2, (int)(w[3]*1.2), w[0]-4);
+//                    g2d.fillRect(w[3]-2, 3, (int)(w[3]*1.2), w[0]-4);
+//
+//                    g2d.fillRect(width - (int)(block.arc[1]/2), 1, 2, 1);
+//                    g2d.fillRect(width-w[1]*2, 2, (int)(w[1]*1.2), w[0]-5);
+//                    g2d.fillRect(width-w[1]*2-1, 3, (int)(w[1]*1.2), w[0]-5);
+//                }
+//                if (w[2] >= 5) {
+//                    g2d.setColor(col[2]);
+//
+//                    g2d.fillRect((int)(block.arc[3]/2)-2, height-2, 2, 1);
+//                    g2d.fillRect(w[3]-2, height-2-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
+//                    g2d.fillRect(w[3]-1, height-3-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
+//
+//                    g2d.fillRect(width - (int)(block.arc[2]/2), height-2, 2, 1);
+//                    g2d.fillRect(width-w[1]*2, height-2-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
+//                    g2d.fillRect(width-w[1]*2-1, height-3-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
+//                }
+//                if (w[3] >= 5) {
+//                    g2d.setColor(col[3]);
+//
+//                    g2d.fillRect(1, (int)(block.arc[3]/2) - 1, 1, 4);
+//                    g2d.fillRect(2, (int)(block.arc[3]/2) - 2, 1, 4);
+//                    g2d.fillRect(3, (int)(block.arc[3]/2) - 3, 1, 4);
+//
+//                    g2d.fillRect(1, height - (int)(block.arc[3]/2), 1, 3);
+//                    g2d.fillRect(2, height - (int)(block.arc[3]/2) + 1, 1, 3);
+//                    g2d.fillRect(3, height - (int)(block.arc[3]/2) + 2, 1, 3);
+//                }
+//
+//                if (w[1] >= 5) {
+//                    g2d.setColor(col[1]);
+//
+//                    g2d.fillRect(width-2, (int)(block.arc[1]/2) - 1, 1, 4);
+//                    g2d.fillRect(width-3, (int)(block.arc[1]/2) - 2, 1, 4);
+//                    g2d.fillRect(width-4, (int)(block.arc[1]/2) - 3, 1, 4);
+//
+//                    g2d.fillRect(width-2, height - (int)(block.arc[1]/2), 1, 3);
+//                    g2d.fillRect(width-3, height - (int)(block.arc[1]/2) + 1, 1, 3);
+//                    g2d.fillRect(width-4, height - (int)(block.arc[1]/2) + 2, 1, 3);
+//                }
+//
+//            }
 
             if (block.arc[0] == 0 && block.arc[1] == 0 && block.arc[2] == 0 && block.arc[3] == 0 && blend_corners) {
-                if (w[0] != w[3]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[3].getRed()+col[0].getRed()) / 2),
+                if (w[0] != w[3]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color( (int)Math.round((col[3].getRed()+col[0].getRed()) / 2),
                                       (int)Math.round((col[3].getGreen()+col[0].getGreen()) / 2),
                                       (int)Math.round((col[3].getBlue()+col[0].getBlue()) / 2) ));
                 if (w[0] != w[3]) {
-                    g.drawLine(x, y, x+w[3]-1, y+w[0]-1);
+                    g2d.drawLine(x, y, x+w[3]-1, y+w[0]-1);
                 } else {
                     for (int i = 0; i < w[0]; i++) {
-                        g.fillRect(x+i, y+i, 1, 1);
+                        g2d.fillRect(x+i, y+i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
                 if (w[0] != w[1]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[1].getRed()+col[0].getRed()) / 2),
+                g2d.setColor(new Color( (int)Math.round((col[1].getRed()+col[0].getRed()) / 2),
                                       (int)Math.round((col[1].getGreen()+col[0].getGreen()) / 2),
                                       (int)Math.round((col[1].getBlue()+col[0].getBlue()) / 2) ));
                 if (w[0] != w[1]) {
-                    g.drawLine(x+width-1, y, x+width-w[1], y+w[0]-1);
+                    g2d.drawLine(x+width-1, y, x+width-w[1], y+w[0]-1);
                 } else {
                     for (int i = 0; i < w[0]; i++) {
-                        g.fillRect(x+width-w[1]+i, y+w[0]-1-i, 1, 1);
+                        g2d.fillRect(x+width-w[1]+i, y+w[0]-1-i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
-                if (w[2] != w[1]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[1].getRed()+col[2].getRed()) / 2),
+                if (w[2] != w[1]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color( (int)Math.round((col[1].getRed()+col[2].getRed()) / 2),
                                       (int)Math.round((col[1].getGreen()+col[2].getGreen()) / 2),
                                       (int)Math.round((col[1].getBlue()+col[2].getBlue()) / 2) ));
                 if (w[2] != w[1]) {
-                    g.drawLine(x+width-1, y+height-w[2]+1, x+width-w[1], y+height-1);
+                    g2d.drawLine(x+width-1, y+height-w[2]+1, x+width-w[1], y+height-1);
                 } else {
                     for (int i = 0; i < w[2]; i++) {
-                        g.fillRect(x+width-w[1]+i, y+height-w[2]+i, 1, 1);
+                        g2d.fillRect(x+width-w[1]+i, y+height-w[2]+i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
-                if (w[2] != w[3]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[3].getRed()+col[2].getRed()) / 2),
+                if (w[2] != w[3]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color( (int)Math.round((col[3].getRed()+col[2].getRed()) / 2),
                                       (int)Math.round((col[3].getGreen()+col[2].getGreen()) / 2),
                                       (int)Math.round((col[3].getBlue()+col[2].getBlue()) / 2) ));
                 if (w[2] != w[3]) {
-                    g.drawLine(x+w[3]-1, y+height-w[2]+1, x, y+height-1);
+                    g2d.drawLine(x+w[3]-1, y+height-w[2]+1, x, y+height-1);
                 } else {
                     for (int i = 0; i < w[2]; i++) {
-                        g.fillRect(x+w[3]-1-i, y+height-w[2]+i, 1, 1);
+                        g2d.fillRect(x+w[3]-1-i, y+height-w[2]+i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
             }
-            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         }
     }
 
     public void paintBorder3(Component c, Graphics g, int x, int y, int width, int height) {
+        Graphics2D g2d = (Graphics2D) g;
         width = block.viewport_width > 0 ? block.viewport_width + (block.scrollbar_y != null ? block.scrollbar_y.getPreferredSize().width : 0) : block.width;
         height = block.viewport_height > 0 ? block.viewport_height + (block.scrollbar_x != null ? block.scrollbar_x.getPreferredSize().height : 0): block.height;
-        ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int r = (int)Math.round(radius / Math.sqrt(2));
 
@@ -377,9 +410,9 @@ public class RoundedBorder implements Border {
 
         for (int j = 0; j < 8; j++) {
             Polygon poly = new Polygon(d[j][0], d[j][1], 3);
-            g.setClip(poly);
+            g2d.setClip(poly);
             color = col[j / 2];
-            g.setColor(color);
+            g2d.setColor(color);
             color2 = new Color(color.getRed(), color.getGreen(), color.getBlue(), 88);
             color3 = new Color(color.getRed(), color.getGreen(), color.getBlue(), 58);
             //RoundedRect rect = new RoundedRect(x, y, width-1, height-1, block.arc[0] / 2, block.arc[1] / 2, block.arc[2] / 2, block.arc[3] / 2);
@@ -388,18 +421,18 @@ public class RoundedBorder implements Border {
             for (int i = 0; i < w[j/2]; i++) {
                 if (block.arc[0] != 0 || block.arc[1] != 0 || block.arc[2] != 0 || block.arc[3] != 0) {
 
-                    //g.fillRoundRect(0, 0, width, height, radius, radius);
+                    //g2d.fillRoundRect(0, 0, width, height, radius, radius);
 
-                    if (i == w[j/2]-1) g.setColor(color2);
+                    if (i == w[j/2]-1) g2d.setColor(color2);
 
                     if (i > 0) {
                         if (i < w[j/2]-1) {
-                            g.setColor(color2);
+                            g2d.setColor(color2);
                         } else {
-                            g.setColor(color3);
+                            g2d.setColor(color3);
                         }
                         
-                        g.setColor(color);
+                        g2d.setColor(color);
                         int seg_length = 0;
                         if (j == 0 || j == 7 && (w[j/2] <= 3 || type[3] == SOLID)) {
                             seg_length = (j == 0 && type[0] == DASHED || j == 7 && type[3] == DASHED) ? (int)Math.floor(w[j/2] * 2) : w[j/2] <= 3 ? (int)Math.floor(w[j/2] * 0.6) : w[j/2] * 2;
@@ -416,7 +449,7 @@ public class RoundedBorder implements Border {
                         }
                         
                     } else {
-                        g.setColor(color2);
+                        g2d.setColor(color2);
                         int seg_length = 0;
                         if (j == 0 || j == 7 && (w[j/2] <= 3 || type[3] == SOLID)) {
                             seg_length = (j == 0 && type[0] == DASHED || j == 7 && type[3] == DASHED) ? (int)Math.floor(w[j/2] * 2) : w[j/2] <= 3 ? w[j/2] : w[j/2] * 2;
@@ -446,150 +479,150 @@ public class RoundedBorder implements Border {
                     }
 
                 } else {
-                    g.fillRect(x, y, width, height);
+                    g2d.fillRect(x, y, width, height);
                 }
 
-                g.setClip(null);
+                g2d.setClip(null);
 
                 int seg_length = 0;
 
                 seg_length = type[0] == DASHED ? (int)Math.floor(w[j / 2] * 2.5) : w[j / 2];
-                g.setColor(col[0]);
+                g2d.setColor(col[0]);
                 if (type[0] != SOLID) {
                     drawSegLine(g, x+(int)(block.arc[0]/2), x+width-1-(int)(block.arc[1]/2), y+i, y+i, seg_length, block.arc[0]>0, block.arc[1]>0, w[j / 2] <= 3 && type[0]==DOTTED);
                 } else {
-                    g.drawLine(x+(int)(block.arc[0]/2), y+i, x+width-1-(int)(block.arc[1]/2), y+i);
+                    g2d.drawLine(x+(int)(block.arc[0]/2), y+i, x+width-1-(int)(block.arc[1]/2), y+i);
                 }
                 seg_length = type[1] == DASHED ? (int)Math.floor(w[j / 2] * 2.5) : w[j / 2];
-                g.setColor(col[1]);
+                g2d.setColor(col[1]);
                 if (type[1] != SOLID) {
                     drawSegLine(g, x+width-1-i, x+width-1-i, y+(int)(block.arc[1]/2), y+height-1-(int)(block.arc[2]/2), seg_length, block.arc[1]>0, block.arc[2]>0, w[j / 2] <= 3 && type[1]==DOTTED);
                 } else {
-                    g.drawLine(x+width-1-i, y+(int)(block.arc[1]/2), x+width-1-i, y+height-1-(int)(block.arc[2]/2));
+                    g2d.drawLine(x+width-1-i, y+(int)(block.arc[1]/2), x+width-1-i, y+height-1-(int)(block.arc[2]/2));
                 }
                 seg_length = type[2] == DASHED ? (int)Math.floor(w[j / 2] * 2.5) : w[j / 2];
-                g.setColor(col[2]);
+                g2d.setColor(col[2]);
                 if (type[2] != SOLID) {
                     drawSegLine(g, x+(int)(block.arc[3]/2), x+width-1-(int)(block.arc[2]/2), y+height-1-i, y+height-1-i, seg_length, block.arc[3]>0, block.arc[2]>0, w[j / 2] <= 3 && type[2]==DOTTED);
                 } else {
-                    g.drawLine(x+(int)(block.arc[3]/2), y+height-1-i, x+width-1-(int)(block.arc[2]/2), y+height-1-i);
+                    g2d.drawLine(x+(int)(block.arc[3]/2), y+height-1-i, x+width-1-(int)(block.arc[2]/2), y+height-1-i);
                 }
                 seg_length = type[3] == DASHED ? (int)Math.floor(w[j / 2] * 2.5) : w[j / 2];
-                g.setColor(col[3]);
+                g2d.setColor(col[3]);
                 if (type[3] != SOLID) {
                     drawSegLine(g, x+i, x+i, y+(int)(block.arc[0]/2), y+height-1-(int)(block.arc[3]/2), seg_length, block.arc[0]>0, block.arc[3]>0, w[j / 2] <= 3 && type[3]==DOTTED);
                 } else {
-                    g.drawLine(x+i, y+(int)(block.arc[0]/2), x+i, y+height-1-(int)(block.arc[3]/2));
+                    g2d.drawLine(x+i, y+(int)(block.arc[0]/2), x+i, y+height-1-(int)(block.arc[3]/2));
                 }
 
-                g.setClip(poly);
+                g2d.setClip(poly);
             }
-            g.setClip(null);
+            g2d.setClip(null);
 
             if (block.arc[0] != 0 || block.arc[1] != 0 || block.arc[2] != 0 || block.arc[3] != 0) {
 
                 if (w[0] >= 5 && type[0] != DOTTED) {
-                    g.setColor(col[0]);
+                    g2d.setColor(col[0]);
 
-                    g.fillRect((int)(block.arc[0]/2)-2, 1, 2, 1);
-                    g.fillRect(w[3]-3, 2, (int)(w[3]*1.2), w[0]-4);
-                    g.fillRect(w[3]-2, 3, (int)(w[3]*1.2), w[0]-4);
+                    g2d.fillRect((int)(block.arc[0]/2)-2, 1, 2, 1);
+                    g2d.fillRect(w[3]-3, 2, (int)(w[3]*1.2), w[0]-4);
+                    g2d.fillRect(w[3]-2, 3, (int)(w[3]*1.2), w[0]-4);
 
-                    g.fillRect(width - (int)(block.arc[1]/2), 1, 2, 1);
-                    g.fillRect(width-w[1]*2, 2, (int)(w[1]*1.2), w[0]-5);
-                    g.fillRect(width-w[1]*2-1, 3, (int)(w[1]*1.2), w[0]-5);
+                    g2d.fillRect(width - (int)(block.arc[1]/2), 1, 2, 1);
+                    g2d.fillRect(width-w[1]*2, 2, (int)(w[1]*1.2), w[0]-5);
+                    g2d.fillRect(width-w[1]*2-1, 3, (int)(w[1]*1.2), w[0]-5);
                 }
                 if (w[2] >= 5 && type[2] != DOTTED) {
-                    g.setColor(col[2]);
+                    g2d.setColor(col[2]);
 
-                    g.fillRect((int)(block.arc[3]/2)-2, height-2, 2, 1);
-                    g.fillRect(w[3]-2, height-2-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
-                    g.fillRect(w[3]-1, height-3-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
+                    g2d.fillRect((int)(block.arc[3]/2)-2, height-2, 2, 1);
+                    g2d.fillRect(w[3]-2, height-2-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
+                    g2d.fillRect(w[3]-1, height-3-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
 
-                    g.fillRect(width - (int)(block.arc[2]/2), height-2, 2, 1);
-                    g.fillRect(width-w[1]*2, height-2-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
-                    g.fillRect(width-w[1]*2-1, height-3-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
+                    g2d.fillRect(width - (int)(block.arc[2]/2), height-2, 2, 1);
+                    g2d.fillRect(width-w[1]*2, height-2-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
+                    g2d.fillRect(width-w[1]*2-1, height-3-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
                 }
                 if (w[3] >= 5 && type[3] != DOTTED) {
-                    g.setColor(col[3]);
+                    g2d.setColor(col[3]);
 
-                    g.fillRect(1, (int)(block.arc[3]/2) - 1, 1, 4);
-                    g.fillRect(2, (int)(block.arc[3]/2) - 2, 1, 4);
-                    g.fillRect(3, (int)(block.arc[3]/2) - 3, 1, 4);
+                    g2d.fillRect(1, (int)(block.arc[3]/2) - 1, 1, 4);
+                    g2d.fillRect(2, (int)(block.arc[3]/2) - 2, 1, 4);
+                    g2d.fillRect(3, (int)(block.arc[3]/2) - 3, 1, 4);
 
-                    g.fillRect(1, height - (int)(block.arc[3]/2), 1, 3);
-                    g.fillRect(2, height - (int)(block.arc[3]/2) + 1, 1, 3);
-                    g.fillRect(3, height - (int)(block.arc[3]/2) + 2, 1, 3);
+                    g2d.fillRect(1, height - (int)(block.arc[3]/2), 1, 3);
+                    g2d.fillRect(2, height - (int)(block.arc[3]/2) + 1, 1, 3);
+                    g2d.fillRect(3, height - (int)(block.arc[3]/2) + 2, 1, 3);
                 }
 
                 if (w[1] >= 5 && type[1] != DOTTED) {
-                    g.setColor(col[1]);
+                    g2d.setColor(col[1]);
 
-                    g.fillRect(width-2, (int)(block.arc[1]/2) - 1, 1, 4);
-                    g.fillRect(width-3, (int)(block.arc[1]/2) - 2, 1, 4);
-                    g.fillRect(width-4, (int)(block.arc[1]/2) - 3, 1, 4);
+                    g2d.fillRect(width-2, (int)(block.arc[1]/2) - 1, 1, 4);
+                    g2d.fillRect(width-3, (int)(block.arc[1]/2) - 2, 1, 4);
+                    g2d.fillRect(width-4, (int)(block.arc[1]/2) - 3, 1, 4);
 
-                    g.fillRect(width-2, height - (int)(block.arc[1]/2), 1, 3);
-                    g.fillRect(width-3, height - (int)(block.arc[1]/2) + 1, 1, 3);
-                    g.fillRect(width-4, height - (int)(block.arc[1]/2) + 2, 1, 3);
+                    g2d.fillRect(width-2, height - (int)(block.arc[1]/2), 1, 3);
+                    g2d.fillRect(width-3, height - (int)(block.arc[1]/2) + 1, 1, 3);
+                    g2d.fillRect(width-4, height - (int)(block.arc[1]/2) + 2, 1, 3);
                 }
 
             }
 
             if (block.arc[0] == 0 && block.arc[1] == 0 && block.arc[2] == 0 && block.arc[3] == 0 && blend_corners) {
                 if (w[0] != w[3]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[3].getRed()+col[0].getRed()) / 2),
+                g2d.setColor(new Color( (int)Math.round((col[3].getRed()+col[0].getRed()) / 2),
                                       (int)Math.round((col[3].getGreen()+col[0].getGreen()) / 2),
                                       (int)Math.round((col[3].getBlue()+col[0].getBlue()) / 2) ));
                 if (w[0] != w[3]) {
-                    g.drawLine(x, y, x+w[3]-1, y+w[0]-1);
+                    g2d.drawLine(x, y, x+w[3]-1, y+w[0]-1);
                 } else {
                     for (int i = 0; i < w[0]; i++) {
-                        g.fillRect(x+i, y+i, 1, 1);
+                        g2d.fillRect(x+i, y+i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
-                if (w[0] != w[1]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[1].getRed()+col[0].getRed()) / 2),
+                if (w[0] != w[1]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color( (int)Math.round((col[1].getRed()+col[0].getRed()) / 2),
                                       (int)Math.round((col[1].getGreen()+col[0].getGreen()) / 2),
                                       (int)Math.round((col[1].getBlue()+col[0].getBlue()) / 2) ));
                 if (w[0] != w[1]) {
-                    g.drawLine(x+width-1, y, x+width-w[1], y+w[0]-1);
+                    g2d.drawLine(x+width-1, y, x+width-w[1], y+w[0]-1);
                 } else {
                     for (int i = 0; i < w[0]; i++) {
-                        g.fillRect(x+width-w[1]+i, y+w[0]-1-i, 1, 1);
+                        g2d.fillRect(x+width-w[1]+i, y+w[0]-1-i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
-                if (w[2] != w[1]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[1].getRed()+col[2].getRed()) / 2),
+                if (w[2] != w[1]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color( (int)Math.round((col[1].getRed()+col[2].getRed()) / 2),
                                       (int)Math.round((col[1].getGreen()+col[2].getGreen()) / 2),
                                       (int)Math.round((col[1].getBlue()+col[2].getBlue()) / 2) ));
                 if (w[2] != w[1]) {
-                    g.drawLine(x+width-1, y+height-w[2]+1, x+width-w[1], y+height-1);
+                    g2d.drawLine(x+width-1, y+height-w[2]+1, x+width-w[1], y+height-1);
                 } else {
                     for (int i = 0; i < w[2]; i++) {
-                        g.fillRect(x+width-w[1]+i, y+height-w[2]+i, 1, 1);
+                        g2d.fillRect(x+width-w[1]+i, y+height-w[2]+i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
-                if (w[2] != w[3]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setColor(new Color( (int)Math.round((col[3].getRed()+col[2].getRed()) / 2),
+                if (w[2] != w[3]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color( (int)Math.round((col[3].getRed()+col[2].getRed()) / 2),
                                       (int)Math.round((col[3].getGreen()+col[2].getGreen()) / 2),
                                       (int)Math.round((col[3].getBlue()+col[2].getBlue()) / 2) ));
                 if (w[2] != w[3]) {
-                    g.drawLine(x+w[3]-1, y+height-w[2]+1, x, y+height-1);
+                    g2d.drawLine(x+w[3]-1, y+height-w[2]+1, x, y+height-1);
                 } else {
                     for (int i = 0; i < w[2]; i++) {
-                        g.fillRect(x+w[3]-1-i, y+height-w[2]+i, 1, 1);
+                        g2d.fillRect(x+w[3]-1-i, y+height-w[2]+i, 1, 1);
                     }
                 }
-                ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
             }
-            ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         }
     }
 
