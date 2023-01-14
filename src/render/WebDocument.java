@@ -349,6 +349,7 @@ public class WebDocument extends JPanel {
     public boolean use_native_inputs = false;
     public boolean keep_root_scrollbars_outside = false;
     public boolean smooth_borders = true;
+    public double forced_dpi = 0;
 
     public String selected_text;
     public static boolean scale_borders = true;

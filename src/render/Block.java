@@ -85,7 +85,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setLayout(null);
         setOpaque(false);
 
-        this.ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96;
+        ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96;
+        if (document.forced_dpi > 0) {
+            ratio = document.forced_dpi;
+        }
 
         fontSize = (int)Math.round(fontSize * ratio);
         scale_borders = WebDocument.scale_borders;
