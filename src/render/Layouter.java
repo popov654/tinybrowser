@@ -662,6 +662,11 @@ public class Layouter {
 
             stack.remove(stack.lastIndexOf(d));
 
+            if (b.document.debug) {
+                System.out.println();
+                System.out.println("Layout ended for block " + b.toString());
+            }
+
             return;
         }
     }

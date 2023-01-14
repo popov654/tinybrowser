@@ -1988,7 +1988,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             clipScrollbars();
         }
         
-        if (document.debug) {
+        if (document.debug && display_type != Display.INLINE) {
             System.out.println();
             System.out.println("Layout ended for block " + toString());
         }
