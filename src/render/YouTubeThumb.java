@@ -100,7 +100,6 @@ public class YouTubeThumb extends Block {
             svgCanvas.setDocument(doc);
         }
 
-        //svgCanvas.setBounds(_x_ + b2, _y_ + b1, width - b2 * 2, height - b1 * 2);
         svgCanvas.setPreferredSize(new Dimension(60, 40));
         svgCanvas.setMaximumSize(new Dimension(60, 40));
         svgCanvas.setBackground(new Color(0, 0, 0, 0));

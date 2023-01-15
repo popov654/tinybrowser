@@ -68,6 +68,7 @@ import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
+import org.apache.batik.swing.JSVGCanvas;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -431,6 +432,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         Component[] c = getComponents();
         for (int i = 0; i < c.length; i++) {
+            if (c[i] instanceof JSVGCanvas) {
+                c[i].setBounds(-scroll_x, -scroll_y, c[i].getWidth(), c[i].getHeight());
+                c[i].repaint(100);
+            }
             if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox))) continue;
             if (formType < 3) {
                 c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
@@ -1972,7 +1977,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        performSizeCheck(no_rec);
+        if (display_type != Display.INLINE) performSizeCheck(no_rec);
 
         if (childDocument != null) {
             childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
@@ -3377,7 +3382,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 orig_width = (int)Math.round(width / ratio);
             }
             if (max_width > 0 && width > max_width) width = max_width;
-            content_x_max = width;
+            //content_x_max = width;
             auto_width = true;
             rules_for_recalc.put("width", "auto");
         } else {
@@ -3390,7 +3395,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (scrollbar_y != null) {
                 viewport_width = width - scrollbar_y.getPreferredSize().width;
             }
-            content_x_max = viewport_width;
+            //content_x_max = viewport_width;
         }
         if (auto_x_margin && !auto_width) {
             setAutoXMargin();

@@ -7,6 +7,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
+import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.swing.JSVGCanvas;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import render.Block;
 import render.MediaPlayer;
 import render.RoundedBorder;
@@ -111,7 +116,10 @@ public class Builder {
             b.colspan = Integer.parseInt(node.getAttribute("colspan"));
             b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
         } else if (node.tagName.equals("svg")) {
-            //parseSVGDocument
+            Document svgDoc = createSVGDocument(node);
+            JSVGCanvas svgCanvas = new JSVGCanvas();
+            svgCanvas.setDocument(svgDoc);
+            b.add(svgCanvas);
         }
         b.id = node.getAttribute("id");
         b.setTextColor(node.getAttribute("color"));
@@ -123,6 +131,47 @@ public class Builder {
         applyInlineStyles(node, b);
 
         return b;
+    }
+
+    public Document createSVGDocument(Node node) {
+        // Get a DOMImplementation object
+        DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+
+        // Create a new document
+        String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+        Document doc = impl.createDocument(svgNS, "svg", null);
+
+        // Get the root element (the 'svg' element).
+        Element svgRoot = doc.getDocumentElement();
+        
+        Set<String> keys = node.attributes.keySet();
+        for (String key: keys) {
+            svgRoot.setAttributeNS(null, key, node.attributes.get(key));
+        }
+        for (int i = 0; i < node.children.size(); i++) {
+            if (node.children.get(i).nodeType == 1) {
+                svgRoot.appendChild(processSVGSubtree(doc, node.children.get(i)));
+            }
+        }
+        //svgRoot.setAttributeNS(null, "width", "400");
+        //svgRoot.setAttributeNS(null, "height", "450");
+
+        return doc;
+    }
+
+    private Element processSVGSubtree(Document doc, Node node) {
+        String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+        Element el = doc.createElementNS(svgNS, node.tagName);
+        Set<String> keys = node.attributes.keySet();
+        for (String key: keys) {
+            el.setAttributeNS(null, key, node.attributes.get(key));
+        }
+        for (int i = 0; i < node.children.size(); i++) {
+            if (node.children.get(i).nodeType == 1) {
+                el.appendChild(processSVGSubtree(doc, node.children.get(i)));
+            }
+        }
+        return el;
     }
 
     public void createMediaPlayer(Block b, String src) {

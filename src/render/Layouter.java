@@ -548,8 +548,9 @@ public class Layouter {
 
             Block b = d.clone();
             d.stopWatcher();
-            //d.width = 0;
-            //d.height = 0;
+            d.width = -1;
+            d.height = -1;
+            d.viewport_width = 0;
             d.parts.add(b);
             b.pos = d.pos;
 
@@ -561,7 +562,7 @@ public class Layouter {
             cur_y = last_line.getY();
 
             if (!b.isImage) {
-                b.width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
+                b.width = b.viewport_width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
             } else {
                 b.performLayout();
             }
@@ -572,6 +573,7 @@ public class Layouter {
                 cur_y = new_line.getY();
                 last_line = new_line;
                 b.width = last_line.getWidth() - b.margins[3];
+                b.viewport_width = b.width;
             }
             b.no_draw = true;
 
