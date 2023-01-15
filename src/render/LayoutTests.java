@@ -810,12 +810,12 @@ public class LayoutTests extends JFrame {
         } catch (Exception e) {}
         final LayoutTests lt = new LayoutTests();
 
-        //lt.basicTest();
+        lt.basicTest();
         //lt.linksTest();
         //lt.testImages();
         //lt.testReplacedContent();
         //lt.testTables();
-        lt.testForms();
+        //lt.testForms();
         //lt.testInternalFrames();
         //lt.testNormal();
         //lt.testPreWrap();

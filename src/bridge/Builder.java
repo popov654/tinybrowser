@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 import render.Block;
+import render.MediaPlayer;
 import render.RoundedBorder;
 import render.WebDocument;
 
@@ -89,7 +90,13 @@ public class Builder {
         } else if (node.nodeType == COMMENT) {
             return null;
         }
-        if (BlockElements.contains(node.tagName)) {
+        if (b.document != null && (node.tagName.equals("audio") || node.tagName.equals("video")) &&
+                node.getAttribute("src") != null) {
+            String src = node.getAttribute("src");
+            if (!src.isEmpty()) {
+                createMediaPlayer(b, src);
+            }
+        } else if (BlockElements.contains(node.tagName)) {
             b.display_type = Block.Display.BLOCK;
         } else if (InlineElements.contains(node.tagName)) {
             b.display_type = Block.Display.INLINE;
@@ -112,6 +119,42 @@ public class Builder {
         applyInlineStyles(node, b);
 
         return b;
+    }
+
+    public void createMediaPlayer(Block b, String src) {
+        int type = detectMediaType(src);
+
+        b.setDisplayType(Block.Display.INLINE_BLOCK);
+
+        MediaPlayer mp = null;
+
+        if (type == MediaPlayer.VIDEO) {
+            int player_width = 320 - b.borderWidth[3] - b.borderWidth[1];
+            int player_height = 206 - b.borderWidth[0] - b.borderWidth[2];
+            b.setWidth(player_width);
+            b.auto_height = true;
+            b.height = -1;
+            mp = new MediaPlayer(b, player_width, player_height);
+        } else {
+            int player_width = 230; //b.parent.width > 0 ? b.parent.width - b.parent.borderWidth[1] - b.parent.borderWidth[3] - b.parent.paddings[1] - b.parent.paddings[3] : -1;
+            b.width = (int) Math.round(player_width * b.ratio);
+            b.auto_height = true;
+            b.height = -1;
+            mp = new MediaPlayer(b, player_width);
+        }
+
+        if (mp != null) {
+            mp.open(src);
+            b.setMediaPlayer(mp);
+            b.isMedia = true;
+        }
+    }
+
+    public int detectMediaType(String source) {
+        if (source.matches(".*(avi|mp4|ts|mpg|m4v|ogv|mkv|flv|3gp)$")) {
+            return MediaPlayer.VIDEO;
+        }
+        return MediaPlayer.AUDIO;
     }
 
     public void applyDefaultStyles(Node node, Block b) {

@@ -545,7 +545,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (parent != null && parent.bgcolor != null && parent.gradient == null && parent.bgImage == null) {
             g2d.setColor(parent.bgcolor);
-            g2d.fillRect(0, 0, bw, bh);
+            //g2d.fillRect(0, 0, bw, bh);
         }
 
         int x0 = has_shadow ? -shadow_x + shadow_blur + shadow_size : 0;
@@ -579,14 +579,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             g = buffer.getGraphics();
             g2d = (Graphics2D) g;
 
-            //AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.CLEAR, 1f);
-            //g2d.setComposite(composite);
-
-            //g2d.fill(rect);
-
             AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
             g2d.setComposite(composite);
-
         }
 
         if (transform) {
@@ -1814,8 +1808,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             height = parent.height - parent.children.get(1).height;
             Block progress = parent.children.get(1).children.get(1);
             progress.width = progress.max_width = progress.children.get(0).width = progress.width + delta;
+            progress.orig_width = (int) ((double)progress.width / ratio);
             getComponents()[0].setBounds(_x_ - scroll_x, _y_ - scroll_y, width, height);
             return;
+        }
+
+        if (parent != null && parent.isMedia && height == Math.round(MediaPlayer.panel_height * ratio)) {
+            int delta = parent.width - width;
+            width = parent.width;
+            Block progress = children.get(1);
+            progress.width = progress.max_width = progress.children.get(0).width = progress.width + delta;
+            progress.orig_width = (int) ((double)progress.width / ratio);
+            progress.children.get(0).orig_width = progress.orig_width;
         }
 
 //      if (children.size() == 1 && children.get(0).type == NodeTypes.ELEMENT && children.get(0).auto_y_margin) {
@@ -1991,27 +1995,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void updateMaxContentSize(Block el) {
-        int w = Math.max(el.viewport_width - borderWidth[1] - borderWidth[3], el.content_x_max);
+        int new_value = el.content_x_max;
+        if (el.positioning != Position.ABSOLUTE) {
+            new_value += el.margins[1] + paddings[1];
+        }
+        int w = Math.max(el.viewport_width - el.borderWidth[1] - el.borderWidth[3], new_value);
         if (el.getOffsetLeft() - borderWidth[3] + w > content_x_max) {
             if (el.float_type == FloatType.NONE && el.margins[1] < 0) {
                 el.margins[1] = 0;
                 el.margins[3] = 0;
             }
             content_x_max = el.getOffsetLeft() - borderWidth[3] + w;
-            if (el.positioning != Position.ABSOLUTE) {
-                content_x_max += el.margins[1] + paddings[1];
-            }
         }
-        int h = Math.max(el.viewport_height - borderWidth[0] - borderWidth[2], el.content_y_max);
+        int h = el.viewport_height - borderWidth[0] - borderWidth[2];
+        if (el.positioning != Position.ABSOLUTE && el.parent != null && el.height > 0) {
+            h += el.margins[2] + paddings[2];
+        }
         if (el.getOffsetTop() - borderWidth[0] + h > content_y_max) {
             if (el.float_type == FloatType.NONE && el.auto_y_margin && el.margins[0] < 0) {
                 el.margins[0] = 0;
                 el.margins[2] = 0;
             }
             content_y_max = el.getOffsetTop() - borderWidth[0] + h;
-            if (el.positioning != Position.ABSOLUTE) {
-                content_y_max += el.margins[2] + paddings[2];
-            }
         }
     }
 
@@ -3340,6 +3345,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 orig_width = (int)Math.round(width / ratio);
             }
             if (max_width > 0 && width > max_width) width = max_width;
+            content_x_max = width;
             auto_width = true;
             rules_for_recalc.put("width", "auto");
         } else {
@@ -3352,6 +3358,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (scrollbar_y != null) {
                 viewport_width = width - scrollbar_y.getPreferredSize().width;
             }
+            content_x_max = viewport_width;
         }
         if (auto_x_margin && !auto_width) {
             setAutoXMargin();
@@ -4670,9 +4677,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private volatile int from_x = -1;
     private volatile int from_y = -1;
 
-    private int content_x_max = 0;
-    private int content_y_min = Integer.MAX_VALUE;
-    private int content_y_max = 0;
+    public int content_x_max = 0;
+    public int content_y_min = Integer.MAX_VALUE;
+    public int content_y_max = 0;
 
     public htmlparser.Node node;
     public bridge.Builder builder;
@@ -4791,6 +4798,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int background_pos_y = 0;
     public Gradient gradient = null;
     public boolean isImage = false;
+    public boolean isMedia = false;
+    public String mediaSource = null;
     public int formType = 0;
 
     public boolean has_animation = false;
@@ -5714,6 +5723,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                  }
             }
         }
+    }
+
+    public void setMediaPlayer(MediaPlayer player) {
+        mp = player;
     }
 
     public void setScaleBorder(boolean value) {

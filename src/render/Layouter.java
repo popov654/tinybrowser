@@ -463,7 +463,10 @@ public class Layouter {
         } else if (d.display_type == Block.Display.INLINE_BLOCK || d.display_type == Block.Display.INLINE_TABLE) {
             if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
                     ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK) {
-                last_line = startNewLine(0, 0, d);
+                if (last_line != null && last_line.elements.size() == 1) {
+                    offset = ((Block)last_line.elements.get(0)).margins[2];
+                }
+                last_line = startNewLine(offset, d.clear_type, d);
             }
             cur_x = last_line.cur_pos;
             cur_y = last_line.getY();
@@ -587,7 +590,12 @@ public class Layouter {
                 b.width = b.borderWidth[3] + b.paddings[3] + line_width + b.paddings[1] + b.borderWidth[1];
                 b.viewport_width = b.width;
                 b.orig_width = (int)Math.round(b.width / b.ratio);
+                b.content_x_max = b.width;
                 last_line.cur_pos = b._getX() + b.width - last_line.getX() + b.margins[1];
+            }
+
+            if (b.parent.content_x_max < last_line.cur_pos) {
+                b.parent.content_x_max = last_line.cur_pos;
             }
 
             if (b.lines.size() == 0 && !b.isImage) {

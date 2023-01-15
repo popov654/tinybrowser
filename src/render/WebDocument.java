@@ -127,11 +127,13 @@ public class WebDocument extends JPanel {
     }
 
     public void insertSubtreeWithoutRoot(Block b, Block insert) {
+        ready = false;
         b.removeAllElements();
         for (int i = 0; i < insert.children.size(); i++) {
             b.addElement(insert.children.get(i));
             processSubtree(insert.children.get(i));
         }
+        ready = true;
     }
 
     private void processSubtree(Block b) {
@@ -150,6 +152,11 @@ public class WebDocument extends JPanel {
                 if (b.width == 0) b.width = b.parent.width;
                 b.parent.addElement(b, index, true);
                 if (debug) System.err.println("Added element, index: " + index);
+                if (b.node != null && (b.node.tagName.equals("audio") || b.node.tagName.equals("video")) &&
+                        b.node.getAttribute("src") != null && !b.node.getAttribute("src").isEmpty()) {
+                    b.removeAllElements();
+                    b.builder.createMediaPlayer(b, b.node.getAttribute("src"));
+                }
             } else {
                 b.parent.addText(b.textContent, index);
                 if (debug) System.err.println("Added text, content: " + b.textContent);
