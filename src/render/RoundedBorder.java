@@ -132,21 +132,40 @@ public class RoundedBorder implements Border {
 
         if (!flag) return;
 
+        boolean smooth = block.document != null ? block.document.smooth_borders : true;
+
         if (!flag2) {
-            g2d.setColor(col[0]);
-            g2d.setStroke(new java.awt.BasicStroke(w[0]));
-            g2d.drawRoundRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), radius, radius);
-            //paintBorder2(c, g, x, y, width, height);
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            if (!smooth) {
+                g2d.setColor(col[0]);
+                g2d.setStroke(new java.awt.BasicStroke(w[0]));
+                g2d.drawRoundRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), radius, radius);
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            } else {
+                paintBorder2(c, g, x, y, width, height);
+            }
             return;
         }
 
         if ((block.arc[0] != block.arc[1] || block.arc[1] != block.arc[2] || block.arc[2] != block.arc[3] || block.arc[3] != block.arc[0]) &&
               w[0] == w[1] && w[1] == w[2] && w[2] == w[3] && col[0] == col[1] && col[1] == col[2] && col[2] == col[3]) {
             RoundedRect rect = new RoundedRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), (double) block.arc[0] / 1.75, (double) block.arc[1] / 1.75, (double) block.arc[2] / 1.75, (double) block.arc[3] / 1.75);
-            g2d.setColor(col[0]);
-            g2d.setStroke(new java.awt.BasicStroke(w[0]));
-            g2d.draw(rect);
+            if (!smooth) {
+                g2d.setColor(col[0]);
+                g2d.setStroke(new java.awt.BasicStroke(w[0]));
+                g2d.draw(rect);
+            } else {
+                g2d.setColor(col[0]);
+                g2d.setStroke(new java.awt.BasicStroke(Math.max(1, w[0])));
+                g2d.draw(rect);
+                g2d.setColor(new Color(Math.max(0, col[0].getRed()-5), Math.max(0, col[0].getGreen()-5), Math.max(0, col[0].getBlue()-5), 88));
+                
+                RoundedRect rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 1, y + (int)block.ratio + w[0] - 1, width - (int) (2 * block.ratio) - w[0] * 2 + 2, height - (int) (2 * block.ratio) - w[0] * 2 + 2, (double) block.arc[0] / 1.9, (double) block.arc[1] / 1.9, (double) block.arc[2] / 1.9, (double) block.arc[3] / 1.9);
+                g2d.setStroke(new java.awt.BasicStroke(1));
+                g2d.draw(rect_inner);
+                rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 1, y + (int)block.ratio + w[0] - 1, width - (int) (2 * block.ratio) - w[0] * 2 + 4, height - (int) (2 * block.ratio) - w[0] * 2 + 4, (double) block.arc[0] / 1.9, (double) block.arc[1] / 1.9, (double) block.arc[2] / 1.9, (double) block.arc[3] / 1.9);
+                rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 3, y + (int)block.ratio + w[0] - 3, width - (int) (2 * block.ratio) - w[0] * 2 + 5, height - (int) (2 * block.ratio) - w[0] * 2 + 5, (double) block.arc[0] / 1.9, (double) block.arc[1] / 1.9, (double) block.arc[2] / 1.9, (double) block.arc[3] / 1.9);
+                g2d.draw(rect_inner);
+            }
             return;
         }
 
