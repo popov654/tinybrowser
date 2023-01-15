@@ -50,13 +50,15 @@ public class Builder {
         if (root == null) return root;
         root.node = node;
         root.builder = this;
-        for (int i = 0; i < node.children.size(); i++) {
-            Block b = buildSubtree(document, node.children.get(i));
-            if (b != null) {
-                root.getChildren().add(b);
-                b.parent = root;
-                b.node = node.children.get(i);
-                b.builder = this;
+        if (!node.tagName.equals("svg")) {
+            for (int i = 0; i < node.children.size(); i++) {
+                Block b = buildSubtree(document, node.children.get(i));
+                if (b != null) {
+                    root.getChildren().add(b);
+                    b.parent = root;
+                    b.node = node.children.get(i);
+                    b.builder = this;
+                }
             }
         }
         return root;
@@ -108,6 +110,8 @@ public class Builder {
             b.display_type = Block.Display.TABLE_CELL;
             b.colspan = Integer.parseInt(node.getAttribute("colspan"));
             b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
+        } else if (node.tagName.equals("svg")) {
+            //parseSVGDocument
         }
         b.id = node.getAttribute("id");
         b.setTextColor(node.getAttribute("color"));
@@ -183,6 +187,14 @@ public class Builder {
         }
         else if (node.tagName.equals("li")) {
             b.list_item_type = 2;
+        }
+        if (b.display_type != Block.Display.INLINE) {
+            if (node.getAttribute("width") != null) {
+                b.setWidth(Integer.parseInt(node.getAttribute("width")));
+            }
+            if (node.getAttribute("height") != null) {
+                b.setHeight(Integer.parseInt(node.getAttribute("height")));
+            }
         }
     }
 

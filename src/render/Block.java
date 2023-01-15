@@ -1332,7 +1332,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 scrollbar_y.setBounds(width - borderWidth[1] - scrollbar_y.getPreferredSize().width, borderWidth[0], scrollbar_y.getPreferredSize().width, height - borderWidth[0] - borderWidth[2] - scrollbar_x.getPreferredSize().height);
                 //sw -= scrollbar_y.getPreferredSize().width;
             }
-            scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + viewport_height - borderWidth[2] - scrollbar_x.getPreferredSize().height, sw, scrollbar_x.getPreferredSize().height);
+            scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + height - borderWidth[2] - scrollbar_x.getPreferredSize().height, sw, scrollbar_x.getPreferredSize().height);
             int w = content_x_max + borderWidth[1] + borderWidth[3];
             scrollbar_x.getModel().setRangeProperties(0, viewport_width, 0, w+1, false);
             scrollbar_x.setVisibleAmount(viewport_width - borderWidth[3]);

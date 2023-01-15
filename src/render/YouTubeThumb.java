@@ -94,31 +94,7 @@ public class YouTubeThumb extends Block {
             ex.printStackTrace();
         }
 
-        svgCanvas = new JSVGCanvas() {
-            @Override
-            public void paintComponent(Graphics g) {
-                int x = 0;
-                int y = 0;
-                int w = getWidth();
-                int h = getHeight();
-                if (parent.scroll_x > _x_ + getX()) {
-                    x += parent.scroll_x - (_x_ + getX());
-                    w -= parent.scroll_x - (_x_ + getX());
-                }
-                if (-parent.scroll_x + _x_ + getX() + getWidth() > parent.viewport_width) {
-                    w -= -parent.scroll_x + _x_ + getX() + getWidth() - parent.viewport_width;
-                }
-                if (parent.scroll_y > _y_ + getY()) {
-                    y += parent.scroll_y - (_y_ + getY());
-                    h -= parent.scroll_y - (_y_ + getY());
-                }
-                if (-parent.scroll_y + _y_ + getY() + getHeight() > parent.viewport_height) {
-                    h -= -parent.scroll_y + _y_ + getY() + getHeight() - parent.viewport_height;
-                }
-                //g.setClip(new Rectangle(x, y, w, h));
-                super.paintComponent(g);
-            }
-        };
+        svgCanvas = new JSVGCanvas();
 
         if (doc != null) {
             svgCanvas.setDocument(doc);
