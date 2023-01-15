@@ -3386,7 +3386,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round((double) viewport_width / 100 * w);
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * w);
+            value = (int)Math.round(16 * ratio * w);
         }
         setWidth(value, false);
     }
@@ -3484,7 +3484,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round((double) viewport_width / 100 * h);
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * h);
+            value = (int)Math.round(16 * ratio * h);
         }
         setHeight(value, false);
     }
@@ -3541,7 +3541,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round((width-borderWidth[1]-borderWidth[3]-bw)*(val/100));
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * ratio * val);
         }
         background_pos_x = value;
         forceRepaint();
@@ -3557,7 +3557,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round((height-borderWidth[0]-borderWidth[2]-bh)*(val/100));
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * ratio * val);
         }
         background_pos_y = value;
         forceRepaint();
@@ -3577,7 +3577,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.ceil((width-borderWidth[1]-borderWidth[3])*(val/100));
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * ratio * val);
         }
         background_size_x = value;
         background_size_x_auto = false;
@@ -3601,7 +3601,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.ceil((height-borderWidth[0]-borderWidth[2])*(val/100));
         }
         else if (units == Units.em) {
-            value = (int)Math.round(14 * ratio * val);
+            value = (int)Math.round(16 * ratio * val);
         }
         background_size_y = value;
         background_size_y_auto = false;
@@ -3625,8 +3625,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value_y = (int)Math.ceil((height-borderWidth[0]-borderWidth[2])*(val_y/100));
         }
         else if (units == Units.em) {
-            value_x = (int)Math.round(14 * ratio * value_x);
-            value_y = (int)Math.round(14 * ratio * value_y);
+            value_x = (int)Math.round(16 * ratio * value_x);
+            value_y = (int)Math.round(16 * ratio * value_y);
         }
         background_size_x = value_x;
         background_size_y = value_y;
@@ -3998,12 +3998,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     String u = s[i].substring(index);
                     if (!u.matches("px|em")) return;
                     int val = (int)Math.round(Float.parseFloat(n) * ratio);
-                    if (u.equals("em")) val = (int)Math.round(Integer.parseInt(n) * 14 * ratio);
+                    if (u.equals("em")) val = (int)Math.round(Integer.parseInt(n) * 16 * ratio);
 
                     if (prop.contains("-left") || prop.equals("border")) this.borderWidth[3] = val;
                     if (prop.contains("-right") || prop.equals("border")) this.borderWidth[1] = val;
                     if (prop.contains("-bottom") || prop.equals("border")) this.borderWidth[2] = val;
-                    if (prop.contains("-top") || prop.equals("border")) this.borderWidth[0] = val;
+                    if (prop.contains("-top")  * || prop.equals("border")) this.borderWidth[0] = val;
                 } else if (s[i].matches("^(#|rgba?).*") || !types.containsKey(s[i])) {
                     Color col = parseColor(s[i]);
                     if (prop.contains("-left") || prop.equals("border")) this.borderColor[3] = col;
