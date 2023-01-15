@@ -86,7 +86,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setOpaque(false);
 
         ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96;
-        if (document.forced_dpi > 0) {
+        if (document != null && document.forced_dpi > 0) {
             ratio = document.forced_dpi;
         }
 
@@ -5616,7 +5616,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         ActionListener listener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (document.is_video_fullscreen) return;
+                if (document == null || document.is_video_fullscreen) return;
                 long time = System.currentTimeMillis();
                 if (has_animation && time > nextFrameDisplayTime()) {
                     displayNextFrame();
