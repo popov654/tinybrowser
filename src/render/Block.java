@@ -3229,6 +3229,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         forceRepaint();
     }
 
+    public void setBorderClipMode(int mode) {
+        borderClipMode = mode;
+        forceRepaint();
+    }
+
     public void updateAbsolutePositionedChildren() {
         for (int i = 0; i < children.size(); i++) {
             if (children.get(i).positioning == Position.ABSOLUTE) {
@@ -4860,6 +4865,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Color color = Color.BLACK;
     public Color bgcolor;
     public int[] borderType = {0, 0, 0, 0};
+    public int borderClipMode = 0;
     public Color[] borderColor = {Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK};
     public String fontFamily = "Tahoma";
     public int fontSize = 14;
@@ -5015,6 +5021,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.width = this.width;
         b.height = this.height;
+        b.orig_width = orig_width;
 
         b.viewport_width = viewport_width;
         b.viewport_height = viewport_height;
@@ -5052,6 +5059,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.borderColor[2] = borderColor[2];
         b.borderColor[3] = borderColor[3];
         b.borderRadius = borderRadius;
+
+        b.arc = new int[4];
+        for (int i = 0; i < 4; i++) {
+            b.arc[i] = arc[i];
+        }
+
+        b.borderClipMode = borderClipMode;
+
+        b.border = new RoundedBorder(b, b.borderWidth, b.arc, b.borderColor, b.borderType);
 
         b.bgImage = this.bgImage;
         if (bgImage != null) {

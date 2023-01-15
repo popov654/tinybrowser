@@ -8,8 +8,6 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.PathIterator;
 import javax.swing.border.Border;
 
 /**
@@ -128,13 +126,13 @@ public class RoundedBorder implements Border {
         boolean flag = false;
         boolean flag2 = false;
         int last_w = w[0];
-        int last_arc = block.arc[0];
+        int last_arc = radius[0];
         Color last_c = col[0];
         for (int i = 0; i < 4; i++) {
             if (w[i] > 0) {
                 flag = true;
             }
-            if (w[i] != last_w || !col[i].equals(last_c) || block.arc[i] != last_arc) {
+            if (w[i] != last_w || !col[i].equals(last_c) || radius[i] != last_arc) {
                 flag2 = true;
             }
         }
@@ -155,9 +153,9 @@ public class RoundedBorder implements Border {
             return;
         }
 
-        if ((block.arc[0] != block.arc[1] || block.arc[1] != block.arc[2] || block.arc[2] != block.arc[3] || block.arc[3] != block.arc[0]) &&
+        if ((radius[0] != radius[1] || radius[1] != radius[2] || radius[2] != radius[3] || radius[3] != radius[0]) &&
               w[0] == w[1] && w[1] == w[2] && w[2] == w[3] && col[0] == col[1] && col[1] == col[2] && col[2] == col[3]) {
-            RoundedRect rect = new RoundedRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), (double) block.arc[0] / 1.75, (double) block.arc[1] / 1.75, (double) block.arc[2] / 1.75, (double) block.arc[3] / 1.75);
+            RoundedRect rect = new RoundedRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), (double) radius[0] / 1.75, (double) radius[1] / 1.75, (double) radius[2] / 1.75, (double) radius[3] / 1.75);
             if (!smooth) {
                 g2d.setColor(col[0]);
                 g2d.setStroke(new java.awt.BasicStroke(w[0]));
@@ -168,11 +166,11 @@ public class RoundedBorder implements Border {
                 g2d.draw(rect);
                 g2d.setColor(new Color(Math.max(0, col[0].getRed()-5), Math.max(0, col[0].getGreen()-5), Math.max(0, col[0].getBlue()-5), 88));
                 
-                RoundedRect rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 1, y + (int)block.ratio + w[0] - 1, width - (int) (2 * block.ratio) - w[0] * 2 + 2, height - (int) (2 * block.ratio) - w[0] * 2 + 2, (double) block.arc[0] / 1.9, (double) block.arc[1] / 1.9, (double) block.arc[2] / 1.9, (double) block.arc[3] / 1.9);
+                RoundedRect rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 1, y + (int)block.ratio + w[0] - 1, width - (int) (2 * block.ratio) - w[0] * 2 + 2, height - (int) (2 * block.ratio) - w[0] * 2 + 2, (double) radius[0] / 1.9, (double) radius[1] / 1.9, (double) radius[2] / 1.9, (double) radius[3] / 1.9);
                 g2d.setStroke(new java.awt.BasicStroke(1));
                 g2d.draw(rect_inner);
-                rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 1, y + (int)block.ratio + w[0] - 1, width - (int) (2 * block.ratio) - w[0] * 2 + 4, height - (int) (2 * block.ratio) - w[0] * 2 + 4, (double) block.arc[0] / 1.9, (double) block.arc[1] / 1.9, (double) block.arc[2] / 1.9, (double) block.arc[3] / 1.9);
-                rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 3, y + (int)block.ratio + w[0] - 3, width - (int) (2 * block.ratio) - w[0] * 2 + 5, height - (int) (2 * block.ratio) - w[0] * 2 + 5, (double) block.arc[0] / 1.9, (double) block.arc[1] / 1.9, (double) block.arc[2] / 1.9, (double) block.arc[3] / 1.9);
+                rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 1, y + (int)block.ratio + w[0] - 1, width - (int) (2 * block.ratio) - w[0] * 2 + 4, height - (int) (2 * block.ratio) - w[0] * 2 + 4, (double) radius[0] / 1.9, (double) radius[1] / 1.9, (double) radius[2] / 1.9, (double) radius[3] / 1.9);
+                rect_inner = new RoundedRect(x + (int)block.ratio + w[0] - 3, y + (int)block.ratio + w[0] - 3, width - (int) (2 * block.ratio) - w[0] * 2 + 5, height - (int) (2 * block.ratio) - w[0] * 2 + 5, (double) radius[0] / 1.9, (double) radius[1] / 1.9, (double) radius[2] / 1.9, (double) radius[3] / 1.9);
                 g2d.draw(rect_inner);
             }
             return;
@@ -183,45 +181,112 @@ public class RoundedBorder implements Border {
             return;
         }
 
-        if (block.arc[0] > width / 4 || block.arc[1] > width / 4 || block.arc[2] > width / 4 || block.arc[3] > width / 4 ||
-              block.arc[0] > height / 2 || block.arc[1] > height / 2 || block.arc[2] > height / 2 || block.arc[3] > height / 2) {
-            
+        int[][][] d = new int[4][2][];
+
+        int mode = block.borderClipMode;
+
+        if (mode == 0) {
+            int hw = width / 2;
+            int hh = height / 2;
+
+            int[] arrayX1 = {x, x+hw, x+width};
+            int[] arrayY1 = {y, y+hh, y};
+            d[0][0] = arrayX1;
+            d[0][1] = arrayY1;
+            int[] arrayX2 = {x+width, x+width-hw, x+width};
+            int[] arrayY2 = {y, y+hh-1, y+height};
+            d[1][0] = arrayX2;
+            d[1][1] = arrayY2;
+            int[] arrayX3 = {x+width, x+hw, x};
+            int[] arrayY3 = {y+height, y+height-hh, y+height};
+            d[2][0] = arrayX3;
+            d[2][1] = arrayY3;
+            int[] arrayX4 = {x, x+hw, x};
+            int[] arrayY4 = {y+height, y+hh, y};
+            d[3][0] = arrayX4;
+            d[3][1] = arrayY4;
         }
 
-        //int r = (int)Math.round(radius[0] / Math.sqrt(2) / 2);
+        else if (mode == 1) {
 
-        int w0 = Math.max(w[0], Math.max(radius[0], radius[1]));
-        int w1 = Math.max(w[1], Math.max(radius[1], radius[2]));
-        int w2 = Math.max(w[2], Math.max(radius[2], radius[3]));
-        int w3 = Math.max(w[3], Math.max(radius[3], radius[0]));
+            int[] arrayX1 = {x, x+w[3], x+width-w[1], x+width};
+            int[] arrayY1 = {y, y+w[0], y+w[0], y};
+            d[0][0] = arrayX1;
+            d[0][1] = arrayY1;
+            int[] arrayX2 = {x+width, x+width-w[1], x+width-w[1], x+width};
+            int[] arrayY2 = {y, y+w[0], y+height-w[2], y+height};
+            d[1][0] = arrayX2;
+            d[1][1] = arrayY2;
+            int[] arrayX3 = {x+width, x+width-w[1], x+w[3], x};
+            int[] arrayY3 = {y+height, y+height-w[2], y+height-w[2], y+height};
+            d[2][0] = arrayX3;
+            d[2][1] = arrayY3;
+            int[] arrayX4 = {x, x+w[3], x+w[3], x};
+            int[] arrayY4 = {y+height, y+height-w[2], y+w[0], y};
+            d[3][0] = arrayX4;
+            d[3][1] = arrayY4;
 
-        //int r1 = (int) Math.sqrt(w0 * w0 + w3 * w3);
-        //int r2 = (int) Math.sqrt(w0 * w0 + w1 * w1);
-        //int r3 = (int) Math.sqrt(w1 * w1 + w2 * w2);
-        //int r4 = (int) Math.sqrt(w2 * w2 + w3 * w3);
+        }
 
-        int[][][] d = new int[4][2][4];
-        int[] arrayX1 = {x, x+w[3], x+width-w[1], x+width};
-        int[] arrayY1 = {y, y+w[0], y+w[0], y};
-        d[0][0] = arrayX1;
-        d[0][1] = arrayY1;
-        int[] arrayX2 = {x+width, x+width-w[1], x+width-w[1], x+width};
-        int[] arrayY2 = {y, y+w[0], y+height-w[2], y+height};
-        d[1][0] = arrayX2;
-        d[1][1] = arrayY2;
-        int[] arrayX3 = {x+width, x+width-w[1], x+w[3], x};
-        int[] arrayY3 = {y+height, y+height-w[2], y+height-w[2], y+height};
-        d[2][0] = arrayX3;
-        d[2][1] = arrayY3;
-        int[] arrayX4 = {x, x+w[3], x+w[3], x};
-        int[] arrayY4 = {y+height, y+height-w[2], y+w[0], y};
-        d[3][0] = arrayX4;
-        d[3][1] = arrayY4;
+        else if (mode == 2) {
+            int hw = width / 2;
+            int hh = height / 2;
+
+            int delta = (int) (radius[0]*0.1);
+
+            int[] arrayX1 = {x+delta, x+hw, x+width-delta};
+            int[] arrayY1 = {y+delta, y+hh, y+delta};
+            d[0][0] = arrayX1;
+            d[0][1] = arrayY1;
+            int[] arrayX2 = {x+width-delta, x+width-hw, x+width-delta};
+            int[] arrayY2 = {y+delta, y+hh, y+height-delta};
+            d[1][0] = arrayX2;
+            d[1][1] = arrayY2;
+            int[] arrayX3 = {x+width-delta, x+hw, x+delta};
+            int[] arrayY3 = {y+height-delta, y+height-hh, y+height-delta};
+            d[2][0] = arrayX3;
+            d[2][1] = arrayY3;
+            int[] arrayX4 = {x+delta, x+hw, x+delta};
+            int[] arrayY4 = {y+height-delta, y+hh, y+delta};
+            d[3][0] = arrayX4;
+            d[3][1] = arrayY4;
+        }
+
+        int[] radius = new int[4];
+        for (int i = 0; i < radius.length; i++) {
+            radius[i] = Math.min(Math.min(width, height), this.radius[i]);
+        }
+
+        if (Math.abs(radius[0] / 2 - width / 2) < 2 && Math.abs(radius[0] / 2 - height / 2) < 2 &&
+                Math.abs(radius[1] / 2 - width / 2) < 2 && Math.abs(radius[1] / 2 - height / 2) < 2 &&
+                Math.abs(radius[2] / 2 - width / 2) < 2 && Math.abs(radius[2] / 2 - height / 2) < 2 &&
+                Math.abs(radius[3] / 2 - width / 2) < 2 && Math.abs(radius[3] / 2 - height / 2) < 2) {
+            int dd = 6;
+            if (mode == 1) dd += 2;
+            for (int j = 0; j < 4; j++) {
+                if (col[j].getAlpha() == 0) continue;
+                Polygon poly = new Polygon(d[j][0], d[j][1], mode != 1 ? 3 : 4);
+                g2d.setClip(poly);
+
+                g2d.setColor(col[j]);
+                g2d.setStroke(new BasicStroke(w[j]));
+                if (mode != 2) {
+                    g2d.drawOval(w[j]-dd, w[j]-dd, width-w[j]*2+dd*2, height-w[j]*2+dd*2);
+                } else {
+                    int bw = w[j] * 2;
+                    g2d.setStroke(new BasicStroke(bw));
+                    g2d.drawOval(-dd / 2, -dd / 2, width+dd, height+dd);
+                }
+
+                g2d.setClip(null);
+            }
+            return;
+        }
 
         Color color, color2, color3;
 
         for (int j = 0; j < 4; j++) {
-            Polygon poly = new Polygon(d[j][0], d[j][1], 4);
+            Polygon poly = new Polygon(d[j][0], d[j][1], mode != 1 ? 3 : 4);
             g2d.setClip(poly);
             color = col[j];
             g2d.setColor(color);
@@ -231,10 +296,11 @@ public class RoundedBorder implements Border {
             //((Graphics2D)g).fill(rect);
             RoundedRect rect = null;
             for (int i = 0; i < w[j]; i++) {
+                if (col[j].getAlpha() == 0) continue;
+                
                 if (block.arc[0] != 0 || block.arc[1] != 0 || block.arc[2] != 0 || block.arc[3] != 0) {
-
                     //g.fillRoundRect(0, 0, width, height, radius, radius);
-
+                    
                     if (i == w[j]-1) g.setColor(color2);
                     rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2, block.arc[1] / 2, block.arc[2] / 2, block.arc[3] / 2);
                     if (w[j] > 2 && i < w[j]-2) {
@@ -249,11 +315,11 @@ public class RoundedBorder implements Border {
                         } else {
                             g2d.setColor(color3);
                         }
-                        if (i > 1) {
+                        if (i > 2) {
                             g2d.setColor(color);
-                            rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 1, block.arc[1] / 2 - 1, block.arc[2] / 2 - 1, block.arc[3] / 2 - 1);
-                            g2d.fill(rect);
-                            break;
+                            rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - i, block.arc[1] / 2 - i, block.arc[2] / 2 - i, block.arc[3] / 2 - i);
+                            g2d.draw(rect);
+                            //break;
                         } else {
                             g2d.setColor(color3);
                             rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 1, block.arc[1] / 2 - 1, block.arc[2] / 2 - 1, block.arc[3] / 2 - 1);
@@ -279,75 +345,38 @@ public class RoundedBorder implements Border {
                 }
             }
             g2d.setClip(null);
+        }
 
-//            if (block.arc[0] != 0 || block.arc[1] != 0 || block.arc[2] != 0 || block.arc[3] != 0) {
-//
-//                if (w[0] >= 5) {
-//                    g2d.setColor(col[0]);
-//
-//                    g2d.fillRect((int)(block.arc[0]/2)-2, 1, 2, 1);
-//                    g2d.fillRect(w[3]-3, 2, (int)(w[3]*1.2), w[0]-4);
-//                    g2d.fillRect(w[3]-2, 3, (int)(w[3]*1.2), w[0]-4);
-//
-//                    g2d.fillRect(width - (int)(block.arc[1]/2), 1, 2, 1);
-//                    g2d.fillRect(width-w[1]*2, 2, (int)(w[1]*1.2), w[0]-5);
-//                    g2d.fillRect(width-w[1]*2-1, 3, (int)(w[1]*1.2), w[0]-5);
-//                }
-//                if (w[2] >= 5) {
-//                    g2d.setColor(col[2]);
-//
-//                    g2d.fillRect((int)(block.arc[3]/2)-2, height-2, 2, 1);
-//                    g2d.fillRect(w[3]-2, height-2-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
-//                    g2d.fillRect(w[3]-1, height-3-(w[2]-4), (int)(w[3]*1.2), w[2]-4);
-//
-//                    g2d.fillRect(width - (int)(block.arc[2]/2), height-2, 2, 1);
-//                    g2d.fillRect(width-w[1]*2, height-2-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
-//                    g2d.fillRect(width-w[1]*2-1, height-3-(w[2]-4), (int)(w[1]*1.2), w[2]-5);
-//                }
-//                if (w[3] >= 5) {
-//                    g2d.setColor(col[3]);
-//
-//                    g2d.fillRect(1, (int)(block.arc[3]/2) - 1, 1, 4);
-//                    g2d.fillRect(2, (int)(block.arc[3]/2) - 2, 1, 4);
-//                    g2d.fillRect(3, (int)(block.arc[3]/2) - 3, 1, 4);
-//
-//                    g2d.fillRect(1, height - (int)(block.arc[3]/2), 1, 3);
-//                    g2d.fillRect(2, height - (int)(block.arc[3]/2) + 1, 1, 3);
-//                    g2d.fillRect(3, height - (int)(block.arc[3]/2) + 2, 1, 3);
-//                }
-//
-//                if (w[1] >= 5) {
-//                    g2d.setColor(col[1]);
-//
-//                    g2d.fillRect(width-2, (int)(block.arc[1]/2) - 1, 1, 4);
-//                    g2d.fillRect(width-3, (int)(block.arc[1]/2) - 2, 1, 4);
-//                    g2d.fillRect(width-4, (int)(block.arc[1]/2) - 3, 1, 4);
-//
-//                    g2d.fillRect(width-2, height - (int)(block.arc[1]/2), 1, 3);
-//                    g2d.fillRect(width-3, height - (int)(block.arc[1]/2) + 1, 1, 3);
-//                    g2d.fillRect(width-4, height - (int)(block.arc[1]/2) + 2, 1, 3);
-//                }
-//
-//            }
+        if (blend_corners) blendCorners(g, x, y, width, height);
+    }
 
-            if (block.arc[0] == 0 && block.arc[1] == 0 && block.arc[2] == 0 && block.arc[3] == 0 && blend_corners) {
-                if (w[0] != w[3]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(new Color( (int)Math.round((col[3].getRed()+col[0].getRed()) / 2),
-                                      (int)Math.round((col[3].getGreen()+col[0].getGreen()) / 2),
-                                      (int)Math.round((col[3].getBlue()+col[0].getBlue()) / 2) ));
-                if (w[0] != w[3]) {
-                    g2d.drawLine(x, y, x+w[3]-1, y+w[0]-1);
-                } else {
-                    for (int i = 0; i < w[0]; i++) {
-                        g2d.fillRect(x+i, y+i, 1, 1);
+    private void blendCorners(Graphics g, int x, int y, int width, int height) {
+        Graphics2D g2d = (Graphics2D) g;
+
+        if (block.arc[0] == 0 && block.arc[1] == 0 && block.arc[2] == 0 && block.arc[3] == 0 && blend_corners) {
+
+            if (col[3].getAlpha() > 0 && col[0].getAlpha() > 0) {
+                if (w[3] != w[0]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(new Color( (int)Math.round((col[3].getRed() + col[0].getRed()) / 2),
+                                        (int)Math.round((col[3].getGreen() + col[0].getGreen()) / 2),
+                                        (int)Math.round((col[3].getBlue() + col[0].getBlue()) / 2),
+                                        (int)Math.round((double)col[3].getAlpha() * (double)col[0].getAlpha() / 255) ));
+                    if (w[3] != w[0]) {
+                        g2d.drawLine(x, y, x+w[3]-1, y+w[0]-1);
+                    } else {
+                        for (int i = 0; i < w[3]; i++) {
+                            g2d.fillRect(x+i, y+i, 1, 1);
+                        }
                     }
-                }
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            }
 
+            if (col[0].getAlpha() > 0 && col[1].getAlpha() > 0) {
                 if (w[0] != w[1]) ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(new Color( (int)Math.round((col[1].getRed()+col[0].getRed()) / 2),
-                                      (int)Math.round((col[1].getGreen()+col[0].getGreen()) / 2),
-                                      (int)Math.round((col[1].getBlue()+col[0].getBlue()) / 2) ));
+                g2d.setColor(new Color( (int)Math.round((col[1].getRed() + col[0].getRed()) / 2),
+                                        (int)Math.round((col[1].getGreen() + col[0].getGreen()) / 2),
+                                        (int)Math.round((col[1].getBlue() + col[0].getBlue()) / 2),
+                                        (int)Math.round((double)col[1].getAlpha() * (double)col[0].getAlpha() / 255) ));
                 if (w[0] != w[1]) {
                     g2d.drawLine(x+width-1, y, x+width-w[1], y+w[0]-1);
                 } else {
@@ -356,11 +385,14 @@ public class RoundedBorder implements Border {
                     }
                 }
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            }
 
+            if (col[1].getAlpha() > 0 && col[2].getAlpha() > 0) {
                 if (w[2] != w[1]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setColor(new Color( (int)Math.round((col[1].getRed()+col[2].getRed()) / 2),
-                                      (int)Math.round((col[1].getGreen()+col[2].getGreen()) / 2),
-                                      (int)Math.round((col[1].getBlue()+col[2].getBlue()) / 2) ));
+                g2d.setColor(new Color( (int)Math.round((col[1].getRed() + col[2].getRed()) / 2),
+                                        (int)Math.round((col[1].getGreen() + col[2].getGreen()) / 2),
+                                        (int)Math.round((col[1].getBlue() + col[2].getBlue()) / 2),
+                                        (int)Math.round((double)col[1].getAlpha() * (double)col[2].getAlpha() / 255) ));
                 if (w[2] != w[1]) {
                     g2d.drawLine(x+width-1, y+height-w[2]+1, x+width-w[1], y+height-1);
                 } else {
@@ -369,11 +401,14 @@ public class RoundedBorder implements Border {
                     }
                 }
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            }
 
+            if (col[2].getAlpha() > 0 && col[3].getAlpha() > 0) {
                 if (w[2] != w[3]) g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2d.setColor(new Color( (int)Math.round((col[3].getRed()+col[2].getRed()) / 2),
-                                      (int)Math.round((col[3].getGreen()+col[2].getGreen()) / 2),
-                                      (int)Math.round((col[3].getBlue()+col[2].getBlue()) / 2) ));
+                                        (int)Math.round((col[3].getGreen()+col[2].getGreen()) / 2),
+                                        (int)Math.round((col[3].getBlue()+col[2].getBlue()) / 2),
+                                        (int)Math.round((double)col[3].getAlpha() * (double)col[2].getAlpha() / 255) ));
                 if (w[2] != w[3]) {
                     g2d.drawLine(x+w[3]-1, y+height-w[2]+1, x, y+height-1);
                 } else {
@@ -383,8 +418,8 @@ public class RoundedBorder implements Border {
                 }
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
             }
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         }
+        //g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
     public void paintBorder3(Component c, Graphics g, int x, int y, int width, int height) {

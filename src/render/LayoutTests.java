@@ -147,8 +147,9 @@ public class LayoutTests extends JFrame {
 
         Block d2 = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d2.setPositioning(Block.Position.STATIC);
+        d2.setDisplayType(Block.Display.INLINE_BLOCK);
+        d2.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d2.setBorderRadius(35);
-        //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d2.setMargins(4);
         d2.setPaddings(0);
         d2.setWidth(70);
@@ -159,8 +160,24 @@ public class LayoutTests extends JFrame {
 
         d2.setId("d2");
 
+        Block d3 = d2.clone();
+        d3.setBorderRadius(0);
+        Color col = new Color(228, 228, 228);
+        d3.setBorderColor(new Color[] {col, col, new Color(0, 0, 0, 0), col});
+        d3.setWidth(60);
+        d3.setHeight(60);
+        d3.setMargins(0, 0, 0, 18);
+        d3.setId("d3");
+
+        Block d4 = d2.clone();
+        d4.setMargins(0, 0, 0, 22);
+        d4.setId("d4");
+        d4.setBorderClipMode(1);
+
         document.root.addElement(d);
         document.root.addElement(d2);
+        document.root.addElement(d3);
+        document.root.addElement(d4);
 
         document.ready = true;
 
@@ -871,7 +888,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 0;
+        int test = 16;
         int list_type = 2;
 
         if (args.length > 0) {

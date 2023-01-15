@@ -218,15 +218,30 @@ public class RenderTests {
             assertTrue(Math.abs(data[1] - 0) < 5);
             assertTrue(Math.abs(data[2] - 253) < 5);
 
-            img.getData().getPixel(19, 119, data);
-            assertTrue(Math.abs(data[0] - 253) < 3);
-            assertTrue(Math.abs(data[1] - 0) < 3);
-            assertTrue(Math.abs(data[2] - 253) < 3);
-
-            img.getData().getPixel(458, 19, data);
-            assertTrue(Math.abs(data[0] - 253) < 3);
-            assertTrue(Math.abs(data[1] - 0) < 3);
-            assertTrue(Math.abs(data[2] - 253) < 3);
+            
+            if (!document.smooth_borders) {
+                img.getData().getPixel(12, 119, data);
+                assertTrue(Math.abs(data[0] - 253) < 3);
+                assertTrue(Math.abs(data[1] - 0) < 3);
+                assertTrue(Math.abs(data[2] - 253) < 3);
+            } else {
+                img.getData().getPixel(15, 119, data);
+                assertTrue(Math.abs(data[0] - 253) < 15);
+                assertTrue(Math.abs(data[1] - 0) < 48);
+                assertTrue(Math.abs(data[2] - 253) < 15);
+            }
+            
+            if (!document.smooth_borders) {
+                img.getData().getPixel(458, 19, data);
+                assertTrue(Math.abs(data[0] - 253) < 3);
+                assertTrue(Math.abs(data[1] - 0) < 3);
+                assertTrue(Math.abs(data[2] - 253) < 3);
+            } else {
+                img.getData().getPixel(458, 16, data);
+                assertTrue(Math.abs(data[0] - 253) < 15);
+                assertTrue(Math.abs(data[1] - 0) < 48);
+                assertTrue(Math.abs(data[2] - 253) < 15);
+            }
 
             img.getData().getPixel(465, 125, data);
             assertTrue(Math.abs(data[0] - 253) < 3);
@@ -238,17 +253,7 @@ public class RenderTests {
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
 
-            img.getData().getPixel(460, 15, data);
-            assertEquals(255, data[0]);
-            assertEquals(255, data[1]);
-            assertEquals(255, data[2]);
-
-            img.getData().getPixel(16, 180, data);
-            assertEquals(0, data[0]);
-            assertEquals(255, data[1]);
-            assertEquals(255, data[2]);
-
-            img.getData().getPixel(60, 140, data);
+            img.getData().getPixel(60, 145, data);
             assertEquals(255, data[0]);
             assertEquals(0, data[1]);
             assertEquals(0, data[2]);
@@ -263,22 +268,53 @@ public class RenderTests {
             assertEquals(255, data[1]);
             assertEquals(0, data[2]);
 
-            img.getData().getPixel(24, 151, data);
+            img.getData().getPixel(40, 170, data);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
 
-            img.getData().getPixel(92, 151, data);
+            img.getData().getPixel(78, 170, data);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
 
-            img.getData().getPixel(92, 218, data);
+            img.getData().getPixel(40, 212, data);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
 
-            img.getData().getPixel(24, 218, data);
+            img.getData().getPixel(78, 212, data);
+            assertEquals(255, data[0]);
+            assertEquals(255, data[1]);
+            assertEquals(255, data[2]);
+
+            img.getData().getPixel(148, 148, data);
+            assertEquals(228, data[0]);
+            assertEquals(228, data[1]);
+            assertEquals(228, data[2]);
+
+            img.getData().getPixel(190, 218, data);
+            assertEquals(255, data[0]);
+            assertEquals(255, data[1]);
+            assertEquals(255, data[2]);
+
+
+            img.getData().getPixel(285, 156, data);
+            assertEquals(255, data[0]);
+            assertEquals(255, data[1]);
+            assertEquals(255, data[2]);
+
+            img.getData().getPixel(353, 156, data);
+            assertEquals(255, data[0]);
+            assertEquals(255, data[1]);
+            assertEquals(255, data[2]);
+
+            img.getData().getPixel(285, 224, data);
+            assertEquals(255, data[0]);
+            assertEquals(255, data[1]);
+            assertEquals(255, data[2]);
+
+            img.getData().getPixel(353, 224, data);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
@@ -327,7 +363,6 @@ public class RenderTests {
             assertTrue(Math.abs(data[0] - 0) < 9);
             assertTrue(Math.abs(data[1] - 0) < 9);
             assertTrue(Math.abs(data[2] - 0) < 9);
-            System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
 
             img.getData().getPixel(402, 272, data);
             assertTrue(Math.abs(data[0] - 0) < 9);
