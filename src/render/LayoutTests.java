@@ -114,6 +114,62 @@ public class LayoutTests extends JFrame {
 
     }
 
+    public void testBorders() {
+        document.ready = false;
+
+        document.root.removeAllElements();
+
+        Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
+        d.setPositioning(Block.Position.STATIC);
+        d.setBorderRadius(0, 17, 0, 17);
+        //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
+        d.setMargins(4);
+        d.setPaddings(15, 17, 15, 17);
+        d.setWidth(-1);
+        d.setHeight(80);
+        d.setBorderWidth(2);
+        d.setTextColor(new Color(0, 0, 0));
+        Vector<Color> c = new Vector<Color>();
+        c.add(new Color(0, 100, 192, 134));
+        c.add(new Color(235, 235, 235, 245));
+        Vector<Float> p = new Vector<Float>();
+        p.add(0f);
+        p.add(0.52f);
+        d.setLinearGradient(c, p, -54);
+        d.setId("d1");
+
+        Block d01 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        d01.setPositioning(Block.Position.STATIC);
+        d01.setDisplayType(Block.Display.INLINE_BLOCK);
+        d01.addText("Text");
+        d.addElement(d01);
+        //d.setBackgroundColor(new Color(228, 223, 226));
+
+        Block d2 = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
+        d2.setPositioning(Block.Position.STATIC);
+        d2.setBorderRadius(35);
+        //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
+        d2.setMargins(4);
+        d2.setPaddings(0);
+        d2.setWidth(70);
+        d2.setHeight(70);
+        d2.setBorderWidth(12);
+        d2.setTextColor(new Color(0, 0, 0));
+        d2.setBorderColor(new Color[] {Color.RED, Color.GREEN, Color.YELLOW, Color.CYAN});
+
+        d2.setId("d2");
+
+        document.root.addElement(d);
+        document.root.addElement(d2);
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
     public void basicTest() {
         document.ready = false;
 
@@ -224,10 +280,11 @@ public class LayoutTests extends JFrame {
         if (this.isVisible()) {
             document.root.performLayout();
             document.root.forceRepaintAll();
+            document.repaint();
         }
     }
 
-    public void linksTest() {
+    public void testLinks() {
         prepareBlock();
 
         Block b = document.root.children.get(0);
@@ -241,19 +298,27 @@ public class LayoutTests extends JFrame {
         d01.setHref("http://popov654.pp.ru");
         d01.linkColor = new Color(6, 66, 162);
         d01.linksUnderlineMode = 1;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+            document.repaint();
+        }
     }
 
-    public void testImages() {
+    public void testImages(int width, int height) {
         document.root.removeAllElements();
+
+        document.ready = false;
 
         Block img = new Block(document, document.root, -1, -1, 0, 0, Color.BLACK);
         img.width = -1;
         img.isImage = true;
         img.setBackgroundImage("image.jpg");
         document.root.addElement(img);
-        //img.setWidth(230, false);
-        //img.setHeight(170, false);
-        img.setWidthHeight(230, 170);
+        //if (width > 0 && height < 0) img.setWidth(width, false);
+        //if (width > 0 && height < 0) img.setHeight(height, false);
+        img.setWidthHeight(width, height);
         img.auto_x_margin = true;
         img.auto_y_margin = true;
 
@@ -262,6 +327,7 @@ public class LayoutTests extends JFrame {
         if (this.isVisible()) {
             document.root.performLayout();
             document.root.forceRepaintAll();
+            document.repaint();
         }
     }
 
@@ -369,6 +435,7 @@ public class LayoutTests extends JFrame {
         if (this.isVisible()) {
             document.root.performLayout();
             document.root.forceRepaintAll();
+            document.repaint();
         }
     }
 
@@ -804,28 +871,73 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
+        int test = 0;
+        int list_type = 2;
+
+        if (args.length > 0) {
+            if (args[0].equals("basic")) test = 0;
+            else if (args[0].equals("links")) test = 1;
+            else if (args[0].equals("images")) test = 2;
+            else if (args[0].equals("replaced")) test = 3;
+            else if (args[0].equals("tables")) test = 4;
+            else if (args[0].equals("forms")) test = 5;
+            else if (args[0].equals("iframes")) test = 6;
+            else if (args[0].equals("overflow")) test = 7;
+            else if (args[0].equals("prewrap")) test = 8;
+            else if (args[0].equals("wordbreak")) test = 9;
+            else if (args[0].equals("inline-block")) test = 10;
+            else if (args[0].equals("relative")) test = 11;
+            else if (args[0].equals("absolute")) test = 12;
+            else if (args[0].equals("auto-marings")) test = 13;
+            else if (args[0].equals("z-index")) test = 14;
+            else if (args[0].equals("lists")) test = 15;
+            else if (args[0].equals("borders")) test = 16;
+
+            if (args.length > 1) list_type = Integer.parseInt(args[1]);
+        }
+
         try {
             UIManager.setLookAndFeel(
                 UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {}
         final LayoutTests lt = new LayoutTests();
 
-        lt.basicTest();
-        //lt.linksTest();
-        //lt.testImages();
-        //lt.testReplacedContent();
-        //lt.testTables();
-        //lt.testForms();
-        //lt.testInternalFrames();
-        //lt.testNormal();
-        //lt.testPreWrap();
-        //lt.testWordBreak();
-        //lt.testInlineBlocks();
-        //lt.testRelativePositioning();
-        //lt.testAbsolutePositioning();
-        //lt.testAutoMargins(60, 15);
-        //lt.testZIndex();
-        //lt.testLists(2);
+        switch (test) {
+            case 0:  lt.basicTest();
+                     break;
+            case 1:  lt.testLinks();
+                     break;
+            case 2:  lt.testImages(230, 170);
+                     break;
+            case 3:  lt.testReplacedContent();
+                     break;
+            case 4:  lt.testTables();
+                     break;
+            case 5:  lt.testForms();
+                     break;
+            case 6:  lt.testInternalFrames();
+                     break;
+            case 7:  lt.testNormal();
+                     break;
+            case 8:  lt.testPreWrap();
+                     break;
+            case 9:  lt.testWordBreak();
+                     break;
+            case 10: lt.testInlineBlocks();
+                     break;
+            case 11: lt.testRelativePositioning();
+                     break;
+            case 12: lt.testAbsolutePositioning();
+                     break;
+            case 13: lt.testAutoMargins(60, 15);
+                     break;
+            case 14: lt.testZIndex();
+                     break;
+            case 15: lt.testLists(list_type);
+                     break;
+            case 16: lt.testBorders();
+                     break;
+        }
 
         lt.setVisible(true);
 

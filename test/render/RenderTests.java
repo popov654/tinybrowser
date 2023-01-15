@@ -345,15 +345,6 @@ public class RenderTests {
         } catch (Exception ex) {}
     }
 
-    private BufferedImage getImage(Block block) {
-        BufferedImage img = new BufferedImage(block.width, block.height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-        Graphics2D gc = (Graphics2D) img.getGraphics();
-        gc.setBackground(block.bgcolor);
-        gc.clearRect(0, 0, document.root.width, document.root.height);
-        block.drawSubtree(gc, block._x_, block._y_);
-        return img;
-    }
-
     private WebDocument document;
     private LayoutTests lt;
 }
