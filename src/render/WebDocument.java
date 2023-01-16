@@ -1,5 +1,6 @@
 package render;
 
+import htmlparser.TagLibrary;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -12,8 +13,11 @@ import java.beans.PropertyChangeListener;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
@@ -62,6 +66,39 @@ public class WebDocument extends JPanel {
         root.setBackgroundColor(new Color(255, 255, 255));
         root.overflow = Block.Overflow.SCROLL;
         panel.add(root);
+
+        final WebDocument instance = this;
+
+        panel.getInputMap().put(KeyStroke.getKeyStroke("F12"), "inspector");
+        panel.getActionMap().put("inspector", new Action() {
+
+            public void actionPerformed(ActionEvent e) {
+                if (inspector != null) {
+                    boolean is_opened = inspector.isVisible();
+                    inspector.setVisible(!is_opened);
+                    return;
+                }
+                JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(instance);
+                inspector = openInspector(frame);
+            }
+
+            public Object getValue(String key) {
+                return null;
+            }
+
+            public void putValue(String key, Object value) {}
+
+            public void setEnabled(boolean b) {}
+
+            public boolean isEnabled() {
+                return true;
+            }
+
+            public void addPropertyChangeListener(PropertyChangeListener listener) {}
+
+            public void removePropertyChangeListener(PropertyChangeListener listener) {}
+
+        });
         panel.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "copy");
         panel.getActionMap().put("copy", new Action() {
 
@@ -221,6 +258,77 @@ public class WebDocument extends JPanel {
         last_height = getHeight();
     }
 
+    public JFrame openInspector(JFrame parent) {
+        if (root.node == null) return null;
+
+        final JFrame frame = new JFrame("Document Inspector");
+        JPanel cp = new JPanel();
+        cp.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
+        frame.setContentPane(cp);
+
+        final JPanel contentpane = new JPanel();
+        contentpane.setBackground(Color.WHITE);
+        contentpane.setOpaque(true);
+        
+        //contentpane.setBounds(0, 0, 490, 380);
+
+        JScrollPane scrollpane = new JScrollPane(contentpane);
+        scrollpane.setOpaque(false);
+
+        cp.add(scrollpane);
+        scrollpane.setBackground(Color.WHITE);
+        scrollpane.setOpaque(true);
+        scrollpane.setPreferredSize(new Dimension(490, 400));
+        //setSize(518, 420);
+        frame.setLocationRelativeTo(parent);
+        frame.setLocation(parent.getX() - 460, parent.getY() - 80);
+        frame.pack();
+        frame.setVisible(true);
+
+        ((JComponent)frame.getContentPane().getComponents()[0]).getInputMap().put(KeyStroke.getKeyStroke("F12"), "close");
+        ((JComponent)frame.getContentPane().getComponents()[0]).getActionMap().put("close", new Action() {
+
+            public void actionPerformed(ActionEvent e) {
+                frame.setVisible(false);
+            }
+
+            public Object getValue(String key) {
+                return null;
+            }
+
+            public void putValue(String key, Object value) {}
+
+            public void setEnabled(boolean b) {}
+
+            public boolean isEnabled() {
+                return true;
+            }
+
+            public void addPropertyChangeListener(PropertyChangeListener listener) {}
+
+            public void removePropertyChangeListener(PropertyChangeListener listener) {}
+
+        });
+
+        final WebDocument instance = this;
+
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                TagLibrary.init();
+                Entry rootEntry = new Entry(root.node, instance);
+                //rootEntry.setMinimumSize(new Dimension(490, 26));
+                contentpane.add(rootEntry);
+                rootEntry.inflate();
+            }
+
+        });
+
+        return frame;
+        
+    }
+
     public Color getDocumentBackground() {
         return panel.getBackground();
     }
@@ -359,4 +467,6 @@ public class WebDocument extends JPanel {
     public final JPanel panel = new JPanel();
     public int width = 0;
     public int height = 0;
+
+    private JFrame inspector;
 }

@@ -7,7 +7,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 import org.apache.batik.dom.svg.SVGDOMImplementation;

@@ -281,6 +281,13 @@ public class Main {
 
         frame.setVisible(true);
 
+//        SwingUtilities.invokeLater(new Runnable() {
+//            @Override
+//            public void run() {
+//                document.openInspector(frame);
+//            }
+//        });
+
         //documentResizeTest(frame, panel, document, 1000, 400);
     }
 
