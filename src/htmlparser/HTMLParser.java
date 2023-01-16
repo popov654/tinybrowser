@@ -177,7 +177,7 @@ public class HTMLParser {
                 cur_attr_name = "";
                 state = SEEK_END;
             } else if (ch == ' ' || ch == '	') {
-                attrs.put(cur_attr_name, "");
+                attrs.put(cur_attr_name.toLowerCase(), "");
             } else if (ch == '=') {
                 state = READ_ATTRIBUTE_VALUE;
                 cur_attr_value = "";
@@ -188,7 +188,7 @@ public class HTMLParser {
             } else if (ch != '"' && ch != '	' && (quotes || ch != '=')) {
                 cur_attr_value += ch;
             } else if (!cur_attr_value.isEmpty() && (!quotes && ch == '>' || quotes && ch == '"')) {
-                attrs.put(cur_attr_name, cur_attr_value);
+                attrs.put(cur_attr_name.toLowerCase(), cur_attr_value);
                 cur_attr_name = "";
                 cur_attr_value = "";
                 state = SEEK_END;

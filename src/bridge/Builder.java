@@ -3,6 +3,9 @@ package bridge;
 import cssparser.QuerySelector;
 import htmlparser.Node;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -71,7 +74,7 @@ public class Builder {
 
     public Block buildElement(WebDocument document, Node node) {
         if (document == null) document = this.document;
-        Block b = new Block(document);
+        final Block b = new Block(document);
         if (node.nodeType == ELEMENT) {
             b.type = Block.NodeTypes.ELEMENT;
             b.width = -1;
@@ -116,10 +119,27 @@ public class Builder {
             b.colspan = Integer.parseInt(node.getAttribute("colspan"));
             b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
         } else if (node.tagName.equals("svg")) {
-            Document svgDoc = createSVGDocument(node);
-            JSVGCanvas svgCanvas = new JSVGCanvas();
+            Document svgDoc = createSVGDocument(document, node);
+            JSVGCanvas svgCanvas = new JSVGCanvas(null, false, false) {
+                @Override
+                public void paintComponent(Graphics g) {
+                    Block clip = b.parent;
+                    while (clip.overflow != Block.Overflow.SCROLL) {
+                        clip = clip.parent;
+                    }
+                    g.setClip(new Rectangle(clip._x_ - b._x_ + b.scroll_x, clip._y_ - b._y_ + b.scroll_y, clip.viewport_width, clip.viewport_height));
+                    super.paintComponent(g);
+                }
+            };
             svgCanvas.setDocument(svgDoc);
+            svgCanvas.setOpaque(true);
             b.add(svgCanvas);
+            Dimension dim = new Dimension(Integer.parseInt(node.getAttribute("width")), Integer.parseInt(node.getAttribute("height")));
+            svgCanvas.setBackground(new Color(0, 0, 0, 0));
+            svgCanvas.setPreferredSize(dim);
+            svgCanvas.setMaximumSize(dim);
+            svgCanvas.setMinimumSize(dim);
+            svgCanvas.repaint();
         }
         b.id = node.getAttribute("id");
         b.setTextColor(node.getAttribute("color"));
@@ -133,7 +153,7 @@ public class Builder {
         return b;
     }
 
-    public Document createSVGDocument(Node node) {
+    public Document createSVGDocument(WebDocument document, Node node) {
         // Get a DOMImplementation object
         DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
 
@@ -153,8 +173,32 @@ public class Builder {
                 svgRoot.appendChild(processSVGSubtree(doc, node.children.get(i)));
             }
         }
-        //svgRoot.setAttributeNS(null, "width", "400");
-        //svgRoot.setAttributeNS(null, "height", "450");
+        if ((node.getAttribute("width") == null || node.getAttribute("height") == null) && node.getAttribute("viewbox") != null) {
+            String[] s = node.getAttribute("viewbox").split("\\s");
+            int vw = 1; int vh = 1;
+            if (s.length  == 4) {
+                vw = Integer.parseInt(s[2]);
+                vh = Integer.parseInt(s[3]);
+            }
+            int width = vw;
+            int height = vh;
+            if (node.getAttribute("width") != null) {
+                width = Integer.parseInt(node.getAttribute("width"));
+                height = (int) ((double) width / vw * vh);
+                node.setAttribute("height", height + "");
+            } else if (node.getAttribute("height") != null) {
+                height = Integer.parseInt(node.getAttribute("height"));
+                width = (int) ((double) height / vh * vw);
+                node.setAttribute("width", width + "");
+            } else {
+                node.setAttribute("width", vw + "");
+                node.setAttribute("height", vh + "");
+            }
+            //System.err.println(svgRoot.getAttribute("viewbox"));
+            //svgRoot.setAttributeNS(null, "viewBox", s[0] + " " + s[1] + " " + width * 1.3 + " " + height * 1.3);
+            svgRoot.setAttributeNS(null, "width", width * 2 + "");
+            svgRoot.setAttributeNS(null, "height", height * 2 + "");
+        }
 
         return doc;
     }

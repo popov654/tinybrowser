@@ -69,6 +69,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
 import org.apache.batik.swing.JSVGCanvas;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -433,8 +434,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Component[] c = getComponents();
         for (int i = 0; i < c.length; i++) {
             if (c[i] instanceof JSVGCanvas) {
-                c[i].setBounds(-scroll_x, -scroll_y, c[i].getWidth(), c[i].getHeight());
-                c[i].repaint(100);
+                Element root = ((JSVGCanvas)c[i]).getSVGDocument().getDocumentElement();
+                //String[] s = root.getAttribute("viewBox").split("\\s");
+                root.setAttributeNS(null, "width", width / ratio + "");
+                root.setAttributeNS(null, "height", height / ratio + "");
+                root.setAttributeNS(null, "viewBox", "0 0 " + width * ratio + " " + height * ratio);
+                c[i].setBounds(_x_ - scroll_x, _y_ -scroll_y, width, height);
+                c[i].repaint();
+                continue;
             }
             if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox))) continue;
             if (formType < 3) {
@@ -2884,7 +2891,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return false;
     }
 
-    Block clipping_block = null;
+    public Block clipping_block = null;
 
     public String replaceEntities(String str) {
         str = str.replaceAll("&nbsp;", "\u0A00");
@@ -2954,12 +2961,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setBackgroundImage(String path) {
         if (path == null || path.isEmpty()) {
             bgImage = null;
+            imgSrc = "";
             forceRepaint();
             return;
         }
         try {
             File f;
             path = (document != null ? document.baseUrl : "") + path;
+            if (path.equals(imgSrc)) return;
+            imgSrc = path;
             if (path.startsWith("http")) {
                 bgImage = ImageIO.read(new URL(path));
                 String[] str = path.split("/");
@@ -2972,6 +2982,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
             ir.setInput(ImageIO.createImageInputStream(f));
             if (ir.getNumImages(true) > 1) {
+                if (has_animation) {
+                    stopWatcher();
+                    w = null;
+                }
                 readGIF(ir);
                 has_animation = true;
                 startWatcher();
@@ -4902,6 +4916,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public String mediaSource = null;
     public int formType = 0;
 
+    public String imgSrc = "";
+
     public boolean has_animation = false;
     private ImageFrame[] animation_frames;
     private int current_frame = 0;
@@ -4947,8 +4963,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     JScrollBar scrollbar_x;
     JScrollBar scrollbar_y;
 
-    protected int scroll_x = 0;
-    protected int scroll_y = 0;
+    public int scroll_x = 0;
+    public int scroll_y = 0;
 
     public int scroll_left = 0;
     public int scroll_top = 0;

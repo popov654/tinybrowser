@@ -230,7 +230,7 @@ public class Main {
         document.root.height = document.height;
         document.root.auto_height = false;
         document.root.setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
-        
+
         document.insertSubtreeWithoutRoot(document.root, root);
         document.root.setId("root");
 
