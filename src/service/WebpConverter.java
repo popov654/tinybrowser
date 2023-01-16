@@ -15,8 +15,8 @@ public class WebpConverter extends Thread {
     String ffmpegPath;
 
     public WebpConverter(String input, String output) {
-        this.input = input;
-        this.output = output;
+        this.input = input.replace("/", File.separator);
+        this.output = output.replace("/", File.separator);
     }
 
     private void detectFileLocation() {

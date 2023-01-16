@@ -146,8 +146,8 @@ public class YouTubeThumb extends Block {
                 f.mkdir();
             }
             cacheFile(imageSrc, "ytimg.webp");
-            String in = Util.getInstallPath() + File.separatorChar + "cache/ytimg.webp";
-            String out = Util.getInstallPath() + File.separatorChar + "cache/ytimg.png";
+            String in = Util.getInstallPath() + "cache/ytimg.webp";
+            String out = Util.getInstallPath() + "cache/ytimg.png";
             WebpConverter converter = new WebpConverter(in, out);
             converter.start();
             try {
