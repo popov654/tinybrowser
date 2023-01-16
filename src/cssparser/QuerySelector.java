@@ -24,7 +24,7 @@ public class QuerySelector {
             }
             resultSet = q.resultSet;
         } else {
-            parseRules(rules);
+            this.rules = CSSParser.parseRules(rules);
             this.query = query;
             this.hp = hp;
             parse();
@@ -33,17 +33,6 @@ public class QuerySelector {
 
     public QuerySelector(String query, HTMLParser hp) {
         this(query, hp, "");
-    }
-
-    private void parseRules(String rules) {
-        this.rules = new HashMap<String, String>();
-        String[] r = rules.split("\\s*;\\s*");
-        for (String rule: r) {
-            String[] p = rule.split("\\s*:\\s*");
-            if (p[0].trim().matches("^[a-z-]{2,}[a-z]$") && !p[1].trim().isEmpty()) {
-                this.rules.put(p[0].trim(), p[1].trim());
-            }
-        }
     }
 
     public void combine(QuerySelector q) {

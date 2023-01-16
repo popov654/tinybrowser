@@ -9,9 +9,11 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.LinearGradientPaint;
@@ -49,6 +51,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
@@ -2662,6 +2666,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                 int offset = getFontMetrics(font).stringWidth(c.getText());
                 c.width = offset;
+
                 c.height = getFontMetrics(font).getHeight();
                 offset += Math.round(getFontMetrics(font).getHeight() / 1.5);
                 c.setX(0);
@@ -3046,6 +3051,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setFontFamily(String value) {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        String[] s = ge.getAvailableFontFamilyNames();
+        boolean found = false;
+        for (String str: s) {
+            if (str.equalsIgnoreCase(value)) {
+                found = true;
+            }
+            System.out.println(str);
+        }
+        if (!found) return;
+        
         fontFamily = value;
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFontFamily(value);

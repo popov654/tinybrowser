@@ -5,6 +5,7 @@ package render;
  * @author Alex
  */
 
+import java.io.IOException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -888,7 +889,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 16;
+        int test = 0;
         int list_type = 2;
 
         if (args.length > 0) {

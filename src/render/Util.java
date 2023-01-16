@@ -3,6 +3,9 @@ package render;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -78,6 +81,33 @@ public class Util {
             }
         }
         System.out.println(result.length() > 0 ? result : "Objects are equal");
+    }
+
+    public static void cacheFile(String src, String cached_name) {
+        InputStream in = null;
+        FileOutputStream fileOutputStream = null;
+        try {
+            in = new URL(src).openStream();
+            fileOutputStream = new FileOutputStream("cache/" + cached_name);
+            byte dataBuffer[] = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                fileOutputStream.write(dataBuffer, 0, bytesRead);
+            }
+            //Files.copy(in, Paths.get("cache/" + cached_name), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                in.close();
+                fileOutputStream.close();
+            } catch (IOException ex) {}
+        }
+    }
+
+    public static void deleteFile(String path) {
+        File f = new File(path);
+        if (f.exists()) f.delete();
     }
 
     public static String getInstallPath() {

@@ -185,6 +185,8 @@ public class Main {
         final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
         root.printTree();
 
+        parser.applyGlobalRules(builder.baseUrl);
+
         //root.removeElement(1);
         visualBuilderTest(root);
 
