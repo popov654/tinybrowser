@@ -3169,13 +3169,37 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         arc[1] = (int)(r2 * 2 * ratio);
         arc[2] = (int)(r3 * 2 * ratio);
         arc[3] = (int)(r4 * 2 * ratio);
-        this.border = new RoundedBorder(this, borderWidth, arc[0], borderColor, borderType);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+        forceRepaint();
+    }
+
+    public void setBorderRadiusNW(int r) {
+        arc[0] = (int)(r * 2 * ratio);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+        forceRepaint();
+    }
+
+    public void setBorderRadiusNE(int r) {
+        arc[1] = (int)(r * 2 * ratio);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+        forceRepaint();
+    }
+
+    public void setBorderRadiusSE(int r) {
+        arc[2] = (int)(r * 2 * ratio);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+        forceRepaint();
+    }
+
+    public void setBorderRadiusSW(int r) {
+        arc[3] = (int)(r * 2 * ratio);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
         forceRepaint();
     }
 
     public void setBorderColor(Color[] col) {
         borderColor = col;
-        this.border = new RoundedBorder(this, borderWidth, arc[0], borderColor, borderType);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
         forceRepaint();
     }
 
@@ -3868,6 +3892,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+        if (prop.equals("border-width")) {
+            setProp("border-left-width", value);
+            setProp("border-right-width", value);
+            setProp("border-top-width", value);
+            setProp("border-bottom-width", value);
+            return;
+        }
+
         if (prop.equals("color")) {
             setTextColor(value);
             return;
@@ -3981,6 +4013,50 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (prop.equals("border(-left|-right|-bottom|-top)-width")) {
+            if (value.matches("^[0-9]+.*(px|em)$")) {
+                int val = getValueInPixels(value);
+                if (prop.contains("-left")) this.borderWidth[3] = val;
+                if (prop.contains("-right")) this.borderWidth[1] = val;
+                if (prop.contains("-bottom")) this.borderWidth[2] = val;
+                if (prop.contains("-top")) this.borderWidth[0] = val;
+            }
+            this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+            forceRepaint();
+            return;
+        }
+
+        if (prop.matches("border-(top-left|top-right|bottom-left|bottom-right)-radius")) {
+            int val = 0;
+            if (value.matches("^[0-9]+.*(px|em)$")) {
+                val = getValueInPixels(value);
+            } else if (value.matches(".*%")) {
+                val = (int) ((double) width * val / 100);
+            }
+            if (prop.contains("top-left")) arc[0] = (int)(val * 2);
+            if (prop.contains("top-right")) arc[1] = (int)(val * 2);
+            if (prop.contains("bottom-right")) arc[2] = (int)(val * 2);
+            if (prop.contains("bottom-left")) arc[3] = (int)(val * 2);
+            this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+            forceRepaint();
+            return;
+        }
+
+        if (prop.equals("border-radius")) {
+            int val = 0;
+            if (value.matches("^[0-9]+.*(px|em)$")) {
+                val = getValueInPixels(value);
+            } else {
+                val = (int) ((double) width * val / 100);
+            }
+            arc[0] = (int)(val * 2);
+            arc[1] = (int)(val * 2);
+            arc[2] = (int)(val * 2);
+            arc[3] = (int)(val * 2);
+            this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+            forceRepaint();
+            return;
+        }
 
         if (prop.matches("border(-left|-right|-bottom|-top)?")) {
             String[] s = value.split("\\s+");
@@ -3990,23 +4066,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             types.put("dotted", 2);
             for (int i = 0; i < s.length; i++) {
                 if (s[i].matches("^[0-9]+.*(px|em)$")) {
-                    String ch = s[i].substring(0, 1);
-                    String n = "";
-                    int index = 0;
-                    while (ch.matches("[0-9.]")) {
-                        n += ch;
-                        index++;
-                        ch = s[i].substring(index, index+1);
-                    }
-                    String u = s[i].substring(index);
-                    if (!u.matches("px|em")) return;
-                    int val = (int)Math.round(Float.parseFloat(n) * ratio);
-                    if (u.equals("em")) val = (int)Math.round(Integer.parseInt(n) * 16 * ratio);
-
+                    int val = getValueInPixels(s[i]);
                     if (prop.contains("-left") || prop.equals("border")) this.borderWidth[3] = val;
                     if (prop.contains("-right") || prop.equals("border")) this.borderWidth[1] = val;
                     if (prop.contains("-bottom") || prop.equals("border")) this.borderWidth[2] = val;
-                    if (prop.contains("-top")  * || prop.equals("border")) this.borderWidth[0] = val;
+                    if (prop.contains("-top") || prop.equals("border")) this.borderWidth[0] = val;
                 } else if (s[i].matches("^(#|rgba?).*") || !types.containsKey(s[i])) {
                     Color col = parseColor(s[i]);
                     if (prop.contains("-left") || prop.equals("border")) this.borderColor[3] = col;
@@ -4142,6 +4206,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return new int[] {val, units};
         }
         return null;
+    }
+
+    public int getValueInPixels(String value, String units_list) {
+        String ch = value.substring(0, 1);
+        String n = "";
+        int index = 0;
+        while (ch.matches("[0-9.]")) {
+            n += ch;
+            index++;
+            ch = value.substring(index, index+1);
+        }
+        String u = value.substring(index);
+        if (!u.matches(units_list)) return 0;
+        
+        int val = (int)Math.round(Float.parseFloat(n) * ratio);
+        if (u.equals("em")) val = (int)Math.round(Integer.parseInt(n) * 16 * ratio);
+
+        return val;
+    }
+
+    public int getValueInPixels(String value) {
+        return getValueInPixels(value, "px|em");
     }
 
     public void setLeft(double val, int units) {

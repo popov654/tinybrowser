@@ -21,9 +21,8 @@ public class RoundedBorder implements Border {
     
     RoundedBorder(Block b, int[] width, int radius) {
         this.block = b;
-        this.radius = radius;
-        if (b.arc[0] == 0.0f && b.arc[1] == 0.0f&& b.arc[2] == 0.0f&& b.arc[3] == 0.0f) {
-            this.radius = 0;
+        for (int i = 0; i < 4; i++) {
+            this.radius[i] = b.arc[i];
         }
         this.w = width;
         this.col = new Color[4];
@@ -33,9 +32,7 @@ public class RoundedBorder implements Border {
     }
 
     RoundedBorder(Block b, int width[], int radius, Color color) {
-        this.block = b;
-        this.w = width;
-        this.radius = radius;
+        this(b, width, radius);
         this.col = new Color[4];
         for (int i = 0; i < 4; i++) {
             this.col[i] = color;
@@ -66,7 +63,9 @@ public class RoundedBorder implements Border {
     RoundedBorder(Block b, int[] width, int radius, Color[] color) {
         this.block = b;
         this.w = width;
-        this.radius = radius;
+        for (int i = 0; i < 4; i++) {
+            this.radius[i] = radius;
+        }
         this.col = color;
     }
 
@@ -92,6 +91,13 @@ public class RoundedBorder implements Border {
         }
     }
 
+    RoundedBorder(Block b, int width[], int[] radius, Color[] color, int[] type) {
+        this(b, width, radius[0], color);
+        for (int i = 0; i < 4; i++) {
+            this.type[i] = type[i];
+        }
+    }
+
     RoundedBorder(Block b, int radius, Color[] color) {
         this(b, null, radius, color);
         this.w = new int[4];
@@ -102,8 +108,11 @@ public class RoundedBorder implements Border {
 
 
     public Insets getBorderInsets(Component c) {
-        if (radius > 0) return new Insets(this.radius+1, this.radius+1, this.radius+1, this.radius+1);
-        else return new Insets(0, 0, 0, 0);
+        int d1 = Math.max(w[0], Math.max(radius[0], radius[1]));
+        int d2 = Math.max(w[1], Math.max(radius[1], radius[2]));
+        int d3 = Math.max(w[2], Math.max(radius[2], radius[3]));
+        int d4 = Math.max(w[3], Math.max(radius[3], radius[0]));
+        return new Insets(d1, d2, d3, d4);
     }
 
 
@@ -138,7 +147,7 @@ public class RoundedBorder implements Border {
             if (!smooth) {
                 g2d.setColor(col[0]);
                 g2d.setStroke(new java.awt.BasicStroke(w[0]));
-                g2d.drawRoundRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), radius, radius);
+                g2d.drawRoundRect(x + (int)block.ratio, y + (int)block.ratio, width - (int) (2 * block.ratio), height - (int) (2 * block.ratio), radius[0], radius[0]);
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
             } else {
                 paintBorder2(c, g, x, y, width, height);
@@ -179,12 +188,12 @@ public class RoundedBorder implements Border {
             
         }
 
-        int r = (int)Math.round(radius / Math.sqrt(2) / 2);
+        //int r = (int)Math.round(radius[0] / Math.sqrt(2) / 2);
 
-        int w0 = Math.max(w[0], r);
-        int w1 = Math.max(w[1], r);
-        int w2 = Math.max(w[2], r);
-        int w3 = Math.max(w[3], r);
+        int w0 = Math.max(w[0], Math.max(radius[0], radius[1]));
+        int w1 = Math.max(w[1], Math.max(radius[1], radius[2]));
+        int w2 = Math.max(w[2], Math.max(radius[2], radius[3]));
+        int w3 = Math.max(w[3], Math.max(radius[3], radius[0]));
 
         //int r1 = (int) Math.sqrt(w0 * w0 + w3 * w3);
         //int r2 = (int) Math.sqrt(w0 * w0 + w1 * w1);
@@ -384,12 +393,12 @@ public class RoundedBorder implements Border {
         height = block.viewport_height > 0 ? block.viewport_height + (block.scrollbar_x != null ? block.scrollbar_x.getPreferredSize().height : 0): block.height;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int r = (int)Math.round(radius / Math.sqrt(2));
+        //int r = (int)Math.round(radius / Math.sqrt(2));
 
-        int w0 = Math.max(w[0], r);
-        int w1 = Math.max(w[1], r);
-        int w2 = Math.max(w[2], r);
-        int w3 = Math.max(w[3], r);
+        int w0 = Math.max(w[0], Math.max(radius[0], radius[1]));
+        int w1 = Math.max(w[1], Math.max(radius[1], radius[2]));
+        int w2 = Math.max(w[2], Math.max(radius[2], radius[3]));
+        int w3 = Math.max(w[3], Math.max(radius[3], radius[0]));
 
         int[][][] d = new int[8][2][3];
         int[] arrayX1 = {x, x+w3, x+w3};
@@ -662,11 +671,11 @@ public class RoundedBorder implements Border {
 
         for (int i = 0; i < w[0]; i++) {
             g.setColor(col[0]);
-            if (i == w[0]-1 && radius > 0 && type[0] == SOLID) g.setColor(col2);
+            if (i == w[0]-1 && radius[0] > 0 && type[0] == SOLID) g.setColor(col2);
             if (block.arc[0] == block.arc[1] && block.arc[1] == block.arc[2] && block.arc[2] == block.arc[3]) {
                 if (type[0] == SOLID) {
-                    if (radius > 0) {
-                        g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius, radius);
+                    if (radius[0] > 0) {
+                        g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius[0], radius[0]);
                     } else {
                         g.drawRect(x+i, y+i, width-1-i*2, height-1-i*2);
                     }
@@ -681,7 +690,7 @@ public class RoundedBorder implements Border {
                 RoundedRect rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2, block.arc[1] / 2, block.arc[2] / 2, block.arc[3] / 2);
                 ((Graphics2D)g).draw(rect);
             }
-            if (radius > 0) {
+            if (radius[0] > 0) {
                 if (i > 0) {
                     if (((Graphics2D)g).getRenderingHint(RenderingHints.KEY_ANTIALIASING) == RenderingHints.VALUE_ANTIALIAS_OFF) {
                         if (i < w[0]-1) {
@@ -694,8 +703,8 @@ public class RoundedBorder implements Border {
                     }
                     if (type[0] == SOLID) {
                         if (block.arc[0] == block.arc[1] && block.arc[1] == block.arc[2] && block.arc[2] == block.arc[3]) {
-                            g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius-2, radius-2);
-                            g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius-3, radius-3);
+                            g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius[0]-2, radius[0]-2);
+                            g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius[0]-3, radius[0]-3);
                         } else {
                             RoundedRect rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 2, block.arc[1] / 2 - 2, block.arc[2] / 2 - 2, block.arc[3]  / 2 - 2);
                             ((Graphics2D)g).draw(rect);
@@ -714,7 +723,7 @@ public class RoundedBorder implements Border {
                     if (type[0] == SOLID) {
                         g.setColor(col3);
                         if (block.arc[0] == block.arc[1] && block.arc[1] == block.arc[2] && block.arc[2] == block.arc[3]) {
-                            g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius-3, radius-3);
+                            g.drawRoundRect(x+i, y+i, width-1-i*2, height-1-i*2, radius[0]-3, radius[0]-3);
                         } else {
                             RoundedRect rect = new RoundedRect(x+i, y+i, width-1-i*2, height-1-i*2, block.arc[0] / 2 - 3, block.arc[1] / 2 - 3, block.arc[2] / 2 - 3, block.arc[3]  / 2 - 3);
                             ((Graphics2D)g).draw(rect);
@@ -930,7 +939,7 @@ public class RoundedBorder implements Border {
     public static final int DOTTED = 2;
 
     private Block block;
-    private int radius;
+    private int[] radius = {0, 0, 0, 0};
     private Color[] col;
     private int[] w = {0, 0, 0, 0};
 }
