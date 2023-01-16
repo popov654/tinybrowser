@@ -18,6 +18,21 @@ public class CSSParser {
         str = str.trim();
         int pos = 0;
         while (pos < str.length()) {
+            if (comment && pos < str.length()-1 && str.substring(pos, pos+2).equals("*/")) {
+                comment = false;
+                str = str.substring(0, comment_start) + str.substring(pos+2);
+                pos = comment_start;
+                continue;
+            } else if (comment) {
+                pos++;
+                continue;
+            }
+            if (!comment && pos < str.length()-1 && str.substring(pos, pos+2).equals("/*")) {
+                comment = true;
+                comment_start = pos;
+                pos += 2;
+                continue;
+            }
             if (str.charAt(pos) == '{' && !quotes) {
                 open = true;
                 current_query = str.substring(last_start, pos).trim();
@@ -42,8 +57,10 @@ public class CSSParser {
 
     String current_query = "";
     int last_start = 0;
+    int comment_start = 0;
     boolean open = false;
     boolean quotes = false;
+    boolean comment = false;
     char quote;
 
     HTMLParser hp;
