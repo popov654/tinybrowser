@@ -167,7 +167,7 @@ public class WebDocument extends JPanel {
         ready = false;
         b.removeAllElements();
         for (int i = 0; i < insert.children.size(); i++) {
-            b.addElement(insert.children.get(i));
+            b.addElement(insert.children.get(i), true);
             processSubtree(insert.children.get(i));
         }
         ready = true;
