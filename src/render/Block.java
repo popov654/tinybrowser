@@ -4531,7 +4531,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (children.get(i).type == NodeTypes.TEXT) {
                     Block b = new Block(document, parent, -1, -1, 0, 0, Color.BLACK);
                     b.display_type = Display.INLINE;
+                    b.node = children.get(i).node;
                     b.addText(children.get(i).textContent);
+                    b.children.get(0).node = b.node;
                     children.remove(i);
                     addElement(b, i, true);
                 }

@@ -159,6 +159,7 @@ public class WebDocument extends JPanel {
                 }
             } else {
                 b.parent.addText(b.textContent, index);
+                b.parent.children.get(index).node = b.node;
                 if (debug) System.err.println("Added text, content: " + b.textContent);
             }
         } else {
