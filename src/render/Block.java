@@ -3161,14 +3161,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Color col = value != null ? parseColor(value) : default_color;
         if (col != null) {
             for (Block part: parts) {
-                part.setBackgroundColor(col);
+                part.setTextColor(col);
             }
             setTextColor(col);
+            for (int i = 0; i < children.size(); i++) {
+                children.get(i).setTextColor(col);
+            }
         }
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).setTextColor(col);
-        }
-        forceRepaint();
     }
 
     public void setBackgroundColor(String value) {
