@@ -91,11 +91,39 @@ public class CSSParser {
 
     public static LinkedHashMap<String, String> parseRules(String rules) {
         LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
-        String[] r = rules.split("\\s*;\\s*");
-        for (String rule: r) {
+        int pos = 0;
+        String rule = "";
+        char quote = '\0';
+        while (pos < rules.length()) {
+            char ch = rules.charAt(pos);
+            if (ch == ';' && quote == '\0') {
+                String[] p = rule.split("\\s*:\\s*");
+                if (p[0].trim().matches("^[a-z-]{2,}[a-z]$") && !p[1].trim().isEmpty()) {
+                    String val = p[1].trim();
+                    if (val.matches("\".*\"") || val.matches("\'.*\'")) {
+                        val = val.substring(1, val.length()-1);
+                    }
+                    result.put(p[0].trim().toLowerCase(), val);
+                }
+                rule = "";
+                pos++;
+                continue;
+            } else if (ch == quote) {
+                quote = '\0';
+            } else if ((ch == '"' || ch == '\'') && quote == '\0') {
+                quote = ch;
+            }
+            rule += ch;
+            pos++;
+        }
+        if (rule.length() > 0) {
             String[] p = rule.split("\\s*:\\s*");
             if (p[0].trim().matches("^[a-z-]{2,}[a-z]$") && !p[1].trim().isEmpty()) {
-                result.put(p[0].trim().toLowerCase(), p[1].trim());
+                String val = p[1].trim();
+                if (val.matches("\".*\"") || val.matches("\'.*\'")) {
+                    val = val.substring(1, val.length()-1);
+                }
+                result.put(p[0].trim().toLowerCase(), val);
             }
         }
         return result;
