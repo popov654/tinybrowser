@@ -4,6 +4,7 @@ import htmlparser.HTMLParser;
 import htmlparser.Node;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -494,7 +495,7 @@ public class QuerySelector {
         }
     }
 
-    public HashMap<String, String> getRules() {
+    public LinkedHashMap<String, String> getRules() {
         return rules;
     }
 
@@ -506,6 +507,6 @@ public class QuerySelector {
     private Vector<Node> focusNodes;
     private Vector<Node> activeNodes;
     private Vector<Node> visitedNodes;
-    HashMap<String, String> rules;
+    LinkedHashMap<String, String> rules;
     HTMLParser hp;
 }

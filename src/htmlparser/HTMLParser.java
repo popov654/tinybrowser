@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -212,7 +215,7 @@ public class HTMLParser {
             if (attrs.containsKey("class")) {
                 String[] classNames = attrs.get("class").split("\\s+");
                 for (int i = 0; i < classNames.length; i++) {
-                    if (!classes.contains(classNames[i])) {
+                    if (!classes.containsKey(classNames[i])) {
                         Vector<Node> v = new Vector<Node>();
                         v.add(curNode);
                         classes.put(classNames[i], v);
@@ -224,7 +227,7 @@ public class HTMLParser {
             }
             if (attrs.containsKey("name")) {
                 String name = attrs.get("name");
-                if (!names.contains(name)) {
+                if (!names.containsKey(name)) {
                     Vector<Node> v = new Vector<Node>();
                     v.add(curNode);
                     names.put(name, v);
@@ -234,7 +237,7 @@ public class HTMLParser {
                 }
             }
             curNode.tagName = cur_tag.toLowerCase();
-            curNode.attributes = (Hashtable<String, String>)attrs.clone();
+            curNode.attributes = (LinkedHashMap<String, String>)attrs.clone();
             if (cur_tag.toLowerCase().equals("html")) {
                 root = curNode;
             }
@@ -351,15 +354,15 @@ public class HTMLParser {
         }
     }
 
-    public Hashtable<String, Vector<Node>> getNamesIndex() {
+    public HashMap<String, Vector<Node>> getNamesIndex() {
         return names;
     }
 
-    public Hashtable<String, Vector<Node>> getClassIndex() {
+    public HashMap<String, Vector<Node>> getClassIndex() {
         return classes;
     }
 
-    public Hashtable<String, Node> getIdIndex() {
+    public HashMap<String, Node> getIdIndex() {
         return ids;
     }
 
@@ -481,12 +484,12 @@ public class HTMLParser {
     private int last_start = -1;
     private boolean quotes = false;
     private boolean closing = false;
-    private Hashtable<String, String> attrs = new Hashtable<String, String>();
+    private LinkedHashMap<String, String> attrs = new LinkedHashMap<String, String>();
     private Node curNode = null;
     private Node root = new Node(1);
-    private Hashtable<String, Node> ids = new Hashtable<String, Node>();
-    private Hashtable<String, Vector<Node>> classes = new Hashtable<String, Vector<Node>>();
-    private Hashtable<String, Vector<Node>> names = new Hashtable<String, Vector<Node>>();
+    private HashMap<String, Node> ids = new HashMap<String, Node>();
+    private HashMap<String, Vector<Node>> classes = new HashMap<String, Vector<Node>>();
+    private HashMap<String, Vector<Node>> names = new HashMap<String, Vector<Node>>();
 
     public String data = "";
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Vector;
@@ -323,7 +324,7 @@ public class Node {
         setAttribute("class", new_value);
     }
 
-    private void replaceValue(Hashtable<String, Vector<Node>> index, String oldValue, String newValue) {
+    private void replaceValue(HashMap<String, Vector<Node>> index, String oldValue, String newValue) {
         Vector<Node> v = oldValue != null ?
             index.get(oldValue) : new Vector<Node>();
         if (v != null) v.remove(this);
@@ -340,7 +341,7 @@ public class Node {
         index.put(newValue, v);
     }
 
-    private void replaceValues(Hashtable<String, Vector<Node>> index, List<String> oldValues, List<String> newValues) {
+    private void replaceValues(HashMap<String, Vector<Node>> index, List<String> oldValues, List<String> newValues) {
         for (String oldValue: oldValues) {
             Vector<Node> v = oldValue != null ?
                 index.get(oldValue) : new Vector<Node>();
@@ -380,8 +381,8 @@ public class Node {
     
     public Node parent;
     public Vector<Node> children = new Vector<Node>();
-    public Hashtable<String, String> attributes = new Hashtable<String, String>();
-    public Hashtable<String, String> styles = new Hashtable<String, String>();
+    public LinkedHashMap<String, String> attributes = new LinkedHashMap<String, String>();
+    public LinkedHashMap<String, String> styles = new LinkedHashMap<String, String>();
     public Vector<QuerySelector> stateStyles = new Vector<QuerySelector>();
     public Vector<String> states = new Vector<String>();
     public Node previousSibling;

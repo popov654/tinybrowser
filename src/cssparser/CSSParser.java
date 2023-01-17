@@ -2,6 +2,7 @@ package cssparser;
 
 import htmlparser.HTMLParser;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Vector;
 import service.FontManager;
@@ -88,8 +89,8 @@ public class CSSParser {
         }
     }
 
-    public static HashMap<String, String> parseRules(String rules) {
-        HashMap<String, String> result = new HashMap<String, String>();
+    public static LinkedHashMap<String, String> parseRules(String rules) {
+        LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
         String[] r = rules.split("\\s*;\\s*");
         for (String rule: r) {
             String[] p = rule.split("\\s*:\\s*");

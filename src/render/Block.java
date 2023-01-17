@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -126,8 +127,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         platform = Float.parseFloat(System.getProperties().getProperty("os.version"));
 
         rules_for_recalc = new HashMap<String, String>();
-        originalStyles = new HashMap<String, Object>();
-        cssStyles = new HashMap<String, String>();
+        originalStyles = new LinkedHashMap<String, Object>();
+        cssStyles = new LinkedHashMap<String, String>();
 
         orig_width = width;
         orig_height = height;
@@ -5047,8 +5048,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean has_shadow = false;
 
     public HashMap<String, String> rules_for_recalc;
-    public HashMap<String, Object> originalStyles;
-    public HashMap<String, String> cssStyles;
+    public LinkedHashMap<String, Object> originalStyles;
+    public LinkedHashMap<String, String> cssStyles;
 
     public String selected_text;
     public Line line;
