@@ -3058,25 +3058,33 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (str.equalsIgnoreCase(value)) {
                 found = true;
             }
-            System.out.println(str);
         }
-        if (!found) return;
-        
+
         fontFamily = value;
+
+        if (!found) value = "Tahoma";
+
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFontFamily(value);
         }
-        performLayout();
-        forceRepaint();
+        
+        doIncrementLayout(viewport_width, viewport_height, false);
+        if (document != null && document.ready) {
+            document.root.forceRepaintAll();
+            document.repaint();
+        }
     }
 
     public void setFontSize(int value) {
-        fontSize = (int)Math.round(value * ratio);
+        fontSize = value;
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFontSize(value);
         }
-        performLayout();
-        forceRepaint();
+        doIncrementLayout(viewport_width, viewport_height, false);
+        if (document != null && document.ready) {
+            document.root.forceRepaintAll();
+            document.repaint();
+        }
     }
 
     public void setBold(boolean value) {
@@ -3830,6 +3838,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (original != null) {
             original.setProp(prop, value);
         }
+        if (prop.equals("font-family")) {
+            setFontFamily(value);
+        }
+        if (prop.equals("font-size")) {
+            int val = this.getValueInPixels(value);
+            setFontSize(val);
+        }
         if (prop.equals("margin")) {
             String[] s = value.split("\\s");
             if (s.length > 0) {
@@ -4277,6 +4292,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         
         int val = (int)Math.round(Float.parseFloat(n) * ratio);
         if (u.equals("em")) val = (int)Math.round(Integer.parseInt(n) * 16 * ratio);
+        if (u.equals("%")) {
+            val = (int)Math.round(Float.parseFloat(n) / 100 * (parent != null ? parent.viewport_width :
+                document.width - document.borderSize * 2));
+        }
 
         return val;
     }
@@ -4474,6 +4493,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         tb.display_type = 2;
         tb.textContent = text;
         tb.type = NodeTypes.TEXT;
+        tb.fontFamily = fontFamily;
         tb.text_bold = text_bold;
         tb.text_italic = text_italic;
         tb.text_underline = text_underline;
@@ -4537,6 +4557,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             d.color = color;
             d.fontSize = fontSize;
             d.fontFamily = fontFamily;
+            d.text_align = text_align;
             d.text_bold = text_bold;
             d.text_italic = text_italic;
             d.text_underline = text_underline;
@@ -4566,7 +4587,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     b.addText(children.get(i).textContent);
                     b.children.get(0).node = b.node;
                     children.remove(i);
-                    addElement(b, i, true);
+                    addElement(b, i, false);
                 }
             }
         }

@@ -166,6 +166,7 @@ public class WebDocument extends JPanel {
     public void insertSubtreeWithoutRoot(Block b, Block insert) {
         ready = false;
         b.removeAllElements();
+        b.setProp("font-family", b.fontFamily);
         for (int i = 0; i < insert.children.size(); i++) {
             b.addElement(insert.children.get(i), true);
             processSubtree(insert.children.get(i));
@@ -211,6 +212,7 @@ public class WebDocument extends JPanel {
             root.overflow = Block.Overflow.SCROLL;
             panel.add(root);
         }
+        b.setProp("font-family", b.fontFamily);
         for (int i = 0; i < b.children.size(); i++) {
             processSubtree(b.children.get(i));
         }

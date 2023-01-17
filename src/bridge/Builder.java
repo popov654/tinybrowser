@@ -52,14 +52,15 @@ public class Builder {
         setDocument(document);
     }
 
-    public Block buildSubtree(WebDocument document, Node node) {
-        Block root = buildElement(document, node);
+    public Block buildSubtree(WebDocument document, Block parent, Node node) {
+        Block root = buildElement(document, parent, node);
         if (root == null) return root;
         root.node = node;
         root.builder = this;
+        root.parent = parent;
         if (!node.tagName.equals("svg")) {
             for (int i = 0; i < node.children.size(); i++) {
-                Block b = buildSubtree(document, node.children.get(i));
+                Block b = buildSubtree(document, root, node.children.get(i));
                 if (b != null) {
                     root.getChildren().add(b);
                     b.parent = root;
@@ -71,7 +72,11 @@ public class Builder {
         return root;
     }
 
-    public Block buildElement(WebDocument document, Node node) {
+    public Block buildSubtree(WebDocument document, Node node) {
+        return buildSubtree(document, null, node);
+    }
+
+    public Block buildElement(WebDocument document, Block parent, Node node) {
         if (document == null) document = this.document;
         final Block b = new Block(document);
         if (node.nodeType == ELEMENT) {
@@ -80,6 +85,9 @@ public class Builder {
             b.height = -1;
             b.auto_width = true;
             b.auto_height = true;
+
+            applyParentFontStyles(b, parent);
+
             b.text_bold = node.tagName.equals("b") || node.tagName.equals("strong");
             b.text_italic = node.tagName.equals("i") || node.tagName.equals("em");
             b.text_underline = node.tagName.equals("u");
@@ -150,6 +158,18 @@ public class Builder {
         applyInlineStyles(node, b);
 
         return b;
+    }
+
+    private void applyParentFontStyles(Block block, Block parent) {
+        if (parent == null) return;
+        block.color = parent.color;
+        block.fontFamily = parent.fontFamily;
+        block.fontSize = parent.fontSize;
+        block.text_align = parent.text_align;
+        block.text_bold = parent.text_bold;
+        block.text_italic = parent.text_italic;
+        block.text_underline = parent.text_underline;
+        block.text_strikethrough = parent.text_strikethrough;
     }
 
     public Document createSVGDocument(WebDocument document, Node node) {
