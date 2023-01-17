@@ -40,32 +40,69 @@ public class Gradient {
 
     public static Point2D[] getPoints(float[] pos, int angle, int x, int y, int w, int h) {
         Point2D[] result = new Point2D[2];
-        if (angle % 90 == 0 && angle % 180 > 0) {
+        if (angle % 180 == 0) {
             int x1 = x;
             int y1 = y;
             int x2 = x;
-            int y2 = y + h;
-            result[0] = new Point2D.Float(x1, y1);
-            result[1] = new Point2D.Float(x2, y2);
+            int y2 = y + h - 1;
+            if (angle % 360 > 0) {
+                result[0] = new Point2D.Float(x1, y1);
+                result[1] = new Point2D.Float(x2, y2);
+            } else {
+                result[1] = new Point2D.Float(x1, y1);
+                result[0] = new Point2D.Float(x2, y2);
+            }
             return result;
-        } else if (angle % 180 == 0) {
+        } else if (angle % 90 == 0) {
             int x1 = x;
             int y1 = y;
-            int x2 = x + w;
+            int x2 = x + w - 1;
             int y2 = y;
-            result[0] = new Point2D.Float(x1, y1);
-            result[1] = new Point2D.Float(x2, y2);
+            if (angle % 180 > 0) {
+                result[0] = new Point2D.Float(x1, y1);
+                result[1] = new Point2D.Float(x2, y2);
+            } else {
+                result[1] = new Point2D.Float(x1, y1);
+                result[0] = new Point2D.Float(x2, y2);
+            }
             return result;
         } else {
-            int d = w / 2;
-            if (Math.abs(angle) > 60 && Math.abs(angle) < 120) d = (int)Math.round(w * 0.18);
-            if (Math.abs(angle) > 80 && Math.abs(angle) < 100) d = (int)Math.round(w * 0.08);
-            int x1 = x + w / 2 - d;
-            int y1 = y + (int)Math.round(h / 2 + d * Math.tan(Math.PI * (1f / 180 * (float)angle + 1)));
-            int x2 = x + w / 2 + d;
-            int y2 = y + h - (y1 - y);
-            result[0] = new Point2D.Float(x1, y1);
-            result[1] = new Point2D.Float(x2, y2);
+
+            boolean flag = true;
+
+            if (angle % 360 > 180) {
+                angle = 180 + angle % 360;
+                flag = false;
+            }
+
+            double s = Math.sin((double) angle / 180 * Math.PI);
+            double c = Math.cos((double) angle / 180 * Math.PI);
+            int dx = (int) (Math.round(h * s * s));
+            int dy = (int) (Math.round(h * c * s));
+
+            int x1 = 0;
+            int y1 = 0;
+            int x2 = (int) (x + w * 0.5 + dx - 2);
+            int y2 = (int) (y + h * 0.5 - dy - 2);
+
+            if (flag) {
+                if (dx > 0 && dy < 0) {
+                    result[0] = new Point2D.Float(0, 0);
+                    result[1] = new Point2D.Float(x2, y2);
+                } else {
+                    result[0] = new Point2D.Float(x, y+h-1);
+                    result[1] = new Point2D.Float(x2, y2);
+                }
+            } else {
+                if (dx > 0 && dy < 0) {
+                    result[0] = new Point2D.Float(x2, y2);
+                    result[1] = new Point2D.Float(0, 0);
+                } else {
+                    result[0] = new Point2D.Float(x2, y2);
+                    result[1] = new Point2D.Float(x, y+h-1);
+                }
+            }
+
             return result;
         }
     }

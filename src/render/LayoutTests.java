@@ -188,6 +188,62 @@ public class LayoutTests extends JFrame {
         }
     }
 
+    public void testGradients() {
+        document.ready = false;
+
+        document.root.removeAllElements();
+
+        int angle = 45;
+
+        Block d = new Block(document, null, 136, 92, 0, 1, Color.BLACK);
+        d.setPositioning(Block.Position.STATIC);
+        d.setDisplayType(Block.Display.INLINE_BLOCK);
+        d.setMargins(6);
+        d.setPaddings(15, 17, 15, 17);
+        d.setWidth(80);
+        d.setHeight(80);
+        //d.setBorderWidth(0);
+        d.setTextColor(new Color(0, 0, 0));
+        Vector<Color> c = new Vector<Color>();
+        c.add(new Color(0, 0, 0, 255));
+        c.add(new Color(160, 160, 160, 255));
+        Vector<Float> p = new Vector<Float>();
+        p.add(0f);
+        p.add(1f);
+        d.setLinearGradient(c, p, angle);
+        d.setId("d1");
+
+        Block d2 = d.clone();
+        d2.setLinearGradient(c, p, angle + 90);
+        d.setId("d2");
+
+        Block d3 = d.clone();
+        d3.setLinearGradient(c, p, angle + 180);
+        d.setId("d3");
+
+        Block d4 = d.clone();
+        d4.setLinearGradient(c, p, angle + 45);
+        d.setId("d4");
+
+        Block d5 = d.clone();
+        d5.setLinearGradient(c, p, angle - 45);
+        d.setId("d5");
+
+        document.root.addElement(d);
+        document.root.addElement(d2);
+        document.root.addElement(d3);
+        document.root.addElement(d4);
+        document.root.addElement(d5);
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+            document.repaint();
+        }
+    }
+
     public void basicTest() {
         document.ready = false;
 
@@ -889,7 +945,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 0;
+        int test = 17;
         int list_type = 2;
 
         if (args.length > 0) {
@@ -910,6 +966,7 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("z-index")) test = 14;
             else if (args[0].equals("lists")) test = 15;
             else if (args[0].equals("borders")) test = 16;
+            else if (args[0].equals("gradients")) test = 17;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -954,6 +1011,8 @@ public class LayoutTests extends JFrame {
             case 15: lt.testLists(list_type);
                      break;
             case 16: lt.testBorders();
+                     break;
+            case 17: lt.testGradients();
                      break;
         }
 
