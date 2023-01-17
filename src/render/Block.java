@@ -3050,13 +3050,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         white_space = value;
     }
 
-    public void setFontFamily(String value) {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        String[] s = ge.getAvailableFontFamilyNames();
-        boolean found = false;
-        for (String str: s) {
-            if (str.equalsIgnoreCase(value)) {
-                found = true;
+    public void setFontFamily(String value, boolean skip_check) {
+        boolean found = true;
+        if (!skip_check) {
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            String[] s = ge.getAvailableFontFamilyNames();
+            found = false;
+            for (String str: s) {
+                if (str.equalsIgnoreCase(value)) {
+                    found = true;
+                }
             }
         }
 
@@ -3065,7 +3068,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (!found) value = "Tahoma";
 
         for (int i = 0; i < children.size(); i++) {
-            children.get(i).setFontFamily(value);
+            children.get(i).setFontFamily(value, true);
         }
         
         doIncrementLayout(viewport_width, viewport_height, false);
@@ -3073,6 +3076,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             document.root.forceRepaintAll();
             document.repaint();
         }
+    }
+
+    public void setFontFamily(String value) {
+        setFontFamily(value, false);
     }
 
     public void setFontSize(int value) {
