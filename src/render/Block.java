@@ -714,13 +714,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
 
         if (gradient != null) {
-            Point2D[] p = Gradient.getPoints(gradient.getPositions(), gradient.getAngle(), 0, 0, width, height);
+            Point2D[] p = Gradient.getPoints(gradient.getAngle(), 0, 0, width, height);
             Point2D start = p[0];
             Point2D end = p[1];
             start.setLocation(start.getX() + x0, start.getY() + y0);
             end.setLocation(end.getX() + x0, end.getY() + y0);
             Color[] colors = gradient.getColors();
-            float[] dist = gradient.getPositions();
+            float[] dist = gradient.getPositions(gradient.getAngle(), start, end);
             LinearGradientPaint gp = new LinearGradientPaint(start, end, dist, colors);
             g2d.setPaint(gp);
             if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
@@ -3043,6 +3043,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         forceRepaint();
     }
 
+    public void setLinearGradientWithUnits(Vector<Color> colors, Vector<String> positions, double angle) {
+        int n = Math.max(colors.size(), positions.size());
+        Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
+        Color c = new Color(0, 0, 0, 0);
+        for (int i = 0; i < n; i++) {
+            if (i < colors.size()) {
+                c = colors.get(i);
+            }
+            CssLength p = null;
+            if (i < positions.size()) {
+                p = parseValueString(positions.get(i));
+            }
+            cs[i] = new Gradient.ColorStop(c, (float) p.value, p.unit);
+        }
+        gradient = new Gradient(angle, cs);
+        forceRepaint();
+    }
+
     public void setTextAlign(int value) {
         text_align = value;
         Layouter.applyHorizontalAlignment(this);
@@ -4052,28 +4070,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (prop.equals("background-position-x")) {
             if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
-                int[] val = parseValueString(value);
+                int[] val = parseValueStringToPx(value);
                 setBackgroundPositionX(val[0], val[1]);
             }
         }
 
         if (prop.equals("background-position-y")) {
             if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
-                int[] val = parseValueString(value);
+                int[] val = parseValueStringToPx(value);
                 setBackgroundPositionY(val[0], val[1]);
             }
         }
 
         if (prop.equals("background-size-x")) {
             if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
-                int[] val = parseValueString(value);
+                int[] val = parseValueStringToPx(value);
                 setBackgroundSizeX(val[0], val[1]);
             }
         }
 
         if (prop.equals("background-size-y")) {
             if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
-                int[] val = parseValueString(value);
+                int[] val = parseValueStringToPx(value);
                 setBackgroundSizeY(val[0], val[1]);
             }
         }
@@ -4275,8 +4293,87 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    private int[] parseValueString(String value) {
-        if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+    public void setLinearGradientFromCSS(String value) {
+        if (!value.matches("(-[a-z]+-)?linear-gradient\\(.*\\)")) return;
+        value = value.substring(value.indexOf("(")+1, value.length()-1);
+        int pos = 0;
+        int braces = 0;
+        String part = "";
+        Vector<String> parts = new Vector<String>();
+        while (pos < value.length()) {
+            char ch = value.charAt(pos);
+            if (ch == '(') braces++;
+            if (ch == ')') braces--;
+            if (braces == 0 && ch == ',' && !part.isEmpty()) {
+                parts.add(part.trim());
+                part = "";
+            } else {
+                part += ch;
+            }
+            pos++;
+        }
+        if (!part.isEmpty()) {
+            parts.add(part.trim());
+        }
+        if (parts.size() < 3) return;
+
+        double angle = 0;
+        
+        if (!parts.get(0).endsWith("deg")) {
+            String s = parts.get(0);
+            if (!(s.matches("((from|to) )?(left|right|top|bottom)"))) {
+                return;
+            }
+            if (s.equals("to bottom") || s.matches("(from )?top")) {
+                parts.set(0, "0deg");
+                angle = 0;
+            }
+            else if (s.equals("to right") || s.matches("(from )?left")) {
+                parts.set(0, "90deg");
+                angle = 90;
+            }
+            else if (s.equals("to bottom") || s.matches("(from )?top")) {
+                parts.set(0, "180deg");
+                angle = 180;
+            }
+            else if (s.equals("to bottom") || s.matches("(from )?top")) {
+                parts.set(0, "180deg");
+                angle = 180;
+            }
+            else if (s.equals("to left") || s.matches("(from )?right")) {
+                parts.set(0, "270deg");
+                angle = 270;
+            }
+        } else if (parts.get(0).endsWith("deg")) {
+            angle = Double.parseDouble(parts.get(0).substring(0, parts.get(0).length()-3));
+        }
+
+        Vector<Color> cols = new Vector<Color>();
+        Vector<String> positions = new Vector<String>();
+
+        for (int i = 1; i < parts.size(); i++) {
+            String[] s = parts.get(i).split("\\s+");
+            Color col = null;
+            col = parseColor(s[0]);
+            if (col == null) {
+                col = parseColor(s[1]);
+                positions.add(s[0]);
+            } else {
+                positions.add(s[1]);
+            }
+            if (col == null) return;
+            cols.add(col);
+        }
+        
+        for (String p: parts) {
+            System.out.println(p);
+        }
+
+        setLinearGradientWithUnits(cols, positions, angle);
+    }
+
+    private int[] parseValueStringToPx(String value) {
+        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|%)$")) {
             String ch = value.substring(0, 1);
             String n = "";
             int index = 0;
@@ -4289,6 +4386,35 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int val = (int)Math.round(Float.parseFloat(n) * ratio);
             int units = u.equals("px") ? Units.px : (u.equals("em") ? Units.em : Units.percent);
             return new int[] {val, units};
+        }
+        return null;
+    }
+
+    public class CssLength {
+
+        public CssLength(double value, int unit) {
+            this.value = value;
+            this.unit = unit;
+        }
+
+        public double value;
+        public int unit;
+    }
+
+    public CssLength parseValueString(String value) {
+        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|%)$")) {
+            String ch = value.substring(0, 1);
+            String n = "";
+            int index = 0;
+            while (ch.matches("[0-9.]")) {
+                n += ch;
+                index++;
+                ch = value.substring(index, index+1);
+            }
+            String u = value.substring(index);
+            double val = Float.parseFloat(n);
+            int units = u.equals("px") ? Units.px : (u.equals("em") ? Units.em : Units.percent);
+            return new CssLength(val, units);
         }
         return null;
     }

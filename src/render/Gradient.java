@@ -9,7 +9,7 @@ import java.awt.geom.Point2D;
  */
 public class Gradient {
 
-    public Gradient(int angle, ColorStop[] points) {
+    public Gradient(double angle, ColorStop[] points) {
         this.angle = angle;
         this.points = points;
     }
@@ -22,15 +22,28 @@ public class Gradient {
         return result;
     }
 
-    public float[] getPositions() {
+    public float[] getPositions(double angle, Point2D start, Point2D end) {
         float[] result = new float[points.length];
         for (int i = 0; i < points.length; i++) {
             result[i] = points[i].pos;
+            if (points[i].units < 0) continue;
+            double dx = end.getX() - start.getX();
+            double dy = end.getY() - start.getY();
+            double r = Math.sqrt(dx * dx + dy * dy);
+            if (points[i].units == Block.Units.px) {
+                result[i] = r > 0 ? (float)(points[i].pos / r) : 0;
+            }
+            else if (points[i].units == Block.Units.em) {
+                result[i] = r > 0 ? (float)(points[i].pos * 16 / r) : 0;
+            }
+            else if (points[i].units == Block.Units.percent) {
+                result[i] = points[i].pos / 100;
+            }
         }
         return result;
     }
 
-    public int getAngle() {
+    public double getAngle() {
         return angle;
     }
 
@@ -38,7 +51,7 @@ public class Gradient {
         return points;
     }
 
-    public static Point2D[] getPoints(float[] pos, int angle, int x, int y, int w, int h) {
+    public static Point2D[] getPoints(double angle, int x, int y, int w, int h) {
         Point2D[] result = new Point2D[2];
         if (angle % 180 == 0) {
             int x1 = x;
@@ -108,7 +121,7 @@ public class Gradient {
     }
 
     ColorStop[] points;
-    int angle;
+    double angle;
 
     public static class ColorStop {
 
@@ -117,7 +130,14 @@ public class Gradient {
             pos = p;
         }
 
+         public ColorStop(Color col, float p, int u) {
+            color = col;
+            pos = p;
+            units = u;
+        }
+
         Color color;
         float pos;
+        int units = -1;
     }
 }

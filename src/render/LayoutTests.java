@@ -235,6 +235,8 @@ public class LayoutTests extends JFrame {
         document.root.addElement(d4);
         document.root.addElement(d5);
 
+        document.root.setLinearGradientFromCSS("linear-gradient(to right, #23ee82 0px, #3cd356 40%, #3dd356 100%)");
+
         document.ready = true;
 
         if (this.isVisible()) {
