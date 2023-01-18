@@ -3,6 +3,7 @@ package render;
 import bridge.Mapper;
 import htmlparser.Node;
 import htmlparser.TagLibrary;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
@@ -28,12 +29,14 @@ public class Entry extends javax.swing.JPanel {
     public Entry(Node node) {
         this.node = node;
         initComponents();
+        initEvents();
     }
 
     public Entry(Node node, WebDocument document) {
         this.node = node;
         this.document = document;
         initComponents();
+        initEvents();
     }
 
     public Entry(Node node, Block block) {
@@ -42,6 +45,33 @@ public class Entry extends javax.swing.JPanel {
         this.document = block.document;
         Mapper.add(node, block);
         initComponents();
+        initEvents();
+    }
+
+    private void initEvents() {
+        marker.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!opened) open();
+                else close();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+
+        });
+
+        addMouseListener(listener);
     }
 
     public void addChild(Entry child, int pos) {
@@ -73,10 +103,12 @@ public class Entry extends javax.swing.JPanel {
             }
 
             content.removeAll();
+            //System.out.println(getWidth());
             for (int i = 0; i < node.children.size(); i++) {
                 Entry e = new Entry(node.children.get(i), document);
                 content.add(e);
                 e.inflate();
+                //content.setSize(e.getSize());
             }
             content.doLayout();
             if (node.children.size() > 0) {
@@ -86,8 +118,9 @@ public class Entry extends javax.swing.JPanel {
             }
 
             int height = 26 * 2 + content.getPreferredSize().height;
-            System.out.println(getWidth() + "x" + height);
-            //content.setPreferredSize(new Dimension(490, content.getPreferredSize().height));
+            //setMaximumSize(new Dimension(490, 26 * 2 + content.getPreferredSize().height));
+            System.out.println(getParent().getWidth() + "x" + height);
+            content.setPreferredSize(new Dimension(480, content.getPreferredSize().height));
             //setPreferredSize(new Dimension(490, height));
             
             content.validate();
@@ -104,6 +137,7 @@ public class Entry extends javax.swing.JPanel {
             textarea.setFont(new Font("Tahoma", Font.PLAIN, 16));
             int rows = node.nodeValue.split("\n").length;
             textarea.setRows(rows);
+            textarea.addMouseListener(listener);
 
             int height = getFontMetrics(textarea.getFont()).getHeight() * rows;
 
@@ -120,67 +154,46 @@ public class Entry extends javax.swing.JPanel {
             setVisible(false);
             content.removeAll();
         }
-        marker.addMouseListener(new MouseListener() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (!opened) open();
-                else close();
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {}
-
-            @Override
-            public void mouseReleased(MouseEvent e) {}
-
-            @Override
-            public void mouseEntered(MouseEvent e) {}
-
-            @Override
-            public void mouseExited(MouseEvent e) {}
-
-        });
-        final Entry instance = this;
-        MouseListener listener = new MouseListener() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // TODO: select
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {}
-
-            @Override
-            public void mouseReleased(MouseEvent e) {}
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                //System.out.println("Entered");
-                instance.node.states.add("highlighted");
-                instance.updateChildren(true);
-                repaint();
-                if (document != null) {
-                    document.root.forceRepaintAll();
-                    document.repaint();
-                }
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                //System.out.println("Exited");
-                instance.node.states.remove("highlighted");
-                instance.updateChildren(false);
-                repaint();
-                if (document != null) {
-                    document.root.forceRepaintAll();
-                    document.repaint();
-                }
-            }
-        };
-        addMouseListener(listener);
+        
     }
+
+    MouseListener listener = new MouseListener() {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            // TODO: select
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {}
+
+        @Override
+        public void mouseReleased(MouseEvent e) {}
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            //System.out.println("Entered");
+            node.states.add("highlighted");
+            updateChildren(true);
+            repaint();
+            if (document != null) {
+                document.root.forceRepaintAll();
+                document.repaint();
+            }
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            //System.out.println("Exited");
+            node.states.remove("highlighted");
+            updateChildren(false);
+            repaint();
+            if (document != null) {
+                document.root.forceRepaintAll();
+                document.repaint();
+            }
+        }
+    };
 
     private void updateChildren(boolean value) {
         hovered = value;
@@ -215,8 +228,6 @@ public class Entry extends javax.swing.JPanel {
         content.setVisible(true);
         footer.setVisible(true);
         opened = true;
-        validate();
-        getParent().validate();
     }
 
     public void close() {
@@ -228,8 +239,6 @@ public class Entry extends javax.swing.JPanel {
         marker.setVisible(has_children);
         tag_header_2.setVisible(true);
         opened = false;
-        validate();
-        getParent().validate();
     }
 
     public void openAll() {
@@ -283,9 +292,11 @@ public class Entry extends javax.swing.JPanel {
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.PAGE_AXIS));
 
         header.setBackground(new java.awt.Color(255, 255, 255));
+        header.setAlignmentX(1.0F);
         header.setMaximumSize(new java.awt.Dimension(32767, 26));
+        header.setMinimumSize(new java.awt.Dimension(280, 26));
         header.setOpaque(false);
-        header.setPreferredSize(new java.awt.Dimension(468, 26));
+        header.setPreferredSize(null);
         header.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 2));
 
         margin_header.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 0, 0, 5));
@@ -332,16 +343,19 @@ public class Entry extends javax.swing.JPanel {
         add(header);
 
         content.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 30, 0, 0));
-        content.setMinimumSize(new java.awt.Dimension(32767, 0));
+        content.setAlignmentX(1.0F);
+        content.setMaximumSize(new java.awt.Dimension(32767, 32767));
+        content.setMinimumSize(null);
         content.setOpaque(false);
         content.setPreferredSize(null);
         content.setLayout(new javax.swing.BoxLayout(content, javax.swing.BoxLayout.PAGE_AXIS));
         add(content);
 
         footer.setBackground(new java.awt.Color(255, 255, 255));
+        footer.setAlignmentX(1.0F);
         footer.setMaximumSize(new java.awt.Dimension(32767, 26));
         footer.setOpaque(false);
-        footer.setPreferredSize(new java.awt.Dimension(468, 26));
+        footer.setPreferredSize(null);
         footer.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEADING, 0, 2));
 
         margin_footer.setOpaque(false);
