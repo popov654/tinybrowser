@@ -7,8 +7,6 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -126,13 +124,14 @@ public class HTMLParser {
         }
         if (pos >= data.length()) return;
         char ch = data.charAt(pos);
-        if (state == READY && data.substring(pos, pos + 4).equals("<!--")) {
+        boolean ignoreOpenTag = pos < data.length()-1 && data.substring(pos, pos+2).matches("<[a-z]") && curNode != null && curNode.isLeaf();
+        if (state == READY && pos < data.length() - 4 && data.substring(pos, pos + 4).equals("<!--")) {
             state = READ_COMMENT;
             last_start = pos+4;
             cur_tag = "";
             cur_text = "";
             pos += 3;
-        } else if (state == READ_COMMENT && data.substring(pos, pos + 3).equals("-->")) {
+        } else if (state == READ_COMMENT && pos < data.length() - 3 && data.substring(pos, pos + 3).equals("-->")) {
             state = READY;
             last_start = pos+3;
             cur_tag = "";
@@ -142,7 +141,7 @@ public class HTMLParser {
                 text.nodeValue = cur_text;
             }
             cur_text = "";
-        } else if (state == READY && ch != '<' || state == READ_COMMENT) {
+        } else if (state == READY && (ch != '<' || ignoreOpenTag) || state == READ_COMMENT) {
             cur_text += ch;
         } else if (state == READY && ch == '<') {
             cur_text += ch;

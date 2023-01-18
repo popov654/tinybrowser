@@ -1,6 +1,7 @@
 package htmlparser;
 
 import java.util.Hashtable;
+import java.util.Vector;
 
 /**
  *
@@ -8,6 +9,8 @@ import java.util.Hashtable;
  */
 public class TagLibrary {
     public static void init() {
+        if (init) return;
+
         tags.put("br", false);
         tags.put("hr", false);
         tags.put("link", false);
@@ -32,7 +35,15 @@ public class TagLibrary {
         tags.put("cite", true);
         tags.put("head", true);
         tags.put("body", true);
+
+        leaves.add("style");
+        leaves.add("script");
+
+        init = true;
     }
 
+    private static boolean init = false;
+
     public static Hashtable<String, Boolean> tags = new Hashtable<String, Boolean>();
+    public static Vector<String> leaves = new Vector<String>();
 }

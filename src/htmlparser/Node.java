@@ -4,10 +4,8 @@ import cssparser.QuerySelector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Vector;
 
 /**
@@ -193,6 +191,10 @@ public class Node {
             n++;
         }
         return n;
+    }
+
+    public boolean isLeaf() {
+        return nodeType != 1 || TagLibrary.leaves.contains(tagName);
     }
 
     public boolean removeSubtree() {
