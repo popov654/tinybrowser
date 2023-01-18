@@ -384,6 +384,8 @@ public class Node {
     public LinkedHashMap<String, String> attributes = new LinkedHashMap<String, String>();
     public LinkedHashMap<String, String> styles = new LinkedHashMap<String, String>();
     public Vector<QuerySelector> stateStyles = new Vector<QuerySelector>();
+    public Vector<QuerySelector> beforeStyles = new Vector<QuerySelector>();
+    public Vector<QuerySelector> afterStyles = new Vector<QuerySelector>();
     public Vector<String> states = new Vector<String>();
     public Node previousSibling;
     public Node nextSibling;

@@ -55,17 +55,11 @@ public class Builder {
     public Block buildSubtree(WebDocument document, Block parent, Node node) {
         Block root = buildElement(document, parent, node);
         if (root == null) return root;
-        root.node = node;
-        root.builder = this;
-        root.parent = parent;
         if (!node.tagName.equals("svg")) {
             for (int i = 0; i < node.children.size(); i++) {
                 Block b = buildSubtree(document, root, node.children.get(i));
                 if (b != null) {
                     root.getChildren().add(b);
-                    b.parent = root;
-                    b.node = node.children.get(i);
-                    b.builder = this;
                 }
             }
         }
@@ -79,14 +73,13 @@ public class Builder {
     public Block buildElement(WebDocument document, Block parent, Node node) {
         if (document == null) document = this.document;
         final Block b = new Block(document);
+        b.node = node;
         if (node.nodeType == ELEMENT) {
             b.type = Block.NodeTypes.ELEMENT;
             b.width = -1;
             b.height = -1;
             b.auto_width = true;
             b.auto_height = true;
-
-            applyParentFontStyles(b, parent);
 
             b.text_bold = node.tagName.equals("b") || node.tagName.equals("strong");
             b.text_italic = node.tagName.equals("i") || node.tagName.equals("em");
@@ -103,7 +96,6 @@ public class Builder {
             b.text_italic = node.parent.tagName.equals("i") || node.parent.tagName.equals("em");
             b.text_underline = node.parent.tagName.equals("u");
             b.text_strikethrough = node.parent.tagName.equals("s");
-            return b;
         } else if (node.nodeType == COMMENT) {
             return null;
         }
@@ -150,15 +142,18 @@ public class Builder {
         }
         b.builder = this;
         b.parent = parent;
-        b.id = node.getAttribute("id");
-        b.setTextColor(node.getAttribute("color"));
-        b.setBackgroundColor(node.getAttribute("bgcolor"));
+        
+        if (node.nodeType == 1) {
+            b.id = node.getAttribute("id");
+            b.setTextColor(node.getAttribute("color"));
+            b.setBackgroundColor(node.getAttribute("bgcolor"));
 
-        applyDefaultStyles(node, b);
-        applyParentFontStyles(b, parent);
+            applyDefaultStyles(node, b);
+            applyParentFontStyles(b, parent);
 
-        applyStyles(node, b);
-        applyInlineStyles(node, b);
+            applyStyles(node, b);
+            applyInlineStyles(node, b);
+        }
 
         return b;
     }
@@ -317,6 +312,7 @@ public class Builder {
         Set<String> keys = node.styles.keySet();
         for (String key: keys) {
             if (!key.trim().isEmpty()) {
+                if (key.trim().equals("content")) continue;
                 b.setProp(key.trim(), node.styles.get(key).trim());
                 b.cssStyles.put(key.trim(), node.styles.get(key).trim());
                 if (b.document != null && b.document.lastSetProperties != null) {
@@ -324,6 +320,7 @@ public class Builder {
                 }
             }
         }
+        generatePseudoElements(node, b);
     }
 
     public void applyInlineStyles(Node node, Block b) {
@@ -480,6 +477,59 @@ public class Builder {
         block.document = document;
         for (int i = 0; i < block.getChildren().size(); i++) {
             setDocument(block.getChildren().get(i), document);
+        }
+    }
+
+    public void generatePseudoElements(Node node, Block b) {
+        if (document == null) return;
+        String content;
+
+        if (node.beforeStyles.size() > 0) {
+            Node n = new Node(1);
+            n.parent = node;
+            content = "";
+            for (QuerySelector sel: node.beforeStyles) {
+                if (sel.getRules().get("content") != null) {
+                    content = sel.getRules().get("content");
+                    if (content.matches("\".*\"") || content.matches("\'.*\'")) {
+                        content = content.substring(1, content.length()-1);
+                    }
+                }
+                n.styles.putAll(sel.getRules());
+            }
+            n.tagName = "span";
+            n.nodeValue = content;
+            Block before = buildElement(document, b, n);
+            before.addText(n.nodeValue);
+            b.addElement(before, 0, true);
+            b.getChildren().remove(0);
+            b.setBeforePseudoElement(before);
+        } else {
+            b.setBeforePseudoElement(null);
+        }
+
+        if (node.afterStyles.size() > 0) {
+            Node n = new Node(1);
+            n.parent = node;
+            content = "";
+            for (QuerySelector sel: node.afterStyles) {
+                if (sel.getRules().get("content") != null) {
+                    content = sel.getRules().get("content");
+                    if (content.matches("\".*\"") || content.matches("\'.*\'")) {
+                        content = content.substring(1, content.length()-1);
+                    }
+                }
+                n.styles.putAll(sel.getRules());
+            }
+            n.tagName = "span";
+            n.nodeValue = content;
+            Block after = buildElement(document, b, n);
+            after.addText(n.nodeValue);
+            b.addElement(after, true);
+            b.getChildren().remove(b.getChildren().size()-1);
+            b.setAfterPseudoElement(after);
+        } else {
+            b.setAfterPseudoElement(null);
         }
     }
 

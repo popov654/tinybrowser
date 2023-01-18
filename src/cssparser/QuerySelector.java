@@ -174,6 +174,14 @@ public class QuerySelector {
                             visitedNodes.add(resultSet.get(j));
                         }
                     }
+                    else if (pseudoclasses[i].equals("before")) {
+                        resultSet.get(j).beforeStyles.add(this);
+                        resultSet.remove(j--);
+                    }
+                    else if (pseudoclasses[i].equals("after")) {
+                        resultSet.get(j).afterStyles.add(this);
+                        resultSet.remove(j--);
+                    }
                 }
             }
         }

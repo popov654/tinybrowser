@@ -52,8 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
@@ -1903,6 +1901,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         processListElements(blocks);
 
+        if (beforePseudoElement != null) blocks.add(0, beforePseudoElement);
+        if (afterPseudoElement != null) blocks.add(afterPseudoElement);
+
         for (int i = 0; i < blocks.size(); i++) {
             Block el = blocks.get(i);
 
@@ -1910,7 +1911,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (el.white_space != WhiteSpace.PRE_WRAP && el.textContent.matches("^\\s*$")) {
                     continue;
                 }
-                el.textContent = replaceEntities(el.textContent);
+                if (parent == null || !isPseudoElement()) {
+                    el.textContent = replaceEntities(el.textContent);
+                }
                 String[] w = el.textContent.split("((?<=\\s+)|(?=\\s+))");
                 int style = (el.parent.text_bold || el.parent.text_italic) ? ((el.parent.text_bold ? Font.BOLD : 0) | (el.parent.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
                 Font f = new Font(el.parent.fontFamily, style, el.parent.fontSize);
@@ -3850,10 +3853,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (prop.equals("font-family")) {
             setFontFamily(value);
+            return;
         }
         if (prop.equals("font-size")) {
             int val = this.getValueInPixels(value);
             setFontSize(val);
+            return;
         }
         if (prop.equals("margin")) {
             String[] s = value.split("\\s");
@@ -4500,6 +4505,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void addText(String text, int pos) {
         Block tb = new Block(document, this, 0, 0, 0, 0, Color.BLACK);
+        htmlparser.Node n = new htmlparser.Node(3);
+        n.nodeValue = text;
+        tb.node = n;
         tb.display_type = 2;
         tb.textContent = text;
         tb.type = NodeTypes.TEXT;
@@ -5088,6 +5096,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     Vector<Block> children = new Vector<Block>();
     Vector<Line> lines = new Vector<Line>();
+
+    Block beforePseudoElement;
+    Block afterPseudoElement;
+
+    public void setBeforePseudoElement(Block block) {
+        beforePseudoElement = block;
+    }
+
+    public void setAfterPseudoElement(Block block) {
+        afterPseudoElement = block;
+    }
+
+    public boolean isPseudoElement() {
+        Block b = original != null ? original : this;
+        return b.parent != null && (b == b.parent.beforePseudoElement || b == b.parent.afterPseudoElement);
+    }
 
     @Override
     public Block clone() {

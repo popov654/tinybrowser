@@ -212,6 +212,10 @@ public class WebDocument extends JPanel {
             root.overflow = Block.Overflow.SCROLL;
             panel.add(root);
         }
+        if (b.builder != null) {
+            b.builder.document = this;
+            b.builder.generatePseudoElements(b.node, b);
+        }
         b.setProp("font-family", b.fontFamily);
         for (int i = 0; i < b.children.size(); i++) {
             processSubtree(b.children.get(i));
