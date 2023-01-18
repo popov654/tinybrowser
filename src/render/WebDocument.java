@@ -1,6 +1,7 @@
 package render;
 
 import htmlparser.TagLibrary;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -271,20 +272,22 @@ public class WebDocument extends JPanel {
         JPanel cp = new JPanel();
         cp.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
         frame.setContentPane(cp);
+        cp.setLayout(new BorderLayout());
 
         final JPanel contentpane = new JPanel();
         contentpane.setBackground(Color.WHITE);
         contentpane.setOpaque(true);
         
         //contentpane.setBounds(0, 0, 490, 380);
+        final int width = 490, height = 410;
 
-        JScrollPane scrollpane = new JScrollPane(contentpane);
+        final JScrollPane scrollpane = new JScrollPane(contentpane);
         scrollpane.setOpaque(false);
 
         cp.add(scrollpane);
         scrollpane.setBackground(Color.WHITE);
         scrollpane.setOpaque(true);
-        scrollpane.setPreferredSize(new Dimension(490, 400));
+        scrollpane.setPreferredSize(new Dimension(width, height));
         //setSize(518, 420);
         frame.setLocationRelativeTo(parent);
         frame.setLocation(parent.getX() - 460, parent.getY() - 80);
@@ -326,7 +329,7 @@ public class WebDocument extends JPanel {
                 Entry rootEntry = new Entry(root.node, instance);
                 //rootEntry.setMinimumSize(new Dimension(490, 26));
                 contentpane.add(rootEntry);
-                rootEntry.inflate();
+                rootEntry.inflate(scrollpane.getWidth() - scrollpane.getVerticalScrollBar().getPreferredSize().width - 12, 30, 0);
             }
 
         });

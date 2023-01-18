@@ -84,7 +84,7 @@ public class Entry extends javax.swing.JPanel {
         //content.validate();
     }
 
-    public void inflate() {
+    public void inflate(int width, int gap, int level) {
         if (node == null) return;
         if (node.nodeType == 1) {
             boolean isPaired = !TagLibrary.tags.containsKey(node.tagName.toLowerCase()) ||
@@ -102,12 +102,14 @@ public class Entry extends javax.swing.JPanel {
                 tag_footer.setText("</" + node.tagName.toLowerCase() + ">");
             }
 
+            int w = Math.max(280, width - gap * level);
+
             content.removeAll();
             //System.out.println(getWidth());
             for (int i = 0; i < node.children.size(); i++) {
                 Entry e = new Entry(node.children.get(i), document);
                 content.add(e);
-                e.inflate();
+                e.inflate(w, gap, level+1);
                 //content.setSize(e.getSize());
             }
             content.doLayout();
@@ -118,9 +120,17 @@ public class Entry extends javax.swing.JPanel {
             }
 
             int height = 26 * 2 + content.getPreferredSize().height;
-            //setMaximumSize(new Dimension(490, 26 * 2 + content.getPreferredSize().height));
-            System.out.println(getParent().getWidth() + "x" + height);
-            content.setPreferredSize(new Dimension(480, content.getPreferredSize().height));
+            //setMaximumSize(new Dimension(width - gap * level, 26 * 2 + content.getPreferredSize().height));
+            //System.out.println(getParent().getWidth() + "x" + height);
+            //System.out.println(width - gap * level);
+            content.setPreferredSize(new Dimension(w, content.getPreferredSize().height));
+            if (w + gap > width) {
+                setMaximumSize(new Dimension(w + gap, 32767));
+            }
+//            Component[] c = content.getComponents();
+//            for (int i = 0; i < c.length; i++) {
+//                c[i].setPreferredSize(new Dimension(width - gap * level, c[i].getPreferredSize().height));
+//            }
             //setPreferredSize(new Dimension(490, height));
             
             content.validate();
