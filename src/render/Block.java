@@ -2915,6 +2915,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Block clipping_block = null;
 
     public String replaceEntities(String str) {
+        str = str.replaceAll("&lt;", "<");
+        str = str.replaceAll("&gt;", ">");
+        str = str.replaceAll("&amp;", "&");
         str = str.replaceAll("&nbsp;", "\u0A00");
         return str;
     }

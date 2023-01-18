@@ -148,11 +148,14 @@ public class Builder {
             svgCanvas.setMinimumSize(dim);
             svgCanvas.repaint();
         }
+        b.builder = this;
+        b.parent = parent;
         b.id = node.getAttribute("id");
         b.setTextColor(node.getAttribute("color"));
         b.setBackgroundColor(node.getAttribute("bgcolor"));
 
         applyDefaultStyles(node, b);
+        applyParentFontStyles(b, parent);
 
         applyStyles(node, b);
         applyInlineStyles(node, b);
