@@ -172,7 +172,7 @@ public class LayoutTests extends JFrame {
         Block d4 = d2.clone();
         d4.setMargins(0, 0, 0, 22);
         d4.setId("d4");
-        d4.setBorderClipMode(1);
+        d4.setBorderClipMode(2);
 
         document.root.addElement(d);
         document.root.addElement(d2);

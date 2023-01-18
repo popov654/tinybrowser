@@ -118,7 +118,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < 4; i++) {
             this.borderColor[i] = borderColor;
         }
-        this.border = new RoundedBorder(this, this.borderWidth, this.arc[0], this.borderColor);
+        this.border = new RoundedBorder(this, this.borderWidth, this.arc, this.borderColor, borderType);
         platform = Float.parseFloat(System.getProperties().getProperty("os.version"));
 
         rules_for_recalc = new HashMap<String, String>();
@@ -1458,7 +1458,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (height < 0) height = viewport_height = (int) Math.round(16 * ratio);
             setBorderColor("#8a8a9f");
             borderWidth = new int[] {1, 1, 1, 1};
-            this.border = new RoundedBorder(this, this.borderWidth, this.arc[0], this.borderColor, this.borderType);
+            this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
             if (bgcolor == null || bgcolor.equals(new Color(0, 0, 0, 0))) bgcolor = new Color(85, 85, 85, 75);
             setBackgroundImage("res" + File.separatorChar + "photo_16.png");
             this.background_pos_x = 1;
@@ -3152,7 +3152,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < 4; i++) {
             borderColor[i] = col;
         }
-        this.border = new RoundedBorder(this, borderWidth, arc[0], borderColor, borderType);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
         forceRepaint();
     }
 
@@ -3166,7 +3166,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < 4; i++) {
             borderWidth[i] = bw;
         }
-        this.border = new RoundedBorder(this, bw, arc[0], borderColor, borderType);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
         updateAbsolutePositionedChildren();
         forceRepaint();
     }
@@ -3229,7 +3229,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         borderWidth = value;
-        this.border = new RoundedBorder(this, borderWidth, arc[0], borderColor, borderType);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
         document.root.performLayout();
         forceRepaint();
     }
@@ -3238,13 +3238,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < 4; i++) {
             borderType[i] = value;
         }
-        this.border = new RoundedBorder(this, borderWidth, arc[0], borderColor, borderType);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
         forceRepaint();
     }
 
     public void setBorderType(int[] value) {
         borderType = value;
-        this.border = new RoundedBorder(this, borderWidth, arc[0], borderColor, borderType);
+        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
         forceRepaint();
     }
 
@@ -4091,27 +4091,27 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int i = 0; i < s.length; i++) {
                 if (s[i].matches("^[0-9]+.*(px|em)$")) {
                     int val = getValueInPixels(s[i]);
-                    if (prop.contains("-left") || prop.equals("border")) this.borderWidth[3] = val;
-                    if (prop.contains("-right") || prop.equals("border")) this.borderWidth[1] = val;
-                    if (prop.contains("-bottom") || prop.equals("border")) this.borderWidth[2] = val;
-                    if (prop.contains("-top") || prop.equals("border")) this.borderWidth[0] = val;
+                    if (prop.contains("-left") || prop.equals("border")) borderWidth[3] = val;
+                    if (prop.contains("-right") || prop.equals("border")) borderWidth[1] = val;
+                    if (prop.contains("-bottom") || prop.equals("border")) borderWidth[2] = val;
+                    if (prop.contains("-top") || prop.equals("border")) borderWidth[0] = val;
                 } else if (s[i].matches("^(#|rgba?).*") || !types.containsKey(s[i])) {
                     Color col = parseColor(s[i]);
-                    if (prop.contains("-left") || prop.equals("border")) this.borderColor[3] = col;
-                    if (prop.contains("-right") || prop.equals("border")) this.borderColor[1] = col;
-                    if (prop.contains("-bottom") || prop.equals("border")) this.borderColor[2] = col;
-                    if (prop.contains("-top") || prop.equals("border")) this.borderColor[0] = col;
+                    if (prop.contains("-left") || prop.equals("border")) borderColor[3] = col;
+                    if (prop.contains("-right") || prop.equals("border")) borderColor[1] = col;
+                    if (prop.contains("-bottom") || prop.equals("border")) borderColor[2] = col;
+                    if (prop.contains("-top") || prop.equals("border")) borderColor[0] = col;
                 } else {
                     if (types.containsKey(s[i])) {
                         int t = types.get(s[i]);
-                        if (prop.contains("-left") || prop.equals("border")) this.borderType[3] = t;
-                        if (prop.contains("-right") || prop.equals("border")) this.borderType[1] = t;
-                        if (prop.contains("-bottom") || prop.equals("border")) this.borderType[2] = t;
-                        if (prop.contains("-top") || prop.equals("border")) this.borderType[0] = t;
+                        if (prop.contains("-left") || prop.equals("border")) borderType[3] = t;
+                        if (prop.contains("-right") || prop.equals("border")) borderType[1] = t;
+                        if (prop.contains("-bottom") || prop.equals("border")) borderType[2] = t;
+                        if (prop.contains("-top") || prop.equals("border")) borderType[0] = t;
                     }
                 }
             }
-            this.border = new RoundedBorder(this, this.borderWidth, this.arc[0], this.borderColor, this.borderType);
+            this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
             forceRepaint();
             return;
         }
@@ -4205,10 +4205,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (prop.contains("-bottom")) this.borderWidth[2] = (int)val;
             if (WebDocument.scale_borders) {
                 for (int i = 0; i < 4; i++) {
-                    this.borderWidth[i] = (int)Math.round(this.borderWidth[i]*ratio);
+                    this.borderWidth[i] = (int)Math.round(borderWidth[i]*ratio);
                 }
             }
-            this.border = new RoundedBorder(this, this.borderWidth, this.arc[0], this.borderColor, this.borderType);
+            this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
             forceRepaint();
             return;
         }

@@ -59,11 +59,7 @@ public class RoundedBorder implements Border {
     }
 
     RoundedBorder(Block b, int[] width, int radius, Color[] color) {
-        this.block = b;
-        this.w = width;
-        for (int i = 0; i < 4; i++) {
-            this.radius[i] = radius;
-        }
+        this(b, width, radius);
         this.col = color;
     }
 
@@ -185,30 +181,91 @@ public class RoundedBorder implements Border {
 
         int mode = block.borderClipMode;
 
-        if (mode == 0) {
+        if (mode == 0 || mode == 2) {
             int hw = width / 2;
             int hh = height / 2;
+            int delta = (mode == 2) ? (int) (radius[0]*0.1) : 0;
 
-            int[] arrayX1 = {x, x+hw, x+width};
-            int[] arrayY1 = {y, y+hh, y};
+            int[] arrayX1;
+            int[] arrayY1;
+            if (radius[0] > 0 && radius[1] > 0) {
+                arrayX1 = new int[] {x+delta, x+hw, x+width-delta};
+                arrayY1 = new int[] {y+delta, y+hh, y+delta};
+            } else if (radius[0] > 0) {
+                arrayX1 = new int[] {x, x+hw, x+width-w[1], x+width};
+                arrayY1 = new int[] {y, y+hh, y+w[0],y};
+            } else if (radius[1] > 0) {
+                arrayX1 = new int[] {x, x+w[3], x+hw, x+width};
+                arrayY1 = new int[] {y, y+w[0], y+hh, y};
+            } else {
+                arrayX1 = new int[] {x, x+w[3], x+width-w[1], x+width};
+                arrayY1 = new int[] {y, y+w[0], y+w[0], y};
+            }
             d[0][0] = arrayX1;
             d[0][1] = arrayY1;
-            int[] arrayX2 = {x+width, x+width-hw, x+width};
-            int[] arrayY2 = {y, y+hh-1, y+height};
+
+            int[] arrayX2;
+            int[] arrayY2;
+
+            if (radius[1] > 0 && radius[2] > 0) {
+                arrayX2 = new int[] {x+width-delta, x+width-hw, x+width-delta};
+                arrayY2 = new int[] {y+delta, y+hh, y+height-delta};
+            } else if (radius[1] > 0) {
+                arrayX2 = new int[] {x+width, x+hw, x+width-w[1], x+width};
+                arrayY2 = new int[] {y, y+hh, y+height-w[2], y+height};
+            } else if (radius[2] > 0) {
+                arrayX2 = new int[] {x+width, x+width-w[1], x+hw, x+width};
+                arrayY2 = new int[] {y, y+w[0], y+hh, y+height};
+            } else {
+                arrayX2 = new int[] {x+width, x+width-w[1], x+width-w[1], x+width};
+                arrayY2 = new int[] {y, y+w[0], y+height-w[2], y+height};
+            }
+
             d[1][0] = arrayX2;
             d[1][1] = arrayY2;
-            int[] arrayX3 = {x+width, x+hw, x};
-            int[] arrayY3 = {y+height, y+height-hh, y+height};
+
+            int[] arrayX3;
+            int[] arrayY3;
+
+            if (radius[2] > 0 && radius[3] > 0) {
+                arrayX3 = new int[] {x+width-delta, x+hw, x+delta};
+                arrayY3 = new int[] {y+height-delta, y+hh, y+height-delta};
+            } else if (radius[2] > 0) {
+                arrayX3 = new int[] {x+width, x+hw, x+w[3], x};
+                arrayY3 = new int[] {y+height, y+hh, y+height-w[2], y+height};
+            } else if (radius[3] > 0) {
+                arrayX3 = new int[] {x+width, x+width-w[1], x+hw, x};
+                arrayY3 = new int[] {y+height, y+height-w[2], y+hh, y+height};
+            } else {
+                arrayX3 = new int[] {x+width, x+width-w[1], x+w[3], x};
+                arrayY3 = new int[] {y+height, y+height-w[2], y+height-w[2], y+height};
+            }
+
             d[2][0] = arrayX3;
             d[2][1] = arrayY3;
-            int[] arrayX4 = {x, x+hw, x};
-            int[] arrayY4 = {y+height, y+hh, y};
+
+            int[] arrayX4;
+            int[] arrayY4;
+
+            if (radius[3] > 0 && radius[0] > 0) {
+                arrayX4 = new int[] {x+delta, x+hw, x+delta};
+                arrayY4 = new int[] {y+height-delta, y+hh, y+delta};
+            } else if (radius[3] > 0) {
+                arrayX4 = new int[] {x, x+hw, x+w[3], x};
+                arrayY4 = new int[] {y+height, y+hh, y+w[0], y};
+            } else if (radius[0] > 0) {
+                arrayX4 = new int[] {x, x+w[3], x+hw, x};
+                arrayY4 = new int[] {y+height, y+height-w[2], y+hh, y};
+            } else {
+                arrayX4 = new int[] {x, x+w[3], x+w[3], x};
+                arrayY4 = new int[] {y+height, y+height-w[2], y+w[0], y};
+            }
+
             d[3][0] = arrayX4;
             d[3][1] = arrayY4;
         }
 
-        else if (mode == 1) {
-
+        if (mode == 1) {
             int[] arrayX1 = {x, x+w[3], x+width-w[1], x+width};
             int[] arrayY1 = {y, y+w[0], y+w[0], y};
             d[0][0] = arrayX1;
@@ -228,30 +285,6 @@ public class RoundedBorder implements Border {
 
         }
 
-        else if (mode == 2) {
-            int hw = width / 2;
-            int hh = height / 2;
-
-            int delta = (int) (radius[0]*0.1);
-
-            int[] arrayX1 = {x+delta, x+hw, x+width-delta};
-            int[] arrayY1 = {y+delta, y+hh, y+delta};
-            d[0][0] = arrayX1;
-            d[0][1] = arrayY1;
-            int[] arrayX2 = {x+width-delta, x+width-hw, x+width-delta};
-            int[] arrayY2 = {y+delta, y+hh, y+height-delta};
-            d[1][0] = arrayX2;
-            d[1][1] = arrayY2;
-            int[] arrayX3 = {x+width-delta, x+hw, x+delta};
-            int[] arrayY3 = {y+height-delta, y+height-hh, y+height-delta};
-            d[2][0] = arrayX3;
-            d[2][1] = arrayY3;
-            int[] arrayX4 = {x+delta, x+hw, x+delta};
-            int[] arrayY4 = {y+height-delta, y+hh, y+delta};
-            d[3][0] = arrayX4;
-            d[3][1] = arrayY4;
-        }
-
         int[] radius = new int[4];
         for (int i = 0; i < radius.length; i++) {
             radius[i] = Math.min(Math.min(width, height), this.radius[i]);
@@ -265,7 +298,7 @@ public class RoundedBorder implements Border {
             if (mode == 1) dd += 2;
             for (int j = 0; j < 4; j++) {
                 if (col[j].getAlpha() == 0) continue;
-                Polygon poly = new Polygon(d[j][0], d[j][1], mode != 1 ? 3 : 4);
+                Polygon poly = new Polygon(d[j][0], d[j][1], d[j][0].length);
                 g2d.setClip(poly);
 
                 g2d.setColor(col[j]);
@@ -286,7 +319,7 @@ public class RoundedBorder implements Border {
         Color color, color2, color3;
 
         for (int j = 0; j < 4; j++) {
-            Polygon poly = new Polygon(d[j][0], d[j][1], mode != 1 ? 3 : 4);
+            Polygon poly = new Polygon(d[j][0], d[j][1], d[j][0].length);
             g2d.setClip(poly);
             color = col[j];
             g2d.setColor(color);
@@ -294,9 +327,14 @@ public class RoundedBorder implements Border {
             color3 = new Color(color.getRed(), color.getGreen(), color.getBlue(), 56);
             //RoundedRect rect = new RoundedRect(x, y, width-1, height-1, block.arc[0] / 2, block.arc[1] / 2, block.arc[2] / 2, block.arc[3] / 2);
             //((Graphics2D)g).fill(rect);
+            if (!block.document.smooth_borders) {
+                g2d.setStroke(new BasicStroke(w[j]));
+                g2d.drawRect(x, y, width, height);
+                continue;
+            }
             RoundedRect rect = null;
             for (int i = 0; i < w[j]; i++) {
-                if (col[j].getAlpha() == 0) continue;
+                if (col[j].getAlpha() == 0 || w[j] == 0) continue;
                 
                 if (block.arc[0] != 0 || block.arc[1] != 0 || block.arc[2] != 0 || block.arc[3] != 0) {
                     //g.fillRoundRect(0, 0, width, height, radius, radius);
@@ -341,9 +379,24 @@ public class RoundedBorder implements Border {
 
                     
                 } else {
-                    g2d.fillRect(x, y, width, height);
+                    g2d.setColor(color);
+                    g2d.setStroke(new BasicStroke(1));
+                    if (j == 0) {
+                        if (w[3] == 0 && w[1] == 0) g.setClip(null);
+                        g2d.drawLine(x, y+i, x+width, y+i);
+                    } else if (j == 1) {
+                        if (w[0] == 0 && w[2] == 0) g.setClip(null);
+                        g2d.drawLine(x+width-1-i, y, x+width-1-i, y+height);
+                    } else if (j == 2) {
+                        if (w[1] == 0 && w[3] == 0) g.setClip(null);
+                        g2d.drawLine(x, y+height-1-i, x+width, y+height-1-i);
+                    } else {
+                        if (w[2] == 0 && w[0] == 0) g.setClip(null);
+                        g2d.drawLine(x+i, y, x+i, y+height);
+                    }
                 }
             }
+
             g2d.setClip(null);
         }
 
