@@ -439,9 +439,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (c[i] instanceof JSVGCanvas) {
                 Element root = ((JSVGCanvas)c[i]).getSVGDocument().getDocumentElement();
                 //String[] s = root.getAttribute("viewBox").split("\\s");
-                root.setAttributeNS(null, "width", width / ratio + "");
-                root.setAttributeNS(null, "height", height / ratio + "");
-                root.setAttributeNS(null, "viewBox", "0 0 " + width * ratio + " " + height * ratio);
+                root.setAttributeNS(null, "width", width + "");
+                root.setAttributeNS(null, "height", height + "");
+                root.setAttributeNS(null, "viewBox", "0 0 " + width + " " + height);
                 c[i].setBounds(_x_ - scroll_x, _y_ -scroll_y, width, height);
                 c[i].repaint();
                 continue;

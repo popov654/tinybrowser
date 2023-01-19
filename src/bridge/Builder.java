@@ -183,12 +183,20 @@ public class Builder {
         
         Set<String> keys = node.attributes.keySet();
         for (String key: keys) {
-            svgRoot.setAttributeNS(null, key, node.attributes.get(key));
+            if (!key.equals("width") && !key.equals("height") && !key.equals("viewbox")) {
+                svgRoot.setAttributeNS(null, key, node.attributes.get(key));
+            }
         }
+
         for (int i = 0; i < node.children.size(); i++) {
-            if (node.children.get(i).nodeType == 1) {
+            if (node.children.get(i).nodeType == 1) { 
                 svgRoot.appendChild(processSVGSubtree(doc, node.children.get(i)));
             }
+        }
+
+        double ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96;
+        if (document != null && document.forced_dpi > 0) {
+            ratio = document.forced_dpi;
         }
         if ((node.getAttribute("width") == null || node.getAttribute("height") == null) && node.getAttribute("viewbox") != null) {
             String[] s = node.getAttribute("viewbox").split("\\s");
@@ -200,21 +208,25 @@ public class Builder {
             int width = vw;
             int height = vh;
             if (node.getAttribute("width") != null) {
-                width = Integer.parseInt(node.getAttribute("width"));
+                width = (int) Math.round(Integer.parseInt(node.getAttribute("width")) * ratio);
                 height = (int) ((double) width / vw * vh);
                 node.setAttribute("height", height + "");
             } else if (node.getAttribute("height") != null) {
-                height = Integer.parseInt(node.getAttribute("height"));
+                height = (int) Math.round(Integer.parseInt(node.getAttribute("height")) * ratio);
                 width = (int) ((double) height / vh * vw);
                 node.setAttribute("width", width + "");
             } else {
-                node.setAttribute("width", vw + "");
-                node.setAttribute("height", vh + "");
+                width = (int) (vw * ratio);
+                height = (int) (vh * ratio);
+                node.setAttribute("width", width + "");
+                node.setAttribute("height", height + "");
             }
             //System.err.println(svgRoot.getAttribute("viewbox"));
-            //svgRoot.setAttributeNS(null, "viewBox", s[0] + " " + s[1] + " " + width * 1.3 + " " + height * 1.3);
-            svgRoot.setAttributeNS(null, "width", width * 2 + "");
-            svgRoot.setAttributeNS(null, "height", height * 2 + "");
+            //svgRoot.setAttributeNS(null, "preserveAspectRatio", "none");
+            svgRoot.setAttributeNS(null, "viewBox", "0 0 " + width + " " + height);
+            svgRoot.setAttributeNS(null, "width", width + "");
+            svgRoot.setAttributeNS(null, "height", height + "");
+
         }
 
         return doc;
