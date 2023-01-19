@@ -279,10 +279,11 @@ public class WebDocument extends JPanel {
         contentpane.setOpaque(true);
         
         //contentpane.setBounds(0, 0, 490, 380);
-        final int width = 490, height = 410;
+        final int width = 490, height = 418;
 
         final JScrollPane scrollpane = new JScrollPane(contentpane);
         scrollpane.setOpaque(false);
+        scrollpane.getInsets();
 
         cp.add(scrollpane);
         scrollpane.setBackground(Color.WHITE);
@@ -290,7 +291,7 @@ public class WebDocument extends JPanel {
         scrollpane.setPreferredSize(new Dimension(width, height));
         //setSize(518, 420);
         frame.setLocationRelativeTo(parent);
-        frame.setLocation(parent.getX() - 460, parent.getY() - 80);
+        frame.setLocation(parent.getX() - getWidth() - 86, parent.getY() - 80);
         frame.pack();
         frame.setVisible(true);
 
@@ -326,10 +327,25 @@ public class WebDocument extends JPanel {
             @Override
             public void run() {
                 TagLibrary.init();
-                Entry rootEntry = new Entry(root.node, instance);
-                //rootEntry.setMinimumSize(new Dimension(490, 26));
+                final Entry rootEntry = new Entry(root.node, instance);
+                //rootEntry.setMinimumSize(new Dimension(width, 26));
                 contentpane.add(rootEntry);
-                rootEntry.inflate(scrollpane.getWidth() - scrollpane.getVerticalScrollBar().getPreferredSize().width - 12, 30, 0);
+
+                final JScrollPane sp = scrollpane;
+
+                int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() + sp.getVerticalScrollBar().getPreferredSize().width;
+                rootEntry.inflate(width, Entry.margin);
+                
+                contentpane.addComponentListener(new java.awt.event.ComponentAdapter() {
+                    @Override
+                    public void componentMoved(java.awt.event.ComponentEvent evt) {}
+
+                    @Override
+                    public void componentResized(java.awt.event.ComponentEvent evt) {
+                        int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() - 12;
+                        rootEntry.setWidth(width, Entry.margin);
+                    }
+                });
             }
 
         });

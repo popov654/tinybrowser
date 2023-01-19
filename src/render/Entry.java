@@ -84,7 +84,7 @@ public class Entry extends javax.swing.JPanel {
         //content.validate();
     }
 
-    public void inflate(int width, int gap, int level) {
+    public void inflate(int width, int gap) {
         if (node == null) return;
         if (node.nodeType == 1) {
             boolean isPaired = !TagLibrary.tags.containsKey(node.tagName.toLowerCase()) ||
@@ -102,14 +102,14 @@ public class Entry extends javax.swing.JPanel {
                 tag_footer.setText("</" + node.tagName.toLowerCase() + ">");
             }
 
-            int w = Math.max(280, width - gap * level);
+            int w = Math.max(min_width, width - gap);
 
             content.removeAll();
             //System.out.println(getWidth());
             for (int i = 0; i < node.children.size(); i++) {
                 Entry e = new Entry(node.children.get(i), document);
                 content.add(e);
-                e.inflate(w, gap, level+1);
+                e.inflate(w, gap);
                 //content.setSize(e.getSize());
             }
             content.doLayout();
@@ -119,10 +119,12 @@ public class Entry extends javax.swing.JPanel {
                 close();
             }
 
-            int height = 26 * 2 + content.getPreferredSize().height;
+            int height = line_height * 2 + content.getPreferredSize().height;
             //setMaximumSize(new Dimension(width - gap * level, 26 * 2 + content.getPreferredSize().height));
             //System.out.println(getParent().getWidth() + "x" + height);
             //System.out.println(width - gap * level);
+            header.setMinimumSize(new Dimension(width, line_height));
+            footer.setMinimumSize(new Dimension(width, line_height));
             content.setPreferredSize(new Dimension(w, content.getPreferredSize().height));
             if (w + gap > width) {
                 setMaximumSize(new Dimension(w + gap, 32767));
@@ -158,6 +160,12 @@ public class Entry extends javax.swing.JPanel {
             //content.setMinimumSize(new Dimension(getParent().getWidth(), height));
 
             //setPreferredSize(new Dimension(getParent().getWidth(), height));
+            
+            header.setMinimumSize(new Dimension(width, line_height));
+            footer.setMinimumSize(new Dimension(width, line_height));
+
+            int w = Math.max(min_width, width - gap);
+            content.setPreferredSize(new Dimension(w, content.getPreferredSize().height));
 
             content.validate();
         } else {
@@ -166,6 +174,26 @@ public class Entry extends javax.swing.JPanel {
         }
         
     }
+
+    public void setWidth(int width, int gap) {
+        int w = Math.max(min_width, width - gap);
+        setPreferredSize(new Dimension(width, getPreferredSize().height));
+        header.setMinimumSize(new Dimension(width, line_height));
+        footer.setMinimumSize(new Dimension(width, line_height));
+        content.setPreferredSize(new Dimension(w, content.getPreferredSize().height));
+        Component[] c = content.getComponents();
+        for (int i = 0; i < c.length; i++) {
+            if (c[i] instanceof Entry) {
+                ((Entry)c[i]).setWidth(width-gap, gap);
+            } else {
+                c[i].setMaximumSize(new Dimension(width-gap, c[i].getMaximumSize().height));
+            }
+        }
+    }
+
+    public static final int min_width = 280;
+    public static final int line_height = 26;
+    public static final int margin = 30;
 
     MouseListener listener = new MouseListener() {
 
@@ -306,7 +334,7 @@ public class Entry extends javax.swing.JPanel {
         header.setMaximumSize(new java.awt.Dimension(32767, 26));
         header.setMinimumSize(new java.awt.Dimension(280, 26));
         header.setOpaque(false);
-        header.setPreferredSize(null);
+        header.setPreferredSize(new java.awt.Dimension(167, 26));
         header.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 2));
 
         margin_header.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 0, 0, 5));
@@ -354,10 +382,7 @@ public class Entry extends javax.swing.JPanel {
 
         content.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 30, 0, 0));
         content.setAlignmentX(1.0F);
-        content.setMaximumSize(new java.awt.Dimension(32767, 32767));
-        content.setMinimumSize(null);
         content.setOpaque(false);
-        content.setPreferredSize(null);
         content.setLayout(new javax.swing.BoxLayout(content, javax.swing.BoxLayout.PAGE_AXIS));
         add(content);
 
@@ -365,7 +390,7 @@ public class Entry extends javax.swing.JPanel {
         footer.setAlignmentX(1.0F);
         footer.setMaximumSize(new java.awt.Dimension(32767, 26));
         footer.setOpaque(false);
-        footer.setPreferredSize(null);
+        footer.setPreferredSize(new java.awt.Dimension(91, 26));
         footer.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEADING, 0, 2));
 
         margin_footer.setOpaque(false);
