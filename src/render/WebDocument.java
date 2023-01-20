@@ -322,19 +322,21 @@ public class WebDocument extends JPanel {
 
         final WebDocument instance = this;
 
+        //final boolean showAttributes = true;
+
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run() {
                 TagLibrary.init();
-                final Entry rootEntry = new Entry(root.node, instance);
+                final ExtendedEntry rootEntry = new ExtendedEntry(root.node, instance);
                 //rootEntry.setMinimumSize(new Dimension(width, 26));
                 contentpane.add(rootEntry);
 
                 final JScrollPane sp = scrollpane;
 
                 int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() + sp.getVerticalScrollBar().getPreferredSize().width;
-                rootEntry.inflate(width, Entry.margin);
+                rootEntry.inflate(width);
                 
                 contentpane.addComponentListener(new java.awt.event.ComponentAdapter() {
                     @Override
@@ -343,7 +345,7 @@ public class WebDocument extends JPanel {
                     @Override
                     public void componentResized(java.awt.event.ComponentEvent evt) {
                         int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() - 12;
-                        rootEntry.setWidth(width, Entry.margin);
+                        rootEntry.setWidth(width);
                     }
                 });
             }
