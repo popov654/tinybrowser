@@ -54,13 +54,14 @@ public class ExtendedEntry extends javax.swing.JPanel {
     }
 
     private void addAttributes() {
+        final ExtendedEntry entry = this;
         callback = new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 String command = e.getActionCommand();
                 Attribute attr = (Attribute)e.getSource();
-                if (command.equals("changed")) {
+                if (command.equals("added") || command.equals("changed")) {
                     node.attributes.put(attr.getNameField(), attr.getValueField());
                 }
                 else if (command.equals("replaced")) {
@@ -71,10 +72,33 @@ public class ExtendedEntry extends javax.swing.JPanel {
                     node.attributes.remove(((Attribute)e.getSource()).getNameField());
                     attributes.remove(attr);
                 }
+                if (command.equals("added")) {
+                    String text = ((Attribute)e.getSource()).getEditorText();
+                    int pos = text.indexOf('=');
+                    if (pos <= 0) return;
+                    String name = text.substring(0, pos);
+                    String value = text.substring(pos+1);
+                    if (value.matches("\".*\"")) {
+                        value = value.substring(1, value.length()-1);
+                    }
+                    Attribute a = new Attribute(entry, name, value, this);
+                    int index = 0;
+                    Component[] c = entry.attributes.getComponents();
+                    for (int i = 0; i < c.length; i++) {
+                        if (c[i] == e.getSource()) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    entry.attributes.add(a, index);
+                    Dimension dim = attributes.getPreferredSize();
+                    entry.attributes.setPreferredSize(new Dimension(dim.width + attr.getWidth(), dim.height));
+                }
             }
         };
         Set<String> keys = node.attributes.keySet();
         attributes.setPreferredSize(new Dimension(0, line_height));
+        int index = 0;
         for (String key: keys) {
             Attribute attr = new Attribute(this, key, node.attributes.get(key), callback);
             attributes.add(attr);

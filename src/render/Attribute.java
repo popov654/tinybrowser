@@ -49,6 +49,7 @@ public class Attribute extends javax.swing.JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (value_editor.isOpaque() || full_editor.isOpaque()) return;
                 value_editor.setOpaque(true);
                 value_editor.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
                 int width = value_editor.getFontMetrics(value_editor.getFont()).stringWidth(value_field.getText());
@@ -79,7 +80,7 @@ public class Attribute extends javax.swing.JPanel {
 
             @Override
             public void focusLost(FocusEvent e) {
-                closeValueEditor();
+                if (value_editor.isOpaque()) closeValueEditor();
             }
 
         });
@@ -88,10 +89,12 @@ public class Attribute extends javax.swing.JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (full_editor.isOpaque()) return;
                 if (value_editor.isOpaque()) closeValueEditor();
+                is_new = e.getSource() == full_editor;
                 full_editor.setOpaque(true);
                 full_editor.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-                String text = name_field.getText() + "=\"" + value_field.getText() + "\"";
+                String text = is_new ? "" : name_field.getText() + "=\"" + value_field.getText() + "\"";
                 //int width = full_editor.getFontMetrics(full_editor.getFont()).stringWidth(text);
                 int width = name_field.getWidth() + value_field.getWidth() + 20;
                 full_editor.setPreferredSize(new Dimension(width, full_editor.getPreferredSize().height));
@@ -129,11 +132,15 @@ public class Attribute extends javax.swing.JPanel {
         full_editor.addFocusListener(new FocusListener() {
 
             @Override
-            public void focusGained(FocusEvent e) {}
+            public void focusGained(FocusEvent e) {
+                if (full_editor.getText().isEmpty()) {
+                    is_new = true;
+                }
+            }
 
             @Override
             public void focusLost(FocusEvent e) {
-                closeFullEditor();
+                if (full_editor.isOpaque()) closeFullEditor();
             }
 
         });
@@ -191,19 +198,22 @@ public class Attribute extends javax.swing.JPanel {
 
         parseFullValue();
 
-        full_editor.setText("");
-
         if (listener != null) {
-            String command = "changed";
+            String command = is_new ? "added" : "changed";
             if (!name_field.getText().equals(originalName)) command = "replaced";
             if (name_field.getText().isEmpty()) command = "removed";
             listener.actionPerformed(new ActionEvent(this, Event.ACTION_EVENT, command));
         }
 
+        full_editor.setText("");
+
+        is_new = false;
+
         setSize(name_field.getSize().width + value_field.getSize().width + 16, Entry.line_height);
     }
 
     private void parseFullValue() {
+        if (is_new) return;
         int pos = full_editor.getText().indexOf('=');
         if (pos <= 0) {
             name_field.setText("");
@@ -222,6 +232,10 @@ public class Attribute extends javax.swing.JPanel {
             name_field.setText(name);
             value_field.setText(value);
         }
+    }
+
+    public String getEditorText() {
+        return full_editor.getText();
     }
 
     public String getNameField() {
@@ -254,7 +268,6 @@ public class Attribute extends javax.swing.JPanel {
         quote2 = new javax.swing.JLabel();
 
         setMaximumSize(new java.awt.Dimension(32767, 24));
-        setMinimumSize(null);
         setOpaque(false);
         setPreferredSize(new java.awt.Dimension(400, 22));
         setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0));
@@ -294,6 +307,7 @@ public class Attribute extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private final int full_editor_width = 8;
+    private boolean is_new = false;
 
     private String originalName;
     private ExtendedEntry entry;
