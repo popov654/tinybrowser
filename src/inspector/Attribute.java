@@ -48,6 +48,7 @@ public class Attribute extends javax.swing.JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (value_editor.isOpaque() || full_editor.isOpaque()) return;
                 value_editor.setOpaque(true);
                 value_editor.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
                 int width = value_editor.getFontMetrics(value_editor.getFont()).stringWidth(value_field.getText());
@@ -87,6 +88,7 @@ public class Attribute extends javax.swing.JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
+                if (full_editor.isOpaque()) return;
                 if (value_editor.isOpaque()) closeValueEditor();
                 is_new = e.getSource() == full_editor;
                 full_editor.setOpaque(true);
@@ -142,6 +144,28 @@ public class Attribute extends javax.swing.JPanel {
 
         });
 
+        if (entry.node.parent == null) {
+            entry.getParent().addMouseListener(new MouseListener() {
+
+                @Override
+                public void mouseClicked(MouseEvent e) {}
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    getRootPane().requestFocus();
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {}
+
+                @Override
+                public void mouseEntered(MouseEvent e) {}
+
+                @Override
+                public void mouseExited(MouseEvent e) {}
+            });
+        }
+
         if (entry != null) entry.addMouseListener(new MouseListener() {
 
             @Override
@@ -149,6 +173,7 @@ public class Attribute extends javax.swing.JPanel {
 
             @Override
             public void mousePressed(MouseEvent e) {
+                getRootPane().requestFocus();
                 if (value_editor.isOpaque()) closeValueEditor();
                 else if (full_editor.isOpaque()) closeFullEditor();
             }

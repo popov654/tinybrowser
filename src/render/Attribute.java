@@ -206,6 +206,7 @@ public class Attribute extends javax.swing.JPanel {
         }
 
         full_editor.setText("");
+        full_editor.getRootPane().requestFocus();
 
         is_new = false;
 

@@ -73,6 +73,8 @@ public class Entry extends javax.swing.JPanel {
                 else if (command.equals("removed")) {
                     node.attributes.remove(((Attribute)e.getSource()).getNameField());
                     attributes.remove(attr);
+                    Dimension dim = attributes.getPreferredSize();
+                    entry.attributes.setPreferredSize(new Dimension(Math.max(0, dim.width - attr.getWidth()), dim.height));
                 }
                 if (command.equals("added")) {
                     String text = ((Attribute)e.getSource()).getEditorText();
