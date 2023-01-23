@@ -66,6 +66,7 @@ public class WebInspectorTest {
         final JPanel contentpane = new JPanel();
         contentpane.setBackground(Color.WHITE);
         contentpane.setOpaque(true);
+        contentpane.setLayout(null);
 
         //contentpane.setBounds(0, 0, 490, 380);
         final int width = 490, height = 418;
@@ -102,7 +103,7 @@ public class WebInspectorTest {
 
                     @Override
                     public void componentResized(java.awt.event.ComponentEvent evt) {
-                        int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() - 12;
+                        int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth();
                         rootEntry.setWidth(width);
                     }
                 });
