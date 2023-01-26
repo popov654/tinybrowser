@@ -142,6 +142,8 @@ public class Attribute extends javax.swing.JPanel {
 
         full_editor.addMouseListener(l);
         name_field.addMouseListener(l);
+        eq.addMouseListener(l);
+        quote1.addMouseListener(l);
 
         full_editor.addFocusListener(new FocusListener() {
 

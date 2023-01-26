@@ -114,9 +114,6 @@ public class Entry extends javax.swing.JPanel {
             attributes.setMaximumSize(new Dimension(dim.width + attr.getWidth(), dim.height));
             //System.err.println(attr.getNameField() + ": " + attr.getValueField() + " -> " + (dim.width + attr.getWidth()));
         }
-        Dimension dim = attributes.getPreferredSize();
-        attributes.setPreferredSize(new Dimension(Math.max(0, dim.width - 3), dim.height));
-        attributes.setMaximumSize(new Dimension(Math.max(0, dim.width - 3), dim.height));
         if (!attributesEnabled) {
             attributes.setPreferredSize(new Dimension(0, attributes.getPreferredSize().height));
             attributes.setMaximumSize(new Dimension(0, attributes.getPreferredSize().height));
