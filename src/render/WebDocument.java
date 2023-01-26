@@ -330,8 +330,7 @@ public class WebDocument extends JPanel {
             @Override
             public void run() {
                 TagLibrary.init();
-                final Entry rootEntry = new Entry(root.node, instance);
-                //rootEntry.setMinimumSize(new Dimension(width, 26));
+                final Entry rootEntry = new Entry(root.node.parent, instance);
                 contentpane.add(rootEntry);
 
                 final JScrollPane sp = scrollpane;
