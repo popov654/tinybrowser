@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -66,7 +67,7 @@ public class WebInspectorTest {
         final JPanel contentpane = new JPanel();
         contentpane.setBackground(Color.WHITE);
         contentpane.setOpaque(true);
-        contentpane.setLayout(null);
+        contentpane.setLayout(new BoxLayout(contentpane, BoxLayout.PAGE_AXIS));
 
         //contentpane.setBounds(0, 0, 490, 380);
         final int width = 490, height = 418;
@@ -103,7 +104,7 @@ public class WebInspectorTest {
 
                     @Override
                     public void componentResized(java.awt.event.ComponentEvent evt) {
-                        int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth();
+                        int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width : sp.getWidth();
                         rootEntry.setWidth(width);
                     }
                 });

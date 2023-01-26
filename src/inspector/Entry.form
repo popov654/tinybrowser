@@ -41,11 +41,7 @@
         </Property>
       </Properties>
 
-      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout">
-        <Property name="alignment" type="int" value="3"/>
-        <Property name="horizontalGap" type="int" value="0"/>
-        <Property name="verticalGap" type="int" value="2"/>
-      </Layout>
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBoxLayout"/>
       <SubComponents>
         <Container class="javax.swing.JPanel" name="headerMargin">
           <Properties>
@@ -111,6 +107,7 @@
         </Component>
         <Container class="javax.swing.JPanel" name="attributes">
           <Properties>
+            <Property name="alignmentY" type="float" value="0.5"/>
             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[32767, 26]"/>
             </Property>

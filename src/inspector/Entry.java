@@ -17,6 +17,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Set;
+import javax.swing.Box;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
@@ -43,6 +44,7 @@ public class Entry extends javax.swing.JPanel {
         this.node = node;
         this.document = document;
         initComponents();
+        header.add(Box.createHorizontalGlue());
         initEvents();
     }
 
@@ -102,22 +104,29 @@ public class Entry extends javax.swing.JPanel {
         };
         Set<String> keys = node.attributes.keySet();
         attributes.setPreferredSize(new Dimension(0, line_height));
+        attributes.setMaximumSize(new Dimension(0, line_height));
         int index = 0;
         for (String key: keys) {
             Attribute attr = new Attribute(this, key, node.attributes.get(key), callback);
             attributes.add(attr);
             Dimension dim = attributes.getPreferredSize();
             attributes.setPreferredSize(new Dimension(dim.width + attr.getWidth(), dim.height));
+            attributes.setMaximumSize(new Dimension(dim.width + attr.getWidth(), dim.height));
             //System.err.println(attr.getNameField() + ": " + attr.getValueField() + " -> " + (dim.width + attr.getWidth()));
         }
+        Dimension dim = attributes.getPreferredSize();
+        attributes.setPreferredSize(new Dimension(Math.max(0, dim.width - 3), dim.height));
+        attributes.setMaximumSize(new Dimension(Math.max(0, dim.width - 3), dim.height));
         if (!attributesEnabled) {
             attributes.setPreferredSize(new Dimension(0, attributes.getPreferredSize().height));
+            attributes.setMaximumSize(new Dimension(0, attributes.getPreferredSize().height));
             attributes.setVisible(false);
         }
-        int max_width = Math.max(attributes.getPreferredSize().width + headerTag.getWidth() + headerTag2.getWidth() + 38, getPreferredSize().width);
+        int max_width = Math.max(attributes.getPreferredSize().width + headerTag.getSize().width + headerTag2.getSize().width + headerMargin.getSize().width + 18, getPreferredSize().width);
         header.setSize(new Dimension(max_width, line_height));
         footer.setSize(new Dimension(max_width, line_height));
         setMinimumSize(new Dimension(max_width, line_height));
+        header.setPreferredSize(new Dimension(max_width, line_height));
     }
 
     private void initEvents() {
@@ -225,7 +234,7 @@ public class Entry extends javax.swing.JPanel {
             return;
         }
 
-        int w = Math.max(Math.max(Math.max(content.getSize().width, header.getSize().width), min_width), width);
+        int w = Math.max(Math.max(Math.max(content.getPreferredSize().width, header.getPreferredSize().width), min_width), width);
 
         if (attributesEnabled) updateWidth(w);
         
@@ -236,11 +245,11 @@ public class Entry extends javax.swing.JPanel {
         int height = opened ? line_height * 2 + content.getPreferredSize().height : line_height;
         if (node.nodeType == 3 && !node.nodeValue.matches("\\s*")) {
             int rows = node.nodeValue.split("\n").length;
-            height = getFontMetrics(content.getComponents()[0].getFont()).getHeight() * rows;
+            height = getFontMetrics(content.getComponents()[0].getFont()).getHeight() * rows + 3;
         }
         int w = Math.max(Math.max(header.getPreferredSize().width, content.getPreferredSize().width), min_width);
-        if (getParent().getSize().width > w) w = getParent().getSize().width;
-        return new Dimension(w, height + 3);
+        //if (getParent().getSize().width > w) w = getParent().getSize().width;
+        return new Dimension(w, height);
     }
 
     @Override
@@ -250,29 +259,13 @@ public class Entry extends javax.swing.JPanel {
 
     @Override
     public Dimension getMaximumSize() {
-        return getPreferredSize();
+        return new Dimension(32767, getPreferredSize().height);
     }
 
     public void setWidth(int width) {
         int w = Math.max(Math.max(header.getMinimumSize().width, min_width), width);
         if (getSize().width > w) return;
         setSize(new Dimension(w, getSize().height));
-        header.setSize(new Dimension(w, line_height));
-        footer.setSize(new Dimension(w, line_height));
-        content.setSize(new Dimension(w, content.getSize().height));
-        content.setPreferredSize(new Dimension(w, content.getSize().height));
-        header.setMinimumSize(new Dimension(w, line_height));
-        content.setMinimumSize(new Dimension(w, content.getSize().height));
-        footer.setMinimumSize(new Dimension(w, line_height));
-        Component[] c = content.getComponents();
-        for (int i = 0; i < c.length; i++) {
-            if (c[i] instanceof Entry) {
-                ((Entry)c[i]).setWidth(w);
-            } else {
-                c[i].setSize(w, c[i].getMaximumSize().height);
-                c[i].setMaximumSize(new Dimension(w, c[i].getMaximumSize().height));
-            }
-        }
     }
 
     private void updateWidth(int width) {
@@ -367,10 +360,6 @@ public class Entry extends javax.swing.JPanel {
             g.setColor(new Color(255, 255, 255));
             g.fillRect(0, 0, getWidth(), getHeight());
         }
-        Component[] c = getComponents();
-        for (Component comp: c) {
-            comp.repaint();
-        }
     }
 
     private boolean hovered = false;
@@ -382,6 +371,12 @@ public class Entry extends javax.swing.JPanel {
         content.setVisible(true);
         footer.setVisible(true);
         opened = true;
+
+        int max_width = Math.max(attributes.getPreferredSize().width + headerTag.getSize().width + headerTag2.getSize().width + headerMargin.getSize().width + 18, getPreferredSize().width);
+        header.setSize(new Dimension(max_width, line_height));
+        footer.setSize(new Dimension(max_width, line_height));
+        setMinimumSize(new Dimension(max_width, line_height));
+        header.setPreferredSize(new Dimension(max_width, line_height));
 
         if (getParent().getParent() != null) {
             getParent().getParent().validate();
@@ -397,6 +392,12 @@ public class Entry extends javax.swing.JPanel {
         marker.setVisible(has_children);
         headerTag3.setVisible(true);
         opened = false;
+
+        int max_width = Math.max(attributes.getPreferredSize().width + headerTag.getSize().width + headerTag2.getSize().width + headerMargin.getSize().width + headerTag3.getSize().width + threeDots.getSize().width, getPreferredSize().width);
+        header.setSize(new Dimension(max_width, line_height));
+        footer.setSize(new Dimension(max_width, line_height));
+        setMinimumSize(new Dimension(max_width, line_height));
+        header.setPreferredSize(new Dimension(max_width, line_height));
 
         if (getParent().getParent() != null) {
             getParent().getParent().validate();
@@ -461,7 +462,7 @@ public class Entry extends javax.swing.JPanel {
         header.setMinimumSize(new java.awt.Dimension(280, 26));
         header.setOpaque(false);
         header.setPreferredSize(new java.awt.Dimension(280, 26));
-        header.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEADING, 0, 2));
+        header.setLayout(new javax.swing.BoxLayout(header, javax.swing.BoxLayout.LINE_AXIS));
 
         headerMargin.setBorder(javax.swing.BorderFactory.createEmptyBorder(2, 0, 0, 5));
         headerMargin.setMaximumSize(new java.awt.Dimension(30, 26));
@@ -495,13 +496,14 @@ public class Entry extends javax.swing.JPanel {
         headerTag.setText("<body");
         header.add(headerTag);
 
+        attributes.setAlignmentY(0.5F);
         attributes.setMaximumSize(new java.awt.Dimension(32767, 26));
         attributes.setOpaque(false);
         attributes.setPreferredSize(new java.awt.Dimension(0, 26));
         attributes.setLayout(new javax.swing.BoxLayout(attributes, javax.swing.BoxLayout.LINE_AXIS));
         header.add(attributes);
 
-        headerTag2.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        headerTag2.setFont(new java.awt.Font("Arial", 1, 16));
         headerTag2.setForeground(new java.awt.Color(102, 0, 153));
         headerTag2.setText(">");
         header.add(headerTag2);
@@ -511,7 +513,7 @@ public class Entry extends javax.swing.JPanel {
         threeDots.setPreferredSize(new java.awt.Dimension(19, 20));
         header.add(threeDots);
 
-        headerTag3.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        headerTag3.setFont(new java.awt.Font("Arial", 1, 16));
         headerTag3.setForeground(new java.awt.Color(102, 0, 153));
         headerTag3.setText("</body>");
         header.add(headerTag3);
@@ -547,7 +549,7 @@ public class Entry extends javax.swing.JPanel {
 
         footer.add(footerMargin);
 
-        footerTag.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        footerTag.setFont(new java.awt.Font("Arial", 1, 16));
         footerTag.setForeground(new java.awt.Color(102, 0, 153));
         footerTag.setText("</body>");
         footer.add(footerTag);

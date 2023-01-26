@@ -204,7 +204,7 @@ public class Attribute extends javax.swing.JPanel {
             listener.actionPerformed(new ActionEvent(this, Event.ACTION_EVENT, command));
         }
 
-        setSize(name_field.getPreferredSize().width + value_field.getPreferredSize().width + 36, Entry.line_height);
+        setSize(name_field.getSize().width + value_field.getSize().width + eq.getSize().width + quote1.getSize().width + quote2.getSize().width, Entry.line_height);
     }
 
     private void closeFullEditor() {
@@ -228,10 +228,11 @@ public class Attribute extends javax.swing.JPanel {
         }
 
         full_editor.setText("");
+        full_editor.setPreferredSize(new Dimension(6, 22));
 
         is_new = false;
 
-        setSize(name_field.getSize().width + value_field.getSize().width + 16, Entry.line_height);
+        setSize(name_field.getSize().width + value_field.getSize().width + eq.getSize().width + quote1.getSize().width + quote2.getSize().width, Entry.line_height);
     }
 
     private void parseFullValue() {
@@ -289,10 +290,11 @@ public class Attribute extends javax.swing.JPanel {
         value_field = new javax.swing.JLabel();
         quote2 = new javax.swing.JLabel();
 
-        setMaximumSize(new java.awt.Dimension(150000, 24));
+        setMaximumSize(new java.awt.Dimension(150000, 26));
+        setMinimumSize(new java.awt.Dimension(84, 26));
         setOpaque(false);
-        setPreferredSize(new java.awt.Dimension(400, 22));
-        setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0));
+        setPreferredSize(new java.awt.Dimension(400, 26));
+        setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 2));
 
         full_editor.setBorder(null);
         full_editor.setMinimumSize(new java.awt.Dimension(0, 22));
