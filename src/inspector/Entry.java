@@ -160,6 +160,27 @@ public class Entry extends javax.swing.JPanel {
 
     public void inflate(int width) {
         if (node == null) return;
+        if (node.parent == null && getParent() != null && getParent().getMouseListeners().length == 0) {
+            getParent().addMouseListener(new MouseListener() {
+
+                @Override
+                public void mouseClicked(MouseEvent e) {}
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    getRootPane().requestFocus();
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {}
+
+                @Override
+                public void mouseEntered(MouseEvent e) {}
+
+                @Override
+                public void mouseExited(MouseEvent e) {}
+            });
+        }
         if (node.nodeType == 1) {
             boolean isPaired = !TagLibrary.tags.containsKey(node.tagName.toLowerCase()) ||
                                 TagLibrary.tags.get(node.tagName.toLowerCase());

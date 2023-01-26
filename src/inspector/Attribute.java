@@ -161,28 +161,6 @@ public class Attribute extends javax.swing.JPanel {
 
         });
 
-        if (entry.node.parent == null) {
-            entry.getParent().addMouseListener(new MouseListener() {
-
-                @Override
-                public void mouseClicked(MouseEvent e) {}
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    getRootPane().requestFocus();
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {}
-
-                @Override
-                public void mouseEntered(MouseEvent e) {}
-
-                @Override
-                public void mouseExited(MouseEvent e) {}
-            });
-        }
-
         if (entry != null) entry.addMouseListener(new MouseListener() {
 
             @Override
