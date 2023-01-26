@@ -122,7 +122,8 @@ public class Entry extends javax.swing.JPanel {
             attributes.setMaximumSize(new Dimension(0, attributes.getPreferredSize().height));
             attributes.setVisible(false);
         }
-        int max_width = Math.max(attributes.getPreferredSize().width + headerTag.getSize().width + headerTag2.getSize().width + headerMargin.getSize().width + 18, getPreferredSize().width);
+        int max_width = Math.max(attributes.getPreferredSize().width + headerTag.getSize().width + headerTag2.getSize().width + Entry.margin, getPreferredSize().width);
+        if (max_width > 2000) max_width += 120;
         header.setSize(new Dimension(max_width, line_height));
         footer.setSize(new Dimension(max_width, line_height));
         setMinimumSize(new Dimension(max_width, line_height));

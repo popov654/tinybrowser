@@ -33,7 +33,7 @@ public class Attribute extends javax.swing.JPanel {
         }
         //setOpaque(true);
         //setBackground(Color.RED);
-        setSize(name_field.getPreferredSize().width + value_field.getPreferredSize().width + 36, Entry.line_height);
+        setSize(getPreferredSize());
         initEvents();
         originalName = name;
     }
@@ -41,6 +41,21 @@ public class Attribute extends javax.swing.JPanel {
     public Attribute(Entry entry, String name, String value, ActionListener listener) {
         this(entry, name, value);
         this.listener = listener;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(name_field.getPreferredSize().width + value_field.getPreferredSize().width + eq.getPreferredSize().width + quote1.getPreferredSize().width + quote2.getPreferredSize().width + 6, Entry.line_height);
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return getPreferredSize();
+    }
+
+    @Override
+    public Dimension getMaximumSize() {
+        return getPreferredSize();
     }
 
     private void initEvents() {
