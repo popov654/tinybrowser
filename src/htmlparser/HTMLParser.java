@@ -207,7 +207,11 @@ public class HTMLParser {
             if (curNode != null) {
                 parentNode = curNode;
             }
-            curNode = new Node(parentNode, 1);
+            if (parentNode.tagName.equals("html") && cur_tag.toLowerCase().equals("html")) {
+                curNode = parentNode;
+            } else {
+                curNode = new Node(parentNode, 1);
+            }
             if (attrs.containsKey("id")) {
                 ids.put(attrs.get("id"), curNode);
             }
