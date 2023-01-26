@@ -868,7 +868,7 @@ public class MediaPlayer {
     public static int panel_height = 22;
 
     private static final String NATIVE_LIBRARY_SEARCH_PATH = "C:/Program Files/VideoLAN/VLC";
-    private static final String LOCAL_PATH = "vlc";
+    private static final String LOCAL_PATH = Util.getInstallPath() + "vlc";
 
     private IconLayer icon1;
     private IconLayer icon2;
