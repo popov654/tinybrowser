@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.BorderFactory;
@@ -104,8 +106,27 @@ public class Attribute extends javax.swing.JPanel {
             }
 
         });
+        KeyListener keyListener = new KeyListener() {
 
-        MouseListener l = new MouseListener() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    no_save = true;
+                    getRootPane().requestFocus();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+        };
+        value_editor.addKeyListener(keyListener);
+        full_editor.addKeyListener(keyListener);
+
+        MouseListener mouseListener = new MouseListener() {
 
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -116,7 +137,7 @@ public class Attribute extends javax.swing.JPanel {
                 String text = is_new ? "" : name_field.getText() + "=\"" + value_field.getText() + "\"";
                 openFullEditor(text, e.getSource() == full_editor);
 
-                //full_editor.selectAll();
+                full_editor.selectAll();
             }
 
             @Override
@@ -133,10 +154,10 @@ public class Attribute extends javax.swing.JPanel {
 
         };
 
-        full_editor.addMouseListener(l);
-        name_field.addMouseListener(l);
-        eq.addMouseListener(l);
-        quote1.addMouseListener(l);
+        full_editor.addMouseListener(mouseListener);
+        name_field.addMouseListener(mouseListener);
+        eq.addMouseListener(mouseListener);
+        quote1.addMouseListener(mouseListener);
 
         full_editor.addFocusListener(new FocusListener() {
 
@@ -244,16 +265,19 @@ public class Attribute extends javax.swing.JPanel {
     private void closeValueEditor() {
         value_editor.setBorder(null);
         value_editor.setPreferredSize(new Dimension(0, value_editor.getPreferredSize().height));
-        value_field.setText(value_editor.getText());
+        if (!no_save) {
+            value_field.setText(value_editor.getText());
+        }
         value_field.setVisible(true);
         value_editor.setOpaque(false);
 
         value_editor.setText("");
 
-        if (listener != null) {
+        if (listener != null && !no_save) {
             String command = "changed";
             listener.actionPerformed(new ActionEvent(this, Event.ACTION_EVENT, command));
         }
+        no_save = false;
 
         setSize(name_field.getSize().width + value_field.getSize().width + eq.getSize().width + quote1.getSize().width + quote2.getSize().width, Entry.line_height);
     }
