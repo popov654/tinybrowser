@@ -283,6 +283,8 @@ public class WebDocument extends JPanel {
         final int width = 490, height = 418;
 
         final JScrollPane scrollpane = new JScrollPane(contentpane);
+        scrollpane.getVerticalScrollBar().setUnitIncrement(20);
+        scrollpane.getHorizontalScrollBar().setUnitIncrement(20);
         scrollpane.setOpaque(false);
         scrollpane.getInsets();
 
