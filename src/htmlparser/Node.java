@@ -13,8 +13,8 @@ import java.util.Vector;
  * @author Alex
  */
 public class Node {
-    public Node() {
-    }
+    public Node() {}
+    
     public Node(Node parent_node) {
         if (parent_node.nodeType == 1) {
             parent = parent_node;
