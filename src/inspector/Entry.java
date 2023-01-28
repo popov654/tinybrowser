@@ -5,10 +5,8 @@ import htmlparser.Node;
 import htmlparser.TagLibrary;
 import render.Block;
 import render.WebDocument;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -18,7 +16,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Set;
 import javax.swing.Box;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
@@ -44,7 +41,6 @@ public class Entry extends javax.swing.JPanel {
         this.node = node;
         this.document = document;
         initComponents();
-        header.add(Box.createHorizontalGlue());
         initEvents();
     }
 
@@ -75,50 +71,24 @@ public class Entry extends javax.swing.JPanel {
                 else if (command.equals("removed")) {
                     node.attributes.remove(((Attribute)e.getSource()).getNameField());
                     attributes.remove(attr);
-                    Dimension dim = attributes.getPreferredSize();
-                    entry.attributes.setPreferredSize(new Dimension(Math.max(0, dim.width - attr.getWidth()), dim.height));
-                }
-                if (command.equals("added")) {
-                    String text = ((Attribute)e.getSource()).getEditorText();
-                    int pos = text.indexOf('=');
-                    if (pos <= 0) return;
-                    String name = text.substring(0, pos);
-                    String value = text.substring(pos+1);
-                    if (value.matches("\".*\"")) {
-                        value = value.substring(1, value.length()-1);
-                    }
-                    Attribute a = new Attribute(entry, name, value, this);
-                    int index = 0;
-                    Component[] c = entry.attributes.getComponents();
-                    for (int i = 0; i < c.length; i++) {
-                        if (c[i] == e.getSource()) {
-                            index = i;
-                            break;
-                        }
-                    }
-                    entry.attributes.add(a, index);
-                    Dimension dim = attributes.getPreferredSize();
-                    entry.attributes.setPreferredSize(new Dimension(dim.width + attr.getWidth(), dim.height));
+                    entry.updateHeaderWidth();
                 }
             }
         };
         Set<String> keys = node.attributes.keySet();
-        attributes.setPreferredSize(new Dimension(0, line_height));
-        attributes.setMaximumSize(new Dimension(0, line_height));
         int index = 0;
         for (String key: keys) {
             Attribute attr = new Attribute(this, key, node.attributes.get(key), callback);
             attributes.add(attr);
-            Dimension dim = attributes.getPreferredSize();
-            attributes.setPreferredSize(new Dimension(dim.width + attr.getWidth(), dim.height));
-            attributes.setMaximumSize(new Dimension(dim.width + attr.getWidth(), dim.height));
             //System.err.println(attr.getNameField() + ": " + attr.getValueField() + " -> " + (dim.width + attr.getWidth()));
         }
         if (!attributesEnabled) {
-            attributes.setPreferredSize(new Dimension(0, attributes.getPreferredSize().height));
-            attributes.setMaximumSize(new Dimension(0, attributes.getPreferredSize().height));
             attributes.setVisible(false);
         }
+        updateHeaderWidth();
+    }
+
+    public void updateHeaderWidth() {
         int max_width = Math.max(attributes.getPreferredSize().width + headerTag.getSize().width + headerTag2.getSize().width + Entry.margin, getPreferredSize().width);
         if (max_width > 2000) max_width += 120;
         header.setSize(new Dimension(max_width, line_height));
@@ -536,6 +506,8 @@ public class Entry extends javax.swing.JPanel {
         headerTag3.setForeground(new java.awt.Color(102, 0, 153));
         headerTag3.setText("</body>");
         header.add(headerTag3);
+
+        header.add(Box.createHorizontalGlue());
 
         add(header);
 
