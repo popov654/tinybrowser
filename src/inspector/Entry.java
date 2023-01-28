@@ -163,25 +163,46 @@ public class Entry extends javax.swing.JPanel {
                 content.setVisible(false);
                 footer.setVisible(false);
                 marker.setVisible(false);
-            } else {
+            } else if (!node.isPseudo()) {
                 headerTag.setText("<" + node.tagName.toLowerCase());
                 headerTag2.setText(">");
                 headerTag3.setText("</" + node.tagName.toLowerCase() + ">");
                 footerTag.setText("</" + node.tagName.toLowerCase() + ">");
+            } else {
+                headerTag.setText(node.tagName.toLowerCase());
+                headerTag.setForeground(new Color(145, 145, 145));
+                headerTag2.setText("");
+                headerTag3.setText("");
+                content.setVisible(false);
+                footer.setVisible(false);
+                marker.setVisible(false);
             }
 
-            addAttributes();
+            if (!node.isPseudo()) addAttributes();
 
             int w = Math.max(Math.max(header.getMinimumSize().width - margin, min_width), width - margin);
 
             content.removeAll();
-            for (int i = 0; i < node.children.size(); i++) {
-                Entry e = new Entry(node.children.get(i), document);
+            //System.out.println(getWidth());
+            if (showPseudoElements && node.beforeNode != null) {
+                Entry e = new Entry(node.beforeNode, document);
+                content.add(e);
+                e.inflate(w);
+            }
+            if (!node.isPseudo()) {
+                for (int i = 0; i < node.children.size(); i++) {
+                    Entry e = new Entry(node.children.get(i), document);
+                    content.add(e);
+                    e.inflate(w);
+                }
+            }
+            if (showPseudoElements && node.afterNode != null) {
+                Entry e = new Entry(node.afterNode, document);
                 content.add(e);
                 e.inflate(w);
             }
             content.doLayout();
-            if (node.children.size() > 0) {
+            if (node.children.size() > 0 && !node.isPseudo()) {
                 open();
             } else if (node.nodeType == 1) {
                 close();
@@ -329,7 +350,8 @@ public class Entry extends javax.swing.JPanel {
         @Override
         public void mouseExited(MouseEvent e) {
             //System.out.println("Exited");
-            updateChildren(true);
+            node.states.remove("highlighted");
+            updateChildren(false);
             repaint();
             if (document != null) {
                 document.root.forceRepaintAll();
@@ -425,6 +447,7 @@ public class Entry extends javax.swing.JPanel {
 
     public boolean opened = false;
     public boolean attributesEnabled = true;
+    public boolean showPseudoElements = true;
 
     public Block block;
     public Node node;

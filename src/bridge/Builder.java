@@ -45,6 +45,9 @@ public class Builder {
         InlineElements.add("em");
         InlineElements.add("cite");
         InlineElements.add("font");
+
+        InlineElements.add("::before");
+        InlineElements.add("::after");
     }
 
     public Builder(WebDocument document) {
@@ -499,6 +502,7 @@ public class Builder {
         if (node.beforeStyles.size() > 0) {
             Node n = new Node(1);
             n.parent = node;
+            node.beforeNode = n;
             content = "";
             for (QuerySelector sel: node.beforeStyles) {
                 if (sel.getRules().get("content") != null) {
@@ -509,7 +513,7 @@ public class Builder {
                 }
                 n.styles.putAll(sel.getRules());
             }
-            n.tagName = "span";
+            n.tagName = "::before";
             n.nodeValue = content;
             Block before = buildElement(document, b, n);
             before.addText(n.nodeValue);
@@ -523,6 +527,7 @@ public class Builder {
         if (node.afterStyles.size() > 0) {
             Node n = new Node(1);
             n.parent = node;
+            node.afterNode = n;
             content = "";
             for (QuerySelector sel: node.afterStyles) {
                 if (sel.getRules().get("content") != null) {
@@ -533,7 +538,7 @@ public class Builder {
                 }
                 n.styles.putAll(sel.getRules());
             }
-            n.tagName = "span";
+            n.tagName = "::after";
             n.nodeValue = content;
             Block after = buildElement(document, b, n);
             after.addText(n.nodeValue);
