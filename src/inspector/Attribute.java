@@ -37,7 +37,7 @@ public class Attribute extends javax.swing.JPanel {
             value_field.setText(value);
         }
         //setOpaque(true);
-        //setBackground(Color.RED);
+        //setBackground(new Color(241, 248, 255));
         setSize(getPreferredSize());
         initEvents();
         originalName = name;
@@ -50,7 +50,8 @@ public class Attribute extends javax.swing.JPanel {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension((full_editor.isOpaque() ? full_editor.getPreferredSize().width : 0) + name_field.getPreferredSize().width + value_field.getPreferredSize().width + eq.getPreferredSize().width + quote1.getPreferredSize().width + quote2.getPreferredSize().width + 6, Entry.line_height);
+        int width = full_editor.isOpaque() ? full_editor.getPreferredSize().width + 4 : name_field.getPreferredSize().width + value_field.getPreferredSize().width + eq.getPreferredSize().width + quote1.getPreferredSize().width + quote2.getPreferredSize().width + 6;
+        return new Dimension(width, Entry.line_height);
     }
 
     @Override

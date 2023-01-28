@@ -79,6 +79,7 @@ public class Entry extends javax.swing.JPanel {
         int index = 0;
         for (String key: keys) {
             Attribute attr = new Attribute(this, key, node.attributes.get(key), callback);
+            //attr.setAlignmentX(0.5F);
             attributes.add(attr);
             //System.err.println(attr.getNameField() + ": " + attr.getValueField() + " -> " + (dim.width + attr.getWidth()));
         }
@@ -420,6 +421,28 @@ public class Entry extends javax.swing.JPanel {
     public Node node;
     public WebDocument document;
 
+    class AttributesPanel extends JPanel {
+        @Override
+        public Dimension getPreferredSize() {
+            int width = 0;
+            Component[] c = getComponents();
+            for (int i = 0; i < c.length; i++) {
+                width += c[i].getPreferredSize().width;
+            }
+            return new Dimension(width, Entry.line_height);
+        }
+
+        @Override
+        public Dimension getMinimumSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            return getPreferredSize();
+        }
+    }
+
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -433,7 +456,7 @@ public class Entry extends javax.swing.JPanel {
         headerMargin = new javax.swing.JPanel();
         marker = new javax.swing.JLabel();
         headerTag = new javax.swing.JLabel();
-        attributes = new javax.swing.JPanel();
+        attributes = new AttributesPanel();
         headerTag2 = new javax.swing.JLabel();
         threeDots = new javax.swing.JLabel();
         headerTag3 = new javax.swing.JLabel();
@@ -480,7 +503,7 @@ public class Entry extends javax.swing.JPanel {
 
         header.add(headerMargin);
 
-        headerTag.setFont(new java.awt.Font("Arial", 1, 16));
+        headerTag.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
         headerTag.setForeground(new java.awt.Color(102, 0, 153));
         headerTag.setText("<body");
         header.add(headerTag);
@@ -488,7 +511,7 @@ public class Entry extends javax.swing.JPanel {
         attributes.setAlignmentY(0.5F);
         attributes.setMaximumSize(new java.awt.Dimension(32767, 26));
         attributes.setOpaque(false);
-        attributes.setPreferredSize(new java.awt.Dimension(0, 26));
+        attributes.setPreferredSize(new java.awt.Dimension(0, 22));
         attributes.setLayout(new javax.swing.BoxLayout(attributes, javax.swing.BoxLayout.LINE_AXIS));
         header.add(attributes);
 
