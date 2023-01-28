@@ -197,6 +197,10 @@ public class Node {
         return nodeType != 1 || TagLibrary.leaves.contains(tagName);
     }
 
+    public boolean isPseudo() {
+        return parent != null && (this == parent.beforeNode || this == parent.afterNode);
+    }
+
     public boolean removeSubtree() {
         if (parent != null) {
             parent.children.remove(this);
@@ -391,6 +395,8 @@ public class Node {
     public Vector<String> states = new Vector<String>();
     public Node previousSibling;
     public Node nextSibling;
+    public Node beforeNode;
+    public Node afterNode;
     public String tagName = "";
     public int nodeType = 3;
     public String nodeValue = "";
