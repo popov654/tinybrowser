@@ -1,6 +1,7 @@
 package inspector;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.event.ActionEvent;
@@ -10,6 +11,10 @@ import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -45,7 +50,7 @@ public class Attribute extends javax.swing.JPanel {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(name_field.getPreferredSize().width + value_field.getPreferredSize().width + eq.getPreferredSize().width + quote1.getPreferredSize().width + quote2.getPreferredSize().width + 6, Entry.line_height);
+        return new Dimension((full_editor.isOpaque() ? full_editor.getPreferredSize().width : 0) + name_field.getPreferredSize().width + value_field.getPreferredSize().width + eq.getPreferredSize().width + quote1.getPreferredSize().width + quote2.getPreferredSize().width + 6, Entry.line_height);
     }
 
     @Override
@@ -106,23 +111,10 @@ public class Attribute extends javax.swing.JPanel {
                 if (full_editor.isOpaque()) return;
                 if (value_editor.isOpaque()) closeValueEditor();
                 is_new = e.getSource() == full_editor;
-                full_editor.setOpaque(true);
-                full_editor.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-                String text = is_new ? "" : name_field.getText() + "=\"" + value_field.getText() + "\"";
-                //int width = full_editor.getFontMetrics(full_editor.getFont()).stringWidth(text);
-                int width = name_field.getWidth() + value_field.getWidth() + 20;
-                full_editor.setPreferredSize(new Dimension(width, full_editor.getPreferredSize().height));
-                //validate();
-                //full_editor.repaint();
-                full_editor.setText(text);
-                full_editor.getParent().setComponentZOrder(full_editor, 0);
 
-                name_field.setVisible(false);
-                eq.setVisible(false);
-                quote1.setVisible(false);
-                quote2.setVisible(false);
-                value_field.setVisible(false);
-                full_editor.requestFocus();
+                String text = is_new ? "" : name_field.getText() + "=\"" + value_field.getText() + "\"";
+                openFullEditor(text, e.getSource() == full_editor);
+
                 //full_editor.selectAll();
             }
 
@@ -168,7 +160,7 @@ public class Attribute extends javax.swing.JPanel {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                getRootPane().requestFocus();
+                if (getRootPane() != null) getRootPane().requestFocus();
                 if (value_editor.isOpaque()) closeValueEditor();
                 else if (full_editor.isOpaque()) closeFullEditor();
             }
@@ -183,6 +175,69 @@ public class Attribute extends javax.swing.JPanel {
             public void mouseExited(MouseEvent e) {}
 
         });
+    }
+
+    public void openFullEditor(String text) {
+        openFullEditor(text, false);
+    }
+
+    public void openFullEditor(String text, boolean delegate) {
+        full_editor.setOpaque(true);
+        setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
+        full_editor.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        
+        //int width = full_editor.getFontMetrics(full_editor.getFont()).stringWidth(text);
+        int width = !text.isEmpty() ? name_field.getWidth() + value_field.getWidth() + eq.getWidth() + quote1.getWidth() + quote2.getWidth() : 130;
+        
+        if (delegate) {
+            final Attribute new_attr = new Attribute(entry, "", "", listener);
+            int index = 0;
+            Component[] c = getParent().getComponents();
+
+            for (int i = 0; i < c.length; i++) {
+                if (c[i] == this) {
+                    index = i;
+                    break;
+                }
+            }
+            new_attr.getComponents()[0].setPreferredSize(new Dimension(width, 22));
+            ((JTextField) new_attr.getComponents()[0]).setOpaque(true);
+            new_attr.validate();
+
+            getParent().add(new_attr, index);
+
+            SwingUtilities.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    getParent().validate();
+
+                    Dimension dim = getParent().getPreferredSize();
+                    Component[] c = getParent().getComponents();
+                    int w = 0;
+                    for (int i = 0; i < c.length; i++) {
+                        w += (c[i] != new_attr) ? c[i].getWidth() : 130;
+                    }
+
+                    no_save = true;
+                    new_attr.openFullEditor("");
+                }
+
+            });
+        } else {
+            full_editor.setPreferredSize(new Dimension(width, full_editor.getPreferredSize().height));
+            full_editor.setText(text);
+            full_editor.getParent().setComponentZOrder(full_editor, 0);
+            
+            name_field.setVisible(false);
+            eq.setVisible(false);
+            quote1.setVisible(false);
+            quote2.setVisible(false);
+            value_field.setVisible(false);
+            full_editor.requestFocus();
+        }
+        ((Entry) getParent().getParent().getParent()).updateHeaderWidth();
+        
     }
 
     private void closeValueEditor() {
@@ -203,6 +258,7 @@ public class Attribute extends javax.swing.JPanel {
     }
 
     private void closeFullEditor() {
+        setBorder(null);
         full_editor.setBorder(null);
         full_editor.setPreferredSize(new Dimension(full_editor_width, value_editor.getPreferredSize().height));
 
@@ -213,14 +269,17 @@ public class Attribute extends javax.swing.JPanel {
         value_field.setVisible(true);
         full_editor.setOpaque(false);
 
-        parseFullValue();
+        if (!no_save) {
+            parseFullValue();
 
-        if (listener != null) {
-            String command = is_new ? "added" : "changed";
-            if (!name_field.getText().equals(originalName)) command = "replaced";
-            if (name_field.getText().isEmpty()) command = "removed";
-            listener.actionPerformed(new ActionEvent(this, Event.ACTION_EVENT, command));
+            if (listener != null) {
+                String command = is_new ? "added" : "changed";
+                if (!is_new && !name_field.getText().equals(originalName)) command = "replaced";
+                else if (name_field.getText().isEmpty()) command = "removed";
+                listener.actionPerformed(new ActionEvent(this, Event.ACTION_EVENT, command));
+            }
         }
+        no_save = false;
 
         full_editor.setText("");
         full_editor.setPreferredSize(new Dimension(6, 22));
@@ -231,7 +290,6 @@ public class Attribute extends javax.swing.JPanel {
     }
 
     private void parseFullValue() {
-        if (is_new) return;
         int pos = full_editor.getText().indexOf('=');
         if (pos <= 0) {
             name_field.setText("");
@@ -325,8 +383,9 @@ public class Attribute extends javax.swing.JPanel {
         add(quote2);
     }// </editor-fold>//GEN-END:initComponents
 
-    private final int full_editor_width = 8;
+    private final int full_editor_width = 5;
     private boolean is_new = false;
+    private boolean no_save = false;
 
     private String originalName;
     private Entry entry;
