@@ -293,13 +293,8 @@ public class Attribute extends javax.swing.JPanel {
     private void parseFullValue() {
         int pos = full_editor.getText().indexOf('=');
         if (pos <= 0) {
-            name_field.setText("");
+            name_field.setText(full_editor.getText().split("\\s")[0]);
             value_field.setText("");
-            name_field.setVisible(false);
-            value_field.setVisible(false);
-            eq.setVisible(false);
-            quote1.setVisible(false);
-            quote2.setVisible(false);
         } else {
             String name = full_editor.getText().substring(0, pos);
             String value = full_editor.getText().substring(pos+1);
