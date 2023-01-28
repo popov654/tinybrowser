@@ -1,6 +1,7 @@
 package render;
 
 import htmlparser.TagLibrary;
+import inspector.Entry;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -329,7 +330,7 @@ public class WebDocument extends JPanel {
             @Override
             public void run() {
                 TagLibrary.init();
-                final ExtendedEntry rootEntry = new ExtendedEntry(root.node, instance);
+                final Entry rootEntry = new Entry(root.node, instance);
                 //rootEntry.setMinimumSize(new Dimension(width, 26));
                 contentpane.add(rootEntry);
 
