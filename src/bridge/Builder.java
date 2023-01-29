@@ -6,6 +6,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
@@ -158,7 +160,23 @@ public class Builder {
             applyInlineStyles(node, b);
         }
 
+        addNodeChangeListeners(b, node);
+
         return b;
+    }
+
+    private void addNodeChangeListeners(final Block b, final Node node) {
+        final Builder builder = this;
+        ActionListener callback = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getActionCommand().equals("render")) return;
+                b.replaceWith(builder.buildElement(document, b.parent, node));
+                node.removeListener(this);
+            }
+        };
+        node.addListener(callback, b, "attributesChanged");
+        node.addListener(callback, b, "valueChanged");
     }
 
     private void applyParentFontStyles(Block block, Block parent) {

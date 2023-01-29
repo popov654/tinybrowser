@@ -3106,6 +3106,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setFontSize(int value) {
+        setFontSizePx((int) Math.round(value * ratio));
+    }
+
+    public void setFontSizePx(int value) {
         fontSize = value;
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFontSize(value);
@@ -3873,7 +3877,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (prop.equals("font-size")) {
             int val = this.getValueInPixels(value);
-            setFontSize(val);
+            setFontSizePx(val);
             return;
         }
         if (prop.equals("margin")) {
@@ -5235,6 +5239,53 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean isPseudoElement() {
         Block b = original != null ? original : this;
         return b.parent != null && (b == b.parent.beforePseudoElement || b == b.parent.afterPseudoElement);
+    }
+
+    public void replaceWith(Block b) {
+        b.parent = parent;
+        b.children = children;
+
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).parent = b;
+        }
+
+        if (parent != null) {
+            for (int i = 0; i < parent.children.size(); i++) {
+                if (parent.children.get(i) == this) {
+                    parent.children.remove(i);
+                    parent.children.add(i, b);
+                    break;
+                }
+            }
+        }
+
+        if (scrollbar_x != null) removeScrollbarX();
+        if (scrollbar_y != null) removeScrollbarY();
+
+        int index = document.root.getComponentZOrder(this);
+        if (parts.size() > 0) {
+            index = document.root.getComponentZOrder(parts.get(0));
+        }
+        document.root.remove(this);
+        for (int i = 0; i < parts.size(); i++) {
+            document.root.remove(parts.get(i));
+        }
+        document.root.add(b, index);
+
+        Block block = b;
+        while (block.display_type == Display.INLINE) {
+            block = block.parent;
+        }
+
+        if (block != null) {
+            block.doIncrementLayout(block.viewport_width, block.viewport_height, false);
+            block.setNeedRestoreSelection(true);
+            block.forceRepaintAll();
+        } else {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+        document.repaint();
     }
 
     @Override
