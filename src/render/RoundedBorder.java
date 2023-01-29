@@ -329,7 +329,7 @@ public class RoundedBorder implements Border {
             //((Graphics2D)g).fill(rect);
             if (!block.document.smooth_borders) {
                 g2d.setStroke(new BasicStroke(w[j]));
-                g2d.drawRect(x, y, width, height);
+                g2d.fillRect(x, y, width, height);
                 continue;
             }
             RoundedRect rect = null;
