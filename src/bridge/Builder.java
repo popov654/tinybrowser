@@ -170,13 +170,21 @@ public class Builder {
         ActionListener callback = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (e.getActionCommand().equals("render")) return;
+                if (e.getActionCommand().equals("render") || document == null) return;
                 b.replaceWith(builder.buildElement(document, b.parent, node));
                 node.removeListener(this);
             }
         };
         node.addListener(callback, b, "attributesChanged");
-        node.addListener(callback, b, "valueChanged");
+        ActionListener callback2 = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getActionCommand().equals("render") || document == null) return;
+                b.replaceSubtreeWith(builder.buildSubtree(document, node));
+                node.removeListener(this);
+            }
+        };
+        node.addListener(callback2, b, "valueChanged");
     }
 
     private void applyParentFontStyles(Block block, Block parent) {

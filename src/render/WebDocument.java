@@ -176,7 +176,7 @@ public class WebDocument extends JPanel {
         ready = true;
     }
 
-    private void processSubtree(Block b) {
+    public void processSubtree(Block b) {
         b.document = null;
         if (b.width < 0) {
             b.setWidth(-1);
@@ -188,6 +188,7 @@ public class WebDocument extends JPanel {
         if (b.parent != null) {
             int index = b.parent.children.indexOf(b);
             b.parent.children.remove(b);
+            if (index < 0) index = b.parent.children.size();
             if (b.type == Block.NodeTypes.ELEMENT) {
                 if (b.width == 0) b.width = b.parent.width;
                 b.parent.addElement(b, index, true);

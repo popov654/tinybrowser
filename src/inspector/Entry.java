@@ -3,22 +3,32 @@ package inspector;
 import bridge.Mapper;
 import htmlparser.Node;
 import htmlparser.TagLibrary;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import render.Block;
 import render.WebDocument;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Set;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -198,6 +208,7 @@ public class Entry extends javax.swing.JPanel {
             } else {
                 headerTag.setText(node.tagName.toLowerCase());
                 headerTag.setForeground(new Color(145, 145, 145));
+                headerTag.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
                 headerTag2.setText("");
                 headerTag3.setText("");
                 content.setVisible(false);
@@ -249,8 +260,47 @@ public class Entry extends javax.swing.JPanel {
             int rows = node.nodeValue.split("\n").length;
             textarea.setRows(rows);
             textarea.addMouseListener(listener);
+            final FocusListener fl = new FocusListener() {
 
-            int height = getFontMetrics(textarea.getFont()).getHeight() * rows + 4;
+                @Override
+                public void focusGained(FocusEvent e) {}
+
+                @Override
+                public void focusLost(FocusEvent e) {
+                    closeContentEditor();
+                }
+
+            };
+            textarea.addFocusListener(fl);
+            textarea.addKeyListener(new KeyListener() {
+
+                @Override
+                public void keyTyped(KeyEvent e) {}
+
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                        no_save = true;
+                        closeContentEditor();
+                    }
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                        JTextArea textarea = (JTextArea) e.getSource();
+                        int rows = textarea.getText().split("\\n").length;
+                        if (e.getKeyCode() == KeyEvent.VK_ENTER) rows++;
+                        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) rows--;
+                        textarea.setRows(rows);
+                        
+                        textarea.getParent().validate();
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {}
+
+
+            });
+
+            int height = getFontMetrics(textarea.getFont()).getHeight() * rows + 3;
 
             content.add(textarea);
             //textarea.setSize(content.getPreferredSize().width, textarea.getPreferredSize().height);
@@ -282,7 +332,13 @@ public class Entry extends javax.swing.JPanel {
     public Dimension getPreferredSize() {
         int height = opened ? line_height * 2 + content.getPreferredSize().height : line_height;
         if (node.nodeType == 3 && !node.nodeValue.matches("\\s*")) {
-            int rows = node.nodeValue.split("\n").length;
+            String text = ((JTextArea)content.getComponent(0)).getText();
+            int rows = text.split("\n").length;
+            int pos = text.length()-1;
+            while (pos >= 0 && text.charAt(pos) == '\n') {
+                rows++;
+                pos--;
+            }
             height = getFontMetrics(content.getComponents()[0].getFont()).getHeight() * rows + 3;
         }
         int w = Math.max(Math.max(header.getPreferredSize().width, content.getPreferredSize().width), min_width);
@@ -353,7 +409,18 @@ public class Entry extends javax.swing.JPanel {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            // TODO: select
+            if (e.getSource() instanceof JTextArea) {
+                JTextArea textarea = (JTextArea) e.getSource();
+                if (textarea.isOpaque()) return;
+                textarea.setOpaque(true);
+                textarea.setBackground(Color.WHITE);
+                textarea.setEditable(true);
+                textarea.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+                textarea.setCaretPosition(textarea.getText().length());
+                textarea.getCaret().setVisible(true);
+                textarea.requestFocus();
+                textarea.selectAll();
+            }
         }
 
         @Override
@@ -396,6 +463,24 @@ public class Entry extends javax.swing.JPanel {
             }
         }
     }
+
+    private void closeContentEditor() {
+        if (node.nodeType != 3) return;
+        JTextArea textarea = (JTextArea) content.getComponents()[0];
+        if (!no_save) {
+            node.nodeValue = textarea.getText();
+            node.fireEvent("valueChanged", "inspector");
+        } else {
+            textarea.setText(node.nodeValue);
+        }
+        no_save = false;
+        textarea.setOpaque(false);
+        textarea.setEditable(false);
+        textarea.getCaret().setVisible(false);
+        textarea.setBorder(null);
+    }
+
+    private boolean no_save;
 
     @Override
     public void paintComponent(Graphics g) {
@@ -562,7 +647,7 @@ public class Entry extends javax.swing.JPanel {
 
         header.add(headerMargin);
 
-        headerTag.setFont(new java.awt.Font("Arial", 1, 16));
+        headerTag.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
         headerTag.setForeground(new java.awt.Color(102, 0, 153));
         headerTag.setText("<body");
         header.add(headerTag);

@@ -5288,6 +5288,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.repaint();
     }
 
+    public void replaceSubtreeWith(Block b) {
+        removeAllElements();
+        b.parent = parent;
+
+        if (scrollbar_x != null) removeScrollbarX();
+        if (scrollbar_y != null) removeScrollbarY();
+
+        if (b.type != Block.NodeTypes.ELEMENT) {
+            b.parent.children.clear();
+        }
+        if (document == null) document = b.document;
+        document.processSubtree(b);
+    }
+
     @Override
     public Block clone() {
         Block b = new Block(this.document);
