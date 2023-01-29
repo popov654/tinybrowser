@@ -1,6 +1,7 @@
 package htmlparser;
 
 import cssparser.QuerySelector;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -303,6 +304,7 @@ public class Node {
         if (attr.equals("name") && document != null) {
             replaceValue(document.getNamesIndex(), attributes.get("name"), val);
         }
+        fireEvent("attributesChanged", "node");
         return attributes.put(attr, val);
     }
 
@@ -372,6 +374,7 @@ public class Node {
     public boolean removeAttribute(String attr) {
         if (attributes.containsKey(attr)) {
             attributes.remove(attr);
+            fireEvent("attributesChanged", "node");
             return true;
         }
         return false;
@@ -384,6 +387,33 @@ public class Node {
     public Vector<QuerySelector> getStateStyles() {
         return stateStyles;
     }
+
+    public void addListener(ActionListener listener, Object target, String eventType) {
+        for (NodeChangeListener ls: listeners) {
+            if (ls.target == target && ls.eventType.equals(eventType)) {
+                return;
+            }
+        }
+        listeners.add(new NodeChangeListener(listener, target, eventType));
+    }
+
+    public void removeListener(ActionListener listener) {
+        for (NodeChangeListener ls: listeners) {
+            if (ls.getHandler() == listener) {
+                listeners.remove(ls);
+                break;
+            }
+        }
+    }
+
+    public void fireEvent(String type, String source) {
+        Vector<NodeChangeListener> l = (Vector<NodeChangeListener>) listeners.clone();
+        for (NodeChangeListener ls: l) {
+            if (ls.eventType.equals(type)) {
+                ls.fireEvent(source);
+            }
+        }
+    }
     
     public Node parent;
     public Vector<Node> children = new Vector<Node>();
@@ -393,6 +423,9 @@ public class Node {
     public Vector<QuerySelector> beforeStyles = new Vector<QuerySelector>();
     public Vector<QuerySelector> afterStyles = new Vector<QuerySelector>();
     public Vector<String> states = new Vector<String>();
+
+    public Vector<NodeChangeListener> listeners = new Vector<NodeChangeListener>();
+
     public Node previousSibling;
     public Node nextSibling;
     public Node beforeNode;

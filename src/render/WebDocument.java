@@ -224,6 +224,10 @@ public class WebDocument extends JPanel {
         }
     }
 
+    public void replaceElement(Block b, Block new_block) {
+        b.replaceWith(new_block);
+    }
+
     public void resized() {
         //panel.repaint();
         width = getWidth();

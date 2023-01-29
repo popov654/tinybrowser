@@ -73,13 +73,12 @@ public class Entry extends javax.swing.JPanel {
                     attributes.remove(attr);
                     entry.updateHeaderWidth();
                 }
+                node.fireEvent("attributesChanged", "inspector");
             }
         };
         Set<String> keys = node.attributes.keySet();
-        int index = 0;
         for (String key: keys) {
             Attribute attr = new Attribute(this, key, node.attributes.get(key), callback);
-            //attr.setAlignmentX(0.5F);
             attributes.add(attr);
             //System.err.println(attr.getNameField() + ": " + attr.getValueField() + " -> " + (dim.width + attr.getWidth()));
         }
@@ -122,6 +121,34 @@ public class Entry extends javax.swing.JPanel {
         });
 
         addMouseListener(listener);
+        addUpdateCallback();
+    }
+
+    private void addUpdateCallback() {
+        final Entry instance = this;
+        ActionListener l = new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!e.getActionCommand().equals("inspector")) {
+                    System.out.println("Attributes changed!");
+                }
+            }
+
+        };
+        node.addListener(l, instance, "attributesChanged");
+        
+        l = new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!e.getActionCommand().equals("inspector")) {
+                    System.out.println("Value changed!");
+                }
+            }
+
+        };
+        node.addListener(l, instance, "valueChanged");
     }
 
     public void addChild(Entry child, int pos) {
@@ -535,12 +562,11 @@ public class Entry extends javax.swing.JPanel {
 
         header.add(headerMargin);
 
-        headerTag.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        headerTag.setFont(new java.awt.Font("Arial", 1, 16));
         headerTag.setForeground(new java.awt.Color(102, 0, 153));
         headerTag.setText("<body");
         header.add(headerTag);
 
-        attributes.setAlignmentY(0.5F);
         attributes.setMaximumSize(new java.awt.Dimension(32767, 26));
         attributes.setOpaque(false);
         attributes.setPreferredSize(new java.awt.Dimension(0, 22));
