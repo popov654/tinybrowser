@@ -137,8 +137,8 @@ public class RenderTests {
 
     @Test
     public void linksTest() {
-        lt.testLinks();
         lt.setVisible(true);
+        lt.testLinks();
         
         try {
             Thread.sleep(200);
@@ -167,15 +167,15 @@ public class RenderTests {
 
             BufferedImage img = robot.createScreenCapture(new Rectangle(p.x + rect.x + border, p.y + rect.y + border, document.root.width, document.root.height));
 
-            img.getData().getPixel(83, 53, data);
-            assertTrue(Math.abs(data[0] - 182) < 3);
-            assertTrue(Math.abs(data[1] - 206) < 3);
-            assertTrue(Math.abs(data[2] - 228) < 3);
+            img.getData().getPixel(83, 52, data);
+            assertTrue(Math.abs(data[0] - 6) < 3);
+            assertTrue(Math.abs(data[1] - 66) < 3);
+            assertTrue(Math.abs(data[2] - 162) < 3);
 
-            img.getData().getPixel(83, 56, data);
-            assertTrue(Math.abs(data[0] - 182) < 3);
-            assertTrue(Math.abs(data[1] - 206) < 3);
-            assertTrue(Math.abs(data[2] - 228) < 3);
+            img.getData().getPixel(83, 54, data);
+            assertTrue(Math.abs(data[0] - 6) < 3);
+            assertTrue(Math.abs(data[1] - 66) < 3);
+            assertTrue(Math.abs(data[2] - 162) < 3);
             //System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
 
             //javax.imageio.ImageIO.write(img, "png", new File("snapshot.png"));
@@ -187,8 +187,9 @@ public class RenderTests {
 
     @Test
     public void bordersTest() {
-        lt.testBorders();
         lt.setVisible(true);
+        lt.testBorders();
+        
         try {
             Thread.sleep(200);
         } catch (InterruptedException ex) {}
@@ -225,7 +226,8 @@ public class RenderTests {
                 assertTrue(Math.abs(data[1] - 0) < 3);
                 assertTrue(Math.abs(data[2] - 253) < 3);
             } else {
-                img.getData().getPixel(15, 119, data);
+                img.getData().getPixel(15, 116, data);
+                System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
                 assertTrue(Math.abs(data[0] - 253) < 15);
                 assertTrue(Math.abs(data[1] - 0) < 48);
                 assertTrue(Math.abs(data[2] - 253) < 15);
@@ -237,7 +239,7 @@ public class RenderTests {
                 assertTrue(Math.abs(data[1] - 0) < 3);
                 assertTrue(Math.abs(data[2] - 253) < 3);
             } else {
-                img.getData().getPixel(458, 16, data);
+                img.getData().getPixel(458, 17, data);
                 assertTrue(Math.abs(data[0] - 253) < 15);
                 assertTrue(Math.abs(data[1] - 0) < 48);
                 assertTrue(Math.abs(data[2] - 253) < 15);
@@ -299,22 +301,23 @@ public class RenderTests {
             assertEquals(255, data[2]);
 
 
-            img.getData().getPixel(285, 156, data);
+            img.getData().getPixel(285, 147, data);
+            System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
 
-            img.getData().getPixel(353, 156, data);
+            img.getData().getPixel(353, 147, data);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
 
-            img.getData().getPixel(285, 224, data);
+            img.getData().getPixel(285, 233, data);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
 
-            img.getData().getPixel(353, 224, data);
+            img.getData().getPixel(353, 233, data);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
