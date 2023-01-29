@@ -294,13 +294,13 @@ public class Attribute extends javax.swing.JPanel {
         value_field.setVisible(true);
         full_editor.setOpaque(false);
 
-        if (!no_save) {
+        if (!no_save || is_new && originalName.isEmpty()) {
             parseFullValue();
 
             if (listener != null) {
                 String command = is_new ? "added" : "changed";
                 if (!is_new && !name_field.getText().equals(originalName)) command = "replaced";
-                else if (name_field.getText().isEmpty()) command = "removed";
+                if (name_field.getText().isEmpty()) command = "removed";
                 listener.actionPerformed(new ActionEvent(this, Event.ACTION_EVENT, command));
             }
         }
