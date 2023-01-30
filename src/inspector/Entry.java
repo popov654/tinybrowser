@@ -649,11 +649,12 @@ public class Entry extends javax.swing.JPanel {
 
         header.add(headerMargin);
 
-        headerTag.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        headerTag.setFont(new java.awt.Font("Arial", 1, 16));
         headerTag.setForeground(new java.awt.Color(102, 0, 153));
         headerTag.setText("<body");
         header.add(headerTag);
 
+        attributes.setAlignmentY(0.5F);
         attributes.setMaximumSize(new java.awt.Dimension(32767, 26));
         attributes.setOpaque(false);
         attributes.setPreferredSize(new java.awt.Dimension(0, 22));
