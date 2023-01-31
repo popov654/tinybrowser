@@ -2564,10 +2564,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             b = b.children.get(0);
             pos = 0;
         }
+        boolean z_auto = block.zIndexAuto || (block.parent != null && block.positioning == Position.STATIC);
+
         while (b != null) {
             /* Do not include descendants of floats and inline-blocks except elements
                generating their own contexts */
-            boolean z_auto = block.zIndexAuto || (block.parent != null && block.positioning == Position.STATIC);
+
             boolean skip = z_auto && b.positioning != Position.STATIC && !b.zIndexAuto;
             if (b.type != NodeTypes.TEXT && !skip && (psc <= 0 || b.positioning != Position.STATIC && !b.zIndexAuto)) {
                 list.add(b);
@@ -2575,6 +2577,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (b.positioning == Position.STATIC || b.zIndexAuto) {
                 /* Traverse everything except elements
                    generating their own contexts */
+                
                 boolean is_leaf = (b.children.size() == 1 && b.children.get(0).type == NodeTypes.TEXT);
                 if (b.children.size() > 0 && !is_leaf) {
                     stack.add(b);
