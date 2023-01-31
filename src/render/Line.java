@@ -81,6 +81,11 @@ public class Line {
                 b.width = width - b.margins[3] - b.margins[1];
             }
         }
+
+        if (d instanceof Block && ((Block)d).node.tagName.equals("br")) {
+            ((Block)d).margins[0] = height - 1;
+            d.setY(height - ((Block)d).height + top - 1);
+        }
         
         if (parent.document.debug) {
             System.out.println((d instanceof Character ? "Letter " : "Element ") + "positioned at (" + d._getX() + ", " + d._getY() + ")");

@@ -554,6 +554,20 @@ public class Layouter {
             d.parts.add(b);
             b.pos = d.pos;
 
+            if (b.node != null && b.node.tagName.equals("br")) {
+                b.width = b.viewport_width = 0;
+                b.height = b.viewport_height = 0;
+                b.auto_width = false;
+                b.auto_height = false;
+                last_line.addElement(b);
+                for (int i = 0; i < d.parts.size(); i++) {
+                    d.document.root.add(d.parts.get(i), index++);
+                }
+                d.document.root.remove(d);
+                last_line = startNewLine(0, 0, d.parent);
+                return;
+            }
+
             if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
                     ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK) {
                 last_line = startNewLine(0, 0, b);

@@ -33,11 +33,11 @@ public class Builder {
         BlockElements.add("p");
         BlockElements.add("blockquote");
         BlockElements.add("hr");
-        BlockElements.add("br");
 
         InlineElements.clear();
         InlineElements.add("span");
         InlineElements.add("a");
+        InlineElements.add("br");
         InlineElements.add("img");
         InlineElements.add("b");
         InlineElements.add("i");
