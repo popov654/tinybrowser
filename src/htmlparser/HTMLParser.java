@@ -274,7 +274,7 @@ public class HTMLParser {
         while (pos < data.length()-1) scanNext();
         if (state != READY && !cur_tag.isEmpty()) {
             data += '>';
-            scan();
+            scanNext();
         }
         if (!cur_text.isEmpty()) {
             Node text = new Node(curNode, 3);

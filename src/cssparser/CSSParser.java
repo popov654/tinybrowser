@@ -1,6 +1,7 @@
 package cssparser;
 
 import htmlparser.HTMLParser;
+import htmlparser.Node;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -71,6 +72,24 @@ public class CSSParser {
         return result;
     }
 
+    public void findStyles(Node node) {
+        if (node.tagName.equals("style")) {
+            styles.add(node);
+        }
+        for (int i = 0; i < node.children.size(); i++) {
+            findStyles(node.children.get(i));
+        }
+    }
+
+    public void applyStyles() {
+        for (Node style: styles) {
+            Vector<QuerySelector> qs = parseString(style.children.get(0).nodeValue);
+            for (int i = 0; i < qs.size(); i++) {
+                qs.get(i).apply();
+            }
+        }
+    }
+
     public void applyGlobalRules(String baseUrl) {
         Set<String> keys = global_rules.keySet();
         for (String key: keys) {
@@ -130,6 +149,7 @@ public class CSSParser {
     }
 
     HashMap<String, HashMap<String, String>> global_rules;
+    Vector<Node> styles = new Vector<Node>();
     
     String current_query = "";
     int last_start = 0;

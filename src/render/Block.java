@@ -2992,7 +2992,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         try {
             File f;
-            path = (document != null ? document.baseUrl : "") + path;
             if (path.equals(imgSrc)) return;
             imgSrc = path;
             if (path.startsWith("http")) {

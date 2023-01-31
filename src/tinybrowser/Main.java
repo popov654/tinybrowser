@@ -1,24 +1,14 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package tinybrowser;
 
-import bridge.Builder;
-import cssparser.CSSParser;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
-import htmlparser.Node;
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URL;
-import java.net.URLDecoder;;
-import java.util.Vector;
+import java.net.URLDecoder;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -165,133 +155,22 @@ public class Main {
     }
 
     public static void testBuilder() {
-        System.out.println(getInstallPath() + "test2.htm");
-        HTMLParser hp = new HTMLParser(getInstallPath() + "test2.htm");
-        System.out.println("----------------------------------");
-        hp.printTree();
-        System.out.println();
-        System.out.println("----------------------------------");
-        
-        Builder builder = new Builder();
-        builder.setBaseUrl(getInstallPath());
-        
-        Node style = hp.getRootNode().firstElementChild().lastElementChild();
-        CSSParser parser = new CSSParser(hp);
-        Vector<QuerySelector> qs = parser.parseString(style.firstChild().nodeValue);
-        for (int i = 0; i < qs.size(); i++) {
-            qs.get(i).apply();
-        }
-
-        final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
-        root.printTree();
-
-        parser.applyGlobalRules(builder.baseUrl);
-
-        //root.removeElement(1);
-        visualBuilderTest(root);
+        Reader reader = new Reader();
+        Block root = reader.readDocument("test2.htm");
+        visualBuilderTest(reader, root);
 
         //System.out.println();
-        
-        //final Block root2 = visualBuilderSyntheticTest();
+        //render.Util.compareTrees(root, visualBuilderSyntheticTest());
 
         //getSyntheticTree();
-
-//        Timer t = new Timer(300, new ActionListener() {
-//
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//
-//                ArrayList<String> exclude = new ArrayList(Arrays.asList("lm", "parentListener", "border", "document", "layouter"));
-//
-//                HashMap<String, String> fields1 = getFields(root, exclude);
-//                HashMap<String, String> fields2 = getFields(root2, exclude);
-//
-//                compareFieldsets(fields1, fields2);
-//
-//            }
-//
-//        });
-//        t.setRepeats(false);
-//        t.start();
-        
     }
 
-    public static void visualBuilderTest(Block root) {
-        final JFrame frame = new JFrame("Render Test");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        final JPanel panel = new JPanel();
-        panel.setLayout(new CardLayout());
-        final WebDocument document = new WebDocument();
-        document.setBaseUrl(getInstallPath());
-
-        document.setPreferredSize(new Dimension(460, 240));
-        document.width = 460;
-        document.height = 240;
-
-        document.root.width = document.width;
-        document.root.height = document.height;
-        document.root.auto_height = false;
-        document.root.setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
-
-        document.insertSubtreeWithoutRoot(document.root, root);
-        document.root.setId("root");
-
-        if (document.root.getChildren().size() > 0) {
-            document.ready = false;
-            document.root.setPaddings(8);
-            document.root.node = document.root.getChildren().get(0).node.parent;
-            document.root.builder = document.root.getChildren().get(0).builder;
-        }
-
-        document.root.addMouseListeners();
-
-        //document.debug = true;
-
-        document.panel.setBackground(Color.WHITE);
-        document.setBorder(BorderFactory.createLineBorder(Color.black, 1));
-        document.setBorderSize(1);
-
-        root.auto_height = false;
-
-        //document.root.getChildren().get(0).setBackgroundColor(Color.CYAN);
-
-        try {
-            UIManager.setLookAndFeel(
-                UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {}
-
-        document.ready = true;
-
-        panel.add(document, "main");
-        frame.setContentPane(panel);
-
-        panel.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
-        panel.setPreferredSize(new Dimension(document.width + 18, document.height + 18));
-
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-
-        frame.addComponentListener(new java.awt.event.ComponentAdapter() {
-            @Override
-            public void componentMoved(java.awt.event.ComponentEvent evt) {}
-
-            @Override
-            public void componentResized(java.awt.event.ComponentEvent evt) {
-                document.resized();
-            }
-        });
-
-        frame.setVisible(true);
-
-//        SwingUtilities.invokeLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                document.openInspector(frame);
-//            }
-//        });
-
+    public static void visualBuilderTest(Reader reader, Block root) {
+        reader.displayDocument(root, "Render Test");
         //documentResizeTest(frame, panel, document, 1000, 400);
     }
+
+
 
     public static Block visualBuilderSyntheticTest() {
         JFrame frame = new JFrame("Render Test");

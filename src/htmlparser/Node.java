@@ -41,7 +41,7 @@ public class Node {
         if (nodeType == 1) {
             children.add(node);
             if (document != null) {
-                document.indexNode(this);
+                document.indexNode(node);
             }
             return true;
         }

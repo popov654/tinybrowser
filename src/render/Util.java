@@ -1,6 +1,8 @@
 package render;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,10 +11,13 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.swing.Timer;
 
 /**
  *
@@ -81,6 +86,25 @@ public class Util {
             }
         }
         System.out.println(result.length() > 0 ? result : "Objects are equal");
+    }
+
+    public static void compareTrees(final Block b1, final Block b2) {
+        Timer t = new Timer(300, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                ArrayList<String> exclude = new ArrayList(Arrays.asList("lm", "parentListener", "border", "document", "layouter"));
+
+                HashMap<String, String> fields1 = render.Util.getFields(b1, exclude);
+                HashMap<String, String> fields2 = render.Util.getFields(b2, exclude);
+
+                render.Util.compareFieldsets(fields1, fields2);
+
+            }
+
+        });
+        t.setRepeats(false);
+        t.start();
     }
 
     public static void cacheFile(String src, String cached_name) {

@@ -165,7 +165,7 @@ public class WebDocument extends JPanel {
         processSubtree(insert);
     }
 
-    public void insertSubtreeWithoutRoot(Block b, Block insert) {
+    public void insertSubtreeWithoutRoot(Block b, final Block insert) {
         ready = false;
         b.removeAllElements();
         b.setProp("font-family", b.fontFamily);
@@ -337,7 +337,7 @@ public class WebDocument extends JPanel {
             @Override
             public void run() {
                 TagLibrary.init();
-                final Entry rootEntry = new Entry(root.node.parent, instance);
+                final Entry rootEntry = new Entry(root.node.parent != null ? root.node.parent : root.node, instance);
                 contentpane.add(rootEntry);
 
                 final JScrollPane sp = scrollpane;
