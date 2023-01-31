@@ -324,6 +324,14 @@ public class Builder {
             b.isImage = true;
             b.setBackgroundImage(baseUrl + node.getAttribute("src"));
         }
+        else if (node.tagName.equals("hr")) {
+            b.height = b.viewport_height = (int) b.ratio + 2;
+            b.auto_height = false;
+            b.borderWidth = new int[] {1, 1, 1, 1};
+            b.setBackgroundColor(new Color(208, 208, 208));
+            b.setBorderColor(new Color(208, 208, 208, 75));
+            b.setMargins(8, 0);
+        }
         else if (node.tagName.equals("p")) {
             b.setMargins(0, 0, 12, 0);
         }
