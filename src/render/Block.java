@@ -524,9 +524,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             width = getFontMetrics(new Font(fontFamily, style, fontSize)).stringWidth(textContent);
         }
-        if (buffer == null && width > 0 && height > 0) {
-            int w = width;
-            int h = height;
+        if (buffer == null && (width > 0 && height > 0 || node != null && node.states.contains("highlighted"))) {
+            int w = Math.max(1, width);
+            int h = Math.max(1, height);
             if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) w += 2;
             buffer = new BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         }
@@ -830,19 +830,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         boolean is_highlighted = node != null && node.states.contains("highlighted") ||
                 children.size() == 1 && children.get(0).node != null && children.get(0).node.states.contains("highlighted");
         if (is_highlighted) {
-            int w = width;
-            int h = height;
+            int w = Math.max(1, width);
+            int h = Math.max(1, height);
             if (parts.size() == 1) {
                 x0 = parts.get(0)._x_ - scroll_x;
                 y0 = parts.get(0)._y_ - scroll_y;
-                w = parts.get(0).width;
-                h = parts.get(0).height;
+                w = Math.max(1, parts.get(0).width);
+                h = Math.max(1, parts.get(0).height);
             }
             g.setColor(new Color(180, 230, 255, 90));
-            g.fillRect(x0, y0, w, h);
+            if (w > 1 && h > 1) g.fillRect(x0, y0, w, h);
+            else {
+                g.setColor(new Color(160, 210, 255, 210));
+                buffer.setRGB(x0, y0, g.getColor().getRGB());
+            }
         }
 
     }
+
 
     private void paintShadow(int x0, int y0) {
         buffer = new BufferedImage(Math.abs(shadow_x) + width + (shadow_blur + shadow_size)*2, Math.abs(shadow_y) + height + (shadow_blur + shadow_size)*2, java.awt.image.BufferedImage.TYPE_INT_ARGB);
