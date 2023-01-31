@@ -2556,8 +2556,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         LinkedList<Block> stack = new LinkedList<Block>();
         LinkedList<Integer> stack2 = new LinkedList<Integer>();
         if (b.children.size() == 0) return list;
-        b = b.children.get(0);
         int psc = 0;
+        if (block.beforePseudoElement != null) {
+            b = block.beforePseudoElement;
+            pos = -1;
+        } else {
+            b = b.children.get(0);
+            pos = 0;
+        }
         while (b != null) {
             /* Do not include descendants of floats and inline-blocks except elements
                generating their own contexts */
@@ -2577,9 +2583,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                             b.display_type == Display.INLINE || (b.positioning != Position.STATIC && b.zIndexAuto)) {
                         psc++;
                     }
-                    b = b.children.get(0);
-                    pos = 0;
+                    if (b.beforePseudoElement != null) {
+                        b = b.beforePseudoElement;
+                        pos = -1;
+                    } else {
+                        b = b.children.get(0);
+                        pos = 0;
+                    }
                 } else {
+                    if (b.parent.children.size() <= pos+1 && b != b.parent.afterPseudoElement && b.parent.afterPseudoElement != null) {
+                        b = b.parent.afterPseudoElement;
+                        continue;
+                    }
                     while (b.parent.children.size() <= pos+1 && !stack.isEmpty()) {
                         pos = stack2.pollLast();
                         b = stack.pollLast();
@@ -2592,7 +2607,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         pos++;
                         b = b.parent.children.get(pos);
                     } else {
-                        b = null;
+                        if (b != b.parent.afterPseudoElement && b.parent.afterPseudoElement != null) {
+                            b = b.parent.afterPseudoElement;
+                        } else {
+                            b = null;
+                        }
                     }
                 }
                 continue;
@@ -2604,10 +2623,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
             if (b.parent.children.size() > pos+1) {
-                pos++;
-                b = b.parent.children.get(pos);
-            } else {
-                b = null;
+                if (b != b.parent.afterPseudoElement && b.parent.afterPseudoElement != null) {
+                    b = b.parent.afterPseudoElement;
+                } else {
+                    b = null;
+                }
             }
         }
         return list;
