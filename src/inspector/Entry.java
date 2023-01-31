@@ -131,6 +131,29 @@ public class Entry extends javax.swing.JPanel {
         });
 
         addMouseListener(listener);
+        attributes.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {}
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                listener.mouseEntered(e);
+                e.consume();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                listener.mouseExited(e);
+                e.consume();
+            }
+        });
         addUpdateCallback();
     }
 
