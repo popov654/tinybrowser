@@ -844,10 +844,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 g.setColor(new Color(160, 210, 255, 210));
                 buffer.setRGB(x0, y0, g.getColor().getRGB());
             }
+
+            highlightMargins();
         }
 
     }
 
+    private void highlightMargins() {
+        Graphics2D g2 = (Graphics2D) document.root.buffer.getGraphics();
+        g2.setColor(new Color(245, 158, 0, 58));
+        int w = Math.max(1, width);
+        int h = Math.max(1, height);
+        if (margins[0] > 0) {
+            g2.fillRect(_x_, _y_ - margins[0], w, margins[0]);
+        }
+        if (margins[1] > 0) {
+            g2.fillRect(_x_ + width, _y_, margins[1], h);
+        }
+        if (margins[2] > 0) {
+            g2.fillRect(_x_, _y_ + height, w, margins[2]);
+        }
+        if (margins[3] > 0) {
+            g2.fillRect(_x_ - margins[3], _y_, margins[3], h);
+        }
+    }
 
     private void paintShadow(int x0, int y0) {
         buffer = new BufferedImage(Math.abs(shadow_x) + width + (shadow_blur + shadow_size)*2, Math.abs(shadow_y) + height + (shadow_blur + shadow_size)*2, java.awt.image.BufferedImage.TYPE_INT_ARGB);
