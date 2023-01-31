@@ -147,12 +147,46 @@ public class Attribute extends javax.swing.JPanel {
             public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {}
+            public void mouseEntered(MouseEvent e) {
+                ((Entry)getParent().getParent().getParent()).listener.mouseEntered(e);
+                e.consume();
+            }
 
             @Override
-            public void mouseExited(MouseEvent e) {}
+            public void mouseExited(MouseEvent e) {
+                ((Entry)getParent().getParent().getParent()).listener.mouseExited(e);
+                e.consume();
+            }
 
         };
+
+        MouseListener hoverListener = new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {}
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                ((Entry)getParent().getParent().getParent()).listener.mouseEntered(e);
+                e.consume();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                ((Entry)getParent().getParent().getParent()).listener.mouseExited(e);
+                e.consume();
+            }
+        };
+
+        name_field.addMouseListener(hoverListener);
+        value_field.addMouseListener(hoverListener);
+        eq.addMouseListener(hoverListener);
 
         full_editor.addMouseListener(mouseListener);
         name_field.addMouseListener(mouseListener);
