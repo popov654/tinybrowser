@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -70,6 +71,34 @@ public class WebDocument extends JPanel {
         panel.add(root);
 
         final WebDocument instance = this;
+
+        glass = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                return highlighted_block != null ? root.getBounds().getSize() : new Dimension(0, 0);
+            }
+            @Override
+            public Dimension getMinimumSize() {
+                return getPreferredSize();
+            }
+            @Override
+            public Dimension getMaximumSize() {
+                return getPreferredSize();
+            }
+            @Override
+            public void paintComponent(Graphics g) {
+                if (highlighted_block != null && instance.highlight_text) {
+                    highlighted_block.highlightBlock(g);
+                } else if (highlighted_block != null) {
+                    highlighted_block.highlightMargins(g);
+                }
+                super.paintComponent(g);
+            }
+        };
+        glass.setOpaque(false);
+        glass.setBackground(new Color(0, 0, 0, 0));
+        panel.add(glass);
+        panel.setComponentZOrder(glass, 0);
 
         panel.getInputMap().put(KeyStroke.getKeyStroke("F12"), "inspector");
         panel.getActionMap().put("inspector", new Action() {
@@ -250,6 +279,8 @@ public class WebDocument extends JPanel {
             }
             root.orig_height = (int) (root.height / root.ratio);
             root.max_height = root.height;
+
+            glass.setBounds(root.getBounds());
 
             Component[] c = root.getComponents();
             for (int i = 0; i < c.length; i++) {
@@ -481,6 +512,7 @@ public class WebDocument extends JPanel {
 
     protected WebDocument parent_document;
     protected Block parent_document_block;
+    public Block highlighted_block;
 
     private Watcher w;
 
@@ -491,6 +523,7 @@ public class WebDocument extends JPanel {
     public boolean preserve_layout_on_copy = true;
     public boolean use_native_inputs = false;
     public boolean keep_root_scrollbars_outside = false;
+    public boolean highlight_text = false;
     public boolean smooth_borders = true;
     public double forced_dpi = 0;
 
@@ -499,6 +532,7 @@ public class WebDocument extends JPanel {
     public int borderSize = 0;
     public Color borderColor;
     public final JPanel panel = new JPanel();
+    public JPanel glass;
     public int width = 0;
     public int height = 0;
 

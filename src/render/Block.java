@@ -829,43 +829,52 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         boolean is_highlighted = node != null && node.states.contains("highlighted") ||
                 children.size() == 1 && children.get(0).node != null && children.get(0).node.states.contains("highlighted");
-        if (is_highlighted) {
-            int w = Math.max(1, width);
-            int h = Math.max(1, height);
-            if (parts.size() == 1) {
-                x0 = parts.get(0)._x_ - scroll_x;
-                y0 = parts.get(0)._y_ - scroll_y;
-                w = Math.max(1, parts.get(0).width);
-                h = Math.max(1, parts.get(0).height);
+        if (is_highlighted && document != null) {
+            document.highlighted_block = this;
+            if (!document.highlight_text) {
+                highlightBlock(g);
             }
-            g.setColor(new Color(180, 230, 255, 90));
-            if (w > 1 && h > 1) g.fillRect(x0, y0, w, h);
-            else {
-                g.setColor(new Color(160, 210, 255, 210));
-                buffer.setRGB(x0, y0, g.getColor().getRGB());
-            }
-
-            highlightMargins();
         }
 
     }
 
-    private void highlightMargins() {
-        Graphics2D g2 = (Graphics2D) document.root.buffer.getGraphics();
-        g2.setColor(new Color(245, 158, 0, 58));
+    public void highlightBlock(Graphics g) {
+        int x0 = document.highlight_text ? _x_ - scroll_x : 0;
+        int y0 = document.highlight_text ? _y_ - scroll_y : 0;
+
+        int w = Math.max(1, width);
+        int h = Math.max(1, height);
+        if (parts.size() == 1) {
+            x0 = parts.get(0)._x_ - scroll_x;
+            y0 = parts.get(0)._y_ - scroll_y;
+            w = Math.max(1, parts.get(0).width);
+            h = Math.max(1, parts.get(0).height);
+        }
+        g.setColor(new Color(180, 230, 255, 90));
+        if (w > 1 && h > 1) g.fillRect(x0, y0, w, h);
+        else {
+            g.setColor(new Color(160, 210, 255, 210));
+            buffer.setRGB(x0, y0, g.getColor().getRGB());
+        }
+
+        highlightMargins(g);
+    }
+
+    public void highlightMargins(Graphics g) {
+        g.setColor(new Color(245, 158, 0, 58));
         int w = Math.max(1, width);
         int h = Math.max(1, height);
         if (margins[0] > 0) {
-            g2.fillRect(_x_, _y_ - margins[0], w, margins[0]);
+            g.fillRect(_x_, _y_ - margins[0], w, margins[0]);
         }
         if (margins[1] > 0) {
-            g2.fillRect(_x_ + width, _y_, margins[1], h);
+            g.fillRect(_x_ + width, _y_, margins[1], h);
         }
         if (margins[2] > 0) {
-            g2.fillRect(_x_, _y_ + height, w, margins[2]);
+            g.fillRect(_x_, _y_ + height, w, margins[2]);
         }
         if (margins[3] > 0) {
-            g2.fillRect(_x_ - margins[3], _y_, margins[3], h);
+            g.fillRect(_x_ - margins[3], _y_, margins[3], h);
         }
     }
 
