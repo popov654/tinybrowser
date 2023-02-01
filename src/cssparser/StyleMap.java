@@ -41,5 +41,13 @@ public class StyleMap {
         }
     }
 
+    public static HashMap<Node, Styles> getDocumentStyles(HTMLParser document) {
+        return styles.get(document);
+    }
+
+    public static void removeDocumentStyles(HTMLParser document) {
+        styles.remove(document);
+    }
+
     public static HashMap<HTMLParser, HashMap<Node, Styles>> styles = new HashMap<HTMLParser, HashMap<Node, Styles>>();
 }

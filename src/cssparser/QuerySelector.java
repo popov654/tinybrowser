@@ -506,10 +506,6 @@ public class QuerySelector {
     public void apply() {
         for (int i = 0; i < resultSet.size(); i++) {
             Styles st = StyleMap.getNodeStyles(resultSet.get(i));
-            if (st == null) {
-                st = new Styles();
-                StyleMap.addNodeStyles(resultSet.get(i), st);
-            }
             if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0 || visitedNodes.size() > 0) {
                 st.stateStyles.add(this);
             } else {

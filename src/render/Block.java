@@ -5285,10 +5285,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     Block afterPseudoElement;
 
     public void setBeforePseudoElement(Block block) {
+        if (beforePseudoElement != null && block == null) {
+            document.root.remove(beforePseudoElement);
+            for (int i = 0; i < beforePseudoElement.parts.size(); i++) {
+                document.root.remove(beforePseudoElement.parts.get(i));
+            }
+        }
         beforePseudoElement = block;
     }
 
     public void setAfterPseudoElement(Block block) {
+        if (afterPseudoElement != null && block == null) {
+            document.root.remove(afterPseudoElement);
+            for (int i = 0; i < afterPseudoElement.parts.size(); i++) {
+                document.root.remove(afterPseudoElement.parts.get(i));
+            }
+        }
         afterPseudoElement = block;
     }
 

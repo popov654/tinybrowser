@@ -1,11 +1,15 @@
 package cssparser;
 
+import bridge.Mapper;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Vector;
+import render.Block;
 import service.FontManager;
 
 /**
@@ -23,6 +27,7 @@ public class CSSParser {
         Vector<QuerySelector> result = new Vector<QuerySelector>();
         str = str.trim();
         int pos = 0;
+        last_start = 0;
         while (pos < str.length()) {
             if (!comment && !open && str.charAt(pos) == '@') {
                 at_rule = true;
@@ -73,8 +78,21 @@ public class CSSParser {
     }
 
     public void findStyles(Node node) {
+        final CSSParser instance = this;
         if (node.tagName.equals("style")) {
             styles.add(node);
+            ActionListener l = new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Block b = Mapper.get(hp.getRootNode().lastElementChild());
+                    if (b != null) {
+                        b.builder.reapplyDocumentStyles(instance);
+                    }
+                }
+
+            };
+            node.children.get(0).addListener(l, this, "valueChanged");
         }
         for (int i = 0; i < node.children.size(); i++) {
             findStyles(node.children.get(i));
@@ -146,6 +164,14 @@ public class CSSParser {
             }
         }
         return result;
+    }
+
+    public HTMLParser getDocument() {
+        return hp;
+    }
+
+    public Vector<Node> getStyleNodes() {
+        return styles;
     }
 
     HashMap<String, HashMap<String, String>> global_rules;

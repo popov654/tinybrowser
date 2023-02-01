@@ -16,6 +16,10 @@ public class Mapper {
         map.put(node, block);
     }
 
+    public static Block get(Node node) {
+        return map.get(node);
+    }
+
     public static void remove(Node node) {
         map.remove(node);
     }

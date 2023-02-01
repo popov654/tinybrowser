@@ -1,8 +1,10 @@
 package bridge;
 
+import cssparser.CSSParser;
 import cssparser.QuerySelector;
 import cssparser.StyleMap;
 import cssparser.Styles;
+import htmlparser.HTMLParser;
 import htmlparser.Node;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -81,6 +83,7 @@ public class Builder {
         if (document == null) document = this.document;
         final Block b = new Block(document);
         b.node = node;
+        Mapper.add(node, b);
         if (node.nodeType == ELEMENT) {
             b.type = Block.NodeTypes.ELEMENT;
             b.width = -1;
@@ -369,6 +372,25 @@ public class Builder {
         return (st != null) ? st.stateStyles : null;
     }
 
+    public void reapplyDocumentStyles(CSSParser parser) {
+        HTMLParser doc = parser.getDocument();
+        HashMap<Node, Styles> map = StyleMap.getDocumentStyles(doc);
+        if (map != null) {
+            Set<Node> nodes = map.keySet();
+            for (Node node: nodes) {
+                Block block = Mapper.get(node);
+                if (block != null) {
+                    block.setBeforePseudoElement(null);
+                    block.setAfterPseudoElement(null);
+                    block.cssStyles.clear();
+                }
+            }
+        }
+        StyleMap.removeDocumentStyles(doc);
+        parser.applyStyles();
+        resetStylesRecursive(document.root, false, true);
+    }
+
     public void applyStyles(Node node, Block b) {
         Styles st = StyleMap.getNodeStyles(node);
         Set<String> keys = st.styles.keySet();
@@ -402,8 +424,12 @@ public class Builder {
     }
 
     public void resetStyles(Block b, boolean no_update) {
+        resetStyles(b, no_update, false);
+    }
+
+    public void resetStyles(Block b, boolean no_update, boolean force) {
         Styles st = StyleMap.getNodeStyles(b.node);
-        if (b.node == null || st.stateStyles.size() == 0) return;
+        if (b.node == null || st.stateStyles.size() == 0 && !force) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -416,6 +442,7 @@ public class Builder {
             b.setBorderWidth(0);
             b.setBorderType(RoundedBorder.SOLID);
             b.setBorderColor(Color.BLACK);
+            b.setFontSize(14);
         }
         b.setMargins(0);
         b.setPaddings(0);
@@ -515,6 +542,10 @@ public class Builder {
     }
 
     public void resetStylesRecursive(Block b, boolean no_rec) {
+        resetStylesRecursive(b, no_rec, false);
+    }
+
+    public void resetStylesRecursive(Block b, boolean no_rec, boolean force) {
         if (b.type != Block.NodeTypes.ELEMENT) return;
         
         int old_width = b.viewport_width;
@@ -524,13 +555,17 @@ public class Builder {
             b.document.lastSetProperties = new java.util.HashSet<String>();
         }
 
-        resetStyles(b, true);
+        resetStyles(b, true, force);
         for (int i = 0; i < b.getChildren().size(); i++) {
-            resetStylesRecursive(b.getChildren().get(i), true);
+            resetStylesRecursive(b.getChildren().get(i), true, force);
         }
 
-        if (b == b.document.root || !no_rec) {
+        if ((b == b.document.root || !no_rec) && !force) {
             b.document.smartUpdate(b, old_width, old_height);
+        } else if (b == b.document.root) {
+            b.performLayout();
+            b.forceRepaintAll();
+            document.repaint();
         }
     }
 
