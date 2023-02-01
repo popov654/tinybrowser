@@ -175,11 +175,21 @@ public class QuerySelector {
                         }
                     }
                     else if (pseudoclasses[i].equals("before")) {
-                        resultSet.get(j).beforeStyles.add(this);
+                        Styles st = StyleMap.getNodeStyles(resultSet.get(j));
+                        if (st == null) {
+                            st = new Styles();
+                            StyleMap.addNodeStyles(resultSet.get(j), st);
+                        }
+                        st.beforeStyles.add(this);
                         resultSet.remove(j--);
                     }
                     else if (pseudoclasses[i].equals("after")) {
-                        resultSet.get(j).afterStyles.add(this);
+                        Styles st = StyleMap.getNodeStyles(resultSet.get(j));
+                        if (st == null) {
+                            st = new Styles();
+                            StyleMap.addNodeStyles(resultSet.get(j), st);
+                        }
+                        st.afterStyles.add(this);
                         resultSet.remove(j--);
                     }
                 }
@@ -495,10 +505,15 @@ public class QuerySelector {
 
     public void apply() {
         for (int i = 0; i < resultSet.size(); i++) {
+            Styles st = StyleMap.getNodeStyles(resultSet.get(i));
+            if (st == null) {
+                st = new Styles();
+                StyleMap.addNodeStyles(resultSet.get(i), st);
+            }
             if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0 || visitedNodes.size() > 0) {
-                resultSet.get(i).addStateSelector(this);
+                st.stateStyles.add(this);
             } else {
-                resultSet.get(i).styles.putAll(rules);
+                st.styles.putAll(rules);
             }
         }
     }

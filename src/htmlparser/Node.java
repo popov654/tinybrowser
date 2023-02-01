@@ -380,14 +380,6 @@ public class Node {
         return false;
     }
 
-    public void addStateSelector(QuerySelector selector) {
-        stateStyles.add(selector);
-    }
-
-    public Vector<QuerySelector> getStateStyles() {
-        return stateStyles;
-    }
-
     public void addListener(ActionListener listener, Object target, String eventType) {
         for (NodeChangeListener ls: listeners) {
             if (ls.target == target && ls.eventType.equals(eventType)) {
@@ -418,10 +410,6 @@ public class Node {
     public Node parent;
     public Vector<Node> children = new Vector<Node>();
     public LinkedHashMap<String, String> attributes = new LinkedHashMap<String, String>();
-    public LinkedHashMap<String, String> styles = new LinkedHashMap<String, String>();
-    public Vector<QuerySelector> stateStyles = new Vector<QuerySelector>();
-    public Vector<QuerySelector> beforeStyles = new Vector<QuerySelector>();
-    public Vector<QuerySelector> afterStyles = new Vector<QuerySelector>();
     public Vector<String> states = new Vector<String>();
 
     public Vector<NodeChangeListener> listeners = new Vector<NodeChangeListener>();

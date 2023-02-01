@@ -1,6 +1,8 @@
 package bridge;
 
 import cssparser.QuerySelector;
+import cssparser.StyleMap;
+import cssparser.Styles;
 import htmlparser.Node;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -357,13 +359,24 @@ public class Builder {
         }
     }
 
+    public void addNodeStateSelector(Node node, QuerySelector selector) {
+        Styles st = StyleMap.getNodeStyles(node);
+        if (st != null) st.stateStyles.add(selector);
+    }
+
+    public Vector<QuerySelector> getNodeStateStyles(Node node) {
+        Styles st = StyleMap.getNodeStyles(node);
+        return (st != null) ? st.stateStyles : null;
+    }
+
     public void applyStyles(Node node, Block b) {
-        Set<String> keys = node.styles.keySet();
+        Styles st = StyleMap.getNodeStyles(node);
+        Set<String> keys = st.styles.keySet();
         for (String key: keys) {
             if (!key.trim().isEmpty()) {
                 if (key.trim().equals("content")) continue;
-                b.setProp(key.trim(), node.styles.get(key).trim());
-                b.cssStyles.put(key.trim(), node.styles.get(key).trim());
+                b.setProp(key.trim(), st.styles.get(key).trim());
+                b.cssStyles.put(key.trim(), st.styles.get(key).trim());
                 if (b.document != null && b.document.lastSetProperties != null) {
                     b.document.lastSetProperties.add(key.trim());
                 }
@@ -389,7 +402,8 @@ public class Builder {
     }
 
     public void resetStyles(Block b, boolean no_update) {
-        if (b.node == null || b.node.stateStyles.size() == 0) return;
+        Styles st = StyleMap.getNodeStyles(b.node);
+        if (b.node == null || st.stateStyles.size() == 0) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -429,10 +443,11 @@ public class Builder {
     }
 
     public void applyStateStyles(Block b) {
+        Styles st = StyleMap.getNodeStyles(b.node);
         if (b.node == null) {
             return;
         }
-        Vector<QuerySelector> stateStyles = b.node.getStateStyles();
+        Vector<QuerySelector> stateStyles = st.stateStyles;
         for (int i = 0; i < stateStyles.size(); i++) {
             if (!stateStyles.get(i).getElements().contains(b.node)) continue;
             boolean flag = true;
@@ -460,7 +475,8 @@ public class Builder {
     }
 
     public void applyStateStyles(Block b, boolean no_update) {
-        if (b.node == null || b.node.stateStyles.size() == 0) return;
+        Styles st = StyleMap.getNodeStyles(b.node);
+        if (b.node == null || st.stateStyles.size() == 0) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -530,22 +546,24 @@ public class Builder {
     }
 
     public void generatePseudoElements(Node node, Block b) {
+        Styles st = StyleMap.getNodeStyles(node);
         if (document == null) return;
         String content;
 
-        if (node.beforeStyles.size() > 0) {
+        if (st.beforeStyles.size() > 0) {
             Node n = new Node(1);
             n.parent = node;
             node.beforeNode = n;
             content = "";
-            for (QuerySelector sel: node.beforeStyles) {
+            for (QuerySelector sel: st.beforeStyles) {
                 if (sel.getRules().get("content") != null) {
                     content = sel.getRules().get("content");
                     if (content.matches("\".*\"") || content.matches("\'.*\'")) {
                         content = content.substring(1, content.length()-1);
                     }
                 }
-                n.styles.putAll(sel.getRules());
+                Styles st2 = StyleMap.getNodeStyles(n);
+                st2.styles.putAll(sel.getRules());
             }
             n.tagName = "::before";
             n.nodeValue = content;
@@ -558,19 +576,20 @@ public class Builder {
             b.setBeforePseudoElement(null);
         }
 
-        if (node.afterStyles.size() > 0) {
+        if (st.afterStyles.size() > 0) {
             Node n = new Node(1);
             n.parent = node;
             node.afterNode = n;
             content = "";
-            for (QuerySelector sel: node.afterStyles) {
+            for (QuerySelector sel: st.afterStyles) {
                 if (sel.getRules().get("content") != null) {
                     content = sel.getRules().get("content");
                     if (content.matches("\".*\"") || content.matches("\'.*\'")) {
                         content = content.substring(1, content.length()-1);
                     }
                 }
-                n.styles.putAll(sel.getRules());
+                Styles st2 = StyleMap.getNodeStyles(n);
+                st2.styles.putAll(sel.getRules());
             }
             n.tagName = "::after";
             n.nodeValue = content;
