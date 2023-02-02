@@ -23,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import org.apache.batik.swing.JSVGCanvas;
 
 /**
  *
@@ -247,6 +248,10 @@ public class WebDocument extends JPanel {
         if (b.builder != null) {
             b.builder.document = this;
             b.builder.generatePseudoElements(b.node, b);
+        }
+        if (b.getComponents().length == 1 && b.getComponents()[0] instanceof JSVGCanvas) {
+            b.getComponents()[0].addMouseListener(b);
+            b.getComponents()[0].addMouseMotionListener(b);
         }
         b.setProp("font-family", b.fontFamily);
         for (int i = 0; i < b.children.size(); i++) {

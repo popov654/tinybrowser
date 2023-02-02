@@ -5550,6 +5550,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
+
+        boolean isSVG = getComponents().length == 1 && getComponents()[0] instanceof JSVGCanvas;
+
+        if (isMouseInside(e.getX(), e.getY()) || isSVG && isMouseInside(_x_ + e.getX(), _y_ + e.getY())) {
+            node.fireEvent("click", "render");
+            if (System.currentTimeMillis() - last_click < 320) {
+                node.fireEvent("doubleClick", "render");
+            }
+        }
         
         if (isMouseInside(e.getX(), e.getY()) && href != null || hasParentLink) {
             if (document.active_block != null && document.active_block.node != null) {
@@ -5713,10 +5722,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
+        node.fireEvent("mouseDown", "render");
     }
 
     public void mouseReleased(MouseEvent e) {
         getSelectedText();
+        node.fireEvent("mouseUp", "render");
     }
 
     public void mouseEntered(MouseEvent e) {
@@ -6009,11 +6020,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         int x = e.getX();
         int y = e.getY();
+        
+        boolean isSVG = getComponents().length == 1 && getComponents()[0] instanceof JSVGCanvas;
+
+        if (isSVG) {
+            x += _x_;
+            y += _y_;
+        }
 
         for (int i = 0; i < v.size(); i++) {
             Drawable d = v.get(i);
-
-            Rectangle bounds = new Rectangle(d._getX() - scroll_x, d._getY() - scroll_y, d._getWidth(), d._getHeight());
 
             if (d != null && d instanceof Block) {
                 Block b = (Block) d;
@@ -6058,8 +6074,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                     }
                     flag = true;
-                } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered) {
-                    hovered = false;
+                } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <=p. _y_ + p.height) && p.hovered && (p.hasParentLink || p.href != null)) {
+                    p.hovered = false;
                     document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 }
             }
@@ -6084,7 +6100,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 }
                 flag = true;
-            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered) {
+            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered && (hasParentLink || href != null)) {
                 hovered = false;
                 document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
@@ -6145,7 +6161,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int j = 0; j < parts.size(); j++) {
                 Block p = parts.get(j);
                 if (x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height) {
+                    if (!p.hovered) p.node.fireEvent("mouseOver", "render");
                     p.hovered = true;
+                    p.node.fireEvent("mouseMove", "render");
                     if (p.node != null && !p.node.states.contains("hover")) {
                         p.node.states.add("hover");
                         p.applyStateStyles();
@@ -6157,6 +6175,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         //System.err.println(node.tagName + " Hovered!");
                     }
                 } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height)) {
+                     if (p.hovered) p.node.fireEvent("mouseOut", "render");
                      p.hovered = false;
                      if (p.node != null && p.node.states.contains("hover")) {
                          p.node.states.remove("hover");
@@ -6173,7 +6192,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         } else {
             if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) {
+                if (!hovered) node.fireEvent("mouseOver", "render");
                 hovered = true;
+                node.fireEvent("mouseMove", "render");
                 if (node != null && !node.states.contains("hover")) {
                     node.states.add("hover");
                     applyStateStyles();
@@ -6185,6 +6206,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     //System.err.println(node.tagName + " Hovered!");
                 }
             } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height)) {
+                 if (hovered) node.fireEvent("mouseOut", "render");
                  hovered = false;
                  if (node != null && node.states.contains("hover")) {
                      node.states.remove("hover");

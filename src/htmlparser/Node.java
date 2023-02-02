@@ -416,6 +416,8 @@ public class Node {
         for (NodeChangeListener ls: l) {
             if (ls.eventType.equals(type)) {
                 ls.fireEvent(source);
+            } else if (ls.eventType.equals("any")) {
+                ls.fireEvent(source + ":" + type);
             }
         }
     }

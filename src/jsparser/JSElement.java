@@ -1,6 +1,8 @@
 package jsparser;
 
 import htmlparser.Node;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -21,7 +23,18 @@ public class JSElement extends JSObject {
         items.put("getElementsByTagName", new getElementsByTagNameFunction());
         items.put("getElementsByName", new getElementsByNameFunction());
         items.put("getElementsByClassName", new getElementsByClassNameFunction());
+
+        node.addListener(eventListener, node, "any");
     }
+
+    ActionListener eventListener = new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            System.out.println("JS event: " + e.getActionCommand().split(":")[1] + " " + ((Node)e.getSource()).tagName);
+        }
+
+    };
 
     public static JSElement create(Node node) {
         JSElement element = map.get(node);
