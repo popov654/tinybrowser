@@ -40,10 +40,14 @@ public class Reader {
         parser.findStyles(hp.getRootNode());
         parser.applyStyles();
 
+        builder.findScripts(hp.getRootNode());
+
         final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
         if (debug) root.printTree();
 
         parser.applyGlobalRules(builder.baseUrl);
+
+        builder.runScripts(hp);
 
         return root;
     }

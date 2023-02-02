@@ -1,5 +1,6 @@
 package jsparser;
 
+import htmlparser.HTMLParser;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -107,6 +108,17 @@ public class Window extends JSObject {
         items.put("clearInterval", new clearTimeoutFunction());
         tr = new TaskRunner(timers);
     }
+    
+    public Window(Block block, HTMLParser document) {
+        this(block);
+        setDocument(document);
+    }
+
+    public void setDocument(HTMLParser document) {
+        this.parser = document;
+        this.document = new JSDocument(document);
+        items.put("document", this.document);
+    }
 
     public void startTaskRunner() {
         tr.started = true;
@@ -209,6 +221,8 @@ public class Window extends JSObject {
     }
 
     private Block root;
+    private HTMLParser parser;
+    private JSDocument document;
     private HashMap<String, JSValue> items;
     private String type = "Object";
     private Vector<Timer> timers = new Vector<Timer>();

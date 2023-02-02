@@ -444,6 +444,23 @@ public class HTMLParser {
         return v;
     }
 
+    public Vector<Node> getElementsByName(Node node, String name, boolean deep) {
+        if (node == null) node = root;
+        Vector<Node> results = new Vector<Node>();
+        findChildElementsByName(results, node, name, deep);
+        return results;
+    }
+
+    private void findChildElementsByName(Vector<Node> results, Node node, String name, boolean deep) {
+        for (int i = 0; i < node.children.size(); i++) {
+            if (node.children.get(i).nodeType == 1 && node.children.get(i).getAttribute("name") != null &&
+                  node.children.get(i).getAttribute("name").equals(name)) {
+                results.add(node.children.get(i));
+            }
+            if (deep) findChildElementsByName(results, node.children.get(i), name, true);
+        }
+    }
+
     public Node getElementById(String str) {
         str = str.replaceAll("^\\#", "");
         return getElementById(null, str, true);

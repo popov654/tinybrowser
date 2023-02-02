@@ -1,5 +1,6 @@
 package jsparser;
 
+import htmlparser.HTMLParser;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -1017,6 +1018,13 @@ public class Block extends Expression {
             if (exp instanceof Block) {
                 ((Block)exp).setStrictMode(val);
             }
+        }
+    }
+    
+    public void setDocument(HTMLParser document) {
+        JSValue w = scope.get("window");
+        if (w != null) {
+            ((Window) w).setDocument(document);
         }
     }
 

@@ -164,6 +164,7 @@ public class Node {
     }
 
     public Node previousElementSibling() {
+        if (parent == null) return null;
         for (int i = 0; i < parent.children.size(); i++) {
             if (this.equals(parent.children.get(i))) {
                 return i > 0 ? parent.children.get(i-1) : null;
@@ -173,9 +174,10 @@ public class Node {
     }
 
     public Node nextElementSibling() {
+        if (parent == null) return null;
         for (int i = 0; i < parent.children.size(); i++) {
             if (this.equals(parent.children.get(i))) {
-                return i < parent.children.size() ? parent.children.get(i+1) : null;
+                return i < parent.children.size()-1 ? parent.children.get(i+1) : null;
             }
         }
         return null;
@@ -200,6 +202,17 @@ public class Node {
 
     public boolean isPseudo() {
         return parent != null && (this == parent.beforeNode || this == parent.afterNode);
+    }
+
+    public String getTextContent() {
+        String result = "";
+        for (int i = 0; i < children.size(); i++) {
+            result += children.get(i).getTextContent();
+        }
+        if (isLeaf()) {
+            result += nodeValue + " ";
+        }
+        return result.trim();
     }
 
     public boolean removeSubtree() {

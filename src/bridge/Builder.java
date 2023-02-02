@@ -15,6 +15,9 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
+import jsparser.Expression;
+import jsparser.JSParser;
+import jsparser.Window;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.apache.batik.swing.JSVGCanvas;
 import org.w3c.dom.DOMImplementation;
@@ -315,6 +318,30 @@ public class Builder {
             return MediaPlayer.VIDEO;
         }
         return MediaPlayer.AUDIO;
+    }
+
+    public void findScripts(Node node) {
+        findScripts(node, true);
+    }
+
+    public void findScripts(Node node, boolean clean) {
+        if (clean) scripts.clear();
+        if (node.tagName.equals("script")) {
+            scripts.add(node);
+        }
+        for (int i = 0; i < node.children.size(); i++) {
+            findScripts(node.children.get(i), false);
+        }
+    }
+
+    public void runScripts(HTMLParser document) {
+        for (Node script: scripts) {
+            String code = script.children.get(0).nodeValue;
+            JSParser jp = new JSParser(code);
+            Expression exp = Expression.create(jp.getHead());
+            ((jsparser.Block)exp).setDocument(document);
+            exp.eval();
+        }
     }
 
     public void applyDefaultStyles(Node node, Block b) {
@@ -651,6 +678,7 @@ public class Builder {
 
     public String baseUrl = "";
     public WebDocument document;
+    public Vector<Node> scripts = new Vector<Node>();
 
     public final static Vector<String> BlockElements = new Vector<String>();
     public final static Vector<String> InlineElements = new Vector<String>();
