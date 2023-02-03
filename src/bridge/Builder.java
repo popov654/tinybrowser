@@ -6,6 +6,7 @@ import cssparser.StyleMap;
 import cssparser.Styles;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
+import htmlparser.NodeActionListener;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -175,7 +176,7 @@ public class Builder {
 
     private void addNodeChangeListeners(final Block b, final Node node) {
         final Builder builder = this;
-        ActionListener callback = new ActionListener() {
+        NodeActionListener callback = new NodeActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().equals("render") || document == null) return;
@@ -184,7 +185,7 @@ public class Builder {
             }
         };
         node.addListener(callback, b, "attributesChanged");
-        ActionListener callback2 = new ActionListener() {
+        NodeActionListener callback2 = new NodeActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getActionCommand().equals("render") || document == null) return;

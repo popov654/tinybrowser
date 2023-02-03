@@ -2,11 +2,10 @@ package inspector;
 
 import bridge.Mapper;
 import htmlparser.Node;
+import htmlparser.NodeActionListener;
 import htmlparser.TagLibrary;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import render.Block;
 import render.WebDocument;
 import java.awt.Color;
@@ -159,7 +158,7 @@ public class Entry extends javax.swing.JPanel {
 
     private void addUpdateCallback() {
         final Entry instance = this;
-        ActionListener l = new ActionListener() {
+        NodeActionListener l = new NodeActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -171,7 +170,7 @@ public class Entry extends javax.swing.JPanel {
         };
         node.addListener(l, instance, "attributesChanged");
         
-        l = new ActionListener() {
+        l = new NodeActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {

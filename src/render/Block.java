@@ -6023,11 +6023,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (parts.size() == 0) {
             processLinks(x, y);
-            updateStates(x, y);
+            updateStates(e, x, y);
         } else {
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).processLinks(x, y);
-                parts.get(i).updateStates(x, y);
+                parts.get(i).updateStates(e, x, y);
             }
         }
 
@@ -6037,7 +6037,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block b = this.original == null ? this : this.original;
         if (b.children.size() == 1 && b.children.get(0) instanceof YouTubeThumb) {
             b.children.get(0).processLinks(x, y);
-            b.children.get(0).updateStates(x, y);
+            b.children.get(0).updateStates(e, x, y);
         } else {
             for (int i = 0; i < b.children.size(); i++) {
                 b.children.get(i).mouseMoved(e);
@@ -6127,11 +6127,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } catch (IOException ex) {}
     }
 
-    private void fireEventForNode(htmlparser.Node node, String event) {
+    private HashMap<String, String> getEventData(MouseEvent e, String type) {
+        HashMap<String, String> data = new HashMap<String, String>();
+        data.put("clientX", e.getX() + "");
+        data.put("clientY", e.getY() + "");
+        data.put("pageX", e.getX() + scroll_x + "");
+        data.put("pageY", e.getY() + scroll_y + "");
+        data.put("type", type);
+        data.put("ctrlKey", e.isControlDown() ? "true" : "false");
+        data.put("shiftKey", e.isShiftDown() ? "true" : "false");
+        data.put("altKey", e.isAltDown() ? "true" : "false");
+        data.put("metaKey", e.isMetaDown() ? "true" : "false");
+        return data;
+    }
+
+    private void fireEventForNode(MouseEvent e, htmlparser.Node node, String event_type) {
         if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
-        boolean was_fired = document != null ? document.eventWasFired(node, event) : false;
-        if (!was_fired) node.fireEvent(event, "render");
-        if (document != null) document.fireEventForNode(node, event);
+        boolean was_fired = document != null ? document.eventWasFired(node, event_type) : false;
+        if (!was_fired) {
+            HashMap<String, String> data = getEventData(e, event_type);
+            node.fireEvent(event_type, "render", data);
+        }
+        if (document != null) document.fireEventForNode(node, event_type);
     }
 
     private boolean isInnermostBlockForEvent(int x, int y) {
@@ -6145,49 +6162,49 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return true;
     }
 
-    private void processMouseOverEvent(htmlparser.Node node, int x, int y) {
+    private void processMouseOverEvent(MouseEvent e, htmlparser.Node node, int x, int y) {
         if (parts.size() > 0) return;
         if (node.tagName.startsWith("::")) return;
         if (document.eventWasFired(node, "mouseOut")) return;
         if (isInnermostBlockForEvent(x, y) && (document.hovered_block == null || document.hovered_block.node != node)) {
             if (document.hovered_block != null && document.hovered_block.node != null) {
-                fireEventForNode(document.hovered_block.node, "mouseOut");
+                fireEventForNode(e, document.hovered_block.node, "mouseOut");
             }
-            fireEventForNode(node, "mouseOver");
+            fireEventForNode(e, node, "mouseOver");
             document.hovered_block = this;
         }
     }
 
-    private void processMouseOutEvent(htmlparser.Node node, int x, int y) {
+    private void processMouseOutEvent(MouseEvent e, htmlparser.Node node, int x, int y) {
         if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
         if (document.eventWasFired(node, "mouseOver")) return;
         if (isInnermostBlockForEvent(x, y)) {
-            fireEventForNode(node, "mouseOut");
+            fireEventForNode(e, node, "mouseOut");
         }
     }
 
-    private void processMouseMoveEvent(htmlparser.Node node, int x, int y) {
+    private void processMouseMoveEvent(MouseEvent e, htmlparser.Node node, int x, int y) {
         if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
         if (isInnermostBlockForEvent(x, y)) {
-            fireEventForNode(node, "mouseMove");
+            fireEventForNode(e, node, "mouseMove");
         }
     }
 
-    private void updateStates(int x, int y) {
+    private void updateStates(MouseEvent e, int x, int y) {
         Block last_hovered_block = document != null ? document.hovered_block : null;
         htmlparser.Node last_hovered_node = (document != null && document.hovered_block != null) ? document.hovered_block.node : null;
         
         if (x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height) {
-            processMouseOverEvent(node, x, y);
+            processMouseOverEvent(e, node, x, y);
             if (!hovered) {
                 if (last_hovered_node != null && last_hovered_node != node && !last_hovered_block.isMouseInside(x, y)) {
-                    fireEventForNode(last_hovered_node, "mouseLeave");
+                    fireEventForNode(e, last_hovered_node, "mouseLeave");
                 }
-                fireEventForNode(node, "mouseEnter");
+                fireEventForNode(e, node, "mouseEnter");
                 last_hovered_block = document.hovered_block;
             }
             hovered = true;
-            if (last_hovered_node == node) processMouseMoveEvent(node, x, y);
+            if (last_hovered_node == node) processMouseMoveEvent(e, node, x, y);
             if (node != null && !node.states.contains("hover")) {
                 node.states.add("hover");
                 applyStateStyles();
@@ -6201,7 +6218,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else if (!(x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height)) {
             //processMouseOutEvent(node, x, y);
             if (hovered) {
-                fireEventForNode(node, "mouseLeave");
+                fireEventForNode(e, node, "mouseLeave");
             }
             hovered = false;
             if (node != null && node.states.contains("hover")) {

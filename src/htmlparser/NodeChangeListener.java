@@ -3,6 +3,7 @@ package htmlparser;
 import java.awt.Event;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 
 /**
  *
@@ -10,7 +11,7 @@ import java.awt.event.ActionListener;
  */
 public class NodeChangeListener {
 
-    public NodeChangeListener(ActionListener listener, Object target, String eventType) {
+    public NodeChangeListener(NodeActionListener listener, Object target, String eventType) {
         this.listener = listener;
         this.target = target;
         this.eventType = eventType;
@@ -20,11 +21,16 @@ public class NodeChangeListener {
         listener.actionPerformed(new ActionEvent(target, Event.ACTION_EVENT, source));
     }
 
-    public ActionListener getHandler() {
+    public void fireEvent(String source, HashMap<String, String> eventData) {
+        listener.setEventData(eventData);
+        fireEvent(source);
+    }
+
+    public NodeActionListener getHandler() {
         return listener;
     }
 
-    private ActionListener listener;
+    private NodeActionListener listener;
 
     public Object target;
     public String eventType;

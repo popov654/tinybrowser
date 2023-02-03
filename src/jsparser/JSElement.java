@@ -1,6 +1,7 @@
 package jsparser;
 
 import htmlparser.Node;
+import htmlparser.NodeActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -27,10 +28,11 @@ public class JSElement extends JSObject {
         node.addListener(eventListener, node, "any");
     }
 
-    ActionListener eventListener = new ActionListener() {
+    NodeActionListener eventListener = new NodeActionListener() {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
             System.out.println("JS event: " + e.getActionCommand().split(":")[1] + " " + ((Node)e.getSource()).tagName);
         }
 

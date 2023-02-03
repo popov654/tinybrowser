@@ -393,7 +393,7 @@ public class Node {
         return false;
     }
 
-    public void addListener(ActionListener listener, Object target, String eventType) {
+    public void addListener(NodeActionListener listener, Object target, String eventType) {
         for (NodeChangeListener ls: listeners) {
             if (ls.target == target && ls.eventType.equals(eventType)) {
                 return;
@@ -412,12 +412,16 @@ public class Node {
     }
 
     public void fireEvent(String type, String source) {
+        fireEvent(type, source, null);
+    }
+
+    public void fireEvent(String type, String source, HashMap<String, String> data) {
         Vector<NodeChangeListener> l = (Vector<NodeChangeListener>) listeners.clone();
         for (NodeChangeListener ls: l) {
             if (ls.eventType.equals(type)) {
-                ls.fireEvent(source);
+                ls.fireEvent(source, data);
             } else if (ls.eventType.equals("any")) {
-                ls.fireEvent(source + ":" + type);
+                ls.fireEvent(source + ":" + type, data);
             }
         }
     }

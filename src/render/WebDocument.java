@@ -444,7 +444,7 @@ public class WebDocument extends JPanel {
 
     }
 
-    public synchronized void fireEventForNode(Node node, String event) {
+    public void fireEventForNode(Node node, String event) {
         HashSet<String> events = eventsFired.get(node);
         if (events == null) {
             events = new HashSet<String>();
@@ -453,7 +453,7 @@ public class WebDocument extends JPanel {
         events.add(event);
     }
 
-    public synchronized boolean eventWasFired(Node node, String event) {
+    public boolean eventWasFired(Node node, String event) {
         HashSet<String> events = eventsFired.get(node);
         if (events == null) {
             return false;
