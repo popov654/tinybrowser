@@ -32,6 +32,7 @@ public class JSElement extends JSObject {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            if (!e.getActionCommand().split(":")[0].equals("render")) return;
             //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
             Vector<JSElement> parents = getParents();
             if (data != null) data.put("bubbles", parents.size() > 1 ? "true" : "false");
