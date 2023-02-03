@@ -270,9 +270,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean isMouseInside(int x, int y) {
         boolean result = false;
         if (display_type != Display.INLINE) {
-            result = (x >= _x_ && x <= _x_ + viewport_width && y >= _y_ && y <= _y_ + viewport_height);
+            result = (x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height);
         } else {
-            if (x >= _x_ && x <= _x_ + viewport_width && y >= _y_ && y <= _y_ + viewport_height) {
+            if (x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height) {
                 result = true;
             }
             for (int i = 0; i < parts.size(); i++) {
@@ -6020,25 +6020,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         int x = e.getX();
         int y = e.getY();
-        
-        boolean isSVG = getComponents().length == 1 && getComponents()[0] instanceof JSVGCanvas;
 
-        if (isSVG) {
-            x += _x_;
-            y += _y_;
-        }
-
-        for (int i = 0; i < v.size(); i++) {
-            Drawable d = v.get(i);
-
-            if (d != null && d instanceof Block) {
-                Block b = (Block) d;
-                b.processLinks(x, y);
-                b.updateStates(x, y);
+        if (parts.size() == 0) {
+            processLinks(x, y);
+            updateStates(x, y);
+        } else {
+            for (int i = 0; i < parts.size(); i++) {
+                parts.get(i).processLinks(x, y);
+                parts.get(i).updateStates(x, y);
             }
         }
+
+        for (int i = 0; i < parts.size(); i++) {
+            parts.get(i).mouseMoved(e);
+        }
         Block b = this.original == null ? this : this.original;
-        if (b.children.size() == 1 && (b.children.get(0).type == NodeTypes.TEXT || b.children.get(0) instanceof YouTubeThumb)) {
+        if (b.children.size() == 1 && b.children.get(0) instanceof YouTubeThumb) {
             b.children.get(0).processLinks(x, y);
             b.children.get(0).updateStates(x, y);
         } else {
@@ -6046,64 +6043,38 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 b.children.get(i).mouseMoved(e);
             }
         }
-        if (this == document.root) document.repaint();
+
+        if (this == document.root) {
+            document.eventsFired.clear();
+            document.repaint();
+        }
     }
 
     private void processLinks(int x, int y) {
         boolean flag = false;
-        if (parts.size() > 0) {
-            for (int j = 0; j < parts.size(); j++) {
-                Block p = parts.get(j);
-                if (x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height &&
-                      (p.hasParentLink || p.href != null) && !p.hovered) {
-                    p.hovered = true;
-                    p.originalStyles.put("text_underline", p.text_underline);
-                    p.originalStyles.put("text_color", p.color);
-                    p.text_underline = true;
-                    p.color = p.linkColor;
-                    document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    flag = true;
-                } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height) &&
-                        (!p.hasParentLink && p.href == null || p.linksUnderlineMode == 1) && p.originalStyles.containsKey("text_underline")) {
-                    p.hovered = false;
-                    p.text_underline = (Boolean) (p.originalStyles.get("text_underline"));
-                    p.color = (Color) p.originalStyles.get("text_color");
-                    p.originalStyles.remove("text_underline");
-                    p.originalStyles.remove("text_color");
-                    if (!hasParentLink && href == null) {
-                        document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                    }
-                    flag = true;
-                } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <=p. _y_ + p.height) && p.hovered && (p.hasParentLink || p.href != null)) {
-                    p.hovered = false;
-                    document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                }
-            }
-        } else {
-            if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height &&
-                  (hasParentLink || href != null) && !hovered) {
-                hovered = true;
-                originalStyles.put("text_underline", text_underline);
-                originalStyles.put("text_color", color);
-                text_underline = true;
-                color = linkColor;
-                document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                flag = true;
-            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) &&
-                    (!hasParentLink && href == null || linksUnderlineMode == 1) && originalStyles.containsKey("text_underline")) {
-                hovered = false;
-                text_underline = (Boolean) (originalStyles.get("text_underline"));
-                color = (Color) originalStyles.get("text_color");
-                originalStyles.remove("text_underline");
-                originalStyles.remove("text_color");
-                if (!hasParentLink && href == null) {
-                    document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                }
-                flag = true;
-            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered && (hasParentLink || href != null)) {
-                hovered = false;
+        if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height &&
+              (hasParentLink || href != null) && !hovered) {
+            hovered = true;
+            originalStyles.put("text_underline", text_underline);
+            originalStyles.put("text_color", color);
+            text_underline = true;
+            color = linkColor;
+            document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            flag = true;
+        } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) &&
+                (!hasParentLink && href == null || linksUnderlineMode == 1) && originalStyles.containsKey("text_underline")) {
+            hovered = false;
+            text_underline = (Boolean) (originalStyles.get("text_underline"));
+            color = (Color) originalStyles.get("text_color");
+            originalStyles.remove("text_underline");
+            originalStyles.remove("text_color");
+            if (!hasParentLink && href == null) {
                 document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
+            flag = true;
+        } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered && (hasParentLink || href != null)) {
+            hovered = false;
+            document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         }
         if (flag) {
             if (text_layer != null) {
@@ -6156,70 +6127,94 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } catch (IOException ex) {}
     }
 
+    private void fireEventForNode(htmlparser.Node node, String event) {
+        if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
+        boolean was_fired = document != null ? document.eventWasFired(node, event) : false;
+        if (!was_fired) node.fireEvent(event, "render");
+        if (document != null) document.fireEventForNode(node, event);
+    }
+
+    private boolean isInnermostBlockForEvent(int x, int y) {
+        boolean isInside = isMouseInside(x, y);
+        if (isInside && (children.size() == 0 || children.size() == 1 && children.get(0).type == NodeTypes.TEXT)) {
+            return true;
+        }
+        for (int i = 0; i < children.size(); i++) {
+            if (children.get(i).isMouseInside(x, y)) return false;
+        }
+        return true;
+    }
+
+    private void processMouseOverEvent(htmlparser.Node node, int x, int y) {
+        if (parts.size() > 0) return;
+        if (node.tagName.startsWith("::")) return;
+        if (document.eventWasFired(node, "mouseOut")) return;
+        if (isInnermostBlockForEvent(x, y) && (document.hovered_block == null || document.hovered_block.node != node)) {
+            if (document.hovered_block != null && document.hovered_block.node != null) {
+                fireEventForNode(document.hovered_block.node, "mouseOut");
+            }
+            fireEventForNode(node, "mouseOver");
+            document.hovered_block = this;
+        }
+    }
+
+    private void processMouseOutEvent(htmlparser.Node node, int x, int y) {
+        if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
+        if (document.eventWasFired(node, "mouseOver")) return;
+        if (isInnermostBlockForEvent(x, y)) {
+            fireEventForNode(node, "mouseOut");
+        }
+    }
+
+    private void processMouseMoveEvent(htmlparser.Node node, int x, int y) {
+        if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
+        if (isInnermostBlockForEvent(x, y)) {
+            fireEventForNode(node, "mouseMove");
+        }
+    }
+
     private void updateStates(int x, int y) {
-        if (parts.size() > 0) {
-            for (int j = 0; j < parts.size(); j++) {
-                Block p = parts.get(j);
-                if (x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height) {
-                    if (!p.hovered) p.node.fireEvent("mouseOver", "render");
-                    p.hovered = true;
-                    p.node.fireEvent("mouseMove", "render");
-                    if (p.node != null && !p.node.states.contains("hover")) {
-                        p.node.states.add("hover");
-                        p.applyStateStyles();
-                        if (p.cursor != null) {
-                            document.panel.setCursor(p.cursor);
-                            if (p.text_layer != null) p.text_layer.setCursor(p.cursor);
-                            //System.out.println("Cursor set");
-                        }
-                        //System.err.println(node.tagName + " Hovered!");
-                    }
-                } else if (!(x >= p._x_ && x <= p._x_ + p.width && y >= p._y_ && y <= p._y_ + p.height)) {
-                     if (p.hovered) p.node.fireEvent("mouseOut", "render");
-                     p.hovered = false;
-                     if (p.node != null && p.node.states.contains("hover")) {
-                         p.node.states.remove("hover");
-                         p.resetStyles();
-                         p.applyStateStyles();
-                         if (p.cursor != null) {
-                             document.panel.setCursor(Cursor.getDefaultCursor());
-                             if (p.text_layer != null) p.text_layer.setCursor(Cursor.getDefaultCursor());
-                             //System.out.println("Cursor unset");
-                         }
-                         //System.err.println(node.tagName + " Out!");
-                     }
+        Block last_hovered_block = document != null ? document.hovered_block : null;
+        htmlparser.Node last_hovered_node = (document != null && document.hovered_block != null) ? document.hovered_block.node : null;
+        
+        if (x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height) {
+            processMouseOverEvent(node, x, y);
+            if (!hovered) {
+                if (last_hovered_node != null && last_hovered_node != node && !last_hovered_block.isMouseInside(x, y)) {
+                    fireEventForNode(last_hovered_node, "mouseLeave");
                 }
+                fireEventForNode(node, "mouseEnter");
+                last_hovered_block = document.hovered_block;
             }
-        } else {
-            if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) {
-                if (!hovered) node.fireEvent("mouseOver", "render");
-                hovered = true;
-                node.fireEvent("mouseMove", "render");
-                if (node != null && !node.states.contains("hover")) {
-                    node.states.add("hover");
-                    applyStateStyles();
-                    if (cursor != null) {
-                        document.panel.setCursor(cursor);
-                        if (text_layer != null) text_layer.setCursor(cursor);
-                        //System.out.println("Cursor set");
-                    }
-                    //System.err.println(node.tagName + " Hovered!");
+            hovered = true;
+            if (last_hovered_node == node) processMouseMoveEvent(node, x, y);
+            if (node != null && !node.states.contains("hover")) {
+                node.states.add("hover");
+                applyStateStyles();
+                if (cursor != null) {
+                    document.panel.setCursor(cursor);
+                    if (text_layer != null) text_layer.setCursor(cursor);
+                    //System.out.println("Cursor set");
                 }
-            } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height)) {
-                 if (hovered) node.fireEvent("mouseOut", "render");
-                 hovered = false;
-                 if (node != null && node.states.contains("hover")) {
-                     node.states.remove("hover");
-                     resetStyles();
-                     applyStateStyles();
-                     if (cursor != null) {
-                         document.panel.setCursor(Cursor.getDefaultCursor());
-                         if (text_layer != null) text_layer.setCursor(Cursor.getDefaultCursor());
-                         //System.out.println("Cursor unset");
-                     }
-                     //System.err.println(node.tagName + " Out!");
+                //System.err.println(node.tagName + " Hovered!");
+            }
+        } else if (!(x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height)) {
+            //processMouseOutEvent(node, x, y);
+            if (hovered) {
+                fireEventForNode(node, "mouseLeave");
+            }
+            hovered = false;
+            if (node != null && node.states.contains("hover")) {
+                 node.states.remove("hover");
+                 resetStyles();
+                 applyStateStyles();
+                 if (cursor != null) {
+                     document.panel.setCursor(Cursor.getDefaultCursor());
+                     if (text_layer != null) text_layer.setCursor(Cursor.getDefaultCursor());
+                     //System.out.println("Cursor unset");
                  }
-            }
+                 //System.err.println(node.tagName + " Out!");
+             }
         }
     }
 

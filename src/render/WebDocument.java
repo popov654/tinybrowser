@@ -1,5 +1,6 @@
 package render;
 
+import htmlparser.Node;
 import htmlparser.TagLibrary;
 import inspector.Entry;
 import java.awt.BorderLayout;
@@ -13,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.Action;
@@ -442,6 +444,23 @@ public class WebDocument extends JPanel {
 
     }
 
+    public synchronized void fireEventForNode(Node node, String event) {
+        HashSet<String> events = eventsFired.get(node);
+        if (events == null) {
+            events = new HashSet<String>();
+            eventsFired.put(node, events);
+        }
+        events.add(event);
+    }
+
+    public synchronized boolean eventWasFired(Node node, String event) {
+        HashSet<String> events = eventsFired.get(node);
+        if (events == null) {
+            return false;
+        }
+        return events.contains(event);
+    }
+
     public Layouter getLayouter() {
         return layouter;
     }
@@ -517,7 +536,10 @@ public class WebDocument extends JPanel {
 
     protected WebDocument parent_document;
     protected Block parent_document_block;
+    public Block hovered_block;
     public Block highlighted_block;
+
+    public HashMap<Node, HashSet<String>> eventsFired = new HashMap<Node, HashSet<String>>();
 
     private Watcher w;
 
