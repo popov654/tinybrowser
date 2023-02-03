@@ -285,7 +285,7 @@ public class WebDocument extends JPanel {
         contentpane.setOpaque(true);
         
         //contentpane.setBounds(0, 0, 490, 380);
-        final int width = 490, height = 418;
+        final int width = 510, height = 438;
 
         final JScrollPane scrollpane = new JScrollPane(contentpane);
         scrollpane.getVerticalScrollBar().setUnitIncrement(20);
@@ -299,7 +299,7 @@ public class WebDocument extends JPanel {
         scrollpane.setPreferredSize(new Dimension(width, height));
         //setSize(518, 420);
         frame.setLocationRelativeTo(parent);
-        frame.setLocation(parent.getX() - getWidth() - 86, parent.getY() - 80);
+        frame.setLocation(parent.getX() - getWidth() - 86, parent.getY() - 90);
         frame.pack();
         frame.setVisible(true);
 
@@ -344,6 +344,13 @@ public class WebDocument extends JPanel {
 
                 int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() + sp.getVerticalScrollBar().getPreferredSize().width;
                 rootEntry.inflate(width);
+
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        scrollpane.getHorizontalScrollBar().setValue(0);
+                    }
+                });
                 
                 contentpane.addComponentListener(new java.awt.event.ComponentAdapter() {
                     @Override

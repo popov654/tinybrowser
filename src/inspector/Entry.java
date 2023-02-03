@@ -15,6 +15,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusListener;
@@ -28,6 +29,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
 /**
@@ -276,7 +278,8 @@ public class Entry extends javax.swing.JPanel {
             header.setVisible(false);
             footer.setVisible(false);
             JTextArea textarea = new JTextArea();
-            textarea.setText(node.nodeValue);
+            String value = node.nodeValue.replaceAll("^\n+", "").replaceAll("\n+$", "");
+            textarea.setText(value);
             textarea.setEditable(false);
             textarea.setOpaque(false);
             textarea.setBackground(new Color(255, 255, 255, 0));
@@ -436,15 +439,18 @@ public class Entry extends javax.swing.JPanel {
         public void mouseClicked(MouseEvent e) {
             if (e.getSource() instanceof JTextArea) {
                 JTextArea textarea = (JTextArea) e.getSource();
+                boolean multiline = textarea.getText().split("\n").length > 1;
                 if (textarea.isOpaque()) return;
                 textarea.setOpaque(true);
                 textarea.setBackground(Color.WHITE);
                 textarea.setEditable(true);
                 textarea.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-                textarea.setCaretPosition(textarea.getText().length());
                 textarea.getCaret().setVisible(true);
                 textarea.requestFocus();
-                textarea.selectAll();
+                if (!multiline) {
+                    textarea.setCaretPosition(textarea.getText().length());
+                    textarea.selectAll();
+                }
             }
         }
 
@@ -491,7 +497,19 @@ public class Entry extends javax.swing.JPanel {
             node.nodeValue = textarea.getText();
             node.fireEvent("valueChanged", "inspector");
         } else {
+            Component c = getParent();
+            while (c != null && !(c instanceof JViewport)) {
+                c = c.getParent();
+            }
+            final Point p = ((JViewport)c).getViewPosition();
             textarea.setText(node.nodeValue);
+            final JViewport viewport = (JViewport) c;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    viewport.setViewPosition(p);
+                }
+            });
         }
         no_save = false;
         textarea.setOpaque(false);
