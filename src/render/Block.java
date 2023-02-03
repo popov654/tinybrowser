@@ -6022,12 +6022,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int y = e.getY();
 
         if (parts.size() == 0) {
-            processLinks(x, y);
             updateStates(e, x, y);
+            processLinks(x, y);
         } else {
             for (int i = 0; i < parts.size(); i++) {
-                parts.get(i).processLinks(x, y);
                 parts.get(i).updateStates(e, x, y);
+                parts.get(i).processLinks(x, y);
             }
         }
 
@@ -6036,8 +6036,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         Block b = this.original == null ? this : this.original;
         if (b.children.size() == 1 && b.children.get(0) instanceof YouTubeThumb) {
-            b.children.get(0).processLinks(x, y);
             b.children.get(0).updateStates(e, x, y);
+            b.children.get(0).processLinks(x, y);
         } else {
             for (int i = 0; i < b.children.size(); i++) {
                 b.children.get(i).mouseMoved(e);
@@ -6051,6 +6051,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     private void processLinks(int x, int y) {
+        if (node != null && node.defaultPrevented) {
+            node.defaultPrevented = false;
+            return;
+        }
         boolean flag = false;
         if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height &&
               (hasParentLink || href != null) && !hovered) {
@@ -6129,11 +6133,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     private HashMap<String, String> getEventData(MouseEvent e, String type) {
         HashMap<String, String> data = new HashMap<String, String>();
+        type = type.toLowerCase();
+        if (type.equals("doubleclick")) type = "dblclick";
         data.put("clientX", e.getX() + "");
         data.put("clientY", e.getY() + "");
         data.put("pageX", e.getX() + scroll_x + "");
         data.put("pageY", e.getY() + scroll_y + "");
-        data.put("type", type);
+        data.put("type", '"' + type + '"');
         data.put("ctrlKey", e.isControlDown() ? "true" : "false");
         data.put("shiftKey", e.isShiftDown() ? "true" : "false");
         data.put("altKey", e.isAltDown() ? "true" : "false");

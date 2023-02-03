@@ -440,5 +440,6 @@ public class Node {
     public String tagName = "";
     public int nodeType = 3;
     public String nodeValue = "";
+    public boolean defaultPrevented = true;
     public HTMLParser document;
 }

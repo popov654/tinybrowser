@@ -33,10 +33,47 @@ public class JSElement extends JSObject {
         @Override
         public void actionPerformed(ActionEvent e) {
             //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
-            System.out.println("JS event: " + e.getActionCommand().split(":")[1] + " " + ((Node)e.getSource()).tagName);
+            Vector<JSElement> parents = getParents();
+            if (data != null) data.put("bubbles", parents.size() > 1 ? "true" : "false");
+            if (e.getActionCommand().split(":")[1].equals("doubleClick")) {
+                data.put("type", "\"dblclick\"");
+            }
+            JSEvent event = new JSEvent(JSElement.create(node), data);
+            Vector<JSValue> args = new Vector<JSValue>();
+            args.add(event);
+            for (int i = parents.size()-1; i >= 0; i--) {
+                if (event.get("cancelBubble").asBool().getValue()) break;
+                Vector<Function> funcs = parents.get(i).listeners_0.get(data.get("type"));
+                if (funcs == null) continue;
+                for (Function func: funcs) {
+                    func.call(args);
+                }
+            }
+            for (int i = 0; i < parents.size(); i++) {
+                if (event.get("cancelBubble").asBool().getValue()) break;
+                Vector<Function> funcs = parents.get(i).listeners.get(data.get("type"));
+                if (funcs == null) continue;
+                for (Function func: funcs) {
+                    func.call(args);
+                }
+            }
+            if (!data.get("type").equals("\"mousemove\"")) {
+                System.out.println("JS event: " + e.getActionCommand().split(":")[1] + " " + ((Node)e.getSource()).tagName);
+            }
         }
 
     };
+
+    private Vector<JSElement> getParents() {
+        Vector<JSElement> result = new Vector<JSElement>();
+        result.add(this);
+        JSValue p = items.get("parentNode");
+        while (p != null && p instanceof JSElement) {
+            result.add((JSElement)p);
+            p = ((JSElement)p).items.get("parentNode");
+        }
+        return result;
+    }
 
     public static JSElement create(Node node) {
         JSElement element = map.get(node);
@@ -269,11 +306,13 @@ public class JSElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
+            boolean capture_phase = args.size() > 2 && args.get(2).asBool().getValue();
             String event_type = args.get(0).asString().getValue();
             Vector<Function> funcs = listeners.get(event_type);
             if (funcs == null) {
                 funcs = new Vector<Function>();
-                listeners.put(event_type, funcs);
+                if (!capture_phase) listeners.put(event_type, funcs);
+                else listeners_0.put(event_type, funcs);
             }
             funcs.add((Function) args.get(1));
             return Undefined.getInstance();
@@ -298,8 +337,9 @@ public class JSElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
+            boolean capture_phase = args.size() > 2 && args.get(2).asBool().getValue();
             String event_type = args.get(0).asString().getValue();
-            Vector<Function> funcs = listeners.get(event_type);
+            Vector<Function> funcs = !capture_phase ? listeners.get(event_type) : listeners_0.get(event_type);
             for (int i = 0; i < funcs.size(); i++) {
                 if (funcs.get(i) == args.get(1)) {
                     funcs.remove(i);
@@ -332,6 +372,7 @@ public class JSElement extends JSObject {
     public static HashMap<Node, JSElement> map = new HashMap<Node, JSElement>();
 
     LinkedHashMap<String, Vector<Function>> listeners = new LinkedHashMap<String, Vector<Function>>();
+    LinkedHashMap<String, Vector<Function>> listeners_0 = new LinkedHashMap<String, Vector<Function>>();
     HashMap<String, String> styles = new HashMap<String, String>();
     public Node node;
 }
