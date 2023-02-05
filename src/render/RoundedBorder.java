@@ -33,7 +33,7 @@ public class RoundedBorder implements Border {
         this(b, width, radius);
         this.col = new Color[4];
         for (int i = 0; i < 4; i++) {
-            this.col[i] = color;
+            this.col[i] = color != null ? color : new Color(0, 0, 0, 0);
         }
     }
 
@@ -61,6 +61,9 @@ public class RoundedBorder implements Border {
     RoundedBorder(Block b, int[] width, int radius, Color[] color) {
         this(b, width, radius);
         this.col = color;
+        for (int i = 0; i < 4; i++) {
+            if (col[i] == null) col[i] = new Color(0, 0, 0, 0);
+        }
     }
 
     RoundedBorder(Block b, int width, int radius, Color[] color) {
