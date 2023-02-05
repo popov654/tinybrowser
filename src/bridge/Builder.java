@@ -470,7 +470,7 @@ public class Builder {
             b.setBorderWidth(0);
             b.setBorderType(RoundedBorder.SOLID);
             b.setBorderColor(Color.BLACK);
-            b.setFontSize(14);
+            b.setFontSizePx(b.parent != null ? b.parent.fontSize : (int) Math.round(14 * b.ratio));
         }
         b.setMargins(0);
         b.setPaddings(0);

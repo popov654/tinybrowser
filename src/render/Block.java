@@ -3168,7 +3168,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setFontSizePx(int value) {
         fontSize = value;
         for (int i = 0; i < children.size(); i++) {
-            children.get(i).setFontSize(value);
+            children.get(i).setFontSizePx(value);
         }
         doIncrementLayout(viewport_width, viewport_height, false);
         if (document != null && document.ready) {
