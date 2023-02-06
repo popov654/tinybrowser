@@ -61,6 +61,7 @@ public class Reader {
                 final JPanel panel = new JPanel();
                 panel.setLayout(new CardLayout());
                 final WebDocument document = new WebDocument();
+                root.builder.setWindowFrame(frame);
                 document.setBaseUrl(Main.getInstallPath());
 
                 document.setPreferredSize(new Dimension(460, 240));

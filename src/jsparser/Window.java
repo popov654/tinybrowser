@@ -1,17 +1,32 @@
 package jsparser;
 
 import htmlparser.HTMLParser;
+import java.awt.Frame;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 
 /**
  *
  * @author Alex
  */
 public class Window extends JSObject {
+
+    class alertFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() == 0) {
+                args.add(JSValue.create("String", ""));
+                
+            }
+            alert(args.get(0).asString().getValue());
+            return Undefined.getInstance();
+        }
+    }
 
     class parseIntFunction extends Function {
         @Override
@@ -99,6 +114,7 @@ public class Window extends JSObject {
     public Window(Block block) {
         root = block;
         items = root.scope;
+        items.put("alert", new alertFunction());
         items.put("eval", new evalFunction());
         items.put("parseInt", new parseIntFunction());
         items.put("parseFloat", new parseFloatFunction());
@@ -118,6 +134,18 @@ public class Window extends JSObject {
         this.parser = document;
         this.document = new JSDocument(document);
         items.put("document", this.document);
+    }
+
+    public void setWindowFrame(Frame frame) {
+        this.windowFrame = frame;
+    }
+
+    private void alert(String message) {
+        try {
+            UIManager.setLookAndFeel(
+                UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {}
+        JOptionPane.showMessageDialog(windowFrame, message, "Alert", JOptionPane.PLAIN_MESSAGE);
     }
 
     public void startTaskRunner() {
@@ -223,6 +251,7 @@ public class Window extends JSObject {
     private Block root;
     private HTMLParser parser;
     private JSDocument document;
+    private Frame windowFrame;
     private HashMap<String, JSValue> items;
     private String type = "Object";
     private Vector<Timer> timers = new Vector<Timer>();

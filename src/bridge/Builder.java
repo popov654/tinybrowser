@@ -341,8 +341,13 @@ public class Builder {
             JSParser jp = new JSParser(code);
             Expression exp = Expression.create(jp.getHead());
             ((jsparser.Block)exp).setDocument(document);
+            ((jsparser.Block)exp).setWindowFrame(windowFrame);
             exp.eval();
         }
+    }
+
+    public void setWindowFrame(java.awt.Frame window) {
+        this.windowFrame = window;
     }
 
     public void applyDefaultStyles(Node node, Block b) {
@@ -679,6 +684,7 @@ public class Builder {
 
     public String baseUrl = "";
     public WebDocument document;
+    public java.awt.Frame windowFrame;
     public Vector<Node> scripts = new Vector<Node>();
 
     public final static Vector<String> BlockElements = new Vector<String>();

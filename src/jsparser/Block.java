@@ -1028,6 +1028,13 @@ public class Block extends Expression {
         }
     }
 
+    public void setWindowFrame(java.awt.Frame window) {
+        JSValue w = scope.get("window");
+        if (w != null) {
+            ((Window) w).setWindowFrame(window);
+        }
+    }
+
     public Console getConsole() {
         return console;
     }
