@@ -337,12 +337,16 @@ public class Builder {
 
     public void runScripts(HTMLParser document) {
         for (Node script: scripts) {
-            String code = script.children.get(0).nodeValue;
-            JSParser jp = new JSParser(code);
-            Expression exp = Expression.create(jp.getHead());
-            ((jsparser.Block)exp).setDocument(document);
-            ((jsparser.Block)exp).setWindowFrame(windowFrame);
-            exp.eval();
+            try {
+                String code = script.children.get(0).nodeValue;
+                JSParser jp = new JSParser(code);
+                Expression exp = Expression.create(jp.getHead());
+                ((jsparser.Block)exp).setDocument(document);
+                ((jsparser.Block)exp).setWindowFrame(windowFrame);
+                exp.eval();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
