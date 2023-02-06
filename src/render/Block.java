@@ -5311,17 +5311,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void replaceWith(Block b) {
         b.parent = parent;
-        b.children = children;
 
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).parent = b;
+        boolean isRoot = (this == document.root);
+
+        Block old_root = document.root;
+
+        document.ready = false;
+
+        if (isRoot) {
+            document.setRoot(b);
+        }
+
+        Vector<Block> blocks = (Vector<Block>) children.clone();
+
+        for (int i = 0; i < blocks.size(); i++) {
+            Block child = blocks.get(i);
+            old_root.remove(child);
+            b.addElement(child, true);
         }
 
         if (parent != null) {
             for (int i = 0; i < parent.children.size(); i++) {
                 if (parent.children.get(i) == this) {
-                    parent.children.remove(i);
-                    parent.children.add(i, b);
+                    old_root.remove(parent.children.get(i));
+                    parent.addElement(b, i);
                     break;
                 }
             }
@@ -5330,10 +5343,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (scrollbar_x != null) removeScrollbarX();
         if (scrollbar_y != null) removeScrollbarY();
 
+        if (isRoot) {
+            document.ready = true;
+            b.performLayout();
+            b.forceRepaint();
+            getParent().repaint();
+            return;
+        }
+
         int index = document.root.getComponentZOrder(this);
         if (parts.size() > 0) {
             index = document.root.getComponentZOrder(parts.get(0));
         }
+
         document.root.remove(this);
         for (int i = 0; i < parts.size(); i++) {
             document.root.remove(parts.get(i));
@@ -5344,6 +5366,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         while (block.display_type == Display.INLINE) {
             block = block.parent;
         }
+
+        document.ready = true;
 
         if (block != null) {
             block.doIncrementLayout(block.viewport_width, block.viewport_height, false);

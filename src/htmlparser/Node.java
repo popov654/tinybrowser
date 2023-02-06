@@ -304,8 +304,8 @@ public class Node {
             document.getIdIndex().put(val, this);
         }
         if (attr.equals("class") && document != null) {
-            String[] oldClassNames = attributes.get("class").split("\\s+");
-            String[] newClassNames = val.split("\\s+");
+            String[] oldClassNames = attributes.get("class") != null ? attributes.get("class").split("\\s+") : new String[] {};
+            String[] newClassNames = !val.isEmpty() ? val.split("\\s+") : new String[] {};
             List<String> old_list = Arrays.asList(oldClassNames);
             List<String> new_list = Arrays.asList(newClassNames);
             List<String> l1 = (List<String>)(new ArrayList<String>(old_list)).clone();

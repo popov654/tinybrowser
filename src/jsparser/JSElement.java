@@ -24,6 +24,11 @@ public class JSElement extends JSObject {
         items.put("getElementsByName", new getElementsByNameFunction());
         items.put("getElementsByClassName", new getElementsByClassNameFunction());
 
+        items.put("getAttribute", new getAttributeFunction());
+        items.put("hasAttribute", new hasAttributeFunction());
+        items.put("setAttribute", new setAttributeFunction());
+        items.put("removeAttribute", new removeAttributeFunction());
+
         items.put("addEventListener", new addEventListenerFunction());
         items.put("removeEventListener", new removeEventListenerFunction());
 
@@ -289,6 +294,55 @@ public class JSElement extends JSObject {
                 }
             }
             return array;
+        }
+    }
+
+    class getAttributeFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "Arguments size error: 1 argument required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            return new JSString(node.getAttribute(args.get(0).toString()));
+        }
+    }
+
+    class hasAttributeFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "Arguments size error: 1 argument required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            return new JSBool(node.getAttribute(args.get(0).toString()) != null);
+        }
+    }
+
+    class setAttributeFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 2) {
+                JSError e = new JSError(null, "Arguments size error: 2 arguments required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            return new JSString(node.setAttribute(args.get(0).asString().getValue(), args.get(1).asString().getValue()));
+        }
+    }
+
+    class removeAttributeFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "Arguments size error: 1 argument required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            node.removeAttribute(args.get(0).toString());
+            return Undefined.getInstance();
         }
     }
 

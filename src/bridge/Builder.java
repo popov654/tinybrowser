@@ -137,8 +137,8 @@ public class Builder {
             JSVGCanvas svgCanvas = new JSVGCanvas(null, false, false) {
                 @Override
                 public void paintComponent(Graphics g) {
-                    Block clip = b.parent;
-                    while (clip.overflow != Block.Overflow.SCROLL) {
+                    Block clip = Mapper.get(b.node).parent;
+                    while (clip.parent != null && clip.overflow != Block.Overflow.SCROLL) {
                         clip = clip.parent;
                     }
                     g.setClip(new Rectangle(clip._x_ - b._x_ + b.scroll_x, clip._y_ - b._y_ + b.scroll_y, clip.viewport_width, clip.viewport_height));
@@ -170,31 +170,34 @@ public class Builder {
             applyInlineStyles(node, b);
         }
 
-        addNodeChangeListeners(b, node);
+        addNodeChangeListeners(node);
 
         return b;
     }
 
-    private void addNodeChangeListeners(final Block b, final Node node) {
+    public void addNodeChangeListeners(final Node node) {
         final Builder builder = this;
         NodeActionCallback callback = new NodeActionCallback() {
             @Override
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
+                Block b = Mapper.get(e.target);
+                b.document = document;
                 b.replaceWith(builder.buildElement(document, b.parent, node));
                 node.removeListener(this);
             }
         };
-        node.addListener(callback, b, "attributesChanged");
+        node.addListener(callback, node, "attributesChanged");
         NodeActionCallback callback2 = new NodeActionCallback() {
             @Override
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
+                Block b = Mapper.get(e.target);
                 b.replaceSubtreeWith(builder.buildSubtree(document, node));
                 node.removeListener(this);
             }
         };
-        node.addListener(callback2, b, "valueChanged");
+        node.addListener(callback2, node, "valueChanged");
     }
 
     private void applyParentFontStyles(Block block, Block parent) {

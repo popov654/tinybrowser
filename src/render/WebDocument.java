@@ -39,39 +39,7 @@ public class WebDocument extends JPanel {
         add(panel);
         setOpaque(false);
         panel.setOpaque(false);
-        root.addMouseListener(new MouseListener() {
-
-            public void mouseClicked(MouseEvent e) {
-
-            }
-
-            public void mousePressed(MouseEvent e) {
-                Component[] c = panel.getComponents();
-                for (int i = 0; i < c.length; i++) {
-                    if (c[i] instanceof Block) {
-                        ((Block)c[i]).clearSelection();
-                    }
-                }
-            }
-
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            public void mouseExited(MouseEvent e) {
-
-            }
-
-        });
-
-        layouter.setCurrentBlock(root);
-        root.setBackgroundColor(new Color(255, 255, 255));
-        root.overflow = Block.Overflow.SCROLL;
-        panel.add(root);
+        setRoot(root);
 
         final WebDocument instance = this;
 
@@ -161,6 +129,70 @@ public class WebDocument extends JPanel {
         });
     }
 
+    public void setRoot(Block b) {
+        b.document = this;
+        b.parent = null;
+        Component[] c = root.getComponents();
+        for (int i = 0; i < c.length; i++) {
+            root.remove(c[i]);
+            b.add(c[i]);
+        }
+        root = b;
+
+        if (keep_root_scrollbars_outside) {
+            root.setBounds(0, 0, width - root.getScrollbarYSize() - borderSize * 2, height - root.getScrollbarXSize() - borderSize * 2);
+            root.width = root.viewport_width = width - root.getScrollbarYSize() - borderSize * 2;
+            root.height = root.viewport_height = height - root.getScrollbarXSize() - borderSize * 2;
+        } else {
+            root.setBounds(0, 0, width - borderSize * 2, height - borderSize * 2);
+            root.width = width - borderSize * 2;
+            root.height = height - borderSize * 2;
+            root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
+            root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
+        }
+        root.orig_height = (int) (root.height / root.ratio);
+        root.max_height = root.height;
+
+        root.addMouseListener(new MouseListener() {
+
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            public void mousePressed(MouseEvent e) {
+                Component[] c = panel.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    if (c[i] instanceof Block) {
+                        ((Block)c[i]).clearSelection();
+                    }
+                }
+            }
+
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            public void mouseExited(MouseEvent e) {
+
+            }
+
+        });
+
+        root.addMouseListeners();
+
+        layouter.setCurrentBlock(root);
+        root.setBackgroundColor(new Color(255, 255, 255));
+        root.overflow = Block.Overflow.SCROLL;
+        panel.add(root, 0);
+        if (glass != null) {
+            panel.setComponentZOrder(glass, 0);
+        }
+    }
+
     public void setWidth(int value) {
         setBounds(getX(), getY(), value, this.height);
         SwingUtilities.invokeLater(new Runnable() {
@@ -204,6 +236,10 @@ public class WebDocument extends JPanel {
         for (int i = 0; i < insert.children.size(); i++) {
             b.addElement(insert.children.get(i), true);
             processSubtree(insert.children.get(i));
+        }
+        b.builder = insert.builder;
+        if (b == root) {
+            root.node = insert.node;
         }
         ready = true;
     }
@@ -461,6 +497,7 @@ public class WebDocument extends JPanel {
     }
 
     public void fireLoadEvent() {
+        loadEventFired = true;
         root.node.fireEvent("DOMContentLoaded", "render", null, null);
         root.node.fireEvent("load", "render", null, null);
     }

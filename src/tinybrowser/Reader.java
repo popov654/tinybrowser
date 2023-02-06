@@ -82,6 +82,10 @@ public class Reader {
                     document.root.node = document.root.getChildren().get(0).node.parent;
                     document.root.builder = document.root.getChildren().get(0).builder;
                     Mapper.add(document.root.node, document.root);
+                } else {
+                    document.root.node = root.node;
+                    document.root.builder = root.builder;
+                    Mapper.add(document.root.node, document.root);
                 }
 
                 document.root.addMouseListeners();
