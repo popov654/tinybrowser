@@ -2,7 +2,8 @@ package inspector;
 
 import bridge.Mapper;
 import htmlparser.Node;
-import htmlparser.NodeActionListener;
+import htmlparser.NodeActionCallback;
+import htmlparser.NodeEvent;
 import htmlparser.TagLibrary;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
@@ -160,11 +161,11 @@ public class Entry extends javax.swing.JPanel {
 
     private void addUpdateCallback() {
         final Entry instance = this;
-        NodeActionListener l = new NodeActionListener() {
+        NodeActionCallback l = new NodeActionCallback() {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!e.getActionCommand().equals("inspector")) {
+            public void nodeChanged(NodeEvent e, String source) {
+                if (!source.equals("inspector")) {
                     System.out.println("Attributes changed!");
                 }
             }
@@ -172,11 +173,11 @@ public class Entry extends javax.swing.JPanel {
         };
         node.addListener(l, instance, "attributesChanged");
         
-        l = new NodeActionListener() {
+        l = new NodeActionCallback() {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!e.getActionCommand().equals("inspector")) {
+            public void nodeChanged(NodeEvent e, String source) {
+                if (!source.equals("inspector")) {
                     System.out.println("Value changed!");
                 }
             }

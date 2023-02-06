@@ -3,7 +3,8 @@ package cssparser;
 import bridge.Mapper;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
-import htmlparser.NodeActionListener;
+import htmlparser.NodeActionCallback;
+import htmlparser.NodeEvent;
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -81,10 +82,10 @@ public class CSSParser {
         final CSSParser instance = this;
         if (node.tagName.equals("style")) {
             styles.add(node);
-            NodeActionListener l = new NodeActionListener() {
+            NodeActionCallback l = new NodeActionCallback() {
 
                 @Override
-                public void actionPerformed(ActionEvent e) {
+                public void nodeChanged(NodeEvent e, String source) {
                     Block b = Mapper.get(hp.getRootNode().lastElementChild());
                     if (b != null) {
                         b.builder.reapplyDocumentStyles(instance);

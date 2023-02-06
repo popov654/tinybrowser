@@ -6,7 +6,8 @@ import cssparser.StyleMap;
 import cssparser.Styles;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
-import htmlparser.NodeActionListener;
+import htmlparser.NodeActionCallback;
+import htmlparser.NodeEvent;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -176,19 +177,19 @@ public class Builder {
 
     private void addNodeChangeListeners(final Block b, final Node node) {
         final Builder builder = this;
-        NodeActionListener callback = new NodeActionListener() {
+        NodeActionCallback callback = new NodeActionCallback() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if (e.getActionCommand().equals("render") || document == null) return;
+            public void nodeChanged(NodeEvent e, String source) {
+                if (source.equals("render") || document == null) return;
                 b.replaceWith(builder.buildElement(document, b.parent, node));
                 node.removeListener(this);
             }
         };
         node.addListener(callback, b, "attributesChanged");
-        NodeActionListener callback2 = new NodeActionListener() {
+        NodeActionCallback callback2 = new NodeActionCallback() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if (e.getActionCommand().equals("render") || document == null) return;
+            public void nodeChanged(NodeEvent e, String source) {
+                if (source.equals("render") || document == null) return;
                 b.replaceSubtreeWith(builder.buildSubtree(document, node));
                 node.removeListener(this);
             }

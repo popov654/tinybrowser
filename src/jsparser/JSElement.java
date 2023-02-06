@@ -1,9 +1,8 @@
 package jsparser;
 
 import htmlparser.Node;
-import htmlparser.NodeActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import htmlparser.NodeActionCallback;
+import htmlparser.NodeEvent;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -31,15 +30,16 @@ public class JSElement extends JSObject {
         node.addListener(eventListener, node, "any");
     }
 
-    NodeActionListener eventListener = new NodeActionListener() {
+    NodeActionCallback eventListener = new NodeActionCallback() {
 
         @Override
-        public void actionPerformed(ActionEvent e) {
-            if (!e.getActionCommand().split(":")[0].equals("render")) return;
+        public void nodeChanged(NodeEvent e, String source) {
+            if (!source.split(":")[0].equals("render")) return;
+            HashMap<String, String> data = e.getData();
             //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
             Vector<JSElement> parents = getParents();
             if (data != null) data.put("bubbles", parents.size() > 1 ? "true" : "false");
-            JSEvent event = new JSEvent(JSElement.create(node), relatedTarget != null ? JSElement.create(relatedTarget) : null, data);
+            JSEvent event = new JSEvent(JSElement.create(node), e.relatedTarget != null ? JSElement.create(e.relatedTarget) : null, data);
             Vector<JSValue> args = new Vector<JSValue>();
             args.add(event);
             for (int i = parents.size()-1; i >= 0; i--) {
@@ -59,7 +59,7 @@ public class JSElement extends JSObject {
                 }
             }
             if (!data.get("type").equals("\"mousemove\"")) {
-                System.out.println("JS event: " + e.getActionCommand().split(":")[1] + " " + ((Node)e.getSource()).tagName);
+                System.out.println("JS event: " + source.split(":")[1] + " " + e.target.tagName);
                 /* if (relatedTarget != null) {
                     System.out.println("Related target: " + relatedTarget.tagName);
                 } */

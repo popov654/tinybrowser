@@ -393,7 +393,7 @@ public class Node {
         return false;
     }
 
-    public void addListener(NodeActionListener listener, Object target, String eventType) {
+    public void addListener(NodeActionCallback listener, Object target, String eventType) {
         for (NodeChangeListener ls: listeners) {
             if (ls.target == target && ls.eventType.equals(eventType)) {
                 return;
@@ -402,7 +402,7 @@ public class Node {
         listeners.add(new NodeChangeListener(listener, target, eventType));
     }
 
-    public void removeListener(ActionListener listener) {
+    public void removeListener(NodeActionCallback listener) {
         for (NodeChangeListener ls: listeners) {
             if (ls.getHandler() == listener) {
                 listeners.remove(ls);
