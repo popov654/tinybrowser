@@ -25,6 +25,9 @@ public class JSElement extends JSObject {
         items.put("getElementsByName", new getElementsByNameFunction());
         items.put("getElementsByClassName", new getElementsByClassNameFunction());
 
+        items.put("addEventListener", new addEventListenerFunction());
+        items.put("removeEventListener", new removeEventListenerFunction());
+
         node.addListener(eventListener, node, "any");
     }
 

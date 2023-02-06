@@ -416,6 +416,10 @@ public class Node {
     }
 
     public void fireEvent(String type, String source, HashMap<String, String> data, Node relatedNode) {
+        if (data == null) {
+            data = new HashMap<String, String>();
+            data.put("type", type);
+        }
         Vector<NodeChangeListener> l = (Vector<NodeChangeListener>) listeners.clone();
         for (NodeChangeListener ls: l) {
             if (ls.eventType.equals(type)) {

@@ -460,6 +460,11 @@ public class WebDocument extends JPanel {
         events.add(event);
     }
 
+    public void fireLoadEvent() {
+        root.node.fireEvent("DOMContentLoaded", "render", null, null);
+        root.node.fireEvent("load", "render", null, null);
+    }
+
     public boolean eventWasFired(Node node, String event) {
         HashSet<String> events = eventsFired.get(node);
         if (events == null) {
@@ -547,6 +552,7 @@ public class WebDocument extends JPanel {
     public Block highlighted_block;
 
     public HashMap<Node, HashSet<String>> eventsFired = new HashMap<Node, HashSet<String>>();
+    public boolean loadEventFired = false;
 
     private Watcher w;
 

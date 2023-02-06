@@ -117,6 +117,9 @@ public class Reader {
                     @Override
                     public void componentResized(java.awt.event.ComponentEvent evt) {
                         document.resized();
+                        if (!document.loadEventFired) {
+                            document.fireLoadEvent();
+                        }
                     }
                 });
 

@@ -111,6 +111,30 @@ public class Window extends JSObject {
         }
     }
 
+    class addEventListenerFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (document == null) return Undefined.getInstance();
+            JSElement bodyElement = (JSElement) document.items.get("body");
+            if (bodyElement == null) return Undefined.getInstance();
+
+            return ((Function)bodyElement.items.get("addEventListener")).call(context, args, as_constr);
+        }
+    }
+
+    class removeEventListenerFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            JSValue document = items.get("document");
+            if (document == null) return Undefined.getInstance();
+            JSValue bodyElement = ((JSObject)document).items.get("body");
+            if (bodyElement == null) return Undefined.getInstance();
+            JSElement body = (JSElement) bodyElement;
+
+            return ((Function)body.items.get("removeEventListener")).call(context, args, as_constr);
+        }
+    }
+
     public Window(Block block) {
         root = block;
         items = root.scope;
@@ -122,6 +146,8 @@ public class Window extends JSObject {
         items.put("clearTimeout", new clearTimeoutFunction());
         items.put("setInterval", new setIntervalFunction());
         items.put("clearInterval", new clearTimeoutFunction());
+        items.put("addEventListener", new addEventListenerFunction());
+        items.put("removeEventListener", new removeEventListenerFunction());
         tr = new TaskRunner(timers);
     }
     
