@@ -6022,8 +6022,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int y = e.getY();
 
         if (parts.size() == 0) {
-            updateStates(e, x, y);
-            processLinks(x, y);
+            boolean isSVG = getComponents().length == 1 && getComponents()[0] instanceof JSVGCanvas;
+
+            if (isSVG) {
+                updateStates(e, x + _x_, y + _y_);
+            } else {
+                updateStates(e, x, y);
+                processLinks(x, y);
+            }
         } else {
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).updateStates(e, x, y);
