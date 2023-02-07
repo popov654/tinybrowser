@@ -5616,7 +5616,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             document.active_block = this;
 
-            if (href != null) {
+            if (node != null && node.defaultPrevented) {
+                node.defaultPrevented = false;
+            } else if (href != null) {
                 openBrowser(href);
                 node.states.add("visited");
             } else {
@@ -6175,7 +6177,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     private void fireEventForNode(MouseEvent e, htmlparser.Node node, htmlparser.Node related_node, String event_type) {
-        if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
+        if (node == null || node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
         boolean was_fired = document != null ? document.eventWasFired(node, event_type) : false;
         if (!was_fired) {
             HashMap<String, String> data = getEventData(e, event_type);
@@ -6197,7 +6199,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     private void processMouseOverEvent(MouseEvent e, htmlparser.Node node, int x, int y) {
         if (parts.size() > 0) return;
-        if (node.tagName.startsWith("::")) return;
+        if (node == null || node.tagName.startsWith("::")) return;
         if (document.eventWasFired(node, "mouseOut")) return;
         if (isInnermostBlockForEvent(x, y) && (document.hovered_block == null || document.hovered_block.node != node)) {
             htmlparser.Node relatedNode = document.hovered_block != null ? document.hovered_block.node : null;
@@ -6210,7 +6212,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     private void processMouseOutEvent(MouseEvent e, htmlparser.Node node, int x, int y) {
-        if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
+        if (node == null || node.tagName.startsWith("::")) return;
         if (document.eventWasFired(node, "mouseOver")) return;
         if (isInnermostBlockForEvent(x, y)) {
             htmlparser.Node relatedNode = document.hovered_block != null ? document.hovered_block.node : null;
@@ -6219,7 +6221,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     private void processMouseMoveEvent(MouseEvent e, htmlparser.Node node, int x, int y) {
-        if (node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
+        if (node == null || node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
         if (isInnermostBlockForEvent(x, y)) {
             fireEventForNode(e, node, null, "mouseMove");
         }

@@ -5,7 +5,6 @@ package render;
  * @author Alex
  */
 
-import java.io.IOException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;

@@ -82,7 +82,7 @@ public class Line {
             }
         }
 
-        if (d instanceof Block && ((Block)d).node.tagName.equals("br")) {
+        if (d instanceof Block && ((Block)d).node != null && ((Block)d).node.tagName.equals("br")) {
             ((Block)d).margins[0] = height - 1;
             d.setY(height - ((Block)d).height + top - 1);
         }
