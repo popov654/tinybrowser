@@ -4817,14 +4817,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         d.hasParentLink = false;
         d.removeTextLayers();
-        d.removeAllElements();
+        children.remove(d);
         if (document != null) {
             document.root.remove(d);
-            document.root.forceRepaint();
+            document.smartUpdate(this, viewport_width, viewport_height);
         }
-        children.remove(d);
-        //performLayout();
-        //forceRepaint();
     }
 
     public void removeElement(int index) {
