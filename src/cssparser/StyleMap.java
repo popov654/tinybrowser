@@ -11,17 +11,23 @@ import java.util.HashMap;
 public class StyleMap {
 
     public static Styles getNodeStyles(Node node) {
-        HashMap<Node, Styles> map = styles.get(node.document);
-        if (map == null) {
-            map = new HashMap<Node, Styles>();
-            styles.put(node.document, map);
+        try {
+            HashMap<Node, Styles> map = styles.get(node.document);
+        
+            if (map == null) {
+                map = new HashMap<Node, Styles>();
+                styles.put(node.document, map);
+            }
+            Styles s = map.get(node);
+            if (s == null) {
+                s = new Styles();
+                map.put(node, s);
+            }
+            return s;
+        } catch (Exception ex) {
+            System.err.println(node.tagName);
         }
-        Styles s = map.get(node);
-        if (s == null) {
-            s = new Styles();
-            map.put(node, s);
-        }
-        return s;
+        return null;
     }
 
     public static void addNodeStyles(Node node, Styles st) {

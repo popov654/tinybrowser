@@ -7,6 +7,7 @@ import htmlparser.HTMLParser;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.util.HashMap;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -35,6 +36,7 @@ public class Reader {
 
         Builder builder = new Builder();
         builder.setBaseUrl(Main.getInstallPath());
+        builder.customElements = customElements;
 
         CSSParser parser = new CSSParser(hp);
         parser.findStyles(hp.getRootNode());
@@ -131,6 +133,12 @@ public class Reader {
             }
         });
     }
+
+    public void addCustomElement(String tag, Class className) {
+        customElements.put(tag, className);
+    }
+
+    public HashMap<String, Class> customElements = new HashMap<String, Class>();
 
     public boolean debug = false;
 

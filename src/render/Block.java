@@ -4736,7 +4736,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             children.add(d);
         }
         
-        document.root.add(d, 0);
+        if (document != null) {
+            document.root.add(d, 0);
+        }
         d.pos = getComponentCount()-1;
 
         Block b = this;
@@ -4746,7 +4748,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             b = b.parent;
         }
-        if (b.width <= 0 || b.height <= 0) {
+        if (document != null && (b.width <= 0 || b.height <= 0)) {
             b = document.root;
         }
         d.setBounds(0, 0, b.width, b.height);
@@ -4766,7 +4768,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             d.text_strikethrough = text_strikethrough;
             d.linksUnderlineMode = linksUnderlineMode;
         }
-        if (document.prevent_mixed_content) {
+        if (document != null && document.prevent_mixed_content) {
             normalizeContent();
         }
         //performLayout();

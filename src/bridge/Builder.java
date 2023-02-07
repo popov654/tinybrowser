@@ -12,11 +12,12 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jsparser.Expression;
 import jsparser.JSParser;
 import jsparser.Window;
@@ -154,6 +155,30 @@ public class Builder {
             svgCanvas.setMaximumSize(dim);
             svgCanvas.setMinimumSize(dim);
             svgCanvas.repaint();
+        } else if (customElements.containsKey(node.tagName)) {
+            Class c = customElements.get(node.tagName);
+            if (c.getSuperclass() == CustomElement.class) {
+                try {
+                    Constructor constr = null;
+                    Object enclosingObj = null;
+                    CustomElement element = null;
+                    if (c.getEnclosingClass() == null) {
+                        constr = c.getConstructor(WebDocument.class, Node.class);
+                        constr.setAccessible(true);
+                        element = (CustomElement) constr.newInstance(document, node);
+                    } else {
+                        constr = c.getConstructor(c.getEnclosingClass(), WebDocument.class, Node.class);
+                        enclosingObj = c.getEnclosingClass().getConstructor().newInstance();
+                        constr.setAccessible(true);
+                        element = (CustomElement) constr.newInstance(enclosingObj, document, node);
+                    }
+                   
+                    b.addElement(element.createBlock(this));
+                    b.node = b.getChildren().get(0).node;
+                } catch (Exception ex) {
+                    Logger.getLogger(Builder.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
         b.builder = this;
         b.parent = parent;
@@ -689,6 +714,8 @@ public class Builder {
     public void setBaseUrl(String url) {
         baseUrl = url;
     }
+
+    public HashMap<String, Class> customElements = new HashMap<String, Class>();
 
     public String baseUrl = "";
     public WebDocument document;

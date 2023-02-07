@@ -1,7 +1,9 @@
 package tinybrowser;
 
+import bridge.CustomElement;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
+import htmlparser.Node;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -17,6 +19,8 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import jsparser.Expression;
 import jsparser.JSParser;
+import mediaplayer.MediaController;
+import mediaplayer.NoMediaPlayerException;
 import render.Block;
 import render.WebDocument;
 
@@ -156,6 +160,7 @@ public class Main {
 
     public static void testBuilder() {
         Reader reader = new Reader();
+        reader.addCustomElement("player", CustomPlayer.class);
         Block root = reader.readDocument("test2.htm");
         visualBuilderTest(reader, root);
 
@@ -170,7 +175,59 @@ public class Main {
         //documentResizeTest(frame, panel, document, 1000, 400);
     }
 
+    class CustomPlayer extends CustomElement {
 
+        public CustomPlayer(WebDocument document, Node node) {
+            super(document, node);
+        }
+
+        @Override
+        public void initialize() {
+            MediaController mc = new MediaController();
+            mc.setMediaPlayer(new mediaplayer.MediaPlayer());
+            try {
+                String url = "";
+                String title = "Song Title";
+
+                if (node.hasAttribute("src")) {
+                    url = node.getAttribute("src");
+                    if (node.hasAttribute("title")) {
+                        title = node.getAttribute("title");
+                    } else {
+                        String[] p = url.split("/");
+                        title = capitalizeString(p[p.length-1].replaceAll("\\.[a-z0-9]+$", "").replaceAll("_", " ").replaceFirst("(\\w)-(\\w)", "$1 - $2"));
+                    }
+                }
+
+                mc.openSource(url);
+                mc.setSongTitle(title);
+            } catch (NoMediaPlayerException ex) {
+                ex.printStackTrace();
+            }
+            mc.setBorder(null);
+            setComponent(mc);
+            width = 230;
+            height = 48;
+        }
+
+        public String capitalizeString(String string) {
+            char[] chars = string.toLowerCase().toCharArray();
+            boolean found = false;
+            for (int i = 0; i < chars.length; i++) {
+                if (!found && Character.isLetter(chars[i])) {
+                  chars[i] = Character.toUpperCase(chars[i]);
+                  found = true;
+                } else if (Character.isWhitespace(chars[i]) || chars[i]=='.' || chars[i]=='\'') { // You can add other chars here
+                  found = false;
+                }
+            }
+            return String.valueOf(chars);
+        }
+
+        public Block createBlock(Node node) {
+            return null;
+        }
+    }
 
     public static Block visualBuilderSyntheticTest() {
         JFrame frame = new JFrame("Render Test");
