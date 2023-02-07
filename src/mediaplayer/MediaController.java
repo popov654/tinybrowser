@@ -20,8 +20,9 @@ public class MediaController extends JPanel {
 
     public MediaController() {
         playBtn = new PlayButton();
-        setFont(new Font("Arial", Font.PLAIN, 14));
+        setFont(new Font("Tahoma", Font.PLAIN, 16));
         songTitle = new JLabel("Artist - Title");
+        songTitle.setFont(getFont());
 
         slider = new Slider();
         volumeSlider = new VolumeSlider();

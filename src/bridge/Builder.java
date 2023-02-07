@@ -173,7 +173,7 @@ public class Builder {
                         element = (CustomElement) constr.newInstance(enclosingObj, document, node);
                     }
                    
-                    b.addElement(element.createBlock(this));
+                    b.addElement(element.createBlock(this), true);
                     b.node = b.getChildren().get(0).node;
                 } catch (Exception ex) {
                     Logger.getLogger(Builder.class.getName()).log(Level.SEVERE, null, ex);
@@ -188,11 +188,13 @@ public class Builder {
             b.setTextColor(node.getAttribute("color"));
             b.setBackgroundColor(node.getAttribute("bgcolor"));
 
-            applyDefaultStyles(node, b);
-            applyParentFontStyles(b, parent);
+            if (!customElements.containsKey(node.tagName)) {
+                applyDefaultStyles(node, b);
+                applyParentFontStyles(b, parent);
 
-            applyStyles(node, b);
-            applyInlineStyles(node, b);
+                applyStyles(node, b);
+                applyInlineStyles(node, b);
+            }
         }
 
         addNodeChangeListeners(node);
@@ -458,6 +460,7 @@ public class Builder {
     }
 
     public void applyStyles(Node node, Block b) {
+        if (b instanceof render.ReplacedBlock) return;
         Styles st = StyleMap.getNodeStyles(node);
         Set<String> keys = st.styles.keySet();
         for (String key: keys) {
@@ -494,6 +497,7 @@ public class Builder {
     }
 
     public void resetStyles(Block b, boolean no_update, boolean force) {
+        if (b instanceof render.ReplacedBlock) return;
         Styles st = StyleMap.getNodeStyles(b.node);
         if (b.node == null || st.stateStyles.size() == 0 && !force) return;
 

@@ -533,8 +533,8 @@ public class LayoutTests extends JFrame {
         }
         Block replaced_player = new ReplacedBlock(document, mc);
 
-        replaced_player.width = 100;
-        replaced_player.height = 68;
+        replaced_player.setWidth(236);
+        replaced_player.setHeight(48);
         b.addElement(replaced_player);
 
         document.ready = true;
@@ -946,7 +946,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 17;
+        int test = 3;
         int list_type = 2;
 
         if (args.length > 0) {

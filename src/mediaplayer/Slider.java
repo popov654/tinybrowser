@@ -29,6 +29,7 @@ public class Slider extends JProgressBar implements MouseListener, MouseMotionLi
         //setMinimumSize(new Dimension(size, size));
         //setMaximumSize(new Dimension(size, size));
         //setPreferredSize(new Dimension(size, size));
+        setBorder(null);
         setBackground(new Color(183, 183, 188));
         setForeground(new Color(78, 146, 217));
         try {

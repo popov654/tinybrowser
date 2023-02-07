@@ -25,6 +25,7 @@ public class PlayButton extends JButton implements MouseListener, MouseMotionLis
 
     public PlayButton() {
         setOpaque(false);
+        setBorder(null);
         setMinimumSize(new Dimension(size, size));
         setMaximumSize(new Dimension(size, size));
         setPreferredSize(new Dimension(size, size));
