@@ -185,11 +185,11 @@ public class HTMLParser {
                 cur_attr_value = "";
             }
         } else if (state == READ_ATTRIBUTE_VALUE && !cur_attr_name.isEmpty()) {
-            if (ch == '"' && cur_attr_value.isEmpty()) {
+            if (!quotes && ch == '"' && cur_attr_value.isEmpty()) {
                 quotes = true;
-            } else if (ch != '"' && ch != '	' && (quotes || ch != '=')) {
+            } else if (ch != '"' && (quotes || ch != '=' && ch != ' ' && ch != '	')) {
                 cur_attr_value += ch;
-            } else if (!cur_attr_value.isEmpty() && (!quotes && ch == '>' || quotes && ch == '"')) {
+            } else if (!quotes && (ch == '>' || ch != ' ' || ch != '	') || quotes && ch == '"') {
                 attrs.put(cur_attr_name.toLowerCase(), cur_attr_value);
                 cur_attr_name = "";
                 cur_attr_value = "";
