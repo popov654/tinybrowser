@@ -6050,26 +6050,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (isSVG) {
                 updateStates(e, x + _x_, y + _y_);
             } else {
+                boolean was_hovered = hovered;
                 updateStates(e, x, y);
-                processLinks(x, y);
-            }
-        } else {
-            for (int i = 0; i < parts.size(); i++) {
-                parts.get(i).updateStates(e, x, y);
-                parts.get(i).processLinks(x, y);
+                processLinks(was_hovered, x, y);
             }
         }
 
         for (int i = 0; i < parts.size(); i++) {
             parts.get(i).mouseMoved(e);
         }
+
         Block b = this.original == null ? this : this.original;
         if (b.children.size() == 1 && b.children.get(0) instanceof YouTubeThumb) {
+            boolean was_hovered = b.children.get(0).hovered;
             b.children.get(0).updateStates(e, x, y);
-            b.children.get(0).processLinks(x, y);
+            b.children.get(0).processLinks(was_hovered, x, y);
         } else {
             for (int i = 0; i < b.children.size(); i++) {
-                b.children.get(i).mouseMoved(e);
+                if (b.children.get(i).type == NodeTypes.ELEMENT) {
+                    b.children.get(i).mouseMoved(e);
+                }
             }
         }
 
@@ -6079,17 +6079,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    private void processLinks(int x, int y) {
-        if (node != null && node.defaultPrevented) {
-            node.defaultPrevented = false;
-            return;
-        }
+    private void processLinks(boolean was_hovered, int x, int y) {
         boolean flag = false;
         if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height &&
-              (hasParentLink || href != null) && !hovered) {
+              (hasParentLink || href != null) && !was_hovered && !hovered) {
             hovered = true;
-            originalStyles.put("text_underline", text_underline);
-            originalStyles.put("text_color", color);
+            if (!originalStyles.containsKey("text_underline")) {
+                originalStyles.put("text_underline", text_underline);
+                originalStyles.put("text_color", color);
+            }
             text_underline = true;
             color = linkColor;
             document.panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -6101,13 +6099,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             color = (Color) originalStyles.get("text_color");
             originalStyles.remove("text_underline");
             originalStyles.remove("text_color");
-            if (!hasParentLink && href == null) {
-                document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-            }
+            document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             flag = true;
-        } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && hovered && (hasParentLink || href != null)) {
+        } else if (!(x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height) && was_hovered && (hasParentLink || href != null)) {
             hovered = false;
             document.panel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            flag = true;
         }
         if (flag) {
             if (text_layer != null) {
