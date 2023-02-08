@@ -90,6 +90,18 @@ public class Builder {
         final Block b = new Block(document);
         b.node = node;
         Mapper.add(node, b);
+
+        b.builder = this;
+        b.parent = parent;
+        initElement(b);
+
+        addNodeChangeListeners(node);
+
+        return b;
+    }
+
+    public void initElement(final Block b) {
+        Node node = b.node;
         if (node.nodeType == ELEMENT) {
             b.type = Block.NodeTypes.ELEMENT;
             b.width = -1;
@@ -104,7 +116,7 @@ public class Builder {
 
         } else if (node.nodeType == TEXT) {
             if (node.nodeValue.matches("\\s*")) {
-                return null;
+                return;
             }
             b.type = Block.NodeTypes.TEXT;
             b.textContent = node.nodeValue;
@@ -113,7 +125,7 @@ public class Builder {
             b.text_underline = node.parent.tagName.equals("u");
             b.text_strikethrough = node.parent.tagName.equals("s");
         } else if (node.nodeType == COMMENT) {
-            return null;
+            return;
         }
         if (b.document != null && (node.tagName.equals("audio") || node.tagName.equals("video")) &&
                 node.getAttribute("src") != null) {
@@ -148,6 +160,7 @@ public class Builder {
             };
             svgCanvas.setDocument(svgDoc);
             svgCanvas.setOpaque(true);
+            b.removeAllElements();
             b.add(svgCanvas);
             Dimension dim = new Dimension(Integer.parseInt(node.getAttribute("width")), Integer.parseInt(node.getAttribute("height")));
             svgCanvas.setBackground(new Color(0, 0, 0, 0));
@@ -172,7 +185,7 @@ public class Builder {
                         constr.setAccessible(true);
                         element = (CustomElement) constr.newInstance(enclosingObj, document, node);
                     }
-                   
+
                     b.addElement(element.createBlock(this), true);
                     b.node = b.getChildren().get(0).node;
                 } catch (Exception ex) {
@@ -180,9 +193,7 @@ public class Builder {
                 }
             }
         }
-        b.builder = this;
-        b.parent = parent;
-        
+
         if (node.nodeType == 1) {
             b.id = node.getAttribute("id");
             b.setTextColor(node.getAttribute("color"));
@@ -190,16 +201,12 @@ public class Builder {
 
             if (!customElements.containsKey(node.tagName)) {
                 applyDefaultStyles(node, b);
-                applyParentFontStyles(b, parent);
+                applyParentFontStyles(b, b.parent);
 
                 applyStyles(node, b);
                 applyInlineStyles(node, b);
             }
         }
-
-        addNodeChangeListeners(node);
-
-        return b;
     }
 
     public void addNodeChangeListeners(final Node node) {
