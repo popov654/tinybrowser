@@ -40,6 +40,18 @@ public class Window extends JSObject {
         }
     }
 
+    class promptFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() == 0) {
+                args.add(JSValue.create("String", ""));
+
+            }
+            String value = prompt(args.get(0).asString().getValue());
+            return new JSString(value);
+        }
+    }
+
     class parseIntFunction extends Function {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
@@ -152,6 +164,7 @@ public class Window extends JSObject {
         items = root.scope;
         items.put("alert", new alertFunction());
         items.put("confirm", new confirmFunction());
+        items.put("prompt", new promptFunction());
         items.put("eval", new evalFunction());
         items.put("parseInt", new parseIntFunction());
         items.put("parseFloat", new parseFloatFunction());
@@ -194,6 +207,14 @@ public class Window extends JSObject {
         } catch (Exception e) {}
         int result = JOptionPane.showConfirmDialog(windowFrame, message, "Confirm action", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
         return (result == JOptionPane.OK_OPTION || result == JOptionPane.YES_OPTION);
+    }
+
+    private String prompt(String message) {
+        try {
+            UIManager.setLookAndFeel(
+                UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {}
+        return JOptionPane.showInputDialog(windowFrame, message, "Enter value", JOptionPane.PLAIN_MESSAGE);
     }
 
     public void startTaskRunner() {
