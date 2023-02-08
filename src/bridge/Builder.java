@@ -102,7 +102,7 @@ public class Builder {
 
     public void initElement(final Block b) {
         Node node = b.node;
-        if (node.nodeType == ELEMENT) {
+        if (node.nodeType == ELEMENT && (b.document == null || b != b.document.root)) {
             b.type = Block.NodeTypes.ELEMENT;
             b.width = -1;
             b.height = -1;
@@ -217,7 +217,9 @@ public class Builder {
                 if (source.equals("render") || document == null) return;
                 Block b = Mapper.get(e.target);
                 b.document = document;
-                b.replaceWith(builder.buildElement(document, b.parent, node));
+                b.node = e.target;
+                initElement(b);
+                //b.replaceWith(builder.buildElement(document, b.parent, node));
                 node.removeListener(this);
             }
         };
