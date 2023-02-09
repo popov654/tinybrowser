@@ -314,7 +314,7 @@ public class HTMLElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            return new JSString(node.getAttribute(args.get(0).toString()));
+            return new JSString(node.getAttribute(args.get(0).asString().getValue()));
         }
     }
 
@@ -326,7 +326,7 @@ public class HTMLElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            return new JSBool(node.getAttribute(args.get(0).toString()) != null);
+            return new JSBool(node.getAttribute(args.get(0).asString().getValue()) != null);
         }
     }
 
