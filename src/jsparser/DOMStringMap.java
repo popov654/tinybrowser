@@ -10,16 +10,16 @@ import java.util.Set;
  */
 public class DOMStringMap extends JSObject {
 
-    public DOMStringMap(HashMap<String, String> map) {
+    public DOMStringMap(HashMap<String, String> map, Node node) {
+        this.node = node;
         Set<String> keys = map.keySet();
         for (String key: keys) {
-            set(key, new JSString(map.get(key)));
+            items.put(key, new JSString(map.get(key)));
         }
     }
 
-    public DOMStringMap(HashMap<String, String> map, Node node) {
-        this(map);
-        this.node = node;
+    public DOMStringMap(HashMap<String, String> map) {
+        this(map, null);
     }
 
     public void updateNode() {}
