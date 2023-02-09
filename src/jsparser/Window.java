@@ -139,7 +139,7 @@ public class Window extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (document == null) return Undefined.getInstance();
-            JSElement bodyElement = (JSElement) document.items.get("body");
+            HTMLElement bodyElement = (HTMLElement) document.items.get("body");
             if (bodyElement == null) return Undefined.getInstance();
 
             return ((Function)bodyElement.items.get("addEventListener")).call(context, args, as_constr);
@@ -153,7 +153,7 @@ public class Window extends JSObject {
             if (document == null) return Undefined.getInstance();
             JSValue bodyElement = ((JSObject)document).items.get("body");
             if (bodyElement == null) return Undefined.getInstance();
-            JSElement body = (JSElement) bodyElement;
+            HTMLElement body = (HTMLElement) bodyElement;
 
             return ((Function)body.items.get("removeEventListener")).call(context, args, as_constr);
         }
@@ -184,7 +184,7 @@ public class Window extends JSObject {
 
     public void setDocument(HTMLParser document) {
         this.parser = document;
-        this.document = new JSDocument(document);
+        this.document = new HTMLDocument(document);
         items.put("document", this.document);
     }
 
@@ -319,7 +319,7 @@ public class Window extends JSObject {
 
     private Block root;
     private HTMLParser parser;
-    private JSDocument document;
+    private HTMLDocument document;
     private Frame windowFrame;
     private HashMap<String, JSValue> items;
     private String type = "Object";

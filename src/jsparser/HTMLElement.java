@@ -14,9 +14,9 @@ import java.util.Vector;
  *
  * @author Alex
  */
-public class JSElement extends JSObject {
+public class HTMLElement extends JSObject {
 
-    private JSElement(Node node) {
+    private HTMLElement(Node node) {
         this.node = node;
 
         items.put("getElementById", new getElementByIdFunction());
@@ -45,9 +45,9 @@ public class JSElement extends JSObject {
             }
             HashMap<String, String> data = e.getData();
             //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
-            Vector<JSElement> parents = getParents();
+            Vector<HTMLElement> parents = getParents();
             if (data != null) data.put("bubbles", parents.size() > 1 ? "true" : "false");
-            JSEvent event = new JSEvent(JSElement.create(node), e.relatedTarget != null ? JSElement.create(e.relatedTarget) : null, data);
+            JSEvent event = new JSEvent(HTMLElement.create(node), e.relatedTarget != null ? HTMLElement.create(e.relatedTarget) : null, data);
             Vector<JSValue> args = new Vector<JSValue>();
             args.add(event);
             for (int i = parents.size()-1; i >= 0; i--) {
@@ -76,21 +76,21 @@ public class JSElement extends JSObject {
 
     };
 
-    private Vector<JSElement> getParents() {
-        Vector<JSElement> result = new Vector<JSElement>();
+    private Vector<HTMLElement> getParents() {
+        Vector<HTMLElement> result = new Vector<HTMLElement>();
         result.add(this);
         JSValue p = items.get("parentNode");
-        while (p != null && p instanceof JSElement) {
-            result.add((JSElement)p);
-            p = ((JSElement)p).items.get("parentNode");
+        while (p != null && p instanceof HTMLElement) {
+            result.add((HTMLElement)p);
+            p = ((HTMLElement)p).items.get("parentNode");
         }
         return result;
     }
 
-    public static JSElement create(Node node) {
-        JSElement element = map.get(node);
+    public static HTMLElement create(Node node) {
+        HTMLElement element = map.get(node);
         if (element == null) {
-            element = new JSElement(node);
+            element = new HTMLElement(node);
             map.put(node, element);
             element.calculateValues();
         }
@@ -103,39 +103,31 @@ public class JSElement extends JSObject {
         items.put("nodeType", new JSInt(node.nodeType));
 
         Node parent = node != null ? node.parent : null;
-        items.put("parentNode", parent != null ? JSElement.create(parent) : Null.getInstance());
+        items.put("parentNode", parent != null ? HTMLElement.create(parent) : Null.getInstance());
         Node prev = node != null ? node.previousSibling : null;
-        items.put("previousSibling", prev != null ? JSElement.create(prev) : Null.getInstance());
+        items.put("previousSibling", prev != null ? HTMLElement.create(prev) : Null.getInstance());
         Node next = node != null ? node.nextSibling : null;
-        items.put("nextSibling", next != null ? JSElement.create(next) : Null.getInstance());
+        items.put("nextSibling", next != null ? HTMLElement.create(next) : Null.getInstance());
         Node prev_el = node != null ? node.previousElementSibling() : null;
-        items.put("previousElementSibling", prev_el != null ? JSElement.create(prev_el) : Null.getInstance());
+        items.put("previousElementSibling", prev_el != null ? HTMLElement.create(prev_el) : Null.getInstance());
         Node next_el = node != null ? node.nextElementSibling() : null;
-        items.put("nextElementSibling", next_el != null ? JSElement.create(next_el) : Null.getInstance());
+        items.put("nextElementSibling", next_el != null ? HTMLElement.create(next_el) : Null.getInstance());
 
         JSArray childNodes = new JSArray();
         for (Node child: node.children) {
-            childNodes.push(JSElement.create(child));
+            childNodes.push(HTMLElement.create(child));
         }
         items.put("childNodes", childNodes);
         
         JSArray children = new JSArray();
         for (Node child: node.children) {
             if (child.nodeType == 1) {
-                children.push(JSElement.create(child));
+                children.push(HTMLElement.create(child));
             }
         }
         items.put("children", children);
 
-        NodeClassList classes = new NodeClassList(node);
-        String c = node.getAttribute("class");
-        if (c != null) {
-            String[] classList = c.split("\\s");
-            for (int i = 0; i < classList.length; i++) {
-                classes.push(new JSString(classList[i]));
-            }
-        }
-        items.put("classList", classes);
+        updateClassList();
     }
 
     class getParentFunction extends Function {
@@ -147,7 +139,7 @@ public class JSElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node parent = node != null ? node.parent : null;
-            return parent != null ? new JSElement(parent) : Null.getInstance();
+            return parent != null ? new HTMLElement(parent) : Null.getInstance();
         }
     }
 
@@ -160,7 +152,7 @@ public class JSElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node prev = node != null ? node.previousSibling : null;
-            return prev != null ? new JSElement(prev) : Null.getInstance();
+            return prev != null ? new HTMLElement(prev) : Null.getInstance();
         }
     }
 
@@ -173,7 +165,7 @@ public class JSElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node next = node != null ? node.nextSibling : null;
-            return next != null ? new JSElement(next) : Null.getInstance();
+            return next != null ? new HTMLElement(next) : Null.getInstance();
         }
     }
 
@@ -186,7 +178,7 @@ public class JSElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node prev = node != null ? node.previousElementSibling() : null;
-            return prev != null ? new JSElement(prev) : Null.getInstance();
+            return prev != null ? new HTMLElement(prev) : Null.getInstance();
         }
     }
 
@@ -199,7 +191,7 @@ public class JSElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node next = node != null ? node.nextElementSibling() : null;
-            return next != null ? new JSElement(next) : Null.getInstance();
+            return next != null ? new HTMLElement(next) : Null.getInstance();
         }
     }
 
@@ -213,7 +205,7 @@ public class JSElement extends JSObject {
             }
             JSArray array = new JSArray();
             for (Node child: node.children) {
-                array.push(new JSElement(child));
+                array.push(new HTMLElement(child));
             }
             return array;
         }
@@ -230,7 +222,7 @@ public class JSElement extends JSObject {
             JSArray array = new JSArray();
             for (Node child: node.children) {
                 if (child.nodeType == 1) {
-                    array.push(new JSElement(child));
+                    array.push(new HTMLElement(child));
                 }
             }
             return array;
@@ -247,7 +239,7 @@ public class JSElement extends JSObject {
                     return Undefined.getInstance();
                 }
                 Node n = node.document.getElementById(node, args.get(i).asString().getValue(), true);
-                return n != null ? new JSElement(n) : Null.getInstance();
+                return n != null ? new HTMLElement(n) : Null.getInstance();
             }
             return Null.getInstance();
         }
@@ -265,7 +257,7 @@ public class JSElement extends JSObject {
                 }
                 Vector<Node> nodes = node.document.getElementsByTagName(node, args.get(i).asString().getValue(), true);
                 for (Node node: nodes) {
-                    array.push(new JSElement(node));
+                    array.push(new HTMLElement(node));
                 }
             }
             return array;
@@ -284,7 +276,7 @@ public class JSElement extends JSObject {
                 }
                 Vector<Node> nodes = node.document.getElementsByName(node, args.get(i).asString().getValue(), true);
                 for (Node node: nodes) {
-                    array.push(new JSElement(node));
+                    array.push(new HTMLElement(node));
                 }
             }
             return array;
@@ -303,7 +295,7 @@ public class JSElement extends JSObject {
                 }
                 Vector<Node> nodes = node.document.getElementsByClassName(node, args.get(i).asString().getValue(), true);
                 for (Node node: nodes) {
-                    array.push(new JSElement(node));
+                    array.push(new HTMLElement(node));
                 }
             }
             return array;
@@ -364,13 +356,6 @@ public class JSElement extends JSObject {
 
     public void updateClassList() {
         NodeClassList classes = new NodeClassList(node);
-        String c = node.getAttribute("class");
-        if (c != null) {
-            String[] classList = c.split("\\s");
-            for (int i = 0; i < classList.length; i++) {
-                classes.push(new JSString(classList[i]));
-            }
-        }
         items.put("classList", classes);
     }
 
@@ -495,7 +480,7 @@ public class JSElement extends JSObject {
         }
     }
 
-    public boolean equals(JSElement element) {
+    public boolean equals(HTMLElement element) {
         return element.node == node;
     }
 
@@ -514,7 +499,7 @@ public class JSElement extends JSObject {
         return "HTMLElement {" + result + "}";
     }
 
-    public static HashMap<Node, JSElement> map = new HashMap<Node, JSElement>();
+    public static HashMap<Node, HTMLElement> map = new HashMap<Node, HTMLElement>();
 
     LinkedHashMap<String, Vector<Function>> listeners = new LinkedHashMap<String, Vector<Function>>();
     LinkedHashMap<String, Vector<Function>> listeners_0 = new LinkedHashMap<String, Vector<Function>>();

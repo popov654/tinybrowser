@@ -4,7 +4,7 @@ package jsparser;
  *
  * @author Alex
  */
-public class JSDOMStringMap extends JSObject {
+public class DOMStringMap extends JSObject {
 
     @Override
     public void set(String key, JSValue value) {

@@ -8,20 +8,20 @@ import java.util.Vector;
  *
  * @author Alex
  */
-public class JSDocument extends JSObject {
+public class HTMLDocument extends JSObject {
 
-    public JSDocument(HTMLParser document) {
+    public HTMLDocument(HTMLParser document) {
         this.document = document;
-        items.put("documentElement", JSElement.create(document.getRootNode()));
+        items.put("documentElement", HTMLElement.create(document.getRootNode()));
         items.put("getElementById", new getElementByIdFunction());
         items.put("getElementsByTagName", new getElementsByTagNameFunction());
         items.put("getElementsByName", new getElementsByNameFunction());
         items.put("getElementsByClassName", new getElementsByClassNameFunction());
 
         Vector<Node> head = document.getElementsByTagName("head");
-        items.put("head", head.size() > 0 ? JSElement.create(head.get(0)) : Null.getInstance());
+        items.put("head", head.size() > 0 ? HTMLElement.create(head.get(0)) : Null.getInstance());
         Vector<Node> body = document.getElementsByTagName("body");
-        items.put("body", body.size() > 0 ? JSElement.create(body.get(0)) : Null.getInstance());
+        items.put("body", body.size() > 0 ? HTMLElement.create(body.get(0)) : Null.getInstance());
     }
 
     class getElementByIdFunction extends Function {
@@ -34,7 +34,7 @@ public class JSDocument extends JSObject {
                     return Undefined.getInstance();
                 }
                 Node node = document.getElementById(args.get(i).asString().getValue());
-                return node != null ? JSElement.create(node) : Null.getInstance();
+                return node != null ? HTMLElement.create(node) : Null.getInstance();
             }
             return Null.getInstance();
         }
@@ -52,7 +52,7 @@ public class JSDocument extends JSObject {
                 }
                 Vector<Node> nodes = document.getElementsByTagName(args.get(i).asString().getValue());
                 for (Node node: nodes) {
-                    array.push(JSElement.create(node));
+                    array.push(HTMLElement.create(node));
                 }
             }
             return array;
@@ -71,7 +71,7 @@ public class JSDocument extends JSObject {
                 }
                 Vector<Node> nodes = document.getElementsByName(args.get(i).asString().getValue());
                 for (Node node: nodes) {
-                    array.push(JSElement.create(node));
+                    array.push(HTMLElement.create(node));
                 }
             }
             return array;
@@ -90,7 +90,7 @@ public class JSDocument extends JSObject {
                 }
                 Vector<Node> nodes = document.getElementsByClassName(args.get(i).asString().getValue());
                 for (Node node: nodes) {
-                    array.push(JSElement.create(node));
+                    array.push(HTMLElement.create(node));
                 }
             }
             return array;

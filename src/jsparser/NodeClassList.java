@@ -12,6 +12,13 @@ public class NodeClassList extends JSArray {
     NodeClassList(Node node) {
         super();
         this.node = node;
+        String c = node.getAttribute("class");
+        if (c != null) {
+            String[] classList = c.split("\\s");
+            for (int i = 0; i < classList.length; i++) {
+                items.add(new JSString(classList[i]));
+            }
+        }
         _items.put("add", new addClassFunction(this));
         _items.put("contains", new hasClassFunction(this));
         _items.put("remove", new removeClassFunction(this));
@@ -126,6 +133,6 @@ public class NodeClassList extends JSArray {
     }
 
     private Node node;
-    private JSElement element;
+    private HTMLElement element;
 
 }
