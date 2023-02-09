@@ -41,6 +41,8 @@ public class HTMLElement extends JSObject {
         public void nodeChanged(NodeEvent e, String source) {
             if (!source.split(":")[0].equals("render")) {
                 updateClassList();
+                updateAttributesList();
+                updateDataset();
                 return;
             }
             HashMap<String, String> data = e.getData();
@@ -128,6 +130,8 @@ public class HTMLElement extends JSObject {
         items.put("children", children);
 
         updateClassList();
+        updateAttributesList();
+        updateDataset();
     }
 
     class getParentFunction extends Function {
@@ -334,8 +338,13 @@ public class HTMLElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            node.setAttribute(args.get(0).asString().getValue(), args.get(1).asString().getValue());
+            String key = args.get(0).asString().getValue();
+            node.setAttribute(key, args.get(1).asString().getValue());
+            updateAttributesList();
             updateClassList();
+            if (key.startsWith("data-")) {
+                getDataset().items.put(key.substring(5), args.get(1).asString());
+            }
             return Undefined.getInstance();
         }
     }
@@ -348,10 +357,56 @@ public class HTMLElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            node.removeAttribute(args.get(0).toString());
+            String key = args.get(0).asString().getValue();
+            node.removeAttribute(key);
+            updateAttributesList();
             updateClassList();
+            if (key.startsWith("data-")) {
+                getDataset().items.remove(key.substring(5));
+            }
             return Undefined.getInstance();
         }
+    }
+
+    public DOMStringMap getDataset() {
+        return items.get("dataset") != null ? (DOMStringMap) items.get("dataset") : null;
+    }
+
+    public void updateAttributesList() {
+        Vector<JSValue> attrs = new Vector<JSValue>();
+        for (String str: node.attributes.keySet()) {
+            attrs.add(new JSString(str));
+        }
+        items.put("attributes", new JSArray(attrs) {
+            @Override
+            public JSArray push(JSValue value) {
+                return this;
+            }
+            @Override
+            public JSArray pop() {
+                return this;
+            }
+            @Override
+            public JSArray shift() {
+                return this;
+            }
+            @Override
+            public JSArray unshift(JSValue value) {
+                return this;
+            }
+        });
+    }
+
+    public void updateDataset() {
+        HashMap<String, String> data = new HashMap<String, String>();
+        Set<String> keys = node.attributes.keySet();
+        for (String key: keys) {
+            if (key.startsWith("data-")) {
+                data.put(key.substring(5), node.attributes.get(key));
+            }
+        }
+        DOMStringMap attrs = new DOMStringMap(data, node);
+        items.put("dataset", attrs);
     }
 
     public void updateClassList() {

@@ -50,15 +50,19 @@ window.addEventListener('load', function() {
    console.log(document.body.classList)
    document.body.classList.remove('full')
    console.log(document.body.classList) */
+   
    // alert('Test')
-   if (confirm('Are you sure you want to continue?')) {
+   /* if (confirm('Are you sure you want to continue?')) {
       console.log(document.getElementsByTagName('i')[0].textContent)
-   }
-   console.log(prompt("Please enter any text"))
+   } */
+   // console.log(prompt("Please enter any text"))
+   
+   console.log(document.getElementsByTagName('i')[0].attributes)
+   console.log(document.body.dataset)
 }, false)
 </script>
 </head>
-<body onload="init()">
+<body onload="init()" data-test="1">
 <!-- Comment -->
 <p>This is a <i style="background-color: rgb(223, 216, 45); color: #8848a7; cursor: pointer">paragraph</i>.<img src="smiley.gif" /></p>
 <!-- <audio src="sound.wav"></audio> -->
