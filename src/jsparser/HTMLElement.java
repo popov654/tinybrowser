@@ -387,13 +387,27 @@ public class HTMLElement extends JSObject {
     }
 
     public void updateStyles() {
-        DOMStringMap style = new DOMStringMap(StyleMap.getNodeStyles(node).runtimeStyles, node);
+        DOMStringMap style = new DOMStringMap(StyleMap.getNodeStyles(node).runtimeStyles, node) {
+            @Override
+            public void updateNode() {
+                if (node.document == null) return;
+                HashMap<String, String> st = StyleMap.getNodeStyles(node).runtimeStyles;
+                st.clear();
+                Set<String> keys = items.keySet();
+                for (String key: keys) {
+                    if (key.equals("__proto__")) continue;
+                    st.put(key, items.get(key).asString().getValue());
+                }
+                node.fireEvent("stylesChanged", "node");
+            }
+        };
         items.put("style", style);
     }
 
     public void updateAttributesList() {
         Vector<JSValue> attrs = new Vector<JSValue>();
         for (String str: node.attributes.keySet()) {
+            if (str.equals("__proto__")) continue;
             attrs.add(new JSString(str));
         }
         items.put("attributes", new JSArray(attrs) {

@@ -59,7 +59,8 @@ window.addEventListener('load', function() {
    
    console.log(document.getElementsByTagName('i')[0].attributes)
    console.log(document.body.dataset)
-   console.log(getComputedStyle(document.getElementsByTagName('p')[0]))
+   //console.log(getComputedStyle(document.getElementsByTagName('p')[0]))
+   document.getElementsByTagName('p')[0].style.borderColor = 'green'
 }, false)
 </script>
 </head>

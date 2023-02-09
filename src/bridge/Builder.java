@@ -20,7 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jsparser.Expression;
 import jsparser.JSParser;
-import jsparser.Window;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.apache.batik.swing.JSVGCanvas;
 import org.w3c.dom.DOMImplementation;
@@ -234,6 +233,18 @@ public class Builder {
             }
         };
         node.addListener(callback2, node, "valueChanged");
+        
+        NodeActionCallback callback3 = new NodeActionCallback() {
+            @Override
+            public void nodeChanged(NodeEvent e, String source) {
+                if (source.equals("render") || document == null) return;
+                Block b = Mapper.get(e.target);
+                b.cssStyles.clear();
+                resetStyles(b, false, true);
+                System.out.println(document.ready ? "ready" : "not ready");
+            }
+        };
+        node.addListener(callback3, node, "stylesChanged");
     }
 
     private void applyParentFontStyles(Block block, Block parent) {
@@ -482,6 +493,17 @@ public class Builder {
                 }
             }
         }
+        keys = st.runtimeStyles.keySet();
+        for (String key: keys) {
+            if (!key.trim().isEmpty()) {
+                if (key.trim().equals("content")) continue;
+                b.setProp(key.trim(), st.runtimeStyles.get(key).trim());
+                b.cssStyles.put(key.trim(), st.runtimeStyles.get(key).trim());
+                if (b.document != null && b.document.lastSetProperties != null) {
+                    b.document.lastSetProperties.add(key.trim());
+                }
+            }
+        }
         generatePseudoElements(node, b);
     }
 
@@ -527,6 +549,10 @@ public class Builder {
         b.setPaddings(0);
         b.setBorderRadius(0);
         applyDefaultStyles(b.node, b);
+
+        if (b.document.lastSetProperties == null) {
+            b.document.lastSetProperties = new java.util.HashSet<String>();
+        }
         
         // This will be faster than full scan
         if (b.cssStyles.size() > 0) {

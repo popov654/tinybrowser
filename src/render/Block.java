@@ -3923,7 +3923,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return false;
     }
 
+    public String toHyphens(String str) {
+        String result = "";
+        for (int i = 0; i < str.length(); i++) {
+            if (i > 0 && java.lang.Character.isUpperCase(str.charAt(i)) && java.lang.Character.isLowerCase(str.charAt(i-1))) {
+                result += "-" + java.lang.Character.toLowerCase(str.charAt(i));
+            } else {
+                result += str.charAt(i);
+            }
+        }
+        return result;
+    }
+
     public void setProp(String prop, String value) {
+        prop = toHyphens(prop);
         if (original != null) {
             original.setProp(prop, value);
         }
