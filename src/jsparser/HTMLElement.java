@@ -1,5 +1,6 @@
 package jsparser;
 
+import cssparser.StyleMap;
 import htmlparser.Node;
 import htmlparser.NodeActionCallback;
 import htmlparser.NodeEvent;
@@ -41,6 +42,7 @@ public class HTMLElement extends JSObject {
         public void nodeChanged(NodeEvent e, String source) {
             if (!source.split(":")[0].equals("render")) {
                 updateClassList();
+                updateStyles();
                 updateAttributesList();
                 updateDataset();
                 return;
@@ -130,6 +132,7 @@ public class HTMLElement extends JSObject {
         items.put("children", children);
 
         updateClassList();
+        updateStyles();
         updateAttributesList();
         updateDataset();
     }
@@ -345,6 +348,9 @@ public class HTMLElement extends JSObject {
             if (key.startsWith("data-")) {
                 getDataset().items.put(key.substring(5), args.get(1).asString());
             }
+            if (key.equals("style")) {
+                updateStyles();
+            }
             return Undefined.getInstance();
         }
     }
@@ -364,12 +370,25 @@ public class HTMLElement extends JSObject {
             if (key.startsWith("data-")) {
                 getDataset().items.remove(key.substring(5));
             }
+            if (key.equals("style")) {
+                updateStyles();
+            }
             return Undefined.getInstance();
         }
     }
 
     public DOMStringMap getDataset() {
         return items.get("dataset") != null ? (DOMStringMap) items.get("dataset") : null;
+    }
+
+    public DOMStringMap getComputedStyles() {
+        DOMStringMap style = new DOMStringMap(StyleMap.getNodeStyles(node).styles, node);
+        return style;
+    }
+
+    public void updateStyles() {
+        DOMStringMap style = new DOMStringMap(StyleMap.getNodeStyles(node).runtimeStyles, node);
+        items.put("style", style);
     }
 
     public void updateAttributesList() {

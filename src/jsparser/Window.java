@@ -159,6 +159,24 @@ public class Window extends JSObject {
         }
     }
 
+
+    class getComputedStyleFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "Arguments size error: 1 argument required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(0) instanceof HTMLElement)) {
+                JSError e = new JSError(null, "Type error: argument 1 is not an instance of HTMLElement", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            return ((HTMLElement)args.get(0)).getComputedStyles();
+        }
+    }
+
     public Window(Block block) {
         root = block;
         items = root.scope;
@@ -174,6 +192,7 @@ public class Window extends JSObject {
         items.put("clearInterval", new clearTimeoutFunction());
         items.put("addEventListener", new addEventListenerFunction());
         items.put("removeEventListener", new removeEventListenerFunction());
+        items.put("getComputedStyle", new getComputedStyleFunction());
         tr = new TaskRunner(timers);
     }
     
