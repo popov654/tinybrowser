@@ -40,7 +40,7 @@ public class LayoutTests extends JFrame {
         document.height = 300;
         //document.panel.setBounds(0, 0, cp.width, cp.height);
         //document.root.setBounds(1, 1, cp.width-2, cp.height-2);
-        document.root.addMouseListeners();
+        //document.root.addMouseListeners();
         
         //bp.setBounds(9, 283, 474, 86);
 
@@ -946,7 +946,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 3;
+        int test = 0;
         int list_type = 2;
 
         if (args.length > 0) {

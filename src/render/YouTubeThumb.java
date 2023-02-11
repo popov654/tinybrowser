@@ -328,7 +328,6 @@ public class YouTubeThumb extends Block {
         b.setAutoXMargin();
         b.setAutoYMargin();
         document.root.addElement(b);
-        document.root.addMouseListeners();
 
         document.ready = true;
 

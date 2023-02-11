@@ -90,8 +90,6 @@ public class Reader {
                     Mapper.add(document.root.node, document.root);
                 }
 
-                document.root.addMouseListeners();
-
                 //document.debug = true;
 
                 document.panel.setBackground(Color.WHITE);

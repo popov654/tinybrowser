@@ -33,7 +33,6 @@ public class ScrollTest extends JFrame {
         cp.root.setBounds(1, 1, cp.width-2, cp.height-2);
         cp.root.setWidth(-1);
         cp.root.setHeight(cp.height-2);
-        cp.root.addMouseListeners();
         
         bp.setBounds(9, 283, 474, 86);
         document.ready = false;

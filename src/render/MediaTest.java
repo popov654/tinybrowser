@@ -44,7 +44,6 @@ public class MediaTest extends JFrame {
         document.root.setBounds(1, 1, document.width-2, document.height-2);
         document.root.setWidth(-1);
         document.root.setHeight(document.height-2);
-        document.root.addMouseListeners();
         
         prepareBlock();
         
