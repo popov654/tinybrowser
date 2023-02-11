@@ -5594,6 +5594,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (System.currentTimeMillis() - last_click < 320) {
                 fireEventForNode(e, node, null, "doubleClick");
             }
+            if (node != null && document.eventsFired.get(node) != null) {
+                document.eventsFired.get(node).remove("mouseDown");
+                document.eventsFired.get(node).remove("mouseUp");
+                document.eventsFired.get(node).remove("click");
+                document.eventsFired.get(node).remove("doubleClick");
+            }
         }
         
         if (isMouseInside(e.getX(), e.getY()) && href != null || hasParentLink) {
