@@ -260,12 +260,15 @@ public class LayoutTests extends JFrame {
         d.setBorderWidth(2);
         d.setTextColor(new Color(0, 0, 0));
         Vector<Color> c = new Vector<Color>();
-        c.add(new Color(0, 100, 192, 134));
-        c.add(new Color(235, 235, 235, 245));
+        c.add(new Color(0, 100, 192, 156));
+        c.add(new Color(85, 146, 213, 105));
+        c.add(new Color(235, 235, 238, 193));
         Vector<Float> p = new Vector<Float>();
         p.add(0f);
-        p.add(0.52f);
-        d.setLinearGradient(c, p, -54);
+        p.add(0.21f);
+        p.add(0.45f);
+        //d.setRadialGradient(new int[] {120, 64}, new double[] {120, 64}, c, p);
+        d.setLinearGradient(c, p, -45);
         d.setId("d1");
         //d.setBackgroundColor(new Color(228, 223, 226));
 

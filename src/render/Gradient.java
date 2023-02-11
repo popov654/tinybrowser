@@ -93,6 +93,8 @@ public class Gradient {
             int dx = (int) (Math.round(h * s * s));
             int dy = (int) (Math.round(h * c * s));
 
+            w = h = Math.max(w, h);
+
             int x1 = 0;
             int y1 = 0;
             int x2 = (int) (x + w * 0.5 + dx - 2);
