@@ -21,8 +21,9 @@ public class NodeChangeListener {
         listener.actionPerformed(new ActionEvent(target, Event.ACTION_EVENT, source));
     }
 
-    public void fireEvent(String source, HashMap<String, String> eventData) {
+    public void fireEvent(String source, HashMap<String, String> eventData, Node relatedNode) {
         listener.setEventData(eventData);
+        listener.setRelatedTarget(relatedNode);
         fireEvent(source);
     }
 

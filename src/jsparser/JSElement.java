@@ -35,10 +35,7 @@ public class JSElement extends JSObject {
             //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
             Vector<JSElement> parents = getParents();
             if (data != null) data.put("bubbles", parents.size() > 1 ? "true" : "false");
-            if (e.getActionCommand().split(":")[1].equals("doubleClick")) {
-                data.put("type", "\"dblclick\"");
-            }
-            JSEvent event = new JSEvent(JSElement.create(node), data);
+            JSEvent event = new JSEvent(JSElement.create(node), relatedTarget != null ? JSElement.create(relatedTarget) : null, data);
             Vector<JSValue> args = new Vector<JSValue>();
             args.add(event);
             for (int i = parents.size()-1; i >= 0; i--) {
@@ -59,6 +56,9 @@ public class JSElement extends JSObject {
             }
             if (!data.get("type").equals("\"mousemove\"")) {
                 System.out.println("JS event: " + e.getActionCommand().split(":")[1] + " " + ((Node)e.getSource()).tagName);
+                /* if (relatedTarget != null) {
+                    System.out.println("Related target: " + relatedTarget.tagName);
+                } */
             }
         }
 

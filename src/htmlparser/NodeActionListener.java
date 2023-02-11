@@ -14,8 +14,13 @@ public class NodeActionListener implements ActionListener {
         this.data = data;
     }
 
+    public void setRelatedTarget(Node node) {
+        this.relatedTarget = node;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {}
 
     public HashMap<String, String> data;
+    public Node relatedTarget;
 }

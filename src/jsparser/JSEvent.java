@@ -11,11 +11,13 @@ import java.util.Vector;
  */
 public class JSEvent extends JSObject {
 
-    public JSEvent(JSElement target, HashMap<String, String> data) {
+    public JSEvent(JSElement target, JSElement relatedTarget, HashMap<String, String> data) {
         this.data = new TreeMap<String, JSValue>();
         this.data.put("cancelBubble", new JSBool(false));
         this.data.put("defaultPrevented", new JSBool(false));
         this.data.put("target", target);
+        this.data.put("relatedTarget", relatedTarget != null ? relatedTarget : Null.getInstance());
+        if (data == null) return;
         Set<String> keys = data.keySet();
         for (String key: keys) {
             String type = JSValue.getType(data.get(key));
@@ -36,6 +38,7 @@ public class JSEvent extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             data.put("defaultPrevented", new JSBool(true));
+            ((JSElement)data.get("target")).node.defaultPrevented = true;
             return new JSBool(true);
         }
     }

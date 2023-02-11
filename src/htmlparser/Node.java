@@ -412,16 +412,16 @@ public class Node {
     }
 
     public void fireEvent(String type, String source) {
-        fireEvent(type, source, null);
+        fireEvent(type, source, null, null);
     }
 
-    public void fireEvent(String type, String source, HashMap<String, String> data) {
+    public void fireEvent(String type, String source, HashMap<String, String> data, Node relatedNode) {
         Vector<NodeChangeListener> l = (Vector<NodeChangeListener>) listeners.clone();
         for (NodeChangeListener ls: l) {
             if (ls.eventType.equals(type)) {
-                ls.fireEvent(source, data);
+                ls.fireEvent(source, data, relatedNode);
             } else if (ls.eventType.equals("any")) {
-                ls.fireEvent(source + ":" + type, data);
+                ls.fireEvent(source + ":" + type, data, relatedNode);
             }
         }
     }
