@@ -253,7 +253,7 @@ public class JSParser {
 
             //Reading a variable name (cont.)
             if (last_token.length() > 0 && state == READ_VAR_NAME) {
-                if (ch == '\t' || ch == ' ' || String.valueOf(ch).matches("[(){}\\[\\].,<>^|&*/%?;:+=-]") ||
+                if (Character.isWhitespace(ch) || String.valueOf(ch).matches("[(){}\\[\\].,<>^|&*/%?;:+=-]") ||
                         substate == READ_OBJECT_FIELD && ch == ':' ||
                         substate == READ_OBJECT_VALUE && ch == ',' ||
                         substate == READ_ARRAY && ch == ',') {
