@@ -39,7 +39,10 @@ public class JSElement extends JSObject {
 
         @Override
         public void nodeChanged(NodeEvent e, String source) {
-            if (!source.split(":")[0].equals("render")) return;
+            if (!source.split(":")[0].equals("render")) {
+                updateClassList();
+                return;
+            }
             HashMap<String, String> data = e.getData();
             //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
             Vector<JSElement> parents = getParents();
@@ -123,6 +126,16 @@ public class JSElement extends JSObject {
             }
         }
         items.put("children", children);
+
+        NodeClassList classes = new NodeClassList(node);
+        String c = node.getAttribute("class");
+        if (c != null) {
+            String[] classList = c.split("\\s");
+            for (int i = 0; i < classList.length; i++) {
+                classes.push(new JSString(classList[i]));
+            }
+        }
+        items.put("classList", classes);
     }
 
     class getParentFunction extends Function {
@@ -329,7 +342,9 @@ public class JSElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            return new JSString(node.setAttribute(args.get(0).asString().getValue(), args.get(1).asString().getValue()));
+            node.setAttribute(args.get(0).asString().getValue(), args.get(1).asString().getValue());
+            updateClassList();
+            return Undefined.getInstance();
         }
     }
 
@@ -342,8 +357,21 @@ public class JSElement extends JSObject {
                 return Undefined.getInstance();
             }
             node.removeAttribute(args.get(0).toString());
+            updateClassList();
             return Undefined.getInstance();
         }
+    }
+
+    public void updateClassList() {
+        NodeClassList classes = new NodeClassList(node);
+        String c = node.getAttribute("class");
+        if (c != null) {
+            String[] classList = c.split("\\s");
+            for (int i = 0; i < classList.length; i++) {
+                classes.push(new JSString(classList[i]));
+            }
+        }
+        items.put("classList", classes);
     }
 
     class addEventListenerFunction extends Function {
@@ -405,6 +433,65 @@ public class JSElement extends JSObject {
                 }
             }
             return Undefined.getInstance();
+        }
+    }
+
+    class addClassFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "Arguments size error: 1 arguments required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(0) instanceof JSString)) {
+                JSError e = new JSError(null, "Argument 1 type error: string expected", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            node.addClass(args.get(0).asString().getValue());
+            
+            return new JSBool(true);
+        }
+    }
+
+    class hasClassFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "Arguments size error: 1 arguments required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(0) instanceof JSString)) {
+                JSError e = new JSError(null, "Argument 1 type error: string expected", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            String classes = node.getAttribute("class");
+            if (classes == null) {
+                return new JSBool(false);
+            }
+            return new JSBool(classes.matches("(^|\\s)" + args.get(0).asString().getValue() + "(\\s|$)"));
+        }
+    }
+
+    class removeClassFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "Arguments size error: 1 arguments required", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(0) instanceof JSString)) {
+                JSError e = new JSError(null, "Argument 1 type error: string expected", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            node.removeClass(args.get(0).asString().getValue());
+
+            return new JSBool(true);
         }
     }
 

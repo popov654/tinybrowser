@@ -527,7 +527,9 @@ public class Expression {
                     JSString index = (JSString)v.get(i);
                     ctx = val;
 
-                    if (val.getType().equals("Array")) val = ((JSArray)val).get(index);
+                    if (val.getType().equals("Array")) {
+                        val = ((JSArray)val).get(index);
+                    }
                     else if (val.getType().equals("Integer")) val = ((JSInt)val).get(index);
                     else if (val.getType().equals("Float")) val = ((JSFloat)val).get(index);
                     else if (val.getType().equals("String")) val = ((JSString)val).get(index);

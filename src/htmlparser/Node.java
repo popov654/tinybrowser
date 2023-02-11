@@ -317,8 +317,9 @@ public class Node {
         if (attr.equals("name") && document != null) {
             replaceValue(document.getNamesIndex(), attributes.get("name"), val);
         }
+        String result = attributes.put(attr, val);
         fireEvent("attributesChanged", "node");
-        return attributes.put(attr, val);
+        return result;
     }
 
     public void setId(String id) {

@@ -263,8 +263,8 @@ public class JSArray extends JSObject {
         return type;
     }
 
-    private Vector<JSValue> items = new Vector<JSValue>();
-    private LinkedHashMap<String, JSValue> _items = new LinkedHashMap<String, JSValue>();
+    protected Vector<JSValue> items = new Vector<JSValue>();
+    protected LinkedHashMap<String, JSValue> _items = new LinkedHashMap<String, JSValue>();
     private String type = "Array";
 
 }
