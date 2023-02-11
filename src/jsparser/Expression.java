@@ -860,6 +860,7 @@ public class Expression {
             return "error";
         }
         if (types.equals("Array|Array")) type = "Array";
+        if (types.equals("null|null")) type = "null";
         if (types.contains("undefined") && (types.contains("Integer") || types.contains("Float"))) {
             type = "NaN";
         }
