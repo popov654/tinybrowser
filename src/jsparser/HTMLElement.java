@@ -54,23 +54,24 @@ public class HTMLElement extends JSObject {
             JSEvent event = new JSEvent(HTMLElement.create(node), e.relatedTarget != null ? HTMLElement.create(e.relatedTarget) : null, data);
             Vector<JSValue> args = new Vector<JSValue>();
             args.add(event);
+            String type = data.get("type").replaceAll("(^\"|\"$)", "");
             for (int i = parents.size()-1; i >= 0; i--) {
                 if (event.get("cancelBubble").asBool().getValue()) break;
-                Vector<Function> funcs = parents.get(i).listeners_0.get(data.get("type"));
-                if (funcs == null) continue;
+                if (parents.get(i).listeners_0.get(type) == null) continue;
+                Vector<Function> funcs = (Vector<Function>) parents.get(i).listeners_0.get(type).clone();
                 for (Function func: funcs) {
                     func.call(args);
                 }
             }
             for (int i = 0; i < parents.size(); i++) {
                 if (event.get("cancelBubble").asBool().getValue()) break;
-                Vector<Function> funcs = parents.get(i).listeners.get(data.get("type"));
-                if (funcs == null) continue;
+                if (parents.get(i).listeners.get(type) == null) continue;
+                Vector<Function> funcs = (Vector<Function>) parents.get(i).listeners.get(type).clone();
                 for (Function func: funcs) {
                     func.call(args);
                 }
             }
-            if (!data.get("type").equals("\"mousemove\"")) {
+            if (!type.equals("mousemove")) {
                 System.out.println("JS event: " + source.split(":")[1] + " " + e.target.tagName);
                 /* if (relatedTarget != null) {
                     System.out.println("Related target: " + relatedTarget.tagName);
@@ -566,6 +567,36 @@ public class HTMLElement extends JSObject {
 
             return new JSBool(true);
         }
+    }
+
+    @Override
+    public void set(String str, JSValue value) {
+        if (str.startsWith("on") && (value instanceof Function || value instanceof Null || value instanceof Undefined)) {
+            boolean add = !(value instanceof Null || value instanceof Undefined);
+            Function func = (Function) items.get(add ? "addEventListener" : "removeEventListener");
+            if (func != null) {
+                Vector<JSValue> args = new Vector<JSValue>();
+                args.add(new JSString(str.substring(2).toLowerCase()));
+                args.add(add ? value : items.get(str));
+                if (args.get(1) instanceof Function) func.call(this, args);
+            }
+        }
+        super.set(str, value);
+    }
+
+    @Override
+    public void set(JSString str, JSValue value) {
+        if (str.getValue().startsWith("on") && (value instanceof Function || value instanceof Null || value instanceof Undefined)) {
+            boolean add = !(value instanceof Null || value instanceof Undefined);
+            Function func = (Function) items.get(add ? "addEventListener" : "removeEventListener");
+            if (func != null) {
+                Vector<JSValue> args = new Vector<JSValue>();
+                args.add(new JSString(str.getValue().substring(2).toLowerCase()));
+                args.add(add ? value : items.get(str.getValue()));
+                if (args.get(1) instanceof Function) func.call(this, args);
+            }
+        }
+        super.set(str, value);
     }
 
     public boolean equals(HTMLElement element) {
