@@ -15,6 +15,8 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.LinearGradientPaint;
+import java.awt.MultipleGradientPaint.CycleMethod;
+import java.awt.RadialGradientPaint;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
@@ -712,25 +714,66 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
 
         if (gradient != null) {
-            Point2D[] p = Gradient.getPoints(gradient.getAngle(), 0, 0, width, height);
-            Point2D start = p[0];
-            Point2D end = p[1];
-            start.setLocation(start.getX() + x0, start.getY() + y0);
-            end.setLocation(end.getX() + x0, end.getY() + y0);
-            Color[] colors = gradient.getColors();
-            float[] dist = gradient.getPositions(gradient.getAngle(), start, end);
-            LinearGradientPaint gp = new LinearGradientPaint(start, end, dist, colors);
-            g2d.setPaint(gp);
-            if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
-                double[] arcs = new double[4];
-                for (int i = 0; i < 4; i++) {
-                    arcs[i] = arc[i] / 2.5;
+            if (gradient.type == Gradient.LINEAR) {
+                Point2D[] p = Gradient.getPoints(gradient.getAngle(), 0, 0, width, height);
+                Point2D start = p[0];
+                Point2D end = p[1];
+                start.setLocation(start.getX() + x0, start.getY() + y0);
+                end.setLocation(end.getX() + x0, end.getY() + y0);
+                Color[] colors = gradient.getColors();
+                float[] dist = gradient.getPositions(gradient.getAngle(), start, end);
+                LinearGradientPaint gp = new LinearGradientPaint(start, end, dist, colors);
+                g2d.setPaint(gp);
+                if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+                    double[] arcs = new double[4];
+                    for (int i = 0; i < 4; i++) {
+                        arcs[i] = arc[i] / 2.5;
+                    }
+                    adjustCorners(arcs, this);
+                    RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                    g2d.fill(rect);
+                } else {
+                    g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
                 }
-                adjustCorners(arcs, this);
-                RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                g2d.fill(rect);
-            } else {
-                g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
+            } else if (gradient.type == Gradient.RADIAL) {
+                Point2D center = new Point2D.Double(gradient.cx, gradient.cy);
+                double rx = gradient.rx;
+                double ry = gradient.ry;
+
+                Gradient.ColorStop[] c = gradient.getPoints();
+                float[] dist = new float[c.length];
+                for (int i = 0; i < c.length; i++) {
+                    dist[i] = c[i].getPos();
+                }
+
+                Color[] colors = gradient.getColors();
+                RadialGradientPaint gp = new RadialGradientPaint(center, (float) rx, dist, colors);
+                g2d.setPaint(gp);
+                AffineTransform t0 = g2d.getTransform();
+                if (rx != ry) {
+                    AffineTransform t = (AffineTransform) g2d.getTransform().clone();
+                    t.concatenate(AffineTransform.getScaleInstance(rx / ry * 1.005, 1));
+                    t.concatenate(AffineTransform.getTranslateInstance(-1.6, 0));
+                    g2d.setTransform(t);
+                }
+                if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+                    double[] arcs = new double[4];
+                    for (int i = 0; i < 4; i++) {
+                        arcs[i] = arc[i] / 2.5;
+                    }
+                    adjustCorners(arcs, this);
+                    RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                    if (rx != ry) {
+                        g2d.setClip(new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], (double) (width - borderWidth[1] - borderWidth[3]) * ry / rx, height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]));
+                    }
+                    g2d.fill(rect);
+                } else {
+                    g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
+                }
+                if (rx != ry) {
+                    g2d.setClip(null);
+                    g2d.setTransform(t0);
+                }
             }
         }
         else if (bgcolor != null && !(formType >= 4 && formType <= 5)) {
@@ -3112,6 +3155,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             cs[i] = new Gradient.ColorStop(c, (float) p.value, p.unit);
         }
         gradient = new Gradient(angle, cs);
+        forceRepaint();
+    }
+
+    public void setRadialGradient(int[] center, double[] radius, Vector<Color> colors, Vector<Float> positions) {
+        int n = Math.max(colors.size(), positions.size());
+        Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
+        Color c = new Color(0, 0, 0, 0);
+        float p = 0f;
+        for (int i = 0; i < n; i++) {
+            if (i < colors.size()) {
+                c = colors.get(i);
+            }
+            if (i < positions.size()) {
+                p = positions.get(i);
+            }
+            cs[i] = new Gradient.ColorStop(c, p);
+        }
+        gradient = new Gradient(0, cs);
+        gradient.setType(Gradient.RADIAL);
+        gradient.setRadialParams(center[0], center[1], radius[0], radius[1]);
         forceRepaint();
     }
 

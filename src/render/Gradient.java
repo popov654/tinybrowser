@@ -122,8 +122,35 @@ public class Gradient {
         }
     }
 
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int value) {
+        type = value;
+    }
+
+    public void setRadialParams(double cx, double cy, double rx, double ry) {
+        this.cx = cx;
+        this.cy = cy;
+        this.rx = rx;
+        this.ry = ry;
+    }
+
+    public void setRadialParams(double cx, double cy, double r) {
+        this.cx = cx;
+        this.cy = cy;
+        this.rx = r;
+        this.ry = r;
+    }
+
     ColorStop[] points;
     double angle;
+    int type = LINEAR;
+    double cx, cy, rx, ry;
+
+    public static int LINEAR = 0;
+    public static int RADIAL = 1;
 
     public static class ColorStop {
 
@@ -136,6 +163,10 @@ public class Gradient {
             color = col;
             pos = p;
             units = u;
+        }
+
+        public float getPos() {
+            return pos;
         }
 
         Color color;
