@@ -117,10 +117,14 @@ public class JSParser {
             else if (state == READ_COMMENT && !comment_multiline && ch == '\n') {
                 state = READY;
                 pos++;
+                line++;
                 continue;
             }
 
             else if (state == READ_COMMENT) {
+                if (ch == '\n') {
+                    line++;
+                }
                 pos++;
                 continue;
             }
