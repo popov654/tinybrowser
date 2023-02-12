@@ -267,8 +267,10 @@ public class LayoutTests extends JFrame {
         p.add(0f);
         p.add(0.21f);
         p.add(0.45f);
-        //d.setRadialGradient(new int[] {120, 64}, new double[] {120, 64}, c, p);
         d.setLinearGradient(c, p, -45);
+        //d.setRadialGradient(new int[] {120, 64}, new double[] {120, 64}, c, p);
+        //d.setRadialGradientFromCSS("radial-gradient(circle at 100%, #333, #333 50%, #eee 75%, #333 75%)");
+        //d.setRadialGradientFromCSS("radial-gradient(#e66465, #9198e5)");
         d.setId("d1");
         //d.setBackgroundColor(new Color(228, 223, 226));
 

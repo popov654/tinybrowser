@@ -43,6 +43,28 @@ public class Gradient {
         return result;
     }
 
+    public float[] getPositions() {
+        float[] result = new float[points.length];
+        if (dx == 0 || dy == 0) {
+            return new float[] {0, 0};
+        }
+        for (int i = 0; i < points.length; i++) {
+            result[i] = points[i].pos;
+            if (points[i].units < 0) continue;
+            double r = Math.sqrt(dx * dx + dy * dy);
+            if (points[i].units == Block.Units.px) {
+                result[i] = r > 0 ? (float)(points[i].pos / r) : 0;
+            }
+            else if (points[i].units == Block.Units.em) {
+                result[i] = r > 0 ? (float)(points[i].pos * 16 / r) : 0;
+            }
+            else if (points[i].units == Block.Units.percent) {
+                result[i] = points[i].pos / 100;
+            }
+        }
+        return result;
+    }
+
     public double getAngle() {
         return angle;
     }
@@ -130,24 +152,24 @@ public class Gradient {
         type = value;
     }
 
-    public void setRadialParams(double cx, double cy, double rx, double ry) {
+    public void setRadialParams(double cx, double cy, double dx, double dy) {
         this.cx = cx;
         this.cy = cy;
-        this.rx = rx;
-        this.ry = ry;
+        this.dx = dx;
+        this.dy = dy;
     }
 
-    public void setRadialParams(double cx, double cy, double r) {
+    public void setRadialParams(double cx, double cy, double d) {
         this.cx = cx;
         this.cy = cy;
-        this.rx = r;
-        this.ry = r;
+        this.dx = d;
+        this.dy = d;
     }
 
     ColorStop[] points;
     double angle;
     int type = LINEAR;
-    double cx, cy, rx, ry;
+    double cx, cy, dx, dy;
 
     public static int LINEAR = 0;
     public static int RADIAL = 1;
@@ -168,6 +190,11 @@ public class Gradient {
         public float getPos() {
             return pos;
         }
+
+        public int getUnits() {
+            return units;
+        }
+
 
         Color color;
         float pos;

@@ -15,7 +15,6 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.LinearGradientPaint;
-import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.RadialGradientPaint;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -727,8 +726,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Point2D end = p[1];
                 start.setLocation(start.getX() + x0, start.getY() + y0);
                 end.setLocation(end.getX() + x0, end.getY() + y0);
+                
                 Color[] colors = gradient.getColors();
                 float[] dist = gradient.getPositions(gradient.getAngle(), start, end);
+
+                for (int i = 1; i < dist.length; i++) {
+                    if (dist[i] == dist[i-1]) {
+                        if (dist[i] < 1) dist[i] += 0.000001;
+                        else dist[i-1] -= 0.000001;
+                    }
+                }
+
                 LinearGradientPaint gp = new LinearGradientPaint(start, end, dist, colors);
                 g2d.setPaint(gp);
                 if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
@@ -743,43 +751,110 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
                 }
             } else if (gradient.type == Gradient.RADIAL) {
-                Point2D center = new Point2D.Double(gradient.cx, gradient.cy);
-                double rx = gradient.rx;
-                double ry = gradient.ry;
-
-                Gradient.ColorStop[] c = gradient.getPoints();
-                float[] dist = new float[c.length];
-                for (int i = 0; i < c.length; i++) {
-                    dist[i] = c[i].getPos();
-                }
+                Point2D center = new Point2D.Double(_x_ + gradient.cx, _y_ + gradient.cy);
+                double dx = gradient.dx;
+                double dy = gradient.dy;
 
                 Color[] colors = gradient.getColors();
-                RadialGradientPaint gp = new RadialGradientPaint(center, (float) rx, dist, colors);
-                g2d.setPaint(gp);
-                AffineTransform t0 = g2d.getTransform();
-                if (rx != ry) {
-                    AffineTransform t = (AffineTransform) g2d.getTransform().clone();
-                    t.concatenate(AffineTransform.getScaleInstance(rx / ry * 1.005, 1));
-                    t.concatenate(AffineTransform.getTranslateInstance(-1.6, 0));
-                    g2d.setTransform(t);
+                float[] dist = gradient.getPositions();
+
+                for (int i = 1; i < dist.length; i++) {
+                    if (dist[i] == dist[i-1]) {
+                        if (dist[i] < 1) dist[i] += 0.000001;
+                        else dist[i-1] -= 0.000001;
+                    }
                 }
-                if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+                if (dx / dy < 3) {
+                    RadialGradientPaint gp = new RadialGradientPaint(center, (float) dx, dist, colors);
+                    g2d.setPaint(gp);
+                    AffineTransform t0 = g2d.getTransform();
+                    if (dx != dy) {
+                        AffineTransform t = (AffineTransform) g2d.getTransform().clone();
+                        t.concatenate(AffineTransform.getScaleInstance(dx / dy * 1.005, 1));
+                        t.concatenate(AffineTransform.getTranslateInstance(-1.6, 0));
+                        g2d.setTransform(t);
+                    }
+                    if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+                        double[] arcs = new double[4];
+                        for (int i = 0; i < 4; i++) {
+                            arcs[i] = arc[i] / 2.5;
+                        }
+                        adjustCorners(arcs, this);
+                        RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                        if (dx != dy) {
+                            g2d.setClip(new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], (double) (width - borderWidth[1] - borderWidth[3]) * dy / dx, height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]));
+                        }
+                        g2d.fill(rect);
+                    } else {
+                        g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
+                    }
+                    if (dx != dy) {
+                        g2d.setClip(null);
+                        g2d.setTransform(t0);
+                    }
+                } else {
                     double[] arcs = new double[4];
                     for (int i = 0; i < 4; i++) {
                         arcs[i] = arc[i] / 2.5;
                     }
                     adjustCorners(arcs, this);
                     RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                    if (rx != ry) {
-                        g2d.setClip(new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], (double) (width - borderWidth[1] - borderWidth[3]) * ry / rx, height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]));
+                    g2d.setClip(rect);
+
+                    if (dist[0] > 0) {
+                        Color[] colors2 = new Color[colors.length+1];
+                        float[] dist2 = new float[dist.length+1];
+                        colors2[0] = colors[0];
+                        dist2[0] = 0f;
+                        for (int i = 1; i < colors.length; i++) {
+                            colors2[i] = colors[i-1];
+                            dist2[i] = dist[i-1];
+                        }
+                        colors = colors2;
+                        dist = dist2;
                     }
-                    g2d.fill(rect);
-                } else {
-                    g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
-                }
-                if (rx != ry) {
+
+                    if (dist[dist.length-1] < 1f) {
+                        Color[] colors2 = new Color[colors.length+1];
+                        float[] dist2 = new float[dist.length+1];
+                        for (int i = 0; i < colors.length; i++) {
+                            colors2[i] = colors[i];
+                            dist2[i] = dist[i];
+                        }
+                        colors2[colors.length] = colors[colors.length-1];
+                        dist2[dist.length] = 1f;
+                        colors = colors2;
+                        dist = dist2;
+                    }
+
+                    g2d.setColor(colors[colors.length-1]);
+                    g2d.fillRect(x0, y0, width, height);
+
+                    for (int i = 0; i < colors.length-1; i++) {
+                        Color col1 = colors[i];
+                        Color col2 = colors[i+1];
+
+                        double r11 = dx * dist[i], r12 = dy * dist[i];
+                        double r21 = dx * dist[i+1], r22 = dy * dist[i+1];
+
+                        double delta_red = (double) (col2.getRed() - col1.getRed()) / (r21 - r11);
+                        double delta_green = (double) (col2.getGreen() - col1.getGreen()) / (r21 - r11);
+                        double delta_blue = (double) (col2.getBlue() - col1.getBlue()) / (r21 - r11);
+                        double delta_alpha = (double) (col2.getAlpha() - col1.getAlpha()) / (r21 - r11);
+
+                        for (double r = r11; r < r21; r += 1) {
+                            double h = r21 > 0 ? r * r22 / r21 : 0;
+                            //System.out.println((int)(col1.getAlpha() + (r - r11) * delta_alpha));
+                            Color col = new Color((int)(col1.getRed() + (r - r11) * delta_red),
+                                                  (int)(col1.getGreen() + (r - r11) * delta_green),
+                                                  (int)(col1.getBlue() + (r - r11) * delta_blue),
+                                                  (int)(col1.getAlpha() + (r - r11) * delta_alpha));
+                            g2d.setColor(col);
+                            g2d.setStroke(new BasicStroke(2));
+                            g2d.drawOval((int)(gradient.cx - r), (int)(gradient.cy - h), (int) (r * 2), (int) (h * 2));
+                        }
+                    }
                     g2d.setClip(null);
-                    g2d.setTransform(t0);
                 }
             }
         }
@@ -3187,6 +3262,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         forceRepaint();
     }
 
+    public void setRadialGradientWithUnits(int[] center, double[] size, Vector<Color> colors, Vector<String> positions) {
+        int n = Math.max(colors.size(), positions.size());
+        Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
+        Color c = new Color(0, 0, 0, 0);
+        for (int i = 0; i < n; i++) {
+            if (i < colors.size()) {
+                c = colors.get(i);
+            }
+            CssLength p = null;
+            if (i < positions.size()) {
+                p = parseValueString(positions.get(i));
+            }
+            cs[i] = new Gradient.ColorStop(c, (float) p.value, p.unit);
+        }
+        gradient = new Gradient(0, cs);
+        gradient.setType(Gradient.RADIAL);
+        gradient.setRadialParams(center[0], center[1], size[0], size[1]);
+        forceRepaint();
+    }
+
     public void setRadialGradient(int[] center, double[] radius, Vector<Color> colors, Vector<Float> positions) {
         int n = Math.max(colors.size(), positions.size());
         Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
@@ -3805,7 +3900,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setBackgroundPositionX(double val, int units) {
         int value = 0;
         if (units == Units.px) {
-            value = (int)Math.round(val);
+            value = (int)Math.round(val * ratio);
         }
         else if (units == Units.percent) {
             int bw = background_size_x < 0 && bgImage != null ? bgImage.getWidth() : background_size_x;
@@ -3821,7 +3916,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setBackgroundPositionY(double val, int units) {
         int value = 0;
         if (units == Units.px) {
-            value = (int)Math.round(val);
+            value = (int)Math.round(val * ratio);
         }
         else if (units == Units.percent) {
             int bh = background_size_y < 0 && bgImage != null ? bgImage.getHeight() : background_size_y;
@@ -3842,7 +3937,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         int value = 0;
         if (units == Units.px) {
-            value = (int)Math.round(val);
+            value = (int)Math.round(val * ratio);
         }
         else if (units == Units.percent) {
             value = (int)Math.ceil((width-borderWidth[1]-borderWidth[3])*(val/100));
@@ -3866,7 +3961,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         int value = 0;
         if (units == Units.px) {
-            value = (int)Math.round(val);
+            value = (int)Math.round(val * ratio);
         }
         else if (units == Units.percent) {
             value = (int)Math.ceil((height-borderWidth[0]-borderWidth[2])*(val/100));
@@ -4522,17 +4617,195 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 col = parseColor(s[1]);
                 positions.add(s[0]);
             } else {
-                positions.add(s[1]);
+                positions.add(s.length > 1 ? s[1] : (i > 1 ? "0px" : "100%"));
             }
             if (col == null) return;
             cols.add(col);
         }
-        
+
+        if (document != null && document.debug) {
+            for (String p: parts) {
+                System.out.println(p);
+            }
+        }
+
+        setLinearGradientWithUnits(cols, positions, angle);
+    }
+
+    public void setRadialGradientFromCSS(String value) {
+        if (!value.matches("(-[a-z]+-)?radial-gradient\\(.*\\)")) return;
+        value = value.substring(value.indexOf("(")+1, value.length()-1);
+        int pos = 0;
+        int braces = 0;
+        String part = "";
+        Vector<String> parts = new Vector<String>();
+        while (pos < value.length()) {
+            char ch = value.charAt(pos);
+            if (ch == '(') braces++;
+            if (ch == ')') braces--;
+            if (braces == 0 && ch == ',' && !part.isEmpty()) {
+                parts.add(part.trim());
+                part = "";
+            } else {
+                part += ch;
+            }
+            pos++;
+        }
+        if (!part.isEmpty()) {
+            parts.add(part.trim());
+        }
+        if (parts.size() < 2) return;
+
+        int width = viewport_width > 0 ? viewport_width : this.width;
+        int height = viewport_height > 0 ? viewport_height : this.height;
+
+        double r = Math.sqrt(width * width + height * height);
+
+        int cx = width > 0 ? width / 2 : 0;
+        int cy = height > 0 ? height / 2 : 0;
+
+        double dx = width > 0 ? (width >= height ? r : width) : 0;
+        double dy = height > 0 ? (width <= height ? r : height) : 0;
+
+        if (parts.get(0).equals("circle")) {
+            dx = dy = Math.min(dx, dy);
+        }
+
+        else if (parts.get(0).matches("^(circle|ellipse) at( [0-9]+(px|%|em)){1,2}( [0-9]+(px|%|em)){0,2}")) {
+            String[] p = parts.get(0).split("\\s+");
+
+            if (p[0].equals("circle") && p.length == 6) {
+                System.err.println("CSS parse error: Invalid gradient size");
+                return;
+            }
+
+            if (p.length >= 3) {
+                int[] val = parseValueStringToPx(p[2].trim());
+                val[0] = Math.max(0, Math.min(width, val[0]));
+                if (val[1] == Units.percent) {
+                    val[0] *= (double) width / 100;
+                } else if (val[1] == Units.em) {
+                    val[0] *= 16 * ratio;
+                } else {
+                    val[0] *= ratio;
+                }
+                cx = (int) Math.round(val[0]);
+            }
+            if (p.length >= 4) {
+                int[] val = parseValueStringToPx(p[3].trim());
+                val[0] = Math.max(0, Math.min(height, val[0]));
+                if (val[1] == Units.percent) {
+                    val[0] *= (double) width / 100;
+                } else if (val[1] == Units.em) {
+                    val[0] *= 16 * ratio;
+                } else {
+                    val[0] *= ratio;
+                }
+                cy = (int) Math.round(val[0]);
+            }
+
+            if (p.length >= 3 && p.length <= 4) {
+                // north-east
+                if (cx >= (double) width / 2 && cy <= (double) height / 2) {
+                    dx = dy = Math.sqrt(cx * cx + (height - cy) * (height - cy));
+                }
+                // south-east
+                if (cx >= (double) width / 2 && cy > (double) height / 2) {
+                    dx = dy = Math.sqrt(cx * cx + cy * cy);
+                }
+                // north-west
+                if (cx < (double) width / 2 && cy <= (double) height / 2) {
+                    dx = dy = Math.sqrt((width - cx) * (width - cx) + (height - cy) * (height - cy));
+                }
+                // south-west
+                if (cx < (double) width / 2 && cy <= (double) height / 2) {
+                    dx = dy = Math.sqrt((width - cx) * (width - cx) + cy * cy);
+                }
+            }
+
+            else if (p.length == 5) {
+                int[] val = parseValueStringToPx(p[4]);
+                if (val[1] == Units.percent) {
+                    val[0] *= (double) height / 100;
+                } else if (val[1] == Units.em) {
+                    val[0] *= 16 * ratio;
+                } else {
+                    val[0] *= ratio;
+                }
+                dx = dy = val[0];
+            }
+
+            else if (p.length == 6) {
+                int[] val = parseValueStringToPx(p[4]);
+                if (val[1] == Units.percent) {
+                    val[0] *= (double) height / 100;
+                } else if (val[1] == Units.em) {
+                    val[0] *= 16 * ratio;
+                } else {
+                    val[0] *= ratio;
+                }
+                dx = val[0] / 2;
+                
+                if (val[1] == Units.percent) {
+                    val[0] *= (double) height / 100;
+                } else if (val[1] == Units.em) {
+                    val[0] *= 16 * ratio;
+                } else {
+                    val[0] *= ratio;
+                }
+                dy = val[0] / 2;
+            }
+        } else if (parts.get(0).matches("^(circle|ellipse)( [0-9]+(px|%|em)){1,2}")) {
+            String[] p = parts.get(0).split("\\s+");
+
+            if (p[0].equals("circle") && p.length == 3) {
+                System.err.println("CSS parse error: Invalid gradient size");
+                return;
+            }
+
+            if (p.length == 2) {
+                dx = dy = parseValueStringToPx(p[1])[0] / 2;
+            }
+
+            else if (p.length == 3) {
+                dx = parseValueStringToPx(p[1].trim())[0] / 2;
+                dy = parseValueStringToPx(p[2].trim())[0] / 2;
+            }
+        } else if (parts.get(0).matches("([0-9]+(px|%|em)) ([0-9]+(px|%|em))") || parts.get(0).matches("([0-9]+(px|em))")) {
+            String[] p = parts.get(0).split("\\s+");
+
+            if (p.length == 1) {
+                dx = dy = parseValueStringToPx(p[0].trim())[0] / 2;
+            } else {
+                dx = parseValueStringToPx(p[0].trim())[0] / 2;
+                dy = parseValueStringToPx(p[1].trim())[0] / 2;
+            }
+        } else if (!parts.get(0).matches("(circle|ellipse)")) {
+            parts.add(0, "circle");
+        }
+
+        Vector<Color> cols = new Vector<Color>();
+        Vector<String> positions = new Vector<String>();
+
+        for (int i = 1; i < parts.size(); i++) {
+            String[] s = parts.get(i).split("\\s+");
+            Color col = null;
+            col = parseColor(s[0]);
+            if (col == null) {
+                col = parseColor(s[1]);
+                positions.add(s[0]);
+            } else {
+                positions.add(s.length > 1 ? s[1] : (i == 1 ? "0px" : "100%"));
+            }
+            if (col == null) return;
+            cols.add(col);
+        }
+
         for (String p: parts) {
             System.out.println(p);
         }
 
-        setLinearGradientWithUnits(cols, positions, angle);
+        setRadialGradientWithUnits(new int[] {cx, cy}, new double[] {dx, dy}, cols, positions);
     }
 
     private int[] parseValueStringToPx(String value) {
@@ -4546,7 +4819,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 ch = value.substring(index, index+1);
             }
             String u = value.substring(index);
-            int val = (int)Math.round(Float.parseFloat(n) * ratio);
+            int val = (int)Math.round(Float.parseFloat(n));
             int units = u.equals("px") ? Units.px : (u.equals("em") ? Units.em : Units.percent);
             return new int[] {val, units};
         }
