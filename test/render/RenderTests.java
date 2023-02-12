@@ -1,17 +1,11 @@
 package render;
 
-import java.awt.AWTException;
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.UIManager;
 import org.junit.After;
 import org.junit.AfterClass;
