@@ -764,7 +764,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         else dist[i-1] -= 0.000001;
                     }
                 }
-                if (dx / dy < 3) {
+
+                if (dx <= 0 || dy <= 0) {
+
+                    double[] arcs = new double[4];
+                    for (int i = 0; i < 4; i++) {
+                        arcs[i] = arc[i] / 2.5;
+                    }
+                    adjustCorners(arcs, this);
+                    RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                    g2d.setClip(rect);
+                    g2d.setColor(colors[colors.length-1]);
+                    g2d.fillRect(x0, y0, width, height);
+                    g2d.setClip(null);
+
+                } else if (dx / dy < 3) {
+
                     RadialGradientPaint gp = new RadialGradientPaint(center, (float) dx, dist, colors);
                     g2d.setPaint(gp);
                     AffineTransform t0 = g2d.getTransform();
@@ -792,7 +807,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         g2d.setClip(null);
                         g2d.setTransform(t0);
                     }
+
                 } else {
+
                     double[] arcs = new double[4];
                     for (int i = 0; i < 4; i++) {
                         arcs[i] = arc[i] / 2.5;
@@ -829,6 +846,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                     g2d.setColor(colors[colors.length-1]);
                     g2d.fillRect(x0, y0, width, height);
+
+                    if (dx <= 0 || dy <= 0) return;
 
                     for (int i = 0; i < colors.length-1; i++) {
                         Color col1 = colors[i];
@@ -4623,12 +4642,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             cols.add(col);
         }
 
-        if (document != null && document.debug) {
-            for (String p: parts) {
-                System.out.println(p);
-            }
-        }
-
         setLinearGradientWithUnits(cols, positions, angle);
     }
 
@@ -4667,121 +4680,150 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         double dx = width > 0 ? (width >= height ? r : width) : 0;
         double dy = height > 0 ? (width <= height ? r : height) : 0;
 
+        String mode = "farthest-corner";
+
+        int count = 0;
+
         if (parts.get(0).equals("circle")) {
             dx = dy = Math.min(dx, dy);
+        } else {
+
+            String[] p = parts.get(0).split("\\s+");
+
+            for (int i = 0; i < p.length; i++) {
+
+                if (p[i].matches("[0-9.]+[0-9]+(px|%|em)")) {
+                    if (i > 0 && !p[i-1].equals("at")) {
+                        int[] val = parseValueStringToPx(p[i].trim());
+                        val[0] = Math.max(0, Math.min(width, val[0]));
+                        if (val[1] == Units.percent) {
+                            val[0] *= (double) width / 100;
+                        } else if (val[1] == Units.em) {
+                            val[0] *= 16 * ratio;
+                        } else {
+                            val[0] *= ratio;
+                        }
+                        dx = val[0];
+
+                        if (i < p.length-1 && p[i+1].matches("[0-9.]+[0-9]+(px|%|em)")) {
+                            i++;
+                            val = parseValueStringToPx(p[i].trim());
+                            val[0] = Math.max(0, Math.min(width, val[0]));
+                            if (val[1] == Units.percent) {
+                                val[0] *= (double) width / 100;
+                            } else if (val[1] == Units.em) {
+                                val[0] *= 16 * ratio;
+                            } else {
+                                val[0] *= ratio;
+                            }
+                            dy = val[0];
+                        }
+                    } else if (i > 0 && p[i-1].equals("at")) {
+                        int[] val = parseValueStringToPx(p[i].trim());
+                        val[0] = Math.max(0, Math.min(width, val[0]));
+                        if (val[1] == Units.percent) {
+                            val[0] *= (double) width / 100;
+                        } else if (val[1] == Units.em) {
+                            val[0] *= 16 * ratio;
+                        } else {
+                            val[0] *= ratio;
+                        }
+                        cx = (int) Math.round(val[0]);
+
+                        if (i < p.length-1 && p[i+1].matches("[0-9.]+[0-9]+(px|%|em)")) {
+                            i++;
+                            val = parseValueStringToPx(p[i].trim());
+                            val[0] = Math.max(0, Math.min(width, val[0]));
+                            if (val[1] == Units.percent) {
+                                val[0] *= (double) width / 100;
+                            } else if (val[1] == Units.em) {
+                                val[0] *= 16 * ratio;
+                            } else {
+                                val[0] *= ratio;
+                            }
+                            cy = (int) Math.round(val[0]);
+                        }
+                    }
+                    count++;
+                } else if (i > 0 && p[i-1].equals("at")) {
+                    if (p[i].equals("top")) {
+                        cy = 0;
+                    }
+                    else if (p[i].equals("top-left")) {
+                        cx = 0;
+                        cy = 0;
+                    }
+                    else if (p[i].equals("top-right")) {
+                        cx = width;
+                        cy = 0;
+                    }
+                    else if (p[i].equals("bottom")) {
+                        cy = height;
+                    }
+                    else if (p[i].equals("bottom-left")) {
+                        cx = 0;
+                        cy = height;
+                    }
+                    else if (p[i].equals("bottom-right")) {
+                        cx = width;
+                        cy = height;
+                    }
+                    else if (p[i].equals("left")) {
+                        cx = 0;
+                    }
+                    else if (p[i].equals("right")) {
+                        cx = width;
+                    }
+                    count++;
+                } else if (p[i].matches("(closest|farthest)-(side|corner)")) {
+                    mode = p[i];
+                    count++;
+                }
+            }
         }
 
-        else if (parts.get(0).matches("^(circle|ellipse) at( [0-9]+(px|%|em)){1,2}( [0-9]+(px|%|em)){0,2}")) {
-            String[] p = parts.get(0).split("\\s+");
-
-            if (p[0].equals("circle") && p.length == 6) {
-                System.err.println("CSS parse error: Invalid gradient size");
-                return;
-            }
-
-            if (p.length >= 3) {
-                int[] val = parseValueStringToPx(p[2].trim());
-                val[0] = Math.max(0, Math.min(width, val[0]));
-                if (val[1] == Units.percent) {
-                    val[0] *= (double) width / 100;
-                } else if (val[1] == Units.em) {
-                    val[0] *= 16 * ratio;
-                } else {
-                    val[0] *= ratio;
-                }
-                cx = (int) Math.round(val[0]);
-            }
-            if (p.length >= 4) {
-                int[] val = parseValueStringToPx(p[3].trim());
-                val[0] = Math.max(0, Math.min(height, val[0]));
-                if (val[1] == Units.percent) {
-                    val[0] *= (double) width / 100;
-                } else if (val[1] == Units.em) {
-                    val[0] *= 16 * ratio;
-                } else {
-                    val[0] *= ratio;
-                }
-                cy = (int) Math.round(val[0]);
-            }
-
-            if (p.length >= 3 && p.length <= 4) {
-                // north-east
-                if (cx >= (double) width / 2 && cy <= (double) height / 2) {
-                    dx = dy = Math.sqrt(cx * cx + (height - cy) * (height - cy));
-                }
-                // south-east
-                if (cx >= (double) width / 2 && cy > (double) height / 2) {
-                    dx = dy = Math.sqrt(cx * cx + cy * cy);
-                }
-                // north-west
-                if (cx < (double) width / 2 && cy <= (double) height / 2) {
-                    dx = dy = Math.sqrt((width - cx) * (width - cx) + (height - cy) * (height - cy));
-                }
-                // south-west
-                if (cx < (double) width / 2 && cy <= (double) height / 2) {
-                    dx = dy = Math.sqrt((width - cx) * (width - cx) + cy * cy);
-                }
-            }
-
-            else if (p.length == 5) {
-                int[] val = parseValueStringToPx(p[4]);
-                if (val[1] == Units.percent) {
-                    val[0] *= (double) height / 100;
-                } else if (val[1] == Units.em) {
-                    val[0] *= 16 * ratio;
-                } else {
-                    val[0] *= ratio;
-                }
-                dx = dy = val[0];
-            }
-
-            else if (p.length == 6) {
-                int[] val = parseValueStringToPx(p[4]);
-                if (val[1] == Units.percent) {
-                    val[0] *= (double) height / 100;
-                } else if (val[1] == Units.em) {
-                    val[0] *= 16 * ratio;
-                } else {
-                    val[0] *= ratio;
-                }
-                dx = val[0] / 2;
-                
-                if (val[1] == Units.percent) {
-                    val[0] *= (double) height / 100;
-                } else if (val[1] == Units.em) {
-                    val[0] *= 16 * ratio;
-                } else {
-                    val[0] *= ratio;
-                }
-                dy = val[0] / 2;
-            }
-        } else if (parts.get(0).matches("^(circle|ellipse)( [0-9]+(px|%|em)){1,2}")) {
-            String[] p = parts.get(0).split("\\s+");
-
-            if (p[0].equals("circle") && p.length == 3) {
-                System.err.println("CSS parse error: Invalid gradient size");
-                return;
-            }
-
-            if (p.length == 2) {
-                dx = dy = parseValueStringToPx(p[1])[0] / 2;
-            }
-
-            else if (p.length == 3) {
-                dx = parseValueStringToPx(p[1].trim())[0] / 2;
-                dy = parseValueStringToPx(p[2].trim())[0] / 2;
-            }
-        } else if (parts.get(0).matches("([0-9]+(px|%|em)) ([0-9]+(px|%|em))") || parts.get(0).matches("([0-9]+(px|em))")) {
-            String[] p = parts.get(0).split("\\s+");
-
-            if (p.length == 1) {
-                dx = dy = parseValueStringToPx(p[0].trim())[0] / 2;
-            } else {
-                dx = parseValueStringToPx(p[0].trim())[0] / 2;
-                dy = parseValueStringToPx(p[1].trim())[0] / 2;
-            }
-        } else if (!parts.get(0).matches("(circle|ellipse)")) {
+        if (count == 0) {
             parts.add(0, "circle");
+        }
+
+        if (mode.equals("farthest-corner")) {
+            // north-east
+            if (cx >= (double) width / 2 && cy <= (double) height / 2) {
+                dx = dy = Math.sqrt(cx * cx + (height - cy) * (height - cy));
+            }
+            // south-east
+            if (cx >= (double) width / 2 && cy > (double) height / 2) {
+                dx = dy = Math.sqrt(cx * cx + cy * cy);
+            }
+            // north-west
+            if (cx < (double) width / 2 && cy <= (double) height / 2) {
+                dx = dy = Math.sqrt((width - cx) * (width - cx) + (height - cy) * (height - cy));
+            }
+            // south-west
+            if (cx < (double) width / 2 && cy <= (double) height / 2) {
+                dx = dy = Math.sqrt((width - cx) * (width - cx) + cy * cy);
+            }
+        } else if (mode.equals("closest-corner")) {
+            // north-east
+            if (cx >= (double) width / 2 && cy <= (double) height / 2) {
+                dx = dy = Math.sqrt((width - cx) * (width - cx) + cy * cy);
+            }
+            // south-east
+            if (cx >= (double) width / 2 && cy > (double) height / 2) {
+                dx = dy = Math.sqrt((width - cx) * (width - cx) + (height - cy) * (height - cy));
+            }
+            // north-west
+            if (cx < (double) width / 2 && cy <= (double) height / 2) {
+                dx = dy = Math.sqrt(cx * cx + cy * cy);
+            }
+            // south-west
+            if (cx < (double) width / 2 && cy <= (double) height / 2) {
+                dx = dy = Math.sqrt(cx * cx + (height - cy) * (height - cy));
+            }
+        } else if (mode.equals("farthest-side")) {
+            dx = dy = Math.max(cx, Math.max(width - cx, Math.max(cy, height - cy)));
+        } else if (mode.equals("closest-side")) {
+            dx = dy = Math.min(cx, Math.min(width - cx, Math.min(cy, height - cy)));
         }
 
         Vector<Color> cols = new Vector<Color>();
@@ -4799,10 +4841,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             if (col == null) return;
             cols.add(col);
-        }
-
-        for (String p: parts) {
-            System.out.println(p);
         }
 
         setRadialGradientWithUnits(new int[] {cx, cy}, new double[] {dx, dy}, cols, positions);
