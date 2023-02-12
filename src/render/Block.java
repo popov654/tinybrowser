@@ -414,15 +414,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (transform) {
             int w = (int)(getTransformedSize()*1.1);
-            int px = _x_-(w-width)/2;
-            int py = _y_-(w-height)/2;
+            dx = (w-width) / 2;
+            dy = (w-height) / 2;
             if (height < 20) {
-                px -= 4;
-                py += 2;
+                dx -= 4;
+                dy += 2;
             }
-            g.drawImage(buffer, px, py, this);
+            //height = viewport_height = w;
         }
-        else if (has_shadow) {
+        if (has_shadow) {
             int x0 = -shadow_x + shadow_blur + shadow_size;
             int y0 = -shadow_y + shadow_blur + shadow_size;
             g.drawImage(buffer, _x_ - x0 - dx, _y_ - y0 - dy, this);
@@ -599,6 +599,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
             g2d.setComposite(composite);
+
+            if (parent.transform) {
+                int sx = _x_ - parent._x_ - parent.width / 2;
+                int sy = _y_ - parent._y_ - parent.height / 2;
+                ((Graphics2D)g).setTransform(AffineTransform.getRotateInstance(Math.PI / 4, -sx, -sy));
+            }
         }
 
         if (transform) {
@@ -616,8 +622,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 locationY += 4;
             }
             AffineTransform tx = AffineTransform.getRotateInstance(rotation, locationX, locationY);
-            AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
-            g2d.setTransform(tx);
+            AffineTransform t = g2d.getTransform();
+            t.concatenate(tx);
+            g2d.setTransform(t);
         }
 
         if (alpha < 1.0f) {
@@ -2875,6 +2882,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
         Font font = new Font(fontFamily, style, fontSize);
 
+        Block b = this;
+        while (b.parent != null && !b.transform) {
+            b = b.parent;
+        }
+        final Block instance = this;
+        final Block origin_block = b;
+
         JLabel label = new JLabel(c.getText());
 
         Color col = hasParentLink || href != null ? linkColor : color;
@@ -2891,9 +2905,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             label.setFont(font);
         }
-        Block b = this;
+
+        boolean isTransformed = false;
+
         while (b.parent != null) {
+            if (b.transform) {
+                isTransformed = true;
+            }
             b = b.parent;
+        }
+
+        if (isTransformed) {
+            int sx = _x_ + c.getX() - (origin_block._x_ + origin_block.width / 2);
+            int sy = _y_ + c.getY() - (origin_block._y_ + origin_block.height / 2);
+            ((Graphics2D)g).setTransform(AffineTransform.getRotateInstance(Math.PI / 4, -sx, -sy));
+            //setSize(new Dimension((int) (getWidth() * 1.3), (int) (getHeight() * 1.3)));
+            //g.setClip(null);
+            c.draw(g);
+            return;
         }
 
         if (text_layer == null) {
@@ -2918,7 +2947,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         label.setBounds(_x_ + c.getX() - scroll_x, _y_ + c.getY() - scroll_y, text_italic ? c.getWidth() + 2 : c.getWidth(), c.getHeight());
 
-        if (transform || (hidden && flag)) {
+        if (isTransformed || (hidden && flag)) {
             if (clipping_block != null) {
 
                 int sx = clipping_block.parent != null ? clipping_block.parent.scroll_x : 0;
@@ -5567,6 +5596,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.auto_height = this.auto_height;
         b.auto_x_margin = this.auto_x_margin;
         b.auto_y_margin = this.auto_y_margin;
+
+        b.transform = transform;
 
         b.zIndex = this.zIndex;
         b.zIndexAuto = this.zIndexAuto;
