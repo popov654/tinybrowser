@@ -16,24 +16,29 @@ import java.util.regex.Pattern;
  * @author Alex
  */
 public class QuerySelector {
-    public QuerySelector(String query, HTMLParser hp, String rules) {
+    public QuerySelector(String query, SelectorGroup group, HTMLParser hp, String rules) {
         if (query.contains(",")) {
             String[] a = query.split(",\\s*");
-            QuerySelector q = new QuerySelector(a[0], hp, "");
+            QuerySelector q = new QuerySelector(a[0], group, hp, "");
             for (int i = 1; i < a.length; i++) {
-                q.combine(new QuerySelector(a[i], hp, ""));
+                q.combine(new QuerySelector(a[i], group, hp, ""));
             }
             resultSet = q.resultSet;
         } else {
             this.rules = CSSParser.parseRules(rules);
             this.query = query;
+            this.group = group;
             this.hp = hp;
             parse();
         }
     }
 
+    public QuerySelector(String query, SelectorGroup group, HTMLParser hp) {
+        this(query, group, hp, "");
+    }
+
     public QuerySelector(String query, HTMLParser hp) {
-        this(query, hp, "");
+        this(query, null, hp, "");
     }
 
     public void combine(QuerySelector q) {
@@ -511,6 +516,22 @@ public class QuerySelector {
             } else {
                 st.styles.putAll(rules);
             }
+            st.group = group;
+        }
+    }
+
+    public void apply(int width, int height, double dpi) {
+        if (width > group.maxWidth || width < group.minWidth || height > group.maxHeight || height < group.minHeight || dpi < group.minDpi || dpi > group.maxDpi) {
+           return;
+        }
+        for (int i = 0; i < resultSet.size(); i++) {
+            Styles st = StyleMap.getNodeStyles(resultSet.get(i));
+            if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0 || visitedNodes.size() > 0) {
+                st.stateStyles.add(this);
+            } else {
+                st.styles.putAll(rules);
+            }
+            st.group = group;
         }
     }
 
@@ -518,9 +539,14 @@ public class QuerySelector {
         return rules;
     }
 
+    public void setGroup(SelectorGroup group) {
+        this.group = group;
+    }
+
     private String[] parts;
     private String query;
-    private String orig_query = query;
+    private String orig_query;
+    private SelectorGroup group = null;
     private Vector<Node> resultSet;
     private Vector<Node> hoverNodes;
     private Vector<Node> focusNodes;

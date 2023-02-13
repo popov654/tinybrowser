@@ -103,6 +103,8 @@ public class Reader {
                 } catch (Exception e) {}
 
                 document.ready = true;
+                
+                root.builder.reapplyDocumentStyles(document);
 
                 panel.add(document, "main");
                 frame.setContentPane(panel);

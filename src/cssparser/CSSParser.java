@@ -5,7 +5,6 @@ import htmlparser.HTMLParser;
 import htmlparser.Node;
 import htmlparser.NodeActionCallback;
 import htmlparser.NodeEvent;
-import java.awt.event.ActionEvent;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -25,6 +24,7 @@ public class CSSParser {
     }
 
     public Vector<QuerySelector> parseString(String str) {
+        SelectorGroup group = defaultGroup;
         Vector<QuerySelector> result = new Vector<QuerySelector>();
         str = str.trim();
         int pos = 0;
@@ -55,15 +55,25 @@ public class CSSParser {
                 open = true;
                 current_query = str.substring(last_start, pos).trim();
                 last_start = pos + 1;
+                global_rule = false;
+                if (at_rule && current_query.startsWith("media")) {
+                    open = false;
+                    at_rule = false;
+                    group = new SelectorGroup(current_query);
+                } else if (at_rule) {
+                    global_rule = true;
+                }
             } else if (str.charAt(pos) == '}' && !quotes) {
-                open = false;
                 String block = str.substring(last_start, pos-1).trim();
-                if (!at_rule) {
-                    result.add(new QuerySelector(current_query, hp, block));
+                if (!open && group != defaultGroup) {
+                    group = defaultGroup;
+                } else if (!global_rule) {
+                    result.add(new QuerySelector(current_query, group, hp, block));
                 } else {
                     global_rules.put(current_query, parseRules(block));
                     at_rule = false;
                 }
+                open = false;
                 current_query = "";
                 last_start = pos + 1;
             } else if ((str.charAt(pos) == '\'' || str.charAt(pos) == '"') && !quotes) {
@@ -79,7 +89,6 @@ public class CSSParser {
     }
 
     public void findStyles(Node node) {
-        final CSSParser instance = this;
         if (node.tagName.equals("style")) {
             styles.add(node);
             NodeActionCallback l = new NodeActionCallback() {
@@ -88,7 +97,7 @@ public class CSSParser {
                 public void nodeChanged(NodeEvent e, String source) {
                     Block b = Mapper.get(hp.getRootNode().lastElementChild());
                     if (b != null) {
-                        b.builder.reapplyDocumentStyles(instance);
+                        b.builder.reapplyDocumentStyles(b.document);
                     }
                 }
 
@@ -105,6 +114,15 @@ public class CSSParser {
             Vector<QuerySelector> qs = parseString(style.children.get(0).nodeValue);
             for (int i = 0; i < qs.size(); i++) {
                 qs.get(i).apply();
+            }
+        }
+    }
+
+    public void applyStyles(int width, int height, double dpi) {
+        for (Node style: styles) {
+            Vector<QuerySelector> qs = parseString(style.children.get(0).nodeValue);
+            for (int i = 0; i < qs.size(); i++) {
+                qs.get(i).apply(width, height, dpi);
             }
         }
     }
@@ -177,6 +195,8 @@ public class CSSParser {
 
     HashMap<String, HashMap<String, String>> global_rules;
     Vector<Node> styles = new Vector<Node>();
+
+    SelectorGroup defaultGroup = new SelectorGroup();;
     
     String current_query = "";
     int last_start = 0;
@@ -185,6 +205,7 @@ public class CSSParser {
     boolean quotes = false;
     boolean comment = false;
     boolean at_rule = false;
+    boolean global_rule = false;
     char quote;
 
     HTMLParser hp;

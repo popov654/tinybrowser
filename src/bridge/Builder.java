@@ -2,6 +2,7 @@ package bridge;
 
 import cssparser.CSSParser;
 import cssparser.QuerySelector;
+import cssparser.SelectorGroup;
 import cssparser.StyleMap;
 import cssparser.Styles;
 import htmlparser.HTMLParser;
@@ -481,8 +482,8 @@ public class Builder {
         return (st != null) ? st.stateStyles : null;
     }
 
-    public void reapplyDocumentStyles(CSSParser parser) {
-        HTMLParser doc = parser.getDocument();
+    public void reapplyDocumentStyles(WebDocument document) {
+        HTMLParser doc = cssParser.getDocument();
         HashMap<Node, Styles> map = StyleMap.getDocumentStyles(doc);
         HashMap<Node, HashMap<String, String>> runtimeStyleMap = new HashMap<Node, HashMap<String, String>>();
         if (map != null) {
@@ -497,8 +498,11 @@ public class Builder {
                 }
             }
         }
+        int w = (int) ((double)document.width / document.root.ratio);
+        int h = (int) ((double)document.height / document.root.ratio);
+
         StyleMap.removeDocumentStyles(doc);
-        parser.applyStyles();
+        cssParser.applyStyles(w, h, document.root.ratio);
         
         map = StyleMap.getDocumentStyles(doc);
         Set<Node> nodes = runtimeStyleMap.keySet();

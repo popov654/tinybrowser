@@ -334,6 +334,9 @@ public class WebDocument extends JPanel {
             //System.err.println("Root width: " + root.width);
             //System.err.println("Viewport width: " + root.viewport_width);
             if (root.document.ready && !resizing) {
+                if (root.builder != null) {
+                    root.builder.reapplyDocumentStyles(this);
+                }
                 resizing = true;
                 root.flushBuffersRecursively();
                 root.performLayout();
