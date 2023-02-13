@@ -194,6 +194,13 @@ public class Window extends JSObject {
         items.put("addEventListener", new addEventListenerFunction());
         items.put("removeEventListener", new removeEventListenerFunction());
         items.put("getComputedStyle", new getComputedStyleFunction());
+
+        JSObject screen = new JSObject();
+        java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        screen.set("width", new JSInt(screenSize.width));
+        screen.set("height", new JSInt(screenSize.height));
+        items.put("screen", screen);
+
         tr = new TaskRunner(timers);
     }
     
@@ -367,6 +374,9 @@ public class Window extends JSObject {
             if (b != null) {
                 items.put("innerWidth", new JSInt((int)Math.floor((double)b.viewport_width / b.ratio)));
                 items.put("innerHeight", new JSInt((int)Math.floor((double)b.viewport_height / b.ratio)));
+                java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+                ((JSObject)items.get("screen")).set("width", new JSInt(screenSize.width));
+                ((JSObject)items.get("screen")).set("height", new JSInt(screenSize.height));
             }
         }
     };
