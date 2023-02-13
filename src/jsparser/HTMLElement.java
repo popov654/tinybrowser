@@ -674,6 +674,20 @@ public class HTMLElement extends JSObject {
         while (it.hasNext()) {
             String str = (String)it.next();
             if (str.equals("children") || str.equals("childNodes") || str.matches("(previous|next)(Element)?Sibling")) continue;
+            if (str.equals("parentNode")) {
+                if (result.length() > 0) result += ", ";
+                result += "parentNode: " + (node.parent != null ? "HTMLElement[" + node.parent.tagName + "]" : "null");
+                continue;
+            }
+            if (str.equals("textContent")) {
+                if (result.length() > 0) result += ", ";
+                String text = node.getTextContent();
+                if (text.length() > 100) {
+                    text = text.substring(0, 97) + "...";
+                }
+                result += "textContent: \"" + text + "\"";
+                continue;
+            }
             if (items.get(str) == this) continue;
             if (result.length() > 0) result += ", ";
             result += str + ": " + items.get(str).toString();
