@@ -39,6 +39,7 @@ public class Reader {
         builder.customElements = customElements;
 
         CSSParser parser = new CSSParser(hp);
+        builder.cssParser = parser;
         parser.findStyles(hp.getRootNode());
         parser.applyStyles();
 

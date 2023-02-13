@@ -796,6 +796,7 @@ public class Builder {
 
     public String baseUrl = "";
     public WebDocument document;
+    public CSSParser cssParser;
     public java.awt.Frame windowFrame;
     public Vector<Node> scripts = new Vector<Node>();
 
