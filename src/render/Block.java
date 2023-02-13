@@ -2001,6 +2001,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             System.out.println();
         }
 
+        text_shadow_buffer = null;
+
         if (processImage()) return;
         if (processInput()) return;
 
@@ -2539,7 +2541,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         last_list_index = 0;
 
-        if (text_layer == null || list_item_type > 0 || textRenderingMode == 1 || textShadowColor != null) {
+        boolean paintShadow = textShadowColor != null && text_shadow_buffer == null;
+
+        if (text_layer == null || list_item_type > 0 || textRenderingMode == 1 || paintShadow) {
             renderText(g);
         } else {
             if (needToRestoreSelection) restoreSelection(g);
@@ -2875,7 +2879,36 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             sel[1] = -1;
         }
 
-        boolean render_chars = text_layer == null || textRenderingMode == 1 || textShadowColor != null;
+        boolean paintShadow = false;
+
+        if (textShadowColor != null && text_shadow_buffer == null) {
+            //text_shadow_buffer = new BufferedImage(viewport_width + delta * 2, viewport_height + delta * 2, BufferedImage.TYPE_INT_ARGB);
+            text_shadow_buffer = new BufferedImage(document.root.width, document.root.height, BufferedImage.TYPE_INT_ARGB);
+            for (int i = 0; i < parts.size(); i++) {
+                parts.get(i).text_shadow_buffer = text_shadow_buffer;
+            }
+            paintShadow = true;
+        }
+
+        if (text_shadow_layer == null) {
+            text_shadow_layer = new JPanel() {
+                @Override
+                public void paintComponent(Graphics g) {
+                    if (getParent() != null && getParent() instanceof Block) {
+                        if (((Block)getParent()).text_shadow_buffer != null) {
+                            g.drawImage(((Block)getParent()).text_shadow_buffer, 0, 0, null);
+                        }
+                    }
+                }
+            };
+            text_shadow_layer.setLayout(null);
+            add(text_shadow_layer);
+            text_shadow_layer.setBounds(0, 0, document.root.width, document.root.height);
+            text_shadow_layer.setOpaque(false);
+            setComponentZOrder(text_shadow_layer, getComponents().length-1);
+        }
+
+        boolean render_chars = text_layer == null || textRenderingMode == 1 || paintShadow;
 
         if (list_item_type > 0) {
             int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
@@ -2919,7 +2952,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         g.drawPolygon(x, y, 4);
                     }
                 }
-                else if (render_chars) processTextChar(g, c);
+                else if (render_chars) processTextChar(g, c, paintShadow);
             }
 
             else if (list_item_type >= 10 && list_item_type < 16) {
@@ -2953,7 +2986,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     offset += Math.round(getFontMetrics(font).getHeight() / 2);
                     c.setX(parent.list_max_offset - offset);
                     c.setY(paddings[0]);
-                    if (render_chars) processTextChar(g, c);
+                    if (render_chars) processTextChar(g, c, paintShadow);
                 }
             }
         }
@@ -2962,7 +2995,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 for (int j = 0; j < lines.get(i).elements.size(); j++) {
                     if (lines.get(i).elements.get(j) instanceof Character) {
                         Character c = (Character)lines.get(i).elements.get(j);
-                        processTextChar(g, c);
+                        processTextChar(g, c, paintShadow);
                     }
                 }
             }
@@ -2986,12 +3019,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean needToRestoreSelection = false;
 
-    private void processTextChar(Graphics g, Character c) {
-        if (textRenderingMode > 0) {
-            c.draw(g);
-            return;
-        }
-        if (textShadowColor != null) {
+    private void processTextChar(Graphics g, Character c, boolean paintShadow) {
+        
+        if (paintShadow) {
             AffineTransform t0 = ((Graphics2D)g).getTransform();
             AffineTransform t = ((AffineTransform)t0.clone());
             t.concatenate(AffineTransform.getTranslateInstance(textShadowOffset[0], fontSize > 28 ? textShadowOffset[1] - 2 : textShadowOffset[1]));
@@ -3003,38 +3033,46 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 c.setColor(new Color((int)(textShadowColor.getRed() * 0.95), (int)(textShadowColor.getGreen() * 0.95), (int)(textShadowColor.getBlue() * 0.95), (int)Math.min(255, textShadowColor.getAlpha() * 1.1)));
                 c.draw(g);
             } else {
+                BufferedImage bufferedImage = text_shadow_buffer;
+
                 int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
                 Font font = new Font(fontFamily, style, fontSize);
                 FontMetrics fm = getFontMetrics(font);
                 int w = fm.stringWidth(c.getText());
-                BufferedImage bufferedImage = new BufferedImage((int)(w * 1.8), (int)(fm.getHeight() * 1.8), BufferedImage.TYPE_INT_ARGB);
+                textShadowBlur = 3;
                 double sqr = textShadowBlur * textShadowBlur;
                 float[] data = new float[textShadowBlur * textShadowBlur];
                 for (int i = 0; i < data.length; i++) {
-                    data[i] = (float) (1f / sqr * 1.08);
+                    data[i] = (float) (1f / sqr * (1.15 + 0.01 * (double)fontSize / 20));
                 }
+                data[data.length / 2] = (float) (1f / sqr * 0.25);
                 Kernel kernel = new Kernel(textShadowBlur, textShadowBlur, data);
                 java.awt.image.BufferedImageOp op = new java.awt.image.ConvolveOp(kernel);
-                c.setColor(new Color(160, 160, 160));
                 //c.draw(bufferedImage.getGraphics());
 
                 Graphics2D g2d = (Graphics2D)bufferedImage.getGraphics();
-
+                g2d.setTransform(AffineTransform.getScaleInstance(1, 1.003));
                 g2d.setFont(font);
-                g2d.setColor(new Color(160, 160, 160, 160));
-                double q = 1 + (double) textShadowBlur / fontSize * 0.75;
-                g2d.setTransform(AffineTransform.getScaleInstance(q * (1 + (0.012 * textShadowBlur)), textShadowBlur < 4 ? q * 0.96 - (0.02 * (textShadowBlur-1)) : q * (0.88 - (0.02 * (textShadowBlur-4)))));
-                g2d.drawString(c.getText(), 0, fontSize < 28 ? fm.getHeight()-5 : fm.getHeight()-3);
+
+                //g2d.setColor(new Color((int)(textShadowColor.getRed() * 0.95), (int)(textShadowColor.getGreen() * 0.95), (int)(textShadowColor.getBlue() * 0.95), (int)Math.min(255, textShadowColor.getAlpha() * 1.3)));
+
+                g2d.setColor(textShadowColor);
+                g2d.drawString(c.getText(), (int) (_x_ + c.getX() + textShadowOffset[0]), (int) (_y_ + c.getY() + fm.getHeight() - 6 + textShadowOffset[1]));
                 bufferedImage = op.filter(bufferedImage, null);
-                double sx = fontSize < 28 ? 0.16 : (textShadowBlur > 2 ? 0.16 - (0.05 * (textShadowBlur-1)) : 0.07);
-                //t.concatenate(AffineTransform.getScaleInstance(1.3, 1.1));
-                g.drawImage(bufferedImage, (int)(c.getX() - sx * w), (int)(c.getY() - 0.03 * fm.getHeight()), null);
+                //double sx = fontSize < 28 ? 0.16 : (textShadowBlur > 2 ? 0.16 - (0.05 * (textShadowBlur-1)) : 0.07);
+                text_shadow_buffer = bufferedImage;
+                //g.drawImage(bufferedImage, -_x_, -_y_, null);
+                //g.drawImage(bufferedImage, (int)(c.getX() - sx * w), (int)(c.getY() - 0.03 * fm.getHeight()), null);
             }
             c.setColor(curCol);
             ((Graphics2D)g).setTransform(t0);
             if (textRenderingMode == 0 && c.glyph != null) {
                 return;
             }
+        }
+        if (textRenderingMode > 0) {
+            c.draw(text_shadow_buffer != null ? text_shadow_buffer.getGraphics() : g);
+            return;
         }
 
         int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
@@ -3089,6 +3127,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             add(text_layer);
             text_layer.setBounds(0, 0, b.getWidth(), b.getHeight());
             text_layer.setOpaque(false);
+            setComponentZOrder(text_layer, 0);
         }
 
         if (c.glyph == null) {
@@ -3402,19 +3441,32 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setTextShadow(Color color, int offsetX, int offsetY) {
-        setTextShadow(color, offsetX, offsetY, 0);
+        setTextShadow(color, offsetX, offsetY, 0, false);
     }
 
     public void setTextShadow(Color color, int offsetX, int offsetY, int blurRadius) {
+        setTextShadow(color, offsetX, offsetY, blurRadius, false);
+    }
+
+    public void setTextShadow(Color color, int offsetX, int offsetY, int blurRadius, boolean no_rec) {
         textShadowColor = color;
         textShadowOffset[0] = offsetX;
         textShadowOffset[1] = offsetY;
         textShadowBlur = blurRadius;
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).setTextShadow(color, offsetX, offsetY, blurRadius);
+        text_shadow_buffer  = null;
+        if (text_shadow_layer != null) {
+            remove(text_shadow_layer);
+            invalidate();
         }
-        if (document != null && document.ready) {
-            document.root.forceRepaintAll();
+        text_shadow_layer = null;
+        for (int i = 0; i < parts.size(); i++) {
+            parts.get(i).setTextShadow(color, offsetX, offsetY, blurRadius, true);
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setTextShadow(color, offsetX, offsetY, blurRadius, true);
+        }
+        if (document != null && document.ready && !no_rec) {
+            forceRepaint();
             document.repaint();
         }
     }
@@ -5715,8 +5767,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private static Vector<String> list_types = new Vector<String>();
 
     protected BufferedImage buffer;
+    protected BufferedImage text_shadow_buffer;
 
     public JPanel text_layer;
+    public JPanel text_shadow_layer;
 
     public int viewport_width;
     public int viewport_height;

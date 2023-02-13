@@ -336,7 +336,7 @@ public class LayoutTests extends JFrame {
 
         document.root.addElement(d2);
 
-        //document.root.setTextShadow(new Color(123, 123, 128, 90), 1, 1, 5);
+        document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 3);
 
         //d2.setBold(true);
         //d2.setItalic(true);
