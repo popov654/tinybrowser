@@ -111,6 +111,7 @@ public class HTMLElement extends JSObject {
         items.put("nodeValue", new JSString(node.nodeValue));
         items.put("textContent", new JSString(node.getTextContent()));
         items.put("nodeType", new JSInt(node.nodeType));
+        items.put("tagName", new JSString(node.tagName));
 
         Node parent = node != null ? node.parent : null;
         items.put("parentNode", parent != null ? HTMLElement.create(parent) : Null.getInstance());
