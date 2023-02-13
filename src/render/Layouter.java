@@ -164,6 +164,7 @@ public class Layouter {
                 b0.lines.get(0).setWidth(b0.lines.get(0).cur_pos);
                 b0.width = b0.borderWidth[3] + b0.paddings[3] + b0.lines.get(0).getWidth();
                 b0.viewport_width = b0.width;
+                b0.orig_width = (int)Math.floor(b0.width / b0.ratio);
             }
             Block tb = null;
             if (last_word > -1) {
@@ -192,6 +193,7 @@ public class Layouter {
             }
             b0.width = b0.borderWidth[3] + b0.paddings[3] + last.width;
             b0.viewport_width = b0.width;
+            b0.orig_width = (int)Math.floor(b0.width / b0.ratio);
             b0.parent.lines.lastElement().cur_pos = b0._getX() - b0.parent.lines.lastElement().getX() + b0.width;
             b0.parent.lines.lastElement().width = b0.parent.lines.lastElement().cur_pos;
 
@@ -255,6 +257,7 @@ public class Layouter {
             p.getLayouter().last_line = p.getLayouter().startNewLine(0, 0, b);
             b.width = p.getLayouter().last_line.getWidth();
             b.viewport_width = b.width;
+            b.orig_width = (int)Math.floor(b.width / b.ratio);
             p.getLayouter().last_line.addElement(b);
             index++;
         }
@@ -577,6 +580,7 @@ public class Layouter {
 
             if (!b.isImage) {
                 b.width = b.viewport_width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
+                b.orig_width = (int)Math.floor(b.width / b.ratio);
             } else {
                 b.performLayout();
             }
@@ -588,6 +592,7 @@ public class Layouter {
                 last_line = new_line;
                 b.width = last_line.getWidth() - b.margins[3];
                 b.viewport_width = b.width;
+                b.orig_width = (int)Math.floor(b.width / b.ratio);
             }
             b.no_draw = true;
 
@@ -617,12 +622,13 @@ public class Layouter {
             if (b.lines.size() == 0 && !b.isImage) {
                 b.width = b.borderWidth[3] + b.paddings[3] + b.paddings[1] + b.borderWidth[1];
                 b.viewport_width = b.width;
+                b.orig_width = (int)Math.floor(b.width / b.ratio);
                 int st = (b.text_bold || b.text_italic) ? ((b.text_bold ? Font.BOLD : 0) | (b.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
                 Font f = new Font(b.fontFamily, st, b.fontSize);
                 int fs = b.getFontMetrics(f).getHeight();
                 b.height = b.borderWidth[0] + b.paddings[0] + fs + b.paddings[2] + b.borderWidth[2];
                 b.viewport_height = b.height;
-                b.orig_width = (int)Math.round(b.width / b.ratio);
+                b.orig_height = (int)Math.floor(b.height / b.ratio);
             }
 
             if (block.pref_size < last_line.cur_pos) {

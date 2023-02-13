@@ -79,6 +79,7 @@ public class Line {
             Block b = (Block)d;
             if (b.auto_width) {
                 b.width = width - b.margins[3] - b.margins[1];
+                b.orig_width = (int)Math.floor(b.width / b.ratio);
             }
         }
 

@@ -98,10 +98,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         scale_borders = WebDocument.scale_borders;
 
         this.width = width > 0 ? (int)Math.round(width * ratio) : -1;
-        if (this.width < 0) this.auto_width = true;
+        if (this.width >= 0) {
+            this.orig_width = width;
+        } else {
+            this.auto_width = true;
+        }
         if (height >= 0) {
             auto_height = false;
             this.height = (int)Math.round(height * ratio);
+            this.orig_height = height;
         } else {
             this.height = -1;
             auto_height = true;
@@ -2002,6 +2007,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block root = childDocument.getRoot();
             root.width = root.viewport_width = width;
             root.height = root.viewport_height = height;
+            root.orig_width = (int)Math.floor(root.width / root.ratio);
+            root.orig_height = (int)Math.floor(root.height / root.ratio);
             document.panel.add(childDocument, 0);
             childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
             //childDocument.setOpaque(true);
@@ -2149,6 +2156,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if ((layouter.getBlock().cut & Cut.LEFT) > 0 && (layouter.getBlock().cut & Cut.RIGHT) == 0) {
             layouter.getBlock().width = layouter.getBlock().lines.get(0).getWidth() + paddings[1] + borderWidth[1];
             layouter.getBlock().viewport_width = layouter.getBlock().width;
+            layouter.getBlock().width = (int)Math.floor(layouter.getBlock().width / layouter.getBlock().ratio);
         }
         if (lines.size() > 0) {
             Line last = lines.lastElement();
@@ -2163,6 +2171,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 height = borderWidth[0] + paddings[0] + last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
                 viewport_width = width;
                 viewport_height = height;
+                orig_width = (int)Math.floor(width / ratio);
+                orig_height = (int)Math.floor(height / ratio);
             }
         }
         if (auto_height) {
