@@ -12,6 +12,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.event.ComponentListener;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Set;
@@ -387,20 +388,39 @@ public class Builder {
         }
     }
 
-    public void runScripts(HTMLParser document) {
+    public void compileScripts() {
+        HTMLParser parser = this.document.root.node.document;
+        compiledScripts.clear();
         for (Node script: scripts) {
             try {
                 String code = script.children.get(0).nodeValue;
                 JSParser jp = new JSParser(code);
                 Expression exp = Expression.create(jp.getHead());
-                ((jsparser.Block)exp).setDocument(document);
+                ((jsparser.Block)exp).setDocument(parser);
                 ((jsparser.Block)exp).setWindowFrame(windowFrame);
-                exp.eval();
+                compiledScripts.add(exp);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
+
+    public void runScripts() {
+        for (Expression exp: compiledScripts) {
+            exp.eval();
+        }
+    }
+
+    public void updateWindowObjects() {
+        for (Expression exp: compiledScripts) {
+            jsparser.Window window = (jsparser.Window)((jsparser.Block)exp).scope.get("window");
+            if (window.resizeListener != null) {
+                window.resizeListener.componentResized(new java.awt.event.ComponentEvent(windowFrame, java.awt.event.ComponentEvent.COMPONENT_RESIZED));
+            }
+        }
+    }
+
+    public Vector<Expression> compiledScripts = new Vector<Expression>();
 
     public void setWindowFrame(java.awt.Frame window) {
         this.windowFrame = window;

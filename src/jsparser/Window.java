@@ -1,5 +1,6 @@
 package jsparser;
 
+import bridge.Mapper;
 import htmlparser.HTMLParser;
 import java.awt.Frame;
 import java.util.HashMap;
@@ -355,6 +356,20 @@ public class Window extends JSObject {
     public void addPromise(Promise p) {
         promises.add(p);
     }
+
+    public java.awt.event.ComponentAdapter resizeListener = new java.awt.event.ComponentAdapter() {
+        @Override
+        public void componentMoved(java.awt.event.ComponentEvent evt) {}
+
+        @Override
+        public void componentResized(java.awt.event.ComponentEvent evt) {
+            render.Block b = Mapper.get(((HTMLElement)document.items.get("body")).node);
+            if (b != null) {
+                items.put("innerWidth", new JSInt((int)Math.floor((double)b.viewport_width / b.ratio)));
+                items.put("innerHeight", new JSInt((int)Math.floor((double)b.viewport_height / b.ratio)));
+            }
+        }
+    };
 
     private Block root;
     private HTMLParser parser;

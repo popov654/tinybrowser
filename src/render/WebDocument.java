@@ -320,6 +320,7 @@ public class WebDocument extends JPanel {
                 root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
                 root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
             }
+            root.orig_width = (int) (root.width / root.ratio);
             root.orig_height = (int) (root.height / root.ratio);
             root.max_height = root.height;
 

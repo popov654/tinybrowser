@@ -49,8 +49,6 @@ public class Reader {
 
         parser.applyGlobalRules(builder.baseUrl);
 
-        builder.runScripts(hp);
-
         return root;
     }
 
@@ -121,11 +119,15 @@ public class Reader {
                     @Override
                     public void componentResized(java.awt.event.ComponentEvent evt) {
                         document.resized();
+                        document.root.builder.updateWindowObjects();
                         if (!document.loadEventFired) {
+                            root.builder.runScripts();
                             document.fireLoadEvent();
                         }
                     }
                 });
+
+                root.builder.compileScripts();
 
                 frame.setVisible(true);
             }
