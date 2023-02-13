@@ -36,6 +36,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -2538,7 +2539,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         last_list_index = 0;
 
-        if (text_layer == null || list_item_type > 0 || textRenderingMode == 1) {
+        if (text_layer == null || list_item_type > 0 || textRenderingMode == 1 || textShadowColor != null) {
             renderText(g);
         } else {
             if (needToRestoreSelection) restoreSelection(g);
@@ -2874,7 +2875,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             sel[1] = -1;
         }
 
-        boolean render_chars = text_layer == null || textRenderingMode == 1;
+        boolean render_chars = text_layer == null || textRenderingMode == 1 || textShadowColor != null;
 
         if (list_item_type > 0) {
             int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
@@ -2990,6 +2991,52 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             c.draw(g);
             return;
         }
+        if (textShadowColor != null) {
+            AffineTransform t0 = ((Graphics2D)g).getTransform();
+            AffineTransform t = ((AffineTransform)t0.clone());
+            t.concatenate(AffineTransform.getTranslateInstance(textShadowOffset[0], fontSize > 28 ? textShadowOffset[1] - 2 : textShadowOffset[1]));
+            ((Graphics2D)g).setTransform(t);
+            g.setColor(textShadowColor);
+            Color curCol = this.color;
+            c.setColor(textShadowColor);
+            if (textShadowBlur <= 0) {
+                c.setColor(new Color((int)(textShadowColor.getRed() * 0.95), (int)(textShadowColor.getGreen() * 0.95), (int)(textShadowColor.getBlue() * 0.95), (int)Math.min(255, textShadowColor.getAlpha() * 1.1)));
+                c.draw(g);
+            } else {
+                int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+                Font font = new Font(fontFamily, style, fontSize);
+                FontMetrics fm = getFontMetrics(font);
+                int w = fm.stringWidth(c.getText());
+                BufferedImage bufferedImage = new BufferedImage((int)(w * 1.8), (int)(fm.getHeight() * 1.8), BufferedImage.TYPE_INT_ARGB);
+                double sqr = textShadowBlur * textShadowBlur;
+                float[] data = new float[textShadowBlur * textShadowBlur];
+                for (int i = 0; i < data.length; i++) {
+                    data[i] = (float) (1f / sqr * 1.08);
+                }
+                Kernel kernel = new Kernel(textShadowBlur, textShadowBlur, data);
+                java.awt.image.BufferedImageOp op = new java.awt.image.ConvolveOp(kernel);
+                c.setColor(new Color(160, 160, 160));
+                //c.draw(bufferedImage.getGraphics());
+
+                Graphics2D g2d = (Graphics2D)bufferedImage.getGraphics();
+
+                g2d.setFont(font);
+                g2d.setColor(new Color(160, 160, 160, 160));
+                double q = 1 + (double) textShadowBlur / fontSize * 0.75;
+                g2d.setTransform(AffineTransform.getScaleInstance(q * (1 + (0.012 * textShadowBlur)), textShadowBlur < 4 ? q * 0.96 - (0.02 * (textShadowBlur-1)) : q * (0.88 - (0.02 * (textShadowBlur-4)))));
+                g2d.drawString(c.getText(), 0, fontSize < 28 ? fm.getHeight()-5 : fm.getHeight()-3);
+                bufferedImage = op.filter(bufferedImage, null);
+                double sx = fontSize < 28 ? 0.16 : (textShadowBlur > 2 ? 0.16 - (0.05 * (textShadowBlur-1)) : 0.07);
+                //t.concatenate(AffineTransform.getScaleInstance(1.3, 1.1));
+                g.drawImage(bufferedImage, (int)(c.getX() - sx * w), (int)(c.getY() - 0.03 * fm.getHeight()), null);
+            }
+            c.setColor(curCol);
+            ((Graphics2D)g).setTransform(t0);
+            if (textRenderingMode == 0 && c.glyph != null) {
+                return;
+            }
+        }
+
         int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
         Font font = new Font(fontFamily, style, fontSize);
 
@@ -3044,7 +3091,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             text_layer.setOpaque(false);
         }
 
-        text_layer.add(label);
+        if (c.glyph == null) {
+            text_layer.add(label);
+        }
         c.glyph = label;
 
         boolean hidden = isPartlyHidden();
@@ -3350,6 +3399,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setWhiteSpace(int value) {
         white_space = value;
+    }
+
+    public void setTextShadow(Color color, int offsetX, int offsetY) {
+        setTextShadow(color, offsetX, offsetY, 0);
+    }
+
+    public void setTextShadow(Color color, int offsetX, int offsetY, int blurRadius) {
+        textShadowColor = color;
+        textShadowOffset[0] = offsetX;
+        textShadowOffset[1] = offsetY;
+        textShadowBlur = blurRadius;
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setTextShadow(color, offsetX, offsetY, blurRadius);
+        }
+        if (document != null && document.ready) {
+            document.root.forceRepaintAll();
+            document.repaint();
+        }
     }
 
     public void setFontFamily(String value, boolean skip_check) {
@@ -5200,6 +5267,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             d.text_underline = text_underline;
             d.text_strikethrough = text_strikethrough;
             d.linksUnderlineMode = linksUnderlineMode;
+            d.textShadowColor = textShadowColor;
+            d.textShadowOffset = textShadowOffset;
         }
         if (document != null && document.prevent_mixed_content) {
             normalizeContent();
@@ -5582,6 +5651,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean text_underline = false;
     public boolean text_strikethrough = false;
 
+    public Color textShadowColor = null;
+    public double[] textShadowOffset = {1, 1};
+    public int textShadowBlur = 0;
+
     public int text_align = 0;
     public int positioning = 0;
     public int overflow = 0;
@@ -5863,6 +5936,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.text_italic = this.text_italic;
         b.text_underline = this.text_underline;
         b.text_strikethrough = this.text_strikethrough;
+
+        b.textShadowColor = this.textShadowColor;
+        b.textShadowOffset = this.textShadowOffset;
+        b.textShadowBlur = this.textShadowBlur;
 
         b.letter_spacing = this.letter_spacing;
         b.word_spacing = this.word_spacing;
