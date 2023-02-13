@@ -484,9 +484,11 @@ public class Builder {
     public void reapplyDocumentStyles(CSSParser parser) {
         HTMLParser doc = parser.getDocument();
         HashMap<Node, Styles> map = StyleMap.getDocumentStyles(doc);
+        HashMap<Node, HashMap<String, String>> runtimeStyleMap = new HashMap<Node, HashMap<String, String>>();
         if (map != null) {
             Set<Node> nodes = map.keySet();
             for (Node node: nodes) {
+                runtimeStyleMap.put(node, map.get(node).runtimeStyles);
                 Block block = Mapper.get(node);
                 if (block != null) {
                     block.setBeforePseudoElement(null);
@@ -497,11 +499,25 @@ public class Builder {
         }
         StyleMap.removeDocumentStyles(doc);
         parser.applyStyles();
+        
+        map = StyleMap.getDocumentStyles(doc);
+        Set<Node> nodes = runtimeStyleMap.keySet();
+        for (Node node: nodes) {
+            if (runtimeStyleMap.get(node).isEmpty()) continue;
+            Styles st = map.get(node);
+            if (st == null) {
+                st = new Styles();
+                map.put(node, st);
+            }
+            st.runtimeStyles.putAll(runtimeStyleMap.get(node));
+        }
+        runtimeStyleMap.clear();
+
         resetStylesRecursive(document.root, false, true);
     }
 
     public void applyStyles(Node node, Block b) {
-        if (b instanceof render.ReplacedBlock) return;
+        if (b instanceof render.ReplacedBlock || node.nodeType != 1) return;
         Styles st = StyleMap.getNodeStyles(node);
         Set<String> keys = st.styles.keySet();
         for (String key: keys) {
@@ -525,7 +541,7 @@ public class Builder {
                 }
             }
         }
-        generatePseudoElements(node, b);
+        if (node.nodeType == 1) generatePseudoElements(node, b);
     }
 
     public void applyInlineStyles(Node node, Block b) {
@@ -551,7 +567,7 @@ public class Builder {
     public void resetStyles(Block b, boolean no_update, boolean force) {
         if (b instanceof render.ReplacedBlock) return;
         Styles st = StyleMap.getNodeStyles(b.node);
-        if (b.node == null || st.stateStyles.size() == 0 && !force) return;
+        if (b.node == null || st != null && st.stateStyles.size() == 0 && !force) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -629,7 +645,7 @@ public class Builder {
 
     public void applyStateStyles(Block b, boolean no_update) {
         Styles st = StyleMap.getNodeStyles(b.node);
-        if (b.node == null || st.stateStyles.size() == 0) return;
+        if (b.node == null || b.node.nodeType != 1 || st.stateStyles.size() == 0) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -707,6 +723,7 @@ public class Builder {
     }
 
     public void generatePseudoElements(Node node, Block b) {
+        if (node.nodeType != 1) return;
         Styles st = StyleMap.getNodeStyles(node);
         if (document == null) return;
         String content;

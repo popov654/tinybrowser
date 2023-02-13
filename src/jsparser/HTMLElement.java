@@ -138,6 +138,8 @@ public class HTMLElement extends JSObject {
         }
         items.put("children", children);
 
+        if (node.nodeType != 1) return;
+
         updateClassList();
         updateStyles();
         updateAttributesList();

@@ -19,7 +19,7 @@ public class StyleMap {
                 styles.put(node.document, map);
             }
             Styles s = map.get(node);
-            if (s == null) {
+            if (s == null && node.nodeType == 1) {
                 s = new Styles();
                 map.put(node, s);
             }
