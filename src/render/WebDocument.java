@@ -600,6 +600,7 @@ public class WebDocument extends JPanel {
     public boolean preserve_layout_on_copy = true;
     public boolean use_native_inputs = false;
     public boolean keep_root_scrollbars_outside = false;
+    public boolean return_size_for_inlines = true;
     public boolean highlight_text = false;
     public boolean smooth_borders = true;
     public double forced_dpi = 0;

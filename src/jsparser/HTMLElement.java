@@ -1,5 +1,6 @@
 package jsparser;
 
+import bridge.Mapper;
 import cssparser.StyleMap;
 import htmlparser.Node;
 import htmlparser.NodeActionCallback;
@@ -45,6 +46,10 @@ public class HTMLElement extends JSObject {
                 updateStyles();
                 updateAttributesList();
                 updateDataset();
+                return;
+            }
+            if (source.equals("render:layout")) {
+                updateSize();
                 return;
             }
             HashMap<String, String> data = e.getData();
@@ -446,6 +451,63 @@ public class HTMLElement extends JSObject {
     public void updateClassList() {
         NodeClassList classes = new NodeClassList(node);
         items.put("classList", classes);
+    }
+
+    public void updateSize() {
+        render.Block b0 = Mapper.get(node);
+        if (b0 == null) return;
+
+        render.Block b = b0.parts.size() == 0 ? b0 : b0.parts.get(0);
+
+        if (b0.parts.size() == 0) {
+            items.put("offsetWidth", new JSInt(b.orig_width));
+            items.put("clientWidth", new JSFloat(b.width > 0 ? (double) b.width / b.ratio : 0));
+            items.put("screenWidth", new JSInt(b.viewport_width));
+            items.put("offsetHeight", new JSInt(b.orig_height));
+            items.put("clientHeight", new JSFloat(b.height > 0 ? (double) b.height / b.ratio : 0));
+            items.put("screenHeight", new JSInt(b.viewport_height));
+        } else if (b.document.return_size_for_inlines || b.isImage) {
+            int w = 0, h = 0;
+
+            render.Line line = null;
+
+            for (int i = 0; i < b0.parts.size(); i++) {
+                w += b0.parts.get(i).width;
+                if (b0.parts.get(i).line != line) {
+                    h += b0.parts.get(i).height;
+                    line = b0.parts.get(i).line;
+                }
+            }
+
+            items.put("screenWidth", new JSInt(w));
+            items.put("screenHeight", new JSInt(h));
+
+            w = (int)Math.floor(w / b0.ratio);
+            h = (int)Math.floor(h / b0.ratio);
+
+            items.put("offsetWidth", new JSInt(w));
+            items.put("clientWidth", new JSInt(w));
+            items.put("offsetHeight", new JSInt(h));
+            items.put("clientHeight", new JSInt(h));
+        } else {
+            items.put("offsetWidth", new JSInt(0));
+            items.put("clientWidth", new JSInt(0));
+            items.put("screenWidth", new JSInt(0));
+            items.put("offsetHeight", new JSInt(0));
+            items.put("clientHeight", new JSInt(0));
+            items.put("screenHeight", new JSInt(0));
+        }
+
+        items.put("offsetX", new JSInt(b._x_ - (b.parent != null ? b.parent._x_ : 0)));
+        items.put("offsetY", new JSInt(b._y_ - (b.parent != null ? b.parent._y_ : 0)));
+        items.put("clientX", new JSInt(b._x_ - b.scroll_x));
+        items.put("clientY", new JSInt(b._y_ - b.scroll_y));
+        items.put("pageX", new JSInt(b._x_));
+        items.put("pageY", new JSInt(b._y_));
+
+        javax.swing.JFrame frame = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(b);
+        items.put("screenX", new JSInt(b.document != null ? b._x_ + b.document.getBounds().x + frame.getLocation().x : 0));
+        items.put("screenY", new JSInt(b.document != null ? b._y_ + b.document.getBounds().y + frame.getLocation().y : 0));
     }
 
     class addEventListenerFunction extends Function {

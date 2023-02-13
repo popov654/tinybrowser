@@ -2128,7 +2128,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (auto_height) {
                     viewport_height = height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
                 }
-                if (is_table_cell && auto_width) width = pref_size;
+                if (is_table_cell && auto_width) {
+                    width = pref_size;
+                    orig_width = (int)Math.floor(width / ratio);
+                }
             } else {
 
                 if (el.viewport_width == 0) el.viewport_width = el.width;
@@ -2156,7 +2159,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if ((layouter.getBlock().cut & Cut.LEFT) > 0 && (layouter.getBlock().cut & Cut.RIGHT) == 0) {
             layouter.getBlock().width = layouter.getBlock().lines.get(0).getWidth() + paddings[1] + borderWidth[1];
             layouter.getBlock().viewport_width = layouter.getBlock().width;
-            layouter.getBlock().width = (int)Math.floor(layouter.getBlock().width / layouter.getBlock().ratio);
+            layouter.getBlock().orig_width = (int)Math.floor(layouter.getBlock().width / layouter.getBlock().ratio);
         }
         if (lines.size() > 0) {
             Line last = lines.lastElement();
@@ -2210,6 +2213,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (this == document.root && this.children.size() > 0) {
             setZIndices();
             clipScrollbars();
+        }
+
+        if (node != null && display_type != Display.INLINE) {
+            node.fireEvent("layout", "render");
         }
         
         if (document.debug && display_type != Display.INLINE) {
