@@ -338,11 +338,11 @@ public class LayoutTests extends JFrame {
 
         /*
 
-        document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 0);
+        document.root.setTextShadow(new Color(123, 123, 128, 120), 1, 1, 0);
         Timer t1 = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 1);
+                document.root.setTextShadow(new Color(123, 123, 128, 120), 1, 1, 2);
             }
         });
         t1.setRepeats(false);
@@ -350,7 +350,7 @@ public class LayoutTests extends JFrame {
         Timer t2 = new Timer(3000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 2);
+                document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 4);
             }
         });
         t2.setRepeats(false);

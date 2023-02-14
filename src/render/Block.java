@@ -2880,10 +2880,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         boolean paintShadow = false;
-        //int delta = Math.max(8, textShadowBlur) + 4;
 
-        if (textShadowColor != null && text_shadow_buffer == null) {
-            //text_shadow_buffer = new BufferedImage(viewport_width + delta * 2, viewport_height + delta * 2, BufferedImage.TYPE_INT_ARGB);
+        if (textShadowColor != null && text_shadow_buffer == null && children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
             text_shadow_buffer = new BufferedImage(document.root.width, document.root.height, BufferedImage.TYPE_INT_ARGB);
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).text_shadow_buffer = text_shadow_buffer;
@@ -2897,7 +2895,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 public void paintComponent(Graphics g) {
                     if (getParent() != null && getParent() instanceof Block) {
                         if (((Block)getParent()).text_shadow_buffer != null) {
-                            //int delta = (text_shadow_buffer.getWidth() - viewport_width) / 2;
                             g.drawImage(((Block)getParent()).text_shadow_buffer, 0, 0, null);
                         }
                     }
@@ -3005,8 +3002,34 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 restoreSelection(g);
             }
         }
+        if (paintShadow && textShadowBlur > 0) {
+            blurTextShadow();
+        }
         //invalidate();
         document.repaint();
+    }
+
+    public void blurTextShadow() {
+        //long start = System.nanoTime();
+        java.awt.image.BufferedImageOp op = null;
+        int blur = 3;
+
+        double sqr = blur * blur;
+        float[] data = new float[blur * blur];
+        float q = (float) (blur == 3 ? 1.23 : 1.15);
+        float q2 = (float) (1f / sqr * (textShadowBlur == 3 ? 0.045 : (0.085 - (0.05 * textShadowBlur))));
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (float) (1f / sqr * (q - (0.003 * blur) + 0.01 * (double)fontSize / 20));
+        }
+        data[data.length / 2] = q2;
+        Kernel kernel = new Kernel(blur, blur, data);
+        op = new java.awt.image.ConvolveOp(kernel);
+
+        for (int i = 0; i < textShadowBlur; i++) {
+            text_shadow_buffer = op.filter(text_shadow_buffer, null);
+        }
+        //long end = System.nanoTime();
+        //System.out.println("Text blur finished in " + ((double) (end - start)) / 1000000  + "ms");
     }
 
     public void setNeedRestoreSelection(boolean value) {
@@ -3047,43 +3070,33 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 g2d.drawString(c.getText(), (int) (_x_ + c.getX() + textShadowOffset[0]), (int) (_y_ + c.getY() + fm.getHeight() - (int) (fontSize * 0.24)));
                 //g2d.drawString(c.getText(), (int) (-delta + c.getX()), (int) (-delta + c.getY() + fm.getHeight() - 6));
             } else {
-                BufferedImage bufferedImage = text_shadow_buffer;
 
                 int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
                 Font font = new Font(fontFamily, style, fontSize);
                 FontMetrics fm = getFontMetrics(font);
-                //int w = fm.stringWidth(c.getText());
-                int blur = textShadowBlur > 0 ? textShadowBlur * 2 + 1 : 0;
-
-                java.awt.image.BufferedImageOp op = null;
-                if (blur >= 3) {
-                    double sqr = blur * blur;
-                    float[] data = new float[blur * blur];
-                    float q = (float) (blur > 3 ? 1.15 : 1.23);
-                    float q2 = (float) (1f / sqr * (blur == 3 ? 0.012 : (0.085 - (0.08 * blur))));
-                    for (int i = 0; i < data.length; i++) {
-                        data[i] = (float) (1f / sqr * (q - (0.003 * blur) + 0.01 * (double)fontSize / 20));
-                    }
-                    data[data.length / 2] = q2;
-                    Kernel kernel = new Kernel(blur, blur, data);
-                    op = new java.awt.image.ConvolveOp(kernel);
-                }
+                
                 //c.draw(bufferedImage.getGraphics());
+                int blur = 5;
 
-                Graphics2D g2d = (Graphics2D)bufferedImage.getGraphics();
-                AffineTransform t2 = AffineTransform.getScaleInstance(1, 1 + (textShadowBlur <= 0 || fontSize < 28 ? 0.006 * (textShadowBlur-2) : -0.001 * fontSize / 2));
-                t2.concatenate(AffineTransform.getTranslateInstance(0, textShadowBlur <= 0 ? 0.64 * fontSize / 6 : 0.32 * fontSize / 6));
+                BufferedImage img = new BufferedImage(c.getWidth() + blur * 2, c.getHeight() + blur * 2, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2d = (Graphics2D)img.getGraphics();
+                g2d = (Graphics2D)text_shadow_buffer.getGraphics();
+                //Graphics2D g2d = (Graphics2D)bufferedImage.getGraphics();
+                AffineTransform t2 = AffineTransform.getScaleInstance(1, 1 + (textShadowBlur <= 0 || fontSize < 28 ? 0.006 * Math.max(1, textShadowBlur-3) : -0.001 * fontSize / 2));
+                t2.concatenate(AffineTransform.getTranslateInstance(0, textShadowBlur <= 0 ? 0.64 * fontSize / 6 : 0.28 * (fontSize + textShadowBlur) / 8));
                 g2d.setTransform(t2);
                 g2d.setFont(font);
 
                 //g2d.setColor(new Color((int)(textShadowColor.getRed() * 0.95), (int)(textShadowColor.getGreen() * 0.95), (int)(textShadowColor.getBlue() * 0.95), (int)Math.min(255, textShadowColor.getAlpha() * 1.3)));
-
+                
                 g2d.setColor(textShadowColor);
-                g2d.drawString(c.getText(), (int) (_x_ + c.getX() + textShadowOffset[0]), (int) (_y_ + c.getY() + fm.getHeight() - (int) (fontSize * 0.24)));
+                
+                //g2d.drawString(c.getText(), blur, blur);
+                int dy = textShadowBlur < 5 ? (int) ((fontSize + textShadowBlur) * 0.23) : (fontSize < 28 ? (int) ((fontSize + textShadowBlur) * 0.24) : (int) ((fontSize + textShadowBlur) * 0.15));
+                g2d.drawString(c.getText(), (int) (_x_ + c.getX() + textShadowOffset[0]), (int) (_y_ + c.getY() + fm.getHeight() - dy));
                 //g2d.drawString(c.getText(), (int) (-delta + c.getX()), (int) (-delta + c.getY() + fm.getHeight() - 6));
-                if (op != null) bufferedImage = op.filter(bufferedImage, null);
                 //double sx = fontSize < 28 ? 0.16 : (textShadowBlur > 2 ? 0.16 - (0.05 * (textShadowBlur-1)) : 0.07);
-                text_shadow_buffer = bufferedImage;
+                //text_shadow_buffer.getGraphics().drawImage(img, (int) (_x_ + c.getX() + textShadowOffset[0] - blur), (int) (_y_ + c.getY() + fm.getHeight() - (int) (fontSize * 0.24) - blur), null);
                 //g.drawImage(bufferedImage, -_x_, -_y_, null);
                 //g.drawImage(bufferedImage, (int)(c.getX() - sx * w), (int)(c.getY() - 0.03 * fm.getHeight()), null);
             }
