@@ -336,7 +336,27 @@ public class LayoutTests extends JFrame {
 
         document.root.addElement(d2);
 
-        document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 3);
+        /*
+
+        document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 0);
+        Timer t1 = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 1);
+            }
+        });
+        t1.setRepeats(false);
+        t1.start();
+        Timer t2 = new Timer(3000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                document.root.setTextShadow(new Color(123, 123, 128, 110), 1, 1, 2);
+            }
+        });
+        t2.setRepeats(false);
+        t2.start();
+
+        */
 
         //d2.setBold(true);
         //d2.setItalic(true);

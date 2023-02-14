@@ -2880,6 +2880,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         boolean paintShadow = false;
+        //int delta = Math.max(8, textShadowBlur) + 4;
 
         if (textShadowColor != null && text_shadow_buffer == null) {
             //text_shadow_buffer = new BufferedImage(viewport_width + delta * 2, viewport_height + delta * 2, BufferedImage.TYPE_INT_ARGB);
@@ -2896,6 +2897,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 public void paintComponent(Graphics g) {
                     if (getParent() != null && getParent() instanceof Block) {
                         if (((Block)getParent()).text_shadow_buffer != null) {
+                            //int delta = (text_shadow_buffer.getWidth() - viewport_width) / 2;
                             g.drawImage(((Block)getParent()).text_shadow_buffer, 0, 0, null);
                         }
                     }
@@ -3024,41 +3026,62 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (paintShadow) {
             AffineTransform t0 = ((Graphics2D)g).getTransform();
             AffineTransform t = ((AffineTransform)t0.clone());
-            t.concatenate(AffineTransform.getTranslateInstance(textShadowOffset[0], fontSize > 28 ? textShadowOffset[1] - 2 : textShadowOffset[1]));
+            t.concatenate(AffineTransform.getTranslateInstance(textShadowOffset[0] * ratio, textShadowOffset[1] * ratio));
             ((Graphics2D)g).setTransform(t);
             g.setColor(textShadowColor);
             Color curCol = this.color;
             c.setColor(textShadowColor);
-            if (textShadowBlur <= 0) {
+            //int delta = Math.min(8, textShadowBlur) + 4;
+            if (textShadowBlur < 0) {
                 c.setColor(new Color((int)(textShadowColor.getRed() * 0.95), (int)(textShadowColor.getGreen() * 0.95), (int)(textShadowColor.getBlue() * 0.95), (int)Math.min(255, textShadowColor.getAlpha() * 1.1)));
-                c.draw(g);
+                //c.draw(g);
+                BufferedImage bufferedImage = text_shadow_buffer;
+                Graphics2D g2d = (Graphics2D)bufferedImage.getGraphics();
+                //g2d.setTransform(AffineTransform.getScaleInstance(1, 1.003));
+
+                int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+                Font font = new Font(fontFamily, style, fontSize);
+                FontMetrics fm = getFontMetrics(font);
+                g2d.setFont(font);
+                g2d.setColor(textShadowColor);
+                g2d.drawString(c.getText(), (int) (_x_ + c.getX() + textShadowOffset[0]), (int) (_y_ + c.getY() + fm.getHeight() - (int) (fontSize * 0.24)));
+                //g2d.drawString(c.getText(), (int) (-delta + c.getX()), (int) (-delta + c.getY() + fm.getHeight() - 6));
             } else {
                 BufferedImage bufferedImage = text_shadow_buffer;
 
                 int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
                 Font font = new Font(fontFamily, style, fontSize);
                 FontMetrics fm = getFontMetrics(font);
-                int w = fm.stringWidth(c.getText());
-                textShadowBlur = 3;
-                double sqr = textShadowBlur * textShadowBlur;
-                float[] data = new float[textShadowBlur * textShadowBlur];
-                for (int i = 0; i < data.length; i++) {
-                    data[i] = (float) (1f / sqr * (1.15 + 0.01 * (double)fontSize / 20));
+                //int w = fm.stringWidth(c.getText());
+                int blur = textShadowBlur > 0 ? textShadowBlur * 2 + 1 : 0;
+
+                java.awt.image.BufferedImageOp op = null;
+                if (blur >= 3) {
+                    double sqr = blur * blur;
+                    float[] data = new float[blur * blur];
+                    float q = (float) (blur > 3 ? 1.15 : 1.23);
+                    float q2 = (float) (1f / sqr * (blur == 3 ? 0.012 : (0.085 - (0.08 * blur))));
+                    for (int i = 0; i < data.length; i++) {
+                        data[i] = (float) (1f / sqr * (q - (0.003 * blur) + 0.01 * (double)fontSize / 20));
+                    }
+                    data[data.length / 2] = q2;
+                    Kernel kernel = new Kernel(blur, blur, data);
+                    op = new java.awt.image.ConvolveOp(kernel);
                 }
-                data[data.length / 2] = (float) (1f / sqr * 0.25);
-                Kernel kernel = new Kernel(textShadowBlur, textShadowBlur, data);
-                java.awt.image.BufferedImageOp op = new java.awt.image.ConvolveOp(kernel);
                 //c.draw(bufferedImage.getGraphics());
 
                 Graphics2D g2d = (Graphics2D)bufferedImage.getGraphics();
-                g2d.setTransform(AffineTransform.getScaleInstance(1, 1.003));
+                AffineTransform t2 = AffineTransform.getScaleInstance(1, 1 + (textShadowBlur <= 0 || fontSize < 28 ? 0.006 * (textShadowBlur-2) : -0.001 * fontSize / 2));
+                t2.concatenate(AffineTransform.getTranslateInstance(0, textShadowBlur <= 0 ? 0.64 * fontSize / 6 : 0.32 * fontSize / 6));
+                g2d.setTransform(t2);
                 g2d.setFont(font);
 
                 //g2d.setColor(new Color((int)(textShadowColor.getRed() * 0.95), (int)(textShadowColor.getGreen() * 0.95), (int)(textShadowColor.getBlue() * 0.95), (int)Math.min(255, textShadowColor.getAlpha() * 1.3)));
 
                 g2d.setColor(textShadowColor);
-                g2d.drawString(c.getText(), (int) (_x_ + c.getX() + textShadowOffset[0]), (int) (_y_ + c.getY() + fm.getHeight() - 6 + textShadowOffset[1]));
-                bufferedImage = op.filter(bufferedImage, null);
+                g2d.drawString(c.getText(), (int) (_x_ + c.getX() + textShadowOffset[0]), (int) (_y_ + c.getY() + fm.getHeight() - (int) (fontSize * 0.24)));
+                //g2d.drawString(c.getText(), (int) (-delta + c.getX()), (int) (-delta + c.getY() + fm.getHeight() - 6));
+                if (op != null) bufferedImage = op.filter(bufferedImage, null);
                 //double sx = fontSize < 28 ? 0.16 : (textShadowBlur > 2 ? 0.16 - (0.05 * (textShadowBlur-1)) : 0.07);
                 text_shadow_buffer = bufferedImage;
                 //g.drawImage(bufferedImage, -_x_, -_y_, null);
