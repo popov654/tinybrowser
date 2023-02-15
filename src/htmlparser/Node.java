@@ -277,6 +277,7 @@ public class Node {
             this.children.get(i).parent = this;
         }
         node.removeSubtreeFromIndex();
+        node.setDocument(document);
         indexSubtree();
         return this;
     }
@@ -292,6 +293,7 @@ public class Node {
         this.parent = null;
         removeSubtreeFromIndex();
         this.children.clear();
+        node.setDocument(document);
         node.indexSubtree();
         return node;
     }
@@ -316,6 +318,13 @@ public class Node {
         while (n.parent != null) n = n.parent;
         if (n.document  == null) return;
         n.document.indexSubtree(this);
+    }
+
+    public void setDocument(HTMLParser doc) {
+        this.document = doc;
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setDocument(doc);
+        }
     }
 
     public boolean setTagName(String name) {
