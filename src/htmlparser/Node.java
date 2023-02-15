@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -213,6 +214,41 @@ public class Node {
             result += nodeValue + " ";
         }
         return result.trim();
+    }
+
+    public String getInnerHTML() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < children.size(); i++) {
+            if (children.get(i).nodeType == 1) {
+                sb.append(children.get(i).getOuterHTML());
+            } else {
+                if (children.get(i).nodeType == 3) sb.append(children.get(i).nodeValue);
+                else if (children.get(i).nodeType == 8) sb.append("<!-- " + children.get(i).nodeValue + " -->");
+            }
+        }
+        return sb.toString();
+    }
+
+    public String getOuterHTML() {
+        if (nodeType == 3) return nodeValue;
+        if (nodeType == 8) return "<!-- " + nodeValue + " -->";
+        StringBuilder sb = new StringBuilder();
+        sb.append("<" + tagName + (attributes.size() > 0 ? " " + getAttributeString() : "") + ">");
+        sb.append(getInnerHTML());
+        sb.append("</" + tagName + ">");
+        return sb.toString();
+    }
+
+    public String getAttributeString() {
+        StringBuilder sb = new StringBuilder();
+        Set<String> keys = attributes.keySet();
+        int count = 0;
+        for (String key: keys) {
+            if (count > 0) sb.append(" ");
+            sb.append(key + "=\"" + attributes.get(key) + "\"");
+            count++;
+        }
+        return sb.toString();
     }
 
     public boolean removeSubtree() {
