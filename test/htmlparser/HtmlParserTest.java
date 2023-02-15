@@ -41,18 +41,33 @@ public class HtmlParserTest {
     }
 
     @Test
-    public void basicIndex() {
+    public void basicTest() {
         System.out.println("----------------------------------");
         hp.printTree();
         System.out.println();
         System.out.println("----------------------------------");
-        
-        assertEquals("First child has Comment type", 8, hp.getRootNode().nthElementChild(2).firstChild().nodeType);
 
+        assertEquals("First child has Comment type", 8, hp.getRootNode().nthElementChild(2).firstChild().nodeType);
+        assertEquals("First element child has no previous element sibling", null, hp.getRootNode().firstElementChild().previousElementSibling());
+        assertEquals("Last element child has no next element sibling", null, hp.getRootNode().lastElementChild().nextElementSibling());
+
+        String innerHTML = hp.getRootNode().nthElementChild(2).firstElementChild().getInnerHTML();
+        System.out.println("Testing innerHTML mehod: " + innerHTML + " [OK]");
+        System.out.println();
+        assertEquals("Testing innerHTML mehod", "This is a paragraph with a <a href=\"#\" class=\"link red\" id=\"link\">link</a> inside and <span>another</span> <a href=\"#\">one</a>.", innerHTML);
+
+        String outerHTML = hp.getRootNode().nthElementChild(2).firstElementChild().firstElementChild().getOuterHTML();
+        System.out.println("Testing outerHTML mehod: " + outerHTML + " [OK]");
+        System.out.println();
+        assertEquals("Testing outerHTML mehod", "<a href=\"#\" class=\"link red\" id=\"link\">link</a>", outerHTML);
+    }
+
+    @Test
+    public void basicIndex() {
         System.out.println("Removing first child in <body> element");
         hp.getRootNode().nthElementChild(2).removeChild(1);
         System.out.println("Replacing innerHTML of <p> element");
-        hp.getRootNode().nthElementChild(2).firstElementChild().replaceInnerHTML("This is a paragraph with a <a href=\"#\" class=\"link red\" id=\"link\">link</a> inside and <span>another</span> <a href=\"#\">one</a>.");
+        hp.getRootNode().nthElementChild(2).firstElementChild().replaceInnerHTML("New paragraph with a <a href=\"#\" class=\"link red\" id=\"link\">link</a> inside and <span>another</span> <a href=\"#\">one</a>.");
         System.out.println("----------------------------------");
         System.out.println();
         hp.printTree();
@@ -115,5 +130,5 @@ public class HtmlParserTest {
         System.out.println("Checking class index: OK");
     }
 
-    private HTMLParser hp;
+    private static HTMLParser hp;
 }
