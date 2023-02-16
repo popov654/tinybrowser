@@ -351,6 +351,11 @@ public class HTMLElement extends JSObject {
                 return Undefined.getInstance();
             }
             String key = args.get(0).asString().getValue();
+            if (!key.matches("[a-z0-9_-]+")) {
+                JSError e = new JSError(null, "Uncaught DOMException: '" + key + "' is not a valid attribute name", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
             node.setAttribute(key, args.get(1).asString().getValue());
             updateAttributesList();
             updateClassList();
