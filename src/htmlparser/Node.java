@@ -490,6 +490,6 @@ public class Node {
     public String tagName = "";
     public int nodeType = 3;
     public String nodeValue = "";
-    public boolean defaultPrevented = true;
+    public boolean defaultPrevented = false;
     public HTMLParser document;
 }
