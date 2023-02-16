@@ -231,6 +231,28 @@ public class Builder {
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
                 Block b = Mapper.get(e.target);
+                b.textContent = e.target.nodeValue;
+                if (b.getChildren().size() == 1 && b.getChildren().get(0).type == Block.NodeTypes.TEXT) {
+                    b.getChildren().get(0).textContent = e.target.nodeValue;
+                }
+                if (e.target.nodeType == 3) {
+                    Block b0 = b;
+                    while (b0.display_type == Block.Display.INLINE) {
+                        b0 = b0.parent;
+                    }
+                    if (b0.parent != null) {
+                        b0.doIncrementLayout(b0.viewport_width, b0.viewport_height, false);
+                    } else {
+                        b0.performLayout();
+                    }
+                    b0.setNeedRestoreSelection(true);
+                    b.document.root.flushBuffersRecursively();
+                    b.document.root.forceRepaintAll();
+                    b.document.repaint();
+                    b0.setNeedRestoreSelection(false);
+                    //System.out.println("Test");
+                    return;
+                }
                 b.replaceSubtreeWith(builder.buildSubtree(document, node));
                 node.removeListener(this);
             }
@@ -716,6 +738,7 @@ public class Builder {
         if ((b == b.document.root || !no_rec) && !force) {
             b.document.smartUpdate(b, old_width, old_height);
         } else if (b == b.document.root) {
+            b.flushBuffersRecursively();
             b.performLayout();
             b.forceRepaintAll();
             document.repaint();

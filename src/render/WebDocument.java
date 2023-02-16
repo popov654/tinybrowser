@@ -1,5 +1,6 @@
 package render;
 
+import bridge.Mapper;
 import htmlparser.Node;
 import htmlparser.TagLibrary;
 import inspector.Entry;
@@ -276,6 +277,7 @@ public class WebDocument extends JPanel {
             } else {
                 b.parent.addText(b.textContent, index);
                 b.parent.children.get(index).node = b.node;
+                Mapper.add(b.node, b.parent.children.get(index));
                 if (debug) System.err.println("Added text, content: " + b.textContent);
             }
         } else {
@@ -564,20 +566,32 @@ public class WebDocument extends JPanel {
         onlyRepaint.add("border-color");
         onlyRepaint.add("color");
         onlyRepaint.add("cursor");
+
+        if (lastSetProperties == null) {
+            lastSetProperties = new HashSet<String>();
+        }
+
         Set<String> diff = new HashSet<String>(lastSetProperties);
         diff.removeAll(onlyRepaint);
 
         if (b.document.lastSetProperties == null || diff.size() > 0) {
-            b.doIncrementLayout(old_width, old_height, false);
+            if (b.parent != null) {
+                b.doIncrementLayout(old_width, old_height, false);
+            } else {
+                b.performLayout();
+            }
             b.setNeedRestoreSelection(true);
         }
-        b.forceRepaint();
+        b.document.root.flushBuffersRecursively();
+        b.document.root.forceRepaintAll();
         b.document.repaint();
         b.setNeedRestoreSelection(false);
 
         b.document.lastSetProperties.clear();
         b.document.lastSetProperties = null;
     }
+
+
 
     public String baseUrl = "";
 

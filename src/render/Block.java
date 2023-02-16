@@ -2060,6 +2060,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             text_layer = null;
         }
 
+        //if (beforePseudoElement != null) document.root.remove(beforePseudoElement);
+        //if (afterPseudoElement != null) document.root.remove(afterPseudoElement);
+
         content_x_max = 0;
         content_y_max = 0;
 
@@ -4273,7 +4276,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    private void removeTextLayers() {
+    public void removeTextLayers() {
         if (text_layer != null) {
             remove(text_layer);
         }

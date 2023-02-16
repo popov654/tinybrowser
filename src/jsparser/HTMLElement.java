@@ -527,6 +527,7 @@ public class HTMLElement extends JSObject {
         items.put("pageY", new JSInt(b._y_));
 
         javax.swing.JFrame frame = (javax.swing.JFrame) javax.swing.SwingUtilities.getWindowAncestor(b);
+        if (frame == null) return;
         items.put("screenX", new JSInt(b.document != null ? b._x_ + b.document.getBounds().x + frame.getLocation().x : 0));
         items.put("screenY", new JSInt(b.document != null ? b._y_ + b.document.getBounds().y + frame.getLocation().y : 0));
     }
@@ -664,6 +665,12 @@ public class HTMLElement extends JSObject {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
+        if (str.equals("nodeValue")) {
+            node.nodeValue = value.asString().getValue();
+            items.put("nodeValue", new JSString(node.nodeValue));
+            items.put("textContent", new JSString(node.getTextContent()));
+            node.fireEvent("valueChanged", "node");
+        }
         super.set(str, value);
     }
 
@@ -678,6 +685,12 @@ public class HTMLElement extends JSObject {
                 args.add(add ? value : items.get(str.getValue()));
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
+        }
+        if (str.getValue().equals("nodeValue")) {
+            node.nodeValue = value.asString().getValue();
+            items.put("nodeValue", new JSString(node.nodeValue));
+            items.put("textContent", new JSString(node.getTextContent()));
+            node.fireEvent("valueChanged", "node");
         }
         super.set(str, value);
     }

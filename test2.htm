@@ -76,8 +76,10 @@ window.addEventListener('load', function() {
 document.body.onclick = function() {
    if (!document.body.hasAttribute('user-id')) {
       document.body.setAttribute('user-id', '2')
+      document.getElementsByTagName('p')[0].firstChild.nodeValue = 'Test '
    } else {
       document.body.removeAttribute('user-id')
+      document.getElementsByTagName('p')[0].firstChild.nodeValue = 'This is a '
    }
    //document.body.onclick = null
 }
