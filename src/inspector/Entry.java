@@ -94,9 +94,7 @@ public class Entry extends javax.swing.JPanel {
             attributes.add(attr);
             //System.err.println(attr.getNameField() + ": " + attr.getValueField() + " -> " + (dim.width + attr.getWidth()));
         }
-        if (!attributesEnabled) {
-            attributes.setVisible(false);
-        }
+        attributes.setVisible(attributesEnabled);
         updateHeaderWidth();
     }
 
@@ -166,6 +164,19 @@ public class Entry extends javax.swing.JPanel {
             @Override
             public void nodeChanged(NodeEvent e, String source) {
                 if (!source.equals("inspector")) {
+                    attributes.removeAll();
+                    Set<String> keys = node.attributes.keySet();
+                    for (String key: keys) {
+                        Attribute attr = new Attribute(instance, key, node.attributes.get(key), callback);
+                        attributes.add(attr);
+                        //System.err.println(attr.getNameField() + ": " + attr.getValueField() + " -> " + (dim.width + attr.getWidth()));
+                    }
+                    attributes.setVisible(attributesEnabled);
+                    updateHeaderWidth();
+
+                    int w = Math.max(Math.max(Math.max(content.getPreferredSize().width, header.getPreferredSize().width), min_width), instance.getWidth());
+                    if (attributesEnabled) updateWidth(w);
+                    
                     System.out.println("Attributes changed!");
                 }
             }
@@ -370,7 +381,7 @@ public class Entry extends javax.swing.JPanel {
             height = getFontMetrics(content.getComponents()[0].getFont()).getHeight() * rows + 3;
         }
         int w = Math.max(Math.max(header.getPreferredSize().width, content.getPreferredSize().width), min_width);
-        //if (getParent().getSize().width > w) w = getParent().getSize().width;
+        if (getParent().getSize().width < w) w = getParent().getSize().width;
         return new Dimension(w, height);
     }
 
@@ -386,7 +397,7 @@ public class Entry extends javax.swing.JPanel {
 
     public void setWidth(int width) {
         int w = Math.max(Math.max(header.getMinimumSize().width, min_width), width);
-        if (getSize().width > w) return;
+        //if (getSize().width > w) return;
         setSize(new Dimension(w, getSize().height));
     }
 
@@ -404,20 +415,22 @@ public class Entry extends javax.swing.JPanel {
             //c.setPreferredSize(new Dimension(w, c.getPreferredSize().height));
             Component[] children = ((JPanel)c).getComponents();
             for (int i = 0; i < children.length; i++) {
-                if (children[i] instanceof Entry && children[i] != last && children[i].getSize().width < w) {
+                if (children[i] instanceof Entry && children[i] != last) {
                     ((Entry)children[i]).setWidth(w);
-                } else if (!(children[i] instanceof Entry) && children[i].getParent() != last && children[i].getSize().width < w) {
+                    ((Entry)children[i]).header.setPreferredSize(new Dimension(w, line_height));
+                    ((Entry)children[i]).footer.setPreferredSize(new Dimension(w, line_height));
+                } else if (!(children[i] instanceof Entry) && children[i].getParent() != last) {
                     children[i].setSize(w, children[i].getMaximumSize().height);
                     children[i].setMaximumSize(new Dimension(w, children[i].getMaximumSize().height));
                 }
             }
             w += margin;
-            w = Math.max(c.getParent().getSize().width, w);
+            //w = Math.max(c.getParent().getSize().width, w);
             //if (((Entry)c.getParent()).node.tagName.equals("body")) System.err.println("Root entry width: " + w);
             int h = line_height * 2 + ((Entry)c.getParent()).content.getSize().height;
             c.getParent().setSize(w, h);
-            ((Entry)c.getParent()).header.setSize(new Dimension(w, line_height));
-            ((Entry)c.getParent()).footer.setSize(new Dimension(w, line_height));
+            ((Entry)c.getParent()).header.setPreferredSize(new Dimension(w, line_height));
+            ((Entry)c.getParent()).footer.setPreferredSize(new Dimension(w, line_height));
             //((Entry)c.getParent()).content.setSize(new Dimension(w, ((Entry)c.getParent()).getSize().height - line_height * 2));
             last = (Entry)c.getParent();
             c = c.getParent().getParent();

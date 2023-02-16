@@ -73,10 +73,14 @@ window.addEventListener('load', function() {
    console.log("Viewport size: " + window.innerWidth + 'x' + window.innerHeight)
    console.log("Screen size: " + window.screen.width + 'x' + window.screen.height)
 }, false)
-/* document.body.onclick = function() {
-   console.log("Clicked!")
-   document.body.onclick = null
-} */
+document.body.onclick = function() {
+   if (!document.body.hasAttribute('user-id')) {
+      document.body.setAttribute('user-id', '2')
+   } else {
+      document.body.removeAttribute('user-id')
+   }
+   //document.body.onclick = null
+}
 </script>
 </head>
 <body onload="init()" data-test="1">
