@@ -284,7 +284,7 @@ public class Window extends JSObject {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
-        super.set(str, value);
+        items.put(str, value);
     }
 
     @Override
@@ -299,7 +299,7 @@ public class Window extends JSObject {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
-        super.set(str, value);
+        items.put(str.getValue(), value);
     }
 
     @Override
