@@ -335,7 +335,7 @@ public class JSParser {
                     t.prev = cur;
                     cur = t;
 
-                    if (ch != '\t' && ch != ' ') {
+                    if (!Character.isWhitespace(ch)) {
                         continue;
                     }
                 } /* else {
@@ -361,7 +361,7 @@ public class JSParser {
             //Reading a number literal (cont.)
             if (state == READ_NUMBER && !(ch == '.' || ch == 'E' || ch == 'e' || ch >= '0' && ch <= '9') &&
                     !(sign || (ch == '+' || ch == '-') && pos > 0 && data.substring(pos-1, pos).matches("[Ee]"))) {
-                if (ch == '\t' || ch == ' ' ||
+                if (Character.isWhitespace(ch) ||
                         substate == READ_OBJECT_VALUE && (ch == ',' || ch == '}') ||
                         substate == READ_ARRAY && ch == ',' ||
                         String.valueOf(ch).matches("[,()<>~^|&*/%!?;:+=-]")) {
@@ -371,11 +371,11 @@ public class JSParser {
                     cur.next = t;
                     t.prev = cur;
                     cur = t;
-                    if (ch != '\t' && ch != ' ') {
+                    if (!Character.isWhitespace(ch)) {
                         continue;
                     }
                 } else {
-                    System.err.println("Unexpected character " + ch + " on line " + line);
+                    System.err.println("Unexpected character '" + ch + "' on line " + line);
                     correct = false;
                     return;
                 }
