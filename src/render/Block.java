@@ -486,6 +486,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void flushBuffersRecursively() {
         buffer = null;
+        text_shadow_buffer = null;
         if (children == null) return;
         for (int i = 0; i < children.size(); i++) {
             children.get(i).flushBuffersRecursively();
@@ -2879,9 +2880,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             sel[1] = -1;
         }
 
+        if (isImage || isMedia || node != null && node.tagName.equals("svg")) return;
+
         boolean paintShadow = false;
 
-        if (textShadowColor != null && text_shadow_buffer == null && children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
+        if (textShadowColor != null && text_shadow_buffer == null && children.size() == 1 && children.get(0).type == NodeTypes.TEXT && textRenderingMode == 0) {
             text_shadow_buffer = new BufferedImage(document.root.width, document.root.height, BufferedImage.TYPE_INT_ARGB);
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).text_shadow_buffer = text_shadow_buffer;
@@ -2889,7 +2892,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             paintShadow = true;
         }
 
-        if (text_shadow_layer == null) {
+        if (text_shadow_layer == null && textRenderingMode == 0) {
             text_shadow_layer = new JPanel() {
                 @Override
                 public void paintComponent(Graphics g) {
@@ -2907,7 +2910,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setComponentZOrder(text_shadow_layer, getComponents().length-1);
         }
 
-        boolean render_chars = text_layer == null || textRenderingMode == 1 || paintShadow;
+        boolean render_chars = (text_layer == null || paintShadow) && textRenderingMode == 0 || textRenderingMode == 1;
 
         if (list_item_type > 0) {
             int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
@@ -3048,9 +3051,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         
         if (paintShadow) {
             AffineTransform t0 = ((Graphics2D)g).getTransform();
-            AffineTransform t = ((AffineTransform)t0.clone());
-            t.concatenate(AffineTransform.getTranslateInstance(textShadowOffset[0] * ratio, textShadowOffset[1] * ratio));
-            ((Graphics2D)g).setTransform(t);
+            //AffineTransform t = ((AffineTransform)t0.clone());
+            //t.concatenate(AffineTransform.getTranslateInstance(textShadowOffset[0] * ratio, textShadowOffset[1] * ratio));
+            //((Graphics2D)g).setTransform(t);
             g.setColor(textShadowColor);
             Color curCol = this.color;
             c.setColor(textShadowColor);
@@ -3076,11 +3079,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 FontMetrics fm = getFontMetrics(font);
                 
                 //c.draw(bufferedImage.getGraphics());
-                int blur = 5;
+                //int blur = 5;
 
-                BufferedImage img = new BufferedImage(c.getWidth() + blur * 2, c.getHeight() + blur * 2, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g2d = (Graphics2D)img.getGraphics();
-                g2d = (Graphics2D)text_shadow_buffer.getGraphics();
+                Graphics2D g2d = textRenderingMode == 0 ? (Graphics2D)text_shadow_buffer.getGraphics() : (Graphics2D)g;
                 //Graphics2D g2d = (Graphics2D)bufferedImage.getGraphics();
                 AffineTransform t2 = AffineTransform.getScaleInstance(1, 1 + (textShadowBlur <= 0 || fontSize < 28 ? 0.006 * Math.max(1, textShadowBlur-3) : -0.001 * fontSize / 2));
                 t2.concatenate(AffineTransform.getTranslateInstance(0, textShadowBlur <= 0 ? 0.64 * fontSize / 6 : 0.28 * (fontSize + textShadowBlur) / 8));
@@ -3107,7 +3108,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         if (textRenderingMode > 0) {
-            c.draw(text_shadow_buffer != null ? text_shadow_buffer.getGraphics() : g);
+            c.draw(g);
             return;
         }
 

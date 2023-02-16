@@ -533,11 +533,11 @@ public class Layouter {
 
             int index = 0;
             if (d.document != null) {
-                if (d.parts.size() > 0) {
+                if (d.parts.size() > 0 && d.parts.get(0).getParent() != null) {
                     Block p = d.parts.get(0);
                     index = p.getParent().getComponentZOrder(p) - d.parts.size() + 1;
                 } else {
-                    index = d.document.root.getComponentCount() - d.pos - 1;
+                    index = d.pos;
                 }
                 for (Block part: d.parts) {
                     if (part.bgImage != null && part.has_animation) {
