@@ -4056,6 +4056,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         double old_size_y = old_height > 0 ? (double) background_size_y / old_height : 1;
 
         if (layouter != null) {
+            document.inLayout = true;
             performLayout(true);
             if (viewport_height != old_height && bgImage != null) {
                 background_pos_x = (int) (old_pos_x * viewport_width);
@@ -4070,6 +4071,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 old_height = b.viewport_height;
                 b.performLayout(true);
             }
+            document.inLayout = false;
             // This will be called inside performLayout() for root element
             if (b != document.root) b.setZIndices();
 
@@ -4078,7 +4080,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         } else if (document.ready) {
             document.root.performLayout();
-            document.root.forceRepaint();
             if (viewport_height != old_height && bgImage != null) {
                 background_pos_x = (int) (old_pos_x * viewport_width);
                 background_pos_y = (int) (old_pos_y * viewport_height);
