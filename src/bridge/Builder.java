@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jsparser.Expression;
 import jsparser.JSParser;
+import jsparser.JSValue;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.apache.batik.swing.JSVGCanvas;
 import org.w3c.dom.DOMImplementation;
@@ -397,6 +398,11 @@ public class Builder {
                 String code = script.children.get(0).nodeValue;
                 JSParser jp = new JSParser(code);
                 Expression exp = Expression.create(jp.getHead());
+                if (scope == null) {
+                    scope = ((jsparser.Block)exp).scope;
+                } else {
+                    ((jsparser.Block)exp).scope = scope;
+                }
                 ((jsparser.Block)exp).setDocument(parser);
                 ((jsparser.Block)exp).setWindowFrame(windowFrame);
                 compiledScripts.add(exp);
@@ -422,6 +428,7 @@ public class Builder {
     }
 
     public Vector<Expression> compiledScripts = new Vector<Expression>();
+    public HashMap<String, JSValue> scope = null;
 
     public void setWindowFrame(java.awt.Frame window) {
         this.windowFrame = window;
