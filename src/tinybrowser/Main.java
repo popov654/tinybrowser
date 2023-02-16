@@ -171,7 +171,7 @@ public class Main {
     }
 
     public static void visualBuilderTest(Reader reader, Block root) {
-        reader.displayDocument(root, "Render Test");
+        reader.displayDocument(root, "Render Test", 460, 240);
         //documentResizeTest(frame, panel, document, 1000, 400);
     }
 

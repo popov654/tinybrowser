@@ -305,7 +305,7 @@ public class WebDocument extends JPanel {
         //panel.repaint();
         width = getWidth();
         height = getHeight();
-        borderSize = this.getBorder().getBorderInsets(this).left;
+        borderSize = this.getBorder() != null ? this.getBorder().getBorderInsets(this).left : 0;
         panel.setBounds(borderSize, borderSize, getWidth() - borderSize * 2, getHeight() - borderSize * 2);
         if (getWidth() != last_width || getHeight() != last_height) {
             //System.err.println("Size updated");
