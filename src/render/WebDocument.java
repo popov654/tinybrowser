@@ -78,6 +78,11 @@ public class WebDocument extends JPanel {
                 if (inspector != null) {
                     boolean is_opened = inspector.isVisible();
                     inspector.setVisible(!is_opened);
+                    if (is_opened && highlighted_block != null) {
+                        highlighted_block = null;
+                        root.forceRepaintAll();
+                        repaint();
+                    }
                     return;
                 }
                 JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(instance);
@@ -386,6 +391,11 @@ public class WebDocument extends JPanel {
 
             public void actionPerformed(ActionEvent e) {
                 frame.setVisible(false);
+                if (highlighted_block != null) {
+                    highlighted_block = null;
+                    root.forceRepaintAll();
+                    repaint();
+                }
             }
 
             public Object getValue(String key) {
