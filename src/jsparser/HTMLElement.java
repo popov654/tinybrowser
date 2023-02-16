@@ -21,18 +21,20 @@ public class HTMLElement extends JSObject {
     private HTMLElement(Node node) {
         this.node = node;
 
-        items.put("getElementById", new getElementByIdFunction());
-        items.put("getElementsByTagName", new getElementsByTagNameFunction());
-        items.put("getElementsByName", new getElementsByNameFunction());
-        items.put("getElementsByClassName", new getElementsByClassNameFunction());
+        if (node.nodeType == 1) {
+            items.put("getElementById", new getElementByIdFunction());
+            items.put("getElementsByTagName", new getElementsByTagNameFunction());
+            items.put("getElementsByName", new getElementsByNameFunction());
+            items.put("getElementsByClassName", new getElementsByClassNameFunction());
 
-        items.put("getAttribute", new getAttributeFunction());
-        items.put("hasAttribute", new hasAttributeFunction());
-        items.put("setAttribute", new setAttributeFunction());
-        items.put("removeAttribute", new removeAttributeFunction());
+            items.put("getAttribute", new getAttributeFunction());
+            items.put("hasAttribute", new hasAttributeFunction());
+            items.put("setAttribute", new setAttributeFunction());
+            items.put("removeAttribute", new removeAttributeFunction());
 
-        items.put("addEventListener", new addEventListenerFunction());
-        items.put("removeEventListener", new removeEventListenerFunction());
+            items.put("addEventListener", new addEventListenerFunction());
+            items.put("removeEventListener", new removeEventListenerFunction());
+        }
 
         node.addListener(eventListener, node, "any");
     }
@@ -41,7 +43,7 @@ public class HTMLElement extends JSObject {
 
         @Override
         public void nodeChanged(NodeEvent e, String source) {
-            if (!source.split(":")[0].equals("render")) {
+            if (!source.split(":")[0].equals("render") && e.target.nodeType == 1) {
                 updateClassList();
                 updateStyles();
                 updateAttributesList();
@@ -111,7 +113,9 @@ public class HTMLElement extends JSObject {
         items.put("nodeValue", new JSString(node.nodeValue));
         items.put("textContent", new JSString(node.getTextContent()));
         items.put("nodeType", new JSInt(node.nodeType));
-        items.put("tagName", new JSString(node.tagName));
+        if (node.nodeType == 1) {
+            items.put("tagName", new JSString(node.tagName));
+        }
 
         Node parent = node != null ? node.parent : null;
         items.put("parentNode", parent != null ? HTMLElement.create(parent) : Null.getInstance());
@@ -123,6 +127,15 @@ public class HTMLElement extends JSObject {
         items.put("previousElementSibling", prev_el != null ? HTMLElement.create(prev_el) : Null.getInstance());
         Node next_el = node != null ? node.nextElementSibling() : null;
         items.put("nextElementSibling", next_el != null ? HTMLElement.create(next_el) : Null.getInstance());
+
+        Node first_child = node != null ? node.firstChild() : null;
+        items.put("firstChild", first_child != null ? HTMLElement.create(first_child) : Null.getInstance());
+        Node last_child = node != null ? node.lastChild() : null;
+        items.put("lastChild", last_child != null ? HTMLElement.create(last_child) : Null.getInstance());
+        Node first_el_child = node != null ? node.firstElementChild() : null;
+        items.put("firstElementChild", first_el_child != null ? HTMLElement.create(first_el_child) : Null.getInstance());
+        Node last_el_child = node != null ? node.lastElementChild() : null;
+        items.put("lastElementChild", last_el_child != null ? HTMLElement.create(last_el_child) : Null.getInstance());
 
         JSArray childNodes = new JSArray();
         for (Node child: node.children) {
