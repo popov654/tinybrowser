@@ -189,6 +189,7 @@ public class WebDocument extends JPanel {
 
         root.addMouseListeners();
 
+        ready = false;
         layouter.setCurrentBlock(root);
         root.setBackgroundColor(new Color(255, 255, 255));
         root.overflow = Block.Overflow.SCROLL;
@@ -196,6 +197,7 @@ public class WebDocument extends JPanel {
         if (glass != null) {
             panel.setComponentZOrder(glass, 0);
         }
+        ready = true;
     }
 
     public void setWidth(int value) {
@@ -339,13 +341,14 @@ public class WebDocument extends JPanel {
             //System.err.println("Root width: " + root.width);
             //System.err.println("Viewport width: " + root.viewport_width);
             if (root.document.ready && !resizing) {
+                resizing = true;
                 if (root.builder != null) {
                     root.builder.reapplyDocumentStyles(this);
+                } else {
+                    root.flushBuffersRecursively();
+                    root.performLayout();
+                    root.forceRepaint();
                 }
-                resizing = true;
-                root.flushBuffersRecursively();
-                root.performLayout();
-                root.forceRepaint();
                 resizing = false;
                 getParent().repaint();
             }
