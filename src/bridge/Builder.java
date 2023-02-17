@@ -763,6 +763,7 @@ public class Builder {
         String content;
 
         if (st.beforeStyles.size() > 0) {
+            b.setBeforePseudoElement(null);
             Node n = new Node(1);
             n.parent = node;
             node.beforeNode = n;
@@ -789,6 +790,7 @@ public class Builder {
         }
 
         if (st.afterStyles.size() > 0) {
+            b.setAfterPseudoElement(null);
             Node n = new Node(1);
             n.parent = node;
             node.afterNode = n;

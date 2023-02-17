@@ -294,7 +294,7 @@ public class WebDocument extends JPanel {
         }
         if (b.builder != null) {
             b.builder.document = this;
-            b.builder.generatePseudoElements(b.node, b);
+            //b.builder.generatePseudoElements(b.node, b);
         }
         if (b.getComponents().length == 1 && b.getComponents()[0] instanceof JSVGCanvas) {
             b.getComponents()[0].addMouseListener(b);
@@ -582,7 +582,6 @@ public class WebDocument extends JPanel {
             }
             b.setNeedRestoreSelection(true);
         }
-        b.document.root.flushBuffersRecursively();
         b.document.root.forceRepaintAll();
         b.document.repaint();
         b.setNeedRestoreSelection(false);

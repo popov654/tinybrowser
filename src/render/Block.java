@@ -347,6 +347,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         document.isPainting = true;
         buffer = null;
+        removeTextLayers();
         invalidate();
         draw();
         document.isPainting = false;
@@ -355,6 +356,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public synchronized void forceRepaint(Graphics g) {
         document.isPainting = true;
         buffer = null;
+        removeTextLayers();
         draw();
         document.isPainting = false;
     }
@@ -487,6 +489,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void flushBuffersRecursively() {
         buffer = null;
         text_shadow_buffer = null;
+        if (text_layer != null) {
+            remove(text_layer);
+            text_layer = null;
+        }
+        for (int i = 0; i < parts.size(); i++) {
+            if (parts.get(i).text_layer != null) {
+                parts.get(i).remove(parts.get(i).text_layer);
+                parts.get(i).text_layer = null;
+            }
+        }
         if (children == null) return;
         for (int i = 0; i < children.size(); i++) {
             children.get(i).flushBuffersRecursively();
@@ -2895,26 +2907,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             paintShadow = true;
         }
 
-        if (text_shadow_layer == null && textRenderingMode == 0) {
-            text_shadow_layer = new JPanel() {
-                @Override
-                public void paintComponent(Graphics g) {
-                    if (getParent() != null && getParent() instanceof Block) {
-                        if (((Block)getParent()).text_shadow_buffer != null) {
-                            g.drawImage(((Block)getParent()).text_shadow_buffer, 0, 0, null);
-                        }
-                    }
-                }
-            };
-            text_shadow_layer.setLayout(null);
-            add(text_shadow_layer);
-            text_shadow_layer.setBounds(0, 0, document.root.width, document.root.height);
-            text_shadow_layer.setOpaque(false);
-            setComponentZOrder(text_shadow_layer, getComponents().length-1);
-        }
+        boolean paintChars = text_layer == null || textRenderingMode == 1;
 
-        boolean render_chars = (text_layer == null || paintShadow) && textRenderingMode == 0 || textRenderingMode == 1;
+        prepareTextLayers();
 
+        boolean render_chars = paintChars || paintShadow;
+        
         if (list_item_type > 0) {
             int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             Font font = new Font("Tahoma", style, fontSize);
@@ -2957,7 +2955,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         g.drawPolygon(x, y, 4);
                     }
                 }
-                else if (render_chars) processTextChar(g, c, paintShadow);
+                else if (render_chars) processTextChar(g, c, paintShadow, paintChars);
             }
 
             else if (list_item_type >= 10 && list_item_type < 16) {
@@ -2991,7 +2989,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     offset += Math.round(getFontMetrics(font).getHeight() / 2);
                     c.setX(parent.list_max_offset - offset);
                     c.setY(paddings[0]);
-                    if (render_chars) processTextChar(g, c, paintShadow);
+                    if (render_chars) processTextChar(g, c, paintShadow, paintChars);
                 }
             }
         }
@@ -3000,7 +2998,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 for (int j = 0; j < lines.get(i).elements.size(); j++) {
                     if (lines.get(i).elements.get(j) instanceof Character) {
                         Character c = (Character)lines.get(i).elements.get(j);
-                        processTextChar(g, c, paintShadow);
+                        processTextChar(g, c, paintShadow, paintChars);
                     }
                 }
             }
@@ -3013,6 +3011,42 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         //invalidate();
         document.repaint();
+    }
+
+    private void prepareTextLayers() {
+        if (textRenderingMode == 1) return;
+
+        if (text_shadow_layer == null) {
+            text_shadow_layer = new JPanel() {
+                @Override
+                public void paintComponent(Graphics g) {
+                    if (getParent() != null && getParent() instanceof Block) {
+                        if (((Block)getParent()).text_shadow_buffer != null) {
+                            g.drawImage(((Block)getParent()).text_shadow_buffer, 0, 0, null);
+                        }
+                    }
+                }
+            };
+            text_shadow_layer.setLayout(null);
+            add(text_shadow_layer);
+            text_shadow_layer.setBounds(0, 0, document.root.width, document.root.height);
+            text_shadow_layer.setOpaque(false);
+            setComponentZOrder(text_shadow_layer, getComponents().length-1);
+        }
+
+        Block b = this;
+        while (b.parent != null && !b.transform) {
+            b = b.parent;
+        }
+
+        if (text_layer == null) {
+            text_layer = new JPanel();
+            text_layer.setLayout(null);
+            add(text_layer);
+            text_layer.setBounds(0, 0, b.getWidth(), b.getHeight());
+            text_layer.setOpaque(false);
+            setComponentZOrder(text_layer, 0);
+        }
     }
 
     public void blurTextShadow() {
@@ -3050,7 +3084,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean needToRestoreSelection = false;
 
-    private void processTextChar(Graphics g, Character c, boolean paintShadow) {
+    private void processTextChar(Graphics g, Character c, boolean paintShadow, boolean paintText) {
         
         if (paintShadow) {
             AffineTransform t0 = ((Graphics2D)g).getTransform();
@@ -3106,12 +3140,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             c.setColor(curCol);
             ((Graphics2D)g).setTransform(t0);
-            if (textRenderingMode == 0 && c.glyph != null) {
+            if (textRenderingMode == 0 && !paintText) {
                 return;
             }
         }
         if (textRenderingMode > 0) {
-            c.draw(g);
+            if (paintText) {
+                c.draw(g);
+            }
             return;
         }
 
@@ -3161,18 +3197,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
-        if (text_layer == null) {
-            text_layer = new JPanel();
-            text_layer.setLayout(null);
-            add(text_layer);
-            text_layer.setBounds(0, 0, b.getWidth(), b.getHeight());
-            text_layer.setOpaque(false);
-            setComponentZOrder(text_layer, 0);
-        }
-
-        if (c.glyph == null) {
-            text_layer.add(label);
-        }
+        text_layer.add(label);
         c.glyph = label;
 
         boolean hidden = isPartlyHidden();
@@ -4279,12 +4304,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void removeTextLayers() {
         if (text_layer != null) {
             remove(text_layer);
+            text_layer = null;
+        }
+        for (int i = 0; i < parts.size(); i++) {
+            parts.get(i).removeTextLayers();
         }
         for (int i = 0; i < children.size(); i++) {
             children.get(i).removeTextLayers();
-            for (int j = 0; j < children.get(i).parts.size(); j++) {
-                children.get(i).parts.get(j).removeTextLayers();
-            }
         }
     }
 
