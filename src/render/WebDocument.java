@@ -580,11 +580,11 @@ public class WebDocument extends JPanel {
             } else {
                 b.performLayout();
             }
-            b.setNeedRestoreSelection(true);
         }
+        b.document.root.setNeedRestoreSelection(true);
         b.document.root.forceRepaintAll();
         b.document.repaint();
-        b.setNeedRestoreSelection(false);
+        b.document.root.setNeedRestoreSelection(false);
 
         b.document.lastSetProperties.clear();
         b.document.lastSetProperties = null;

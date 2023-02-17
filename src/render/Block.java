@@ -1984,6 +1984,38 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return true;
     }
 
+    public void saveSelectionRange() {
+        int from = -1;
+        int to = -1;
+        int len = 0;
+        if (parts.size() > 0) {
+            for (int i = 0; i < parts.size(); i++) {
+                if (parts.get(i).sel == null) parts.get(i).sel = new int[] {-1, -1};
+                if ((parts.get(i).sel[0] < 0 || from >= 0) && parts.get(i).sel[1] < 0) {
+                    if (parts.get(i).children.size() > 0) {
+                        len += parts.get(i).children.get(0).textContent.length();
+                    }
+                    continue;
+                }
+                if (parts.get(i).sel[0] > 0 && from < 0) {
+                    from = len;
+                    len = 0;
+                    if (parts.get(i).children.size() > 0) {
+                        len += parts.get(i).children.get(0).textContent.length() - parts.get(i).sel[0];
+                    }
+                }
+                if (parts.get(i).sel[1] > 0 && from >= 0) {
+                    if (parts.get(i).children.size() > 0) {
+                        len += parts.get(i).sel[1];
+                    }
+                    to = len;
+                    break;
+                }
+            }
+            sel = new int[] {from, to};
+        }
+    }
+
     public synchronized void performLayout() {
         if (document == null) return;
         if (document.inLayout && this == document.root) {
@@ -5618,6 +5650,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return buffer;
     }
 
+    public int[] getSelection() {
+        return sel;
+    }
+
+    public void setSelection(int[] range) {
+        sel = range;
+    }
+
     private float platform = 6.1f;
 
     public String textContent;
@@ -6197,6 +6237,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block[] blocks = new Block[document.root.layer_list.size()];
         document.root.layer_list.toArray(blocks);
 
+        if (beforePseudoElement != null) {
+            for (int i = 0; i < beforePseudoElement.parts.size(); i++) {
+                beforePseudoElement.parts.get(i).mouseClicked(e);
+            }
+        }
+
         if (!(children.size() == 1 && children.get(0).type == NodeTypes.TEXT)) {
             for (int i = 0; i < blocks.length; i++) {
                 Block b = blocks[i].original != null ? blocks[i].original : blocks[i];
@@ -6207,11 +6253,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+        if (afterPseudoElement != null) {
+            for (int i = 0; i < afterPseudoElement.parts.size(); i++) {
+                afterPseudoElement.parts.get(i).mouseClicked(e);
+            }
+        }
+
         boolean isSVG = getComponents().length == 1 && getComponents()[0] instanceof JSVGCanvas;
 
-        if (isMouseInside(e.getX(), e.getY()) || isSVG && isMouseInside(_x_ + e.getX(), _y_ + e.getY())) {
+        long last = original == null ? last_click : original.last_click;
+
+        if (isMouseInside(e.getX(), e.getY()) && !isPseudoElement() || isSVG && isMouseInside(_x_ + e.getX(), _y_ + e.getY())) {
             fireEventForNode(e, node, null, "click");
-            if (System.currentTimeMillis() - last_click < 320) {
+            if (System.currentTimeMillis() - last < 320) {
                 fireEventForNode(e, node, null, "doubleClick");
             }
             if (node != null && document.eventsFired.get(node) != null) {
@@ -6281,7 +6335,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (textRenderingMode == 0 && (text_layer == null || text_layer.getComponents().length == 0)) {
             return;
         }
-        if (System.currentTimeMillis() - last_click < 320 && select_enabled) {
+
+        if (System.currentTimeMillis() - last < 320 && select_enabled) {
             int x = e.getX();
             int y = e.getY();
             if (textRenderingMode == 1) {
@@ -6364,7 +6419,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
-        last_click = System.currentTimeMillis();
+        if (original == null) {
+            last_click = System.currentTimeMillis();
+        } else {
+            original.last_click = System.currentTimeMillis();
+        }
     }
 
     public void mousePressed(MouseEvent e) {

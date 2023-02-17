@@ -531,6 +531,8 @@ public class Layouter {
             return;
         } else if (d.display_type == Block.Display.INLINE) {
 
+            int[][] selection = new int[d.parts.size()][2];
+
             int index = 0;
             if (d.document != null) {
                 if (d.parts.size() > 0 && d.parts.get(0).getParent() != null) {
@@ -539,10 +541,14 @@ public class Layouter {
                 } else {
                     index = d.pos;
                 }
-                for (Block part: d.parts) {
+                for (int i = 0; i < d.parts.size(); i++) {
+                    Block part = d.parts.get(i);
                     if (part.bgImage != null && part.has_animation) {
                         part.stopWatcher();
                     }
+                    int[] sel = part.getSelection();
+                    selection[i][0] = sel != null ? sel[0] : -1;
+                    selection[i][1] = sel != null ? sel[1] : -1;
                     d.document.root.remove(part);
                 }
                 if (d.parts.size() > 0) d.document.root.add(d, index);
@@ -636,6 +642,12 @@ public class Layouter {
             }
             if (block.min_size < last_line.cur_pos) {
                 block.min_size = last_line.cur_pos;
+            }
+
+            for (int i = 0; i < d.parts.size(); i++) {
+                if (i < selection.length && selection[i][0] > -1 && selection[i][1] > -1) {
+                    d.parts.get(i).setSelection(selection[i]);
+                }
             }
 
             if (d.getParent() != null) {
