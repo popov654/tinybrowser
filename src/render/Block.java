@@ -347,7 +347,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         document.isPainting = true;
         buffer = null;
-        removeTextLayers();
         invalidate();
         draw();
         document.isPainting = false;
@@ -356,7 +355,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public synchronized void forceRepaint(Graphics g) {
         document.isPainting = true;
         buffer = null;
-        removeTextLayers();
         draw();
         document.isPainting = false;
     }
@@ -3398,9 +3396,31 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return Color.decode(value.toUpperCase());
     }
 
+    public void updateTextLayer() {
+        if (text_layer != null) {
+            Component[] c = text_layer.getComponents();
+            for (int i = 0; i < c.length; i++) {
+                if (!(sel != null && i >= sel[0] && i <= sel[1]) && c[i] instanceof JLabel) {
+                    ((JLabel)c[i]).setForeground(color);
+                }
+            }
+        }
+        for (int i = 0; i < parts.size(); i++) {
+            parts.get(i).color = this.color;
+            parts.get(i).updateTextLayer();
+        }
+    }
+
     public void setTextColor(Color col) {
         color = col;
-        forceRepaint();
+        if (this.textRenderingMode == 0) {
+            updateTextLayer();
+        } else {
+            forceRepaint();
+        }
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setBackgroundColor(Color col) {
@@ -3589,9 +3609,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             children.get(i).setFontFamily(value, true);
         }
         
-        doIncrementLayout(viewport_width, viewport_height, false);
+        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        if (b != null && !no_draw) b.forceRepaint();
         if (document != null && document.ready) {
-            document.root.forceRepaintAll();
             document.repaint();
         }
     }
@@ -3609,9 +3629,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFontSizePx(value);
         }
-        doIncrementLayout(viewport_width, viewport_height, false);
+        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        if (b != null && !no_draw) b.forceRepaint();
         if (document != null && document.ready) {
-            document.root.forceRepaintAll();
             document.repaint();
         }
     }
@@ -3682,9 +3702,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setTextColor(String value) {
         Color col = value != null ? parseColor(value) : default_color;
         if (col != null) {
-            for (Block part: parts) {
-                part.setTextColor(col);
-            }
             setTextColor(col);
             for (int i = 0; i < children.size(); i++) {
                 children.get(i).setTextColor(col);
@@ -3843,8 +3860,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         margins[2] = (int)Math.round(c*ratio);
         margins[3] = (int)Math.round(d*ratio);
 
-        doIncrementLayout(viewport_width, viewport_height, false);
-        forceRepaint();
+        Block block = doIncrementLayout(viewport_width, viewport_height, false);
+        if (block != null && !no_draw) block.forceRepaint();
     }
 
     public void setMargins(int a, int b, int c) {
@@ -3865,8 +3882,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         paddings[2] = (int)Math.round(c*ratio);
         paddings[3] = (int)Math.round(d*ratio);
 
-        doIncrementLayout(viewport_width, viewport_height, false);
-        forceRepaint();
+        Block block = doIncrementLayout(viewport_width, viewport_height, false);
+        if (block != null && !no_draw) block.forceRepaint();
     }
 
     public void setPaddings(int a, int b, int c) {
@@ -3944,7 +3961,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 width = max_width;
             }
             auto_width = width < 0;
-            doIncrementLayout(old_width, old_height, no_recalc);
+            Block b = doIncrementLayout(old_width, old_height, no_recalc);
+            if (b != null && !no_draw) {
+                b.forceRepaint();
+            }
             return;
         }
 
@@ -3984,10 +4004,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (no_recalc) return;
 
-        doIncrementLayout(old_width, old_height, no_recalc);
+        Block b = doIncrementLayout(old_width, old_height, no_recalc);
 
-        if (!no_draw) {
-            forceRepaint();
+        if (b != null && !no_draw) {
+            b.forceRepaint();
         }
     }
 
@@ -4035,10 +4055,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setAutoYMargin();
         }
 
-        doIncrementLayout(old_width, old_height, false);
+        Block b = doIncrementLayout(old_width, old_height, false);
 
-        if (!no_draw) {
-            forceRepaint();
+        if (b != null && !no_draw) {
+            b.forceRepaint();
         }
     }
 
@@ -4056,6 +4076,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             max_height = height;
             auto_height = false;
             doIncrementLayout(old_width, old_height, no_recalc);
+            Block b = doIncrementLayout(old_width, old_height, no_recalc);
+            if (b != null && !no_draw) {
+                b.forceRepaint();
+            }
             return;
         }
         
@@ -4082,10 +4106,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setAutoYMargin();
         }
         
-        doIncrementLayout(old_width, old_height, no_recalc);
+        Block b = doIncrementLayout(old_width, old_height, no_recalc);
         
-        if (!no_draw) {
-            forceRepaint();
+        if (b != null && !no_draw) {
+            b.forceRepaint();
         }
     }
 
@@ -4107,13 +4131,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setHeight(value, false);
     }
 
-    public void doIncrementLayout(int old_width, int old_height, boolean no_recalc) {
-        if (document == null || document.inLayout || !document.ready) return;
+    public Block doIncrementLayout(int old_width, int old_height, boolean no_recalc) {
+        if (document == null || document.inLayout || !document.ready) return null;
 
         double old_pos_x = old_width > 0 ? (double) background_pos_x / old_width : 0;
         double old_pos_y = old_height > 0 ? (double) background_pos_y / old_height : 0;
         double old_size_x = old_width > 0 ? (double) background_size_x / old_width : 1;
         double old_size_y = old_height > 0 ? (double) background_size_y / old_height : 1;
+
+        Block last = this;
 
         if (layouter != null) {
             document.inLayout = true;
@@ -4131,6 +4157,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 old_height = b.viewport_height;
                 b.performLayout(true);
             }
+            last = b;
             document.inLayout = false;
             // This will be called inside performLayout() for root element
             if (b != document.root) b.setZIndices();
@@ -4148,6 +4175,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         document.repaint();
+        return last;
     }
 
     public void setBackgroundPositionX(double val, int units) {
@@ -4308,7 +4336,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setPositioning(int value) {
         positioning = value;
-        doIncrementLayout(viewport_width, viewport_height, false);
+        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        if (b != null && !no_draw) {
+            b.forceRepaint();
+        }
     }
 
     public void setDisplayType(int value) {
@@ -4326,10 +4357,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (display_type == Display.NONE) {
             removeTextLayers();
         }
+        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        if (b != null && !no_draw) {
+            b.forceRepaint();
+        }
         if (document != null && document.ready) {
-            doIncrementLayout(viewport_width, viewport_height, false);
-            forceRepaint();
-            document.validate();
+            document.repaint();
         }
     }
 
@@ -4786,7 +4819,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (prop.matches("margin(-bottom)?")) {
                 margins[2] = (int)Math.round(value * ratio);
             }
-            doIncrementLayout(viewport_width, viewport_height, false);
+            Block b = doIncrementLayout(viewport_width, viewport_height, false);
+            if (b != null && !no_draw) b.forceRepaint();
             return;
         }
         if (prop.matches("border(-left|-right|-top|-bottom)-width")) {
@@ -4800,7 +4834,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
             this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
-            forceRepaint();
+            if (!no_draw) forceRepaint();
             return;
         }
     }
@@ -6036,9 +6070,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.ready = true;
 
         if (block != null) {
-            block.doIncrementLayout(block.viewport_width, block.viewport_height, false);
+            Block b0 = block.doIncrementLayout(block.viewport_width, block.viewport_height, false);
             block.setNeedRestoreSelection(true);
-            block.forceRepaintAll();
+            b0.forceRepaint();
         } else {
             document.root.performLayout();
             document.root.forceRepaintAll();

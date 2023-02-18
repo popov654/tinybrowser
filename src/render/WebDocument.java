@@ -574,16 +574,17 @@ public class WebDocument extends JPanel {
         Set<String> diff = new HashSet<String>(lastSetProperties);
         diff.removeAll(onlyRepaint);
 
+        Block block = b;
         if (b.document.lastSetProperties == null || diff.size() > 0) {
             if (b.parent != null) {
-                b.doIncrementLayout(old_width, old_height, false);
+                block = b.doIncrementLayout(old_width, old_height, false);
             } else {
                 b.performLayout();
             }
         }
         b.document.root.setNeedRestoreSelection(true);
-        b.document.root.forceRepaintAll();
-        b.document.repaint();
+        block.forceRepaint();
+        repaint();
         b.document.root.setNeedRestoreSelection(false);
 
         b.document.lastSetProperties.clear();
