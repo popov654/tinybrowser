@@ -761,6 +761,7 @@ public class Expression {
             }
             JSError e = new JSError(null, name + " is not a function", getStack());
             parent_block.error = e;
+            thr = true;
             return;
         }
         Token ts = t;
@@ -781,12 +782,15 @@ public class Expression {
         }
         if (t == null || t.prev.getType() == Token.EMPTY ||
                 t.prev.getType() == Token.SEMICOLON || t.prev.getType() == Token.VALUE) {
-            System.err.println("Function call error");
+            JSError e = new JSError(null, "SyntaxError: function call error", parent_block.getStack());
+            parent_block.error = e;
+            System.err.println("SyntaxError: function call error");
+            thr = true;
             return;
         }
         Vector<JSValue> params = new Vector<JSValue>();
         t = t.next;
-        while (t.getType() != Token.BRACE_CLOSE) {
+        while (t != null && t.getType() != Token.BRACE_CLOSE) {
             if (t.getType() == Token.VALUE) {
                 params.add(JSValue.create(JSValue.getType(t.getContent()), t.getContent()));
             } else if ((t.getType() == Token.VAR_NAME || t.getType() == Token.BRACE_OPEN || t.getType() == Token.KEYWORD && t.getContent().matches("new|yield")) && t.val == null) {
@@ -801,8 +805,18 @@ public class Expression {
             }
             t = t.next;
         }
+        if (t == null) {
+            JSError e = new JSError(null, "SyntaxError: missing ')' after function arguments list", parent_block.getStack());
+            parent_block.error = e;
+            System.err.println("SyntaxError: missing ')' after function arguments list");
+            thr = true;
+            return;
+        }
         if (t.prev.getType() == Token.OP && t.prev.getContent().equals(",")) {
+            JSError e = new JSError(null, "Hanging comma is not allowed in function arguments list", parent_block.getStack());
+            parent_block.error = e;
             System.err.println("Hanging comma is not allowed in function arguments list");
+            thr = true;
             return;
         }
         boolean as_constr = false;
@@ -1881,7 +1895,7 @@ public class Expression {
         if (start.val.getType().matches("Array|Integer|Float|Number|Object|String|Function")) {
             accessObjectProperties(start);
         }
-        while (start.next != null && start.next.getType() == Token.BRACE_OPEN) {
+        while (!thr && start.next != null && start.next.getType() == Token.BRACE_OPEN) {
             functionCall(start.next);
         }
         if (!silent && parent_block.error == null) {
