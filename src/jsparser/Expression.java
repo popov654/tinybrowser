@@ -807,7 +807,7 @@ public class Expression {
         }
         boolean as_constr = false;
         ((Function)ts.prev.val).setCaller(parent_block);
-        if (ts.prev.ctx == null) ts.prev.ctx = Expression.getVar("window", this);
+        if (ts.prev.ctx == null) ts.prev.ctx = Expression.getVar("window", this); 
         if (ts.prev.prev.getType() == Token.KEYWORD && ts.prev.prev.getContent().equals("new")) {
             as_constr = true;
             ts.prev.prev.prev.next = ts.prev;
@@ -1116,6 +1116,15 @@ public class Expression {
                 }
                 if (op.next.getType() == Token.VALUE) {
                     op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent());
+                    op.next.val = new JSBool(!(op.next.val.asBool()).getValue());
+                    op.next.setContent(op.next.val.toString());
+                } else {
+                    if (((op.next.getType() == Token.VAR_NAME || op.next.getType() == Token.ARRAY_ENTITY || op.next.getType() == Token.OBJECT_ENTITY ||
+                      (op.next.getType() == Token.KEYWORD && op.next.getContent().matches("new|yield"))) &&
+                       op.next.next != null && (op.next.next.getType() == Token.DOT ||
+                       op.next.next.getType() == Token.ARRAY_START) || op.next.getType() == Token.BRACE_OPEN)) {
+                        accessObjectProperties(op.next);
+                    }
                     op.next.val = new JSBool(!(op.next.val.asBool()).getValue());
                     op.next.setContent(op.next.val.toString());
                 }
