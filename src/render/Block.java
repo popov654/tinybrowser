@@ -4170,8 +4170,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block last = this;
 
         if (layouter != null) {
+            boolean use_fast_update = document.fast_update;
             document.no_layout = true;
-            performLayout(true);
+            performLayout(use_fast_update);
             if (viewport_height != old_height && bgImage != null) {
                 background_pos_x = (int) (old_pos_x * viewport_width);
                 background_pos_y = (int) (old_pos_y * viewport_height);
@@ -4183,7 +4184,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 b = b.parent;
                 old_width = b.viewport_width;
                 old_height = b.viewport_height;
-                b.performLayout(true);
+                b.performLayout(use_fast_update);
             }
             document.no_layout = false;
             last = b;
@@ -5487,6 +5488,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             normalizeContent();
         }
         if (document != null && document.ready) {
+            if (d.auto_width && d.parent != null && d.width != d.parent.viewport_width - d.parent.borderWidth[3] - d.parent.borderWidth[1] - d.parent.paddings[3] - d.parent.paddings[1] - d.margins[3] - d.margins[1]) {
+                d.setWidth(-1, false);
+            }
             d.performLayout();
             Block block = doIncrementLayout(viewport_width, viewport_height, false);
             document.root.setNeedRestoreSelection(true);

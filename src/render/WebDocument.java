@@ -604,6 +604,7 @@ public class WebDocument extends JPanel {
     public volatile boolean inLayout = false;
     public volatile boolean isPainting = false;
     public volatile boolean no_layout = false;
+    public volatile boolean fast_update = true;
 
     public Block active_block;
 
