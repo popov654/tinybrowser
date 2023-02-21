@@ -36,7 +36,7 @@ public class LayoutTests extends JFrame {
         cp.add(Box.createRigidArea(new Dimension(0, 15)));
         cp.add(bp);
 
-        document.width = 478;
+        document.width = 474;
         document.height = 300;
         //document.panel.setBounds(0, 0, cp.width, cp.height);
         //document.root.setBounds(1, 1, cp.width-2, cp.height-2);

@@ -480,8 +480,10 @@ public class Layouter {
             int w = getFullLineSize(d);
 
             if (d.display_type != Block.Display.INLINE_TABLE) {
-                d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
-                d.performLayout();
+                if (!d.no_layout) {
+                    d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
+                    d.performLayout();
+                }
                 if (d.auto_width && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
                     int line_width = d.lines.get(0).cur_pos;
                     d.lines.get(0).setWidth(line_width);
@@ -530,6 +532,45 @@ public class Layouter {
             stack.remove(stack.lastIndexOf(d));
             return;
         } else if (d.display_type == Block.Display.INLINE) {
+
+            if (d.no_layout && d.parts.size() > 0) {
+                int old_x = d.parts.get(0)._x_;
+                int old_y = d.parts.get(0)._y_;
+
+                Block temp = new Block(d.document, d.parent, d.parts.get(0).width, d.parts.get(0).height);
+                temp.children = (Vector<Block>) d.children.clone();
+                temp.display_type = Block.Display.INLINE;
+
+                if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
+                        ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK || last_line.width - last_line.cur_pos < temp.width) {
+                    last_line = startNewLine(0, 0, d.parts.get(0));
+                }
+
+                int pos = last_line.cur_pos;
+                Line l = last_line;
+
+                last_line.addElement(temp);
+
+                int new_x = temp._x_;
+                int new_y = temp._y_;
+
+                if (last_line != l) {
+                    last_line = l;
+                } else {
+                    last_line.elements.remove(temp);
+                    last_line.cur_pos = pos;
+                }
+
+                if (old_x == new_x && old_y == new_y) {
+                    for (int i = 0; i < d.parts.size(); i++) {
+                        if (last_line.width - last_line.cur_pos < d.parts.get(i).width) {
+                            last_line = startNewLine(0, 0, d.parts.get(i));
+                        }
+                        last_line.addElement(d.parts.get(0));
+                    }
+                    return;
+                }
+            }
 
             int[][] selection = new int[d.parts.size()][2];
 

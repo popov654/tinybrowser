@@ -342,7 +342,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public synchronized void forceRepaint() {
-        if (document == null || document.root.width < 0 || !document.ready || document.inLayout || this == document.root && document.isPainting) {
+        if (document == null || no_draw || document.root.width < 0 || !document.ready || document.inLayout || this == document.root && document.isPainting) {
             return;
         }
         document.isPainting = true;
@@ -1377,6 +1377,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         //    setBounds(_x_, _y_, width, height);
         //}
         if (old_value != _x_) {
+            if (text_layer != null) {
+                Component[] c = text_layer.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    Rectangle rect = c[i].getBounds();
+                    c[i].setBounds(rect.x + _x_ - old_value, rect.y, rect.width, rect.height);
+                }
+            }
+            if (document.no_layout && children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
+                for (int i = 0; i < lines.size(); i++) {
+                    for (int j = 0; j < lines.get(i).elements.size(); j++) {
+                        lines.get(i).elements.get(j).setX(lines.get(i).elements.get(j)._getX());
+                    }
+                }
+            }
             for (int i = 0; i < children.size(); i++) {
                 if (children.get(i).type == NodeTypes.ELEMENT) {
                     children.get(i).no_draw = true;
@@ -1395,6 +1409,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         //}
         _y_ = parent != null ? parent._y_ + value : value;
         if (old_value != _y_) {
+            if (text_layer != null) {
+                Component[] c = text_layer.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    Rectangle rect = c[i].getBounds();
+                    c[i].setBounds(rect.x, rect.y + _y_ - old_value, rect.width, rect.height);
+                }
+            }
+            if (document.no_layout && children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
+                for (int i = 0; i < lines.size(); i++) {
+                    for (int j = 0; j < lines.get(i).elements.size(); j++) {
+                        lines.get(i).elements.get(j).setY(lines.get(i).elements.get(j)._getY());
+                    }
+                }
+            }
             for (int i = 0; i < children.size(); i++) {
                 if (children.get(i).type == NodeTypes.ELEMENT) {
                     children.get(i).no_draw = true;
@@ -2245,7 +2273,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        if (display_type != Display.INLINE) performSizeCheck(no_rec);
+        if (display_type != Display.INLINE) performSizeCheck();
 
         if (childDocument != null) {
             childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
@@ -2369,7 +2397,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    public void performSizeCheck(boolean no_rec) {
+    public void performSizeCheck() {
         if (content_x_max > viewport_width - borderWidth[1] - borderWidth[3]) {
             addScrollbarX();
         }
@@ -4002,7 +4030,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setAutoXMargin();
         }
 
-        if (no_recalc) return;
+        if (no_recalc || !document.ready) return;
 
         Block b = doIncrementLayout(old_width, old_height, no_recalc);
 
@@ -4142,7 +4170,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block last = this;
 
         if (layouter != null) {
-            document.inLayout = true;
+            document.no_layout = true;
             performLayout(true);
             if (viewport_height != old_height && bgImage != null) {
                 background_pos_x = (int) (old_pos_x * viewport_width);
@@ -4151,14 +4179,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 background_size_y = (int) Math.max(0, old_size_y * viewport_height);
             }
             Block b = this;
-            while (old_width != b.viewport_width && old_height != b.viewport_height && b != null && !no_recalc) {
+            while (old_width != b.viewport_width && old_height != b.viewport_height && b.parent != null && !no_recalc) {
                 b = b.parent;
                 old_width = b.viewport_width;
                 old_height = b.viewport_height;
                 b.performLayout(true);
             }
+            document.no_layout = false;
             last = b;
-            document.inLayout = false;
             // This will be called inside performLayout() for root element
             if (b != document.root) b.setZIndices();
 
@@ -5406,7 +5434,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void addElement(Block d, int pos) {
-        addElement(d, children.size(), false);
+        addElement(d, pos, false);
     }
 
     public void addElement(Block d, int pos, boolean preserve_style) {
@@ -5458,8 +5486,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (document != null && document.prevent_mixed_content) {
             normalizeContent();
         }
-        //performLayout();
-        //forceRepaint();
+        if (document != null && document.ready) {
+            d.performLayout();
+            Block block = doIncrementLayout(viewport_width, viewport_height, false);
+            document.root.setNeedRestoreSelection(true);
+            block.forceRepaint();
+            document.root.setNeedRestoreSelection(false);
+            document.repaint();
+        }
     }
 
     public void normalizeContent() {
