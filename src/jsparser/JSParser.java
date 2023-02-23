@@ -234,23 +234,6 @@ public class JSParser {
                 }
             }
 
-            if (state == READY && (substate == 0 || substate == READ_FUNC_BLOCK) && (ch == '\n' || ch == ';') &&
-                    cur.getType() != Token.SEMICOLON) {
-                Token t = new Token(";");
-                last_token = "";
-                cur.next = t;
-                t.prev = cur;
-                cur = t;
-                pos++;
-                continue;
-            }
-
-            if (state == READY && ch == '(' && last_token.equals("function")) {
-                stack.add(READ_FUNC_ARGS);
-            } else if (state == READY && ch == ')' && substate == READ_FUNC_ARGS) {
-                stack.removeElementAt(stack.size()-1);
-            }
-
             //Reading a variable name (cont.)
             if (last_token.length() > 0 && state == READ_VAR_NAME) {
                 if (Character.isWhitespace(ch) || String.valueOf(ch).matches("[(){}\\[\\].,<>^|&*/%?;:+=-]") ||
@@ -281,6 +264,23 @@ public class JSParser {
                     correct = false;
                     return;
                 }
+            }
+
+            if (state == READY && (substate == 0 || substate == READ_FUNC_BLOCK) && (ch == '\n' || ch == ';') &&
+                    cur.getType() != Token.SEMICOLON) {
+                Token t = new Token(";");
+                last_token = "";
+                cur.next = t;
+                t.prev = cur;
+                cur = t;
+                pos++;
+                continue;
+            }
+
+            if (state == READY && ch == '(' && last_token.equals("function")) {
+                stack.add(READ_FUNC_ARGS);
+            } else if (state == READY && ch == ')' && substate == READ_FUNC_ARGS) {
+                stack.removeElementAt(stack.size()-1);
             }
 
             //Found an array declaration
