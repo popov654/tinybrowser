@@ -151,7 +151,7 @@ public class HTMLElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node parent = node != null ? node.parent : null;
-            return parent != null ? new HTMLElement(parent) : Null.getInstance();
+            return parent != null ? HTMLElement.create(parent) : Null.getInstance();
         }
     }
 
@@ -164,7 +164,7 @@ public class HTMLElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node prev = node != null ? node.previousSibling : null;
-            return prev != null ? new HTMLElement(prev) : Null.getInstance();
+            return prev != null ? HTMLElement.create(prev) : Null.getInstance();
         }
     }
 
@@ -177,7 +177,7 @@ public class HTMLElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node next = node != null ? node.nextSibling : null;
-            return next != null ? new HTMLElement(next) : Null.getInstance();
+            return next != null ? HTMLElement.create(next) : Null.getInstance();
         }
     }
 
@@ -190,7 +190,7 @@ public class HTMLElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node prev = node != null ? node.previousElementSibling() : null;
-            return prev != null ? new HTMLElement(prev) : Null.getInstance();
+            return prev != null ? HTMLElement.create(prev) : Null.getInstance();
         }
     }
 
@@ -203,7 +203,7 @@ public class HTMLElement extends JSObject {
                 return Undefined.getInstance();
             }
             Node next = node != null ? node.nextElementSibling() : null;
-            return next != null ? new HTMLElement(next) : Null.getInstance();
+            return next != null ? HTMLElement.create(next) : Null.getInstance();
         }
     }
 
@@ -217,7 +217,7 @@ public class HTMLElement extends JSObject {
             }
             JSArray array = new JSArray();
             for (Node child: node.children) {
-                array.push(new HTMLElement(child));
+                array.push(HTMLElement.create(child));
             }
             return array;
         }
@@ -234,7 +234,7 @@ public class HTMLElement extends JSObject {
             JSArray array = new JSArray();
             for (Node child: node.children) {
                 if (child.nodeType == 1) {
-                    array.push(new HTMLElement(child));
+                    array.push(HTMLElement.create(child));
                 }
             }
             return array;
@@ -251,7 +251,7 @@ public class HTMLElement extends JSObject {
                     return Undefined.getInstance();
                 }
                 Node n = node.document.getElementById(node, args.get(i).asString().getValue(), true);
-                return n != null ? new HTMLElement(n) : Null.getInstance();
+                return n != null ? HTMLElement.create(n) : Null.getInstance();
             }
             return Null.getInstance();
         }
@@ -269,7 +269,7 @@ public class HTMLElement extends JSObject {
                 }
                 Vector<Node> nodes = node.document.getElementsByTagName(node, args.get(i).asString().getValue(), true);
                 for (Node node: nodes) {
-                    array.push(new HTMLElement(node));
+                    array.push(HTMLElement.create(node));
                 }
             }
             return array;
@@ -288,7 +288,7 @@ public class HTMLElement extends JSObject {
                 }
                 Vector<Node> nodes = node.document.getElementsByName(node, args.get(i).asString().getValue(), true);
                 for (Node node: nodes) {
-                    array.push(new HTMLElement(node));
+                    array.push(HTMLElement.create(node));
                 }
             }
             return array;
@@ -307,7 +307,7 @@ public class HTMLElement extends JSObject {
                 }
                 Vector<Node> nodes = node.document.getElementsByClassName(node, args.get(i).asString().getValue(), true);
                 for (Node node: nodes) {
-                    array.push(new HTMLElement(node));
+                    array.push(HTMLElement.create(node));
                 }
             }
             return array;
