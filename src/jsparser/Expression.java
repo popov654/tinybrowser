@@ -17,6 +17,7 @@ public class Expression {
         end = start;
         Token t = start;
         while (t != null) {
+            source += t.getContent() + " ";
             int type = t.getType();
             if (mode > 0 && type == 6 && (t.next == null ||
                     t.next.getType() == 2 && t.next.getContent().matches("[*/%&|^+-]?=") ||
@@ -933,6 +934,14 @@ public class Expression {
             return this;
         }
         initArraysAndObjects();
+
+        source = "";
+        Token token = start;
+        while (token != null) {
+            source += (token.val == null ? token.getContent() : token.val.toString()) + " ";
+            token = token.next;
+        }
+
         if (parent_block.error != null) {
             return this;
         }
@@ -2059,6 +2068,11 @@ public class Expression {
         return ret;
     }
 
+    @Override
+    public String toString() {
+        return source;
+    }
+
     private int n = 0;
 
     private Token start;
@@ -2075,6 +2089,8 @@ public class Expression {
 
     public Block parent_block;
     public Token yt = null;
+
+    public String source = "";
 
     public boolean silent = false;
     public boolean display_timers = false;

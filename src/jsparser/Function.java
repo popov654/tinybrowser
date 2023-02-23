@@ -173,7 +173,7 @@ public class Function extends JSObject {
 
     @Override
     public String toString() {
-        return "{Function}";
+        return "{Function}" + (body != null ? " {\n" + body.toString() + "\n}" : "");
     }
 
     private Vector<String> params;

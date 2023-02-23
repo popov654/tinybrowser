@@ -1043,6 +1043,27 @@ public class Block extends Expression {
         console = c;
     }
 
+    @Override
+    public String toString() {
+        String result = "";
+        int level = 0;
+        Block b = this;
+        while (b.parent_block != null) {
+            level++;
+            b = b.parent_block;
+        }
+        for (int i = 0; i < children.size(); i++) {
+            for (int j = 0; j < level; j++) {
+                result += "  ";
+            }
+            result += children.get(i).toString();
+            if (i < children.size()-1) {
+                result += "\n";
+            }
+        }
+        return result;
+    }
+
     public int state;
 
     public boolean is_func = false;
