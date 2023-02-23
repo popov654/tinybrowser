@@ -184,7 +184,13 @@ public class Node {
         if (parent == null) return null;
         for (int i = 0; i < parent.children.size(); i++) {
             if (this.equals(parent.children.get(i))) {
-                return i > 0 ? parent.children.get(i-1) : null;
+                if (i == 0) return null;
+                int j = i-1;
+                Node n = parent.children.get(j);
+                while (j >= 0 && n.nodeType != 1) {
+                    n = parent.children.get(j--);
+                }
+                return n.nodeType == 1 ? n : null;
             }
         }
         return null;
@@ -194,7 +200,13 @@ public class Node {
         if (parent == null) return null;
         for (int i = 0; i < parent.children.size(); i++) {
             if (this.equals(parent.children.get(i))) {
-                return i < parent.children.size()-1 ? parent.children.get(i+1) : null;
+                if (i == parent.children.size()-1) return null;
+                int j = i+1;
+                Node n = parent.children.get(j);
+                while (j < parent.children.size() && n.nodeType != 1) {
+                    n = parent.children.get(j++);
+                }
+                return n.nodeType == 1 ? n : null;
             }
         }
         return null;

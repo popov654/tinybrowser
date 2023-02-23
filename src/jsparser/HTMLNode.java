@@ -64,10 +64,6 @@ public class HTMLNode extends JSObject {
         items.put("previousSibling", prev != null ? HTMLElement.create(prev) : Null.getInstance());
         Node next = node != null ? node.nextSibling : null;
         items.put("nextSibling", next != null ? HTMLElement.create(next) : Null.getInstance());
-        Node prev_el = node != null ? node.previousElementSibling() : null;
-        items.put("previousElementSibling", prev_el != null ? HTMLElement.create(prev_el) : Null.getInstance());
-        Node next_el = node != null ? node.nextElementSibling() : null;
-        items.put("nextElementSibling", next_el != null ? HTMLElement.create(next_el) : Null.getInstance());
 
         updateChildren();
     }

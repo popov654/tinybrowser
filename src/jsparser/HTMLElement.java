@@ -120,6 +120,11 @@ public class HTMLElement extends HTMLNode {
 
         items.put("tagName", new JSString(node.tagName));
 
+        Node prev_el = node != null ? node.previousElementSibling() : null;
+        items.put("previousElementSibling", prev_el != null ? HTMLElement.create(prev_el) : Null.getInstance());
+        Node next_el = node != null ? node.nextElementSibling() : null;
+        items.put("nextElementSibling", next_el != null ? HTMLElement.create(next_el) : Null.getInstance());
+
         updateChildren();
 
         if (node.nodeType != 1) return;
