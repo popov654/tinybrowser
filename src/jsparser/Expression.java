@@ -590,7 +590,7 @@ public class Expression {
                       (nt.next.next.getType() == Token.VAR_NAME && nt.next.next.val == null ||
                       nt.next.next.getType() == Token.KEYWORD && nt.next.next.getContent().equals("new") &&
                       nt.next.next.next.val == null)) {
-                    accessObjectProperties(nt.next.next);
+                    //accessObjectProperties(nt.next.next);
                 }
                 functionCall(nt.next);
             } else {
@@ -796,6 +796,7 @@ public class Expression {
             } else if ((t.getType() == Token.VAR_NAME || t.getType() == Token.BRACE_OPEN || t.getType() == Token.KEYWORD && t.getContent().matches("new|yield")) && t.val == null) {
                 if (!(t.next.getType() == Token.OP && t.next.getContent().equals(",")) && t.next.getType() != Token.BRACE_CLOSE) {
                     accessObjectProperties(t);
+                    t = t.prev.next;
                     params.add(t.val);
                 } else {
                     params.add(Expression.getVar(t.getContent(), this));
@@ -1208,6 +1209,28 @@ public class Expression {
                         op.prev.prev.prev.getType() == Token.OBJECT_ENTITY)) {
                     functionCall(op.prev.prev);
                     continue;
+                }
+                if (c.equals(",")) {
+                    Token ct = op.prev;
+                    int level = 0;
+                    while (ct != null && ct.getType() != Token.BRACE_OPEN && level <= 0) {
+                        if (ct.getType() == Token.BRACE_OPEN) level++;
+                        if (ct.getType() == Token.BRACE_CLOSE) level--;
+                        if (level > 0) {
+                            break;
+                        }
+                        ct = ct.prev;
+                    }
+                    
+                    if (op.next == null) {
+                        parent_block.error = new JSError(null, "Hanging " + c + "operator is not allowed", getStack());
+                        break;
+                    }
+
+                    if (ct.prev != null && ct.prev != null && ct.prev.getType() != Token.OP && ct.prev.getType() != Token.EMPTY) {
+                        functionCall(ct);
+                        continue;
+                    }
                 }
                 if (op.prev == null || op.next == null) {
                     System.err.println("Syntax error");
@@ -1779,20 +1802,11 @@ public class Expression {
                 }
 
                 if (c.equals(",")) {
-                    if (op.prev.prev != null && op.prev.prev.prev != null &&
-                          op.prev.prev.prev.getType() != Token.OP && op.prev.prev.prev.getType() != Token.EMPTY) {
-                        functionCall(op.prev.prev);
-                    }
-                    Token ct = op.next;
-                    Token op2 = op;
-                    if (ct == null) {
-                        parent_block.error = new JSError(null, "Hanging " + c + "operator is not allowed", getStack());
-                        break;
-                    }
-                    int level = 0;
                     boolean is_func_call = false;
-                    ct = op.prev;
-                    while (ct.prev != null) {
+
+                    Token ct = op.prev;
+                    int level = 0;
+                    while (ct != null && ct.getType() != Token.BRACE_OPEN && level <= 0) {
                         if (ct.getType() == Token.BRACE_OPEN) level++;
                         if (ct.getType() == Token.BRACE_CLOSE) level--;
                         if (level > 0) {
@@ -1804,8 +1818,18 @@ public class Expression {
                         }
                         ct = ct.prev;
                     }
+                    if (ct.prev != null && ct.prev != null && ct.prev.getType() != Token.OP && ct.prev.getType() != Token.EMPTY) {
+                        functionCall(ct);
+                    }
+                    
+                    ct = op.next;
+                    Token op2 = op;
+                    if (ct == null) {
+                        parent_block.error = new JSError(null, "Hanging " + c + "operator is not allowed", getStack());
+                        break;
+                    }
+                    
                     if (!is_func_call) {
-                        ct = op.next;
                         level = 0;
                         while (ct.next != null) {
                             if (ct.getType() == Token.BRACE_OPEN) level++;
