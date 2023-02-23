@@ -390,8 +390,8 @@ public class JSParser {
                 }
                 Token t;
                 String s = data.substring(pos+1).trim();
-                boolean testObj = s.matches("[a-zA-Z0-9_-]+\\s*:.*") ||
-                                  s.matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*");
+                boolean testObj = s.replaceAll("\n", " ").matches("[a-zA-Z0-9_-]+\\s*:.*") ||
+                                  s.replaceAll("\n", " ").matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*");
                 if (ch == '{' && cur.getContent().equals(")") ||
                         ch == '}' && substate == READ_FUNC_BLOCK) {
                     if (ch == '{') stack.add(READ_FUNC_BLOCK);
