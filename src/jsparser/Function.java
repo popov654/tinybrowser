@@ -173,7 +173,21 @@ public class Function extends JSObject {
 
     @Override
     public String toString() {
-        return "{Function}" + (body != null ? " {\n" + body.toString() + "\n}" : "");
+        return "function()" + (body != null ? " {\n" + body.toString().replaceAll("\\s+$", "") + "}" : "");
+    }
+
+    public String toPaddedString() {
+        int level = 0;
+        Block b = body;
+        while (b.parent_block != null) {
+            level++;
+            b = b.parent_block;
+        }
+        String pad = "";
+        for (int i = 0; i < level; i++) {
+            pad += "  ";
+        }
+        return pad + "function()" + (body != null ? " {\n" + body.toString() + "}" : "");
     }
 
     private Vector<String> params;

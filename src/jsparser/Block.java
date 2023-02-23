@@ -105,6 +105,9 @@ public class Block extends Expression {
                                         
                     Expression e = new Expression(th.next, this);
                     children.add(e);
+                    e.is_cond = true;
+
+                    updateSource();
                     
                     end = t.next;
                     continue;
@@ -185,6 +188,7 @@ public class Block extends Expression {
 
                 Expression e = new Expression(th.next, this);
                 children.add(e);
+                e.is_cond = true;
 
                 end = t.next;
                 continue;
@@ -537,6 +541,7 @@ public class Block extends Expression {
                 func_lmb = true;
             }
             if (type == Token.BLOCK_END && level == 0) {
+                updateSource();
                 return;
             }
             else if (type == Token.BLOCK_START && level == 0 && end.next != null) {
@@ -1044,6 +1049,13 @@ public class Block extends Expression {
     }
 
     @Override
+    public void updateSource() {
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).updateSource();
+        }
+    }
+
+    @Override
     public String toString() {
         String result = "";
         int level = 0;
@@ -1052,13 +1064,27 @@ public class Block extends Expression {
             level++;
             b = b.parent_block;
         }
+        boolean open_else = false;
         for (int i = 0; i < children.size(); i++) {
-            for (int j = 0; j < level; j++) {
+            if (children.get(i).is_cond) continue;
+            String str = children.get(i).toString();
+            result += str;
+            if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
+                open_else = true;
+            }
+            if (i < children.size()-1) result += "\n";
+        }
+        if (open_else) {
+            result += "\n";
+            for (int k = 0; k < level+1; k++) {
                 result += "  ";
             }
-            result += children.get(i).toString();
-            if (i < children.size()-1) {
-                result += "\n";
+            result += "}";
+        }
+        if (is_func) {
+            result += "\n";
+            for (int k = 0; k < level; k++) {
+                result += "  ";
             }
         }
         return result;

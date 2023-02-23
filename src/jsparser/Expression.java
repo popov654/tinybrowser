@@ -17,7 +17,6 @@ public class Expression {
         end = start;
         Token t = start;
         while (t != null) {
-            source += t.getContent() + " ";
             int type = t.getType();
             if (mode > 0 && type == 6 && (t.next == null ||
                     t.next.getType() == 2 && t.next.getContent().matches("[*/%&|^+-]?=") ||
@@ -131,6 +130,59 @@ public class Expression {
                 }
             }
         }
+        updateSource();
+    }
+
+    public void updateSource() {
+        source = "";
+        Token token = start;
+        int level = -1;
+        Expression b = this;
+        while (b != null) {
+            level++;
+            b = b.parent_block;
+        }
+
+        for (int i = 0; i < level; i++) {
+            source += "  ";
+        }
+
+        while (token != null && token.getType() != Token.SEMICOLON) {
+            if (token.getType() == Token.OP && !token.getContent().equals("!")) {
+                source += " ";
+            }
+            String content = "";
+            if (token.val == null) content = token.getContent();
+            if (token.val instanceof Function) {
+                content = ((Function)token.val).toPaddedString().trim();
+            } else if (token.val != null) {
+                content = token.val.toString();
+            }
+            if (content.matches("(if|switch)")) {
+                Block parent = parent_block;
+                for (int i = 0; i < parent.children.size(); i++) {
+                    if (parent.children.get(i) == this && i < parent.children.size()-1) {
+                        content += " (" + parent.children.get(i+1).source.trim().replaceAll(";$", "") + ") {";
+                    }
+                }
+                source += content;
+                break;
+            }
+            if (content.equals("else") && token.next != null && token.next.getContent().equals("if")) {
+                content = "} " + content + " ";
+            }
+            else if (content.equals("else")) {
+                content = "} " + content + " {";
+                source += content;
+                break;
+            }
+            source += content;
+            if (token.getType() == Token.OP && !token.getContent().equals("!") || token.getType() == Token.KEYWORD) {
+                source += " ";
+            }
+            token = token.next;
+        }
+        if (!source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}")) source += ";";
     }
 
     public static Expression create(Token head) {
@@ -907,6 +959,7 @@ public class Expression {
        e.silent = silent;
        e.ret = ret;
        e.thr = thr;
+       e.source = source;
        return e;
     }
 
@@ -936,11 +989,7 @@ public class Expression {
         initArraysAndObjects();
 
         source = "";
-        Token token = start;
-        while (token != null) {
-            source += (token.val == null ? token.getContent() : token.val.toString()) + " ";
-            token = token.next;
-        }
+        updateSource();
 
         if (parent_block.error != null) {
             return this;
@@ -2086,6 +2135,8 @@ public class Expression {
     private boolean ret;
     private boolean del;
     private boolean thr;
+
+    public boolean is_cond;
 
     public Block parent_block;
     public Token yt = null;
