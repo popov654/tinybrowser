@@ -287,7 +287,7 @@ public class LayoutTests extends JFrame {
         //d01.setHref("http://popov654.pp.ru");
         //d01.underlineLinksMode = 1;
 
-        Block d02 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
+        final Block d02 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
         d02.setPositioning(Block.Position.STATIC);
         d02.setDisplayType(Block.Display.INLINE);
         d02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
@@ -297,7 +297,7 @@ public class LayoutTests extends JFrame {
         //d02.setMargins(0, 4);
         d.addElement(d02, true);
 
-        Block d03 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
+        final Block d03 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
         d03.setPositioning(Block.Position.STATIC);
         d03.setDisplayType(Block.Display.INLINE);
         d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
@@ -335,6 +335,35 @@ public class LayoutTests extends JFrame {
         d2.addElement(d04);
 
         document.root.addElement(d2);
+
+        /*
+
+        Timer t1 = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Block d03 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+                d03.setPositioning(Block.Position.STATIC);
+                d03.setDisplayType(Block.Display.INLINE);
+                d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+                d03.addText(" !!");
+                document.root.getChildren().get(0).addElement(d03, 2);
+            }
+        });
+        t1.setRepeats(false);
+        t1.start();
+
+        Timer t2 = new Timer(3000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Block d03 = document.root.getChildren().get(0).getChildren().get(2);
+                document.root.getChildren().get(0).removeElement(d03);
+                document.root.getChildren().get(0).addElement(d03);
+            }
+        });
+        t2.setRepeats(false);
+        t2.start();
+
+        */
 
         /*
 

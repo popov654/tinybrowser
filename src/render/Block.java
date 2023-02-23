@@ -4171,7 +4171,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (layouter != null) {
             boolean use_fast_update = document.fast_update;
-            document.no_layout = true;
+            document.no_layout = use_fast_update;
             performLayout(use_fast_update);
             if (viewport_height != old_height && bgImage != null) {
                 background_pos_x = (int) (old_pos_x * viewport_width);
@@ -4194,7 +4194,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             //document.root.setZIndices();
             document.root.clipScrollbars();
 
-        } else if (document.ready) {
+        } else if (this == document.root && document.ready) {
             document.root.performLayout();
             if (viewport_height != old_height && bgImage != null) {
                 background_pos_x = (int) (old_pos_x * viewport_width);
@@ -5488,11 +5488,69 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             normalizeContent();
         }
         if (document != null && document.ready) {
-            if (d.auto_width && d.parent != null && d.width != d.parent.viewport_width - d.parent.borderWidth[3] - d.parent.borderWidth[1] - d.parent.paddings[3] - d.parent.paddings[1] - d.margins[3] - d.margins[1]) {
+            if (d.display_type == Display.BLOCK && d.auto_width && d.parent != null && d.width != d.parent.viewport_width - d.parent.borderWidth[3] - d.parent.borderWidth[1] - d.parent.paddings[3] - d.parent.paddings[1] - d.margins[3] - d.margins[1]) {
                 d.setWidth(-1, false);
             }
-            d.performLayout();
-            Block block = doIncrementLayout(viewport_width, viewport_height, false);
+            Block block = this;
+            if (d.display_type == Display.INLINE) {
+                Line line = layouter.last_line;
+                boolean found = false;
+                Block last_block = null;
+                
+                Block ref_block = pos < children.size()-1 ? children.get(pos+1) : children.get(pos);
+                if (ref_block.parts.size() > 0) {
+                    ref_block = ref_block.parts.get(0);
+                }
+
+                for (int i = 0; i < lines.size(); i++) {
+                    Vector<Drawable> elements = (Vector<Drawable>) lines.get(i).elements.clone();
+                    for (int j = 0; j < elements.size(); j++) {
+                        
+                        if (lines.get(i).elements.get(j) == ref_block) {
+                            layouter.last_line = lines.get(i);
+                            for (int k = i+1; k < lines.size(); k++) {
+                                lines.remove(k--);
+                            }
+                            for (int k = j; k < lines.get(i).elements.size(); k++) {
+                                Block b0 = (Block) lines.get(i).elements.get(k);
+                                lines.get(i).elements.remove(k--);
+                                lines.get(i).cur_pos -= b0.width + b0.margins[3] + b0.margins[1];
+                            }
+                            layouter.addBlock(d);
+                            
+                            found = true;
+                            if (pos < children.size()-1) j--;
+                            continue;
+                        }
+                        else if (found) {
+                            Drawable el = elements.get(j);
+                            if (el instanceof Block) {
+                                Block b0 = (Block)el;
+                                if (b0.original != null) {
+                                    b0 = b0.original;
+                                }
+                                if (b0 == last_block) {
+                                    continue;
+                                }
+                                last_block = b0;
+                                boolean val = b.no_layout;
+                                b0.no_layout = true;
+                                layouter.addBlock(b0);
+                                b0.no_layout = val;
+                            }
+                        }
+                    }
+
+                }
+                if (pos == children.size()-1) {
+                    layouter.addBlock(d);
+                }
+
+                sortBlocks();
+            } else {
+                d.performLayout();
+                block = doIncrementLayout(viewport_width, viewport_height, false);
+            }
             document.root.setNeedRestoreSelection(true);
             block.forceRepaint();
             document.root.setNeedRestoreSelection(false);
@@ -5546,8 +5604,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         d.removeTextLayers();
         children.remove(d);
         if (document != null) {
-            document.root.remove(d);
-            document.smartUpdate(this, viewport_width, viewport_height);
+            if (d.display_type == Display.INLINE && d.parts.size() > 0 && d.parts.get(0).line != null) {
+                Line line = d.parts.get(0).line;
+                for (int j = line.elements.size()-1; j >= 0; j--) {
+                    Drawable el = line.elements.get(j);
+                    if (!(el instanceof Block) || !d.parts.contains((Block)el)) {
+                        el.setX(el._getX() - d.parts.get(0).width);
+                    } else {
+                        line.elements.remove(el);
+                        if (el instanceof Block) {
+                            document.root.remove((Block)el);
+                        }
+                        v.remove(el);
+                        if (el == d.parts.get(0)) break;
+                    }
+                }
+            }
+            boolean val = document.fast_update;
+            if (line != line.parent.lines.lastElement()) document.fast_update = false;
+            Block block = doIncrementLayout(viewport_width, viewport_height, false);
+            document.fast_update = val;
+            document.root.setNeedRestoreSelection(true);
+            block.forceRepaint();
+            document.root.setNeedRestoreSelection(false);
+            document.repaint();
         }
     }
 
