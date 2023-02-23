@@ -287,7 +287,7 @@ public class LayoutTests extends JFrame {
         //d01.setHref("http://popov654.pp.ru");
         //d01.underlineLinksMode = 1;
 
-        final Block d02 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
+        Block d02 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
         d02.setPositioning(Block.Position.STATIC);
         d02.setDisplayType(Block.Display.INLINE);
         d02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
@@ -297,7 +297,7 @@ public class LayoutTests extends JFrame {
         //d02.setMargins(0, 4);
         d.addElement(d02, true);
 
-        final Block d03 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
+        Block d03 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
         d03.setPositioning(Block.Position.STATIC);
         d03.setDisplayType(Block.Display.INLINE);
         d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);

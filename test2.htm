@@ -73,14 +73,18 @@ window.addEventListener('load', function() {
    console.log("Viewport size: " + window.innerWidth + 'x' + window.innerHeight)
    console.log("Screen size: " + window.screen.width + 'x' + window.screen.height)
    console.log(document.createElement('div'))
+   window.el = document.getElementsByTagName('i')[0]
 }, false)
 document.body.onclick = function() {
+   var p = document.getElementsByTagName('p')[0]
    if (!document.body.hasAttribute('user-id')) {
       document.body.setAttribute('user-id', '2')
-      document.getElementsByTagName('p')[0].firstChild.nodeValue = 'Test '
+      p.removeChild(window.el)
+      //document.getElementsByTagName('p')[0].firstChild.nodeValue = 'Test '
    } else {
       document.body.removeAttribute('user-id')
-      document.getElementsByTagName('p')[0].firstChild.nodeValue = 'This is a '
+      p.insertBefore(window.el, p.childNodes[1])
+      //document.getElementsByTagName('p')[0].firstChild.nodeValue = 'This is a '
    }
    //document.body.onclick = null
 }
