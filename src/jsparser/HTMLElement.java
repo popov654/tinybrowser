@@ -748,10 +748,20 @@ public class HTMLElement extends HTMLNode {
             boolean add = !(value instanceof Null || value instanceof Undefined);
             Function func = (Function) items.get(add ? "addEventListener" : "removeEventListener");
             if (func != null) {
+                if (add && items.get(str) instanceof Function && items.get(str) != value) {
+                    Vector<JSValue> args = new Vector<JSValue>();
+                    args.add(new JSString(str.substring(2).toLowerCase()));
+                    args.add(items.get(str));
+                    if (args.get(1) instanceof Function) {
+                        items.get("removeEventListener").call(this, args);
+                    }
+                }
                 Vector<JSValue> args = new Vector<JSValue>();
                 args.add(new JSString(str.substring(2).toLowerCase()));
                 args.add(add ? value : items.get(str));
-                if (args.get(1) instanceof Function) func.call(this, args);
+                if (args.get(1) instanceof Function) {
+                    func.call(this, args);
+                }
             }
         }
         super.set(str, value);
