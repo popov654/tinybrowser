@@ -1384,7 +1384,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     c[i].setBounds(rect.x + _x_ - old_value, rect.y, rect.width, rect.height);
                 }
             }
-            if (document.no_layout && children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
+            if (document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
                 for (int i = 0; i < lines.size(); i++) {
                     for (int j = 0; j < lines.get(i).elements.size(); j++) {
                         lines.get(i).elements.get(j).setX(lines.get(i).elements.get(j)._getX());
@@ -1416,7 +1416,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     c[i].setBounds(rect.x, rect.y + _y_ - old_value, rect.width, rect.height);
                 }
             }
-            if (document.no_layout && children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
+            if (document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
                 for (int i = 0; i < lines.size(); i++) {
                     for (int j = 0; j < lines.get(i).elements.size(); j++) {
                         lines.get(i).elements.get(j).setY(lines.get(i).elements.get(j)._getY());
@@ -2957,7 +2957,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         boolean paintShadow = false;
 
-        if (textShadowColor != null && text_shadow_buffer == null && children.size() == 1 && children.get(0).type == NodeTypes.TEXT && textRenderingMode == 0) {
+        if (textShadowColor != null && text_shadow_buffer == null && children.get(0).type == NodeTypes.TEXT && textRenderingMode == 0) {
             text_shadow_buffer = new BufferedImage(document.root.width, document.root.height, BufferedImage.TYPE_INT_ARGB);
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).text_shadow_buffer = text_shadow_buffer;
@@ -5422,8 +5422,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (document.prevent_mixed_content) {
             normalizeContent();
         }
-        //if (!no_layout) performLayout();
-        //forceRepaint();
+        if (document != null && document.ready) {
+            Block block = this;
+            if ((display_type == Display.INLINE_BLOCK || display_type == Display.INLINE) && parent != null) {
+                boolean val = document.fast_update;
+                document.fast_update = false;
+                block = parent.doIncrementLayout(parent.viewport_width, parent.viewport_height, false);
+                document.fast_update = val;
+            } else {
+                block = doIncrementLayout(viewport_width, viewport_height, false);
+            }
+            document.root.setNeedRestoreSelection(true);
+            block.forceRepaint();
+            document.root.setNeedRestoreSelection(false);
+            document.repaint();
+        }
     }
 
     public void addElement(Block d) {
@@ -6395,7 +6408,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        if (!(children.size() == 1 && children.get(0).type == NodeTypes.TEXT)) {
+        if (!(children.size() > 0 && children.get(0).type == NodeTypes.TEXT)) {
             for (int i = 0; i < blocks.length; i++) {
                 Block b = blocks[i].original != null ? blocks[i].original : blocks[i];
                 if (children.contains(b)) {
@@ -6492,7 +6505,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int x = e.getX();
             int y = e.getY();
             if (textRenderingMode == 1) {
-                if (!(children.size() == 1 && children.get(0).type == NodeTypes.TEXT)) {
+                if (!(children.size() > 0 && children.get(0).type == NodeTypes.TEXT)) {
                     last_click = System.currentTimeMillis();
                 }
                 for (int i = 0; i < lines.size(); i++) {
@@ -6885,7 +6898,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void applyLinkStyles(boolean is_hovered) {
         Color col = is_hovered && (hasParentLink || href.length() > 0) ? linkColor : default_color;
         
-        if (children.size() == 1 && children.get(0).type == NodeTypes.TEXT) {
+        if (children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
             color = col;
         }
     }
@@ -7037,7 +7050,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     private boolean isInnermostBlockForEvent(int x, int y) {
         boolean isInside = isMouseInside(x, y);
-        if (isInside && (children.size() == 0 || children.size() == 1 && children.get(0).type == NodeTypes.TEXT)) {
+        if (isInside && (children.size() == 0 || children.get(0).type == NodeTypes.TEXT)) {
             return true;
         }
         for (int i = 0; i < children.size(); i++) {
