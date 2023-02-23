@@ -780,7 +780,9 @@ public class HTMLElement extends HTMLNode {
         Iterator it = keys.iterator();
         while (it.hasNext()) {
             String str = (String)it.next();
-            if (str.equals("children") || str.equals("childNodes") || str.matches("(previous|next)(Element)?Sibling")) continue;
+            if (str.equals("__proto__") || str.equals("children") || str.equals("childNodes") ||
+                  str.matches("(previous|next)(Element)?Sibling") || str.endsWith("Child")) continue;
+            if (items.get(str).getType().equals("Function")) continue;
             if (str.equals("parentNode")) {
                 if (result.length() > 0) result += ", ";
                 result += "parentNode: " + (node.parent != null ? "HTMLElement[" + node.parent.tagName + "]" : "null");
