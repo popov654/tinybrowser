@@ -673,6 +673,9 @@ public class HTMLElement extends HTMLNode {
             for (int i = 0; i < funcs.size(); i++) {
                 if (funcs.get(i) == args.get(1)) {
                     funcs.remove(i);
+                    if (items.get("on" + event_type) == args.get(1)) {
+                        items.remove("on" + event_type);
+                    }
                     break;
                 }
             }
