@@ -132,28 +132,7 @@ public class HTMLElement extends JSObject {
         Node next_el = node != null ? node.nextElementSibling() : null;
         items.put("nextElementSibling", next_el != null ? HTMLElement.create(next_el) : Null.getInstance());
 
-        Node first_child = node != null ? node.firstChild() : null;
-        items.put("firstChild", first_child != null ? HTMLElement.create(first_child) : Null.getInstance());
-        Node last_child = node != null ? node.lastChild() : null;
-        items.put("lastChild", last_child != null ? HTMLElement.create(last_child) : Null.getInstance());
-        Node first_el_child = node != null ? node.firstElementChild() : null;
-        items.put("firstElementChild", first_el_child != null ? HTMLElement.create(first_el_child) : Null.getInstance());
-        Node last_el_child = node != null ? node.lastElementChild() : null;
-        items.put("lastElementChild", last_el_child != null ? HTMLElement.create(last_el_child) : Null.getInstance());
-
-        JSArray childNodes = new JSArray();
-        for (Node child: node.children) {
-            childNodes.push(HTMLElement.create(child));
-        }
-        items.put("childNodes", childNodes);
-        
-        JSArray children = new JSArray();
-        for (Node child: node.children) {
-            if (child.nodeType == 1) {
-                children.push(HTMLElement.create(child));
-            }
-        }
-        items.put("children", children);
+        updateChildren();
 
         if (node.nodeType != 1) return;
 
@@ -461,6 +440,31 @@ public class HTMLElement extends JSObject {
         });
     }
 
+    public void updateChildren() {
+        Node first_child = node != null ? node.firstChild() : null;
+        items.put("firstChild", first_child != null ? HTMLElement.create(first_child) : Null.getInstance());
+        Node last_child = node != null ? node.lastChild() : null;
+        items.put("lastChild", last_child != null ? HTMLElement.create(last_child) : Null.getInstance());
+        Node first_el_child = node != null ? node.firstElementChild() : null;
+        items.put("firstElementChild", first_el_child != null ? HTMLElement.create(first_el_child) : Null.getInstance());
+        Node last_el_child = node != null ? node.lastElementChild() : null;
+        items.put("lastElementChild", last_el_child != null ? HTMLElement.create(last_el_child) : Null.getInstance());
+
+        JSArray childNodes = new JSArray();
+        for (Node child: node.children) {
+            childNodes.push(HTMLElement.create(child));
+        }
+        items.put("childNodes", childNodes);
+
+        JSArray children = new JSArray();
+        for (Node child: node.children) {
+            if (child.nodeType == 1) {
+                children.push(HTMLElement.create(child));
+            }
+        }
+        items.put("children", children);
+    }
+
     public void updateDataset() {
         HashMap<String, String> data = new HashMap<String, String>();
         Set<String> keys = node.attributes.keySet();
@@ -557,6 +561,8 @@ public class HTMLElement extends JSObject {
                 parent_block.addElement(block, true);
             }
 
+            updateChildren();
+
             return Undefined.getInstance();
         }
     }
@@ -588,6 +594,8 @@ public class HTMLElement extends JSObject {
                 parent_block.addElement(block, pos, true);
             }
 
+            updateChildren();
+
             return Undefined.getInstance();
         }
     }
@@ -612,6 +620,8 @@ public class HTMLElement extends JSObject {
                 render.Block parent_block = Mapper.get(node);
                 parent_block.removeElement(block);
             }
+
+            updateChildren();
 
             return Undefined.getInstance();
         }
