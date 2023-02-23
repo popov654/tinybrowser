@@ -32,6 +32,10 @@ public class HTMLElement extends JSObject {
             items.put("setAttribute", new setAttributeFunction());
             items.put("removeAttribute", new removeAttributeFunction());
 
+            items.put("appendChild", new appendChildFunction());
+            items.put("insertBefore", new insertBeforeFunction());
+            items.put("removeChild", new removeChildFunction());
+
             items.put("addEventListener", new addEventListenerFunction());
             items.put("removeEventListener", new removeEventListenerFunction());
         }
@@ -530,6 +534,87 @@ public class HTMLElement extends JSObject {
         if (frame == null) return;
         items.put("screenX", new JSInt(b.document != null ? b._x_ + b.document.getBounds().x + frame.getLocation().x : 0));
         items.put("screenY", new JSInt(b.document != null ? b._y_ + b.document.getBounds().y + frame.getLocation().y : 0));
+    }
+
+    class appendChildFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "ArgumentsError: 1 argument expected", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(0) instanceof HTMLElement)) {
+                JSError e = new JSError(null, "TypeError: argument is not an element", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            render.Block block = Mapper.get(((HTMLElement)args.get(0)).node);
+            boolean result = node.addChild(((HTMLElement)args.get(0)).node);
+
+            if (result) {
+                render.Block parent_block = Mapper.get(node);
+                parent_block.addElement(block, true);
+            }
+
+            return Undefined.getInstance();
+        }
+    }
+
+    class insertBeforeFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 2) {
+                JSError e = new JSError(null, "ArgumentsError: 2 arguments expected", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(0) instanceof HTMLElement)) {
+                JSError e = new JSError(null, "TypeError: argument 1 is not an element", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(1) instanceof HTMLElement)) {
+                JSError e = new JSError(null, "TypeError: argument 2 is not an element", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            render.Block block = Mapper.get(((HTMLElement)args.get(0)).node);
+            boolean result = node.insertChild(((HTMLElement)args.get(0)).node, ((HTMLElement)args.get(1)).node);
+
+            if (result) {
+                int pos = node.children.indexOf(((HTMLElement)args.get(0)).node);
+                render.Block parent_block = Mapper.get(node);
+                parent_block.addElement(block, pos, true);
+            }
+
+            return Undefined.getInstance();
+        }
+    }
+
+    class removeChildFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            if (args.size() < 1) {
+                JSError e = new JSError(null, "ArgumentsError: 1 argument expected", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            if (!(args.get(0) instanceof HTMLElement)) {
+                JSError e = new JSError(null, "TypeError: argument is not an element", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
+            render.Block block = Mapper.get(((HTMLElement)args.get(0)).node);
+            boolean result = node.removeChild(((HTMLElement)args.get(0)).node);
+
+            if (result) {
+                render.Block parent_block = Mapper.get(node);
+                parent_block.removeElement(block);
+            }
+
+            return Undefined.getInstance();
+        }
     }
 
     class addEventListenerFunction extends Function {

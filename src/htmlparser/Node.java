@@ -39,12 +39,28 @@ public class Node {
     }
 
     public boolean addChild(Node node) {
-        if (nodeType == 1) {
-            children.add(node);
-            if (document != null) {
-                document.indexNode(node);
+        if (node == null) {
+            return false;
+        }
+        children.add(node);
+        if (document != null && nodeType == 1) {
+            document.indexNode(node);
+        }
+        return true;
+    }
+
+    public boolean insertChild(Node node, Node beforeNode) {
+        if (node == null) {
+            return false;
+        }
+        for (int i = 0; i < children.size(); i++) {
+            if (children.get(i) == beforeNode) {
+                children.add(i, node);
+                if (document != null && nodeType == 1) {
+                    document.indexNode(node);
+                }
+                return true;
             }
-            return true;
         }
         return false;
     }
@@ -261,9 +277,20 @@ public class Node {
 
     public boolean removeChild(int index) {
         if (index >= 1 && index <= children.size()) {
+            Node node = children.get(index - 1);
             children.remove(index - 1);
             if (document != null) {
-                document.removeSubtreeIndex(this);
+                document.removeSubtreeIndex(node);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeChild(Node node) {
+        if (children.remove(node)) {
+            if (document != null) {
+                document.removeSubtreeIndex(node);
             }
             return true;
         }

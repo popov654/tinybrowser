@@ -253,8 +253,8 @@ public class Builder {
                     //System.out.println("Test");
                     return;
                 }
-                b.replaceSubtreeWith(builder.buildSubtree(document, node));
-                node.removeListener(this);
+                //b.replaceSubtreeWith(builder.buildSubtree(document, node));
+                //node.removeListener(this);
             }
         };
         node.addListener(callback2, node, "valueChanged");
