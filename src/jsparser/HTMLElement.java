@@ -58,11 +58,12 @@ public class HTMLElement extends HTMLNode {
                 updateSize();
                 return;
             }
+            if (node.nodeType != 1) return;
             HashMap<String, String> data = e.getData();
             //if (data != null) System.out.println(data.get("pageX") + ", " + data.get("pageY"));
             Vector<HTMLElement> parents = getParents();
             if (data != null) data.put("bubbles", parents.size() > 1 ? "true" : "false");
-            JSEvent event = new JSEvent(HTMLElement.create(node), e.relatedTarget != null ? HTMLElement.create(e.relatedTarget) : null, data);
+            JSEvent event = new JSEvent(HTMLElement.create(node), e.relatedTarget != null && e.relatedTarget.nodeType == 1 ? HTMLElement.create(e.relatedTarget) : null, data);
             Vector<JSValue> args = new Vector<JSValue>();
             args.add(event);
             String type = data.get("type").replaceAll("(^\"|\"$)", "");
