@@ -960,6 +960,7 @@ public class Expression {
        e.ret = ret;
        e.thr = thr;
        e.source = source;
+       e.mode = mode;
        return e;
     }
 
