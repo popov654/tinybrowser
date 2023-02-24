@@ -336,6 +336,10 @@ public class LayoutTests extends JFrame {
 
         document.root.addElement(d2);
 
+        //String expr = "2 * (15px / 4)";
+        //System.out.println(d.calculateCssExpression(expr));
+        //System.out.println(d.getValueInPixels("calc(" + expr + ")", ""));
+
         /*
          
         Timer t1 = new Timer(1500, new ActionListener() {

@@ -5145,6 +5145,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     private int[] parseValueStringToPx(String value) {
+        if (value.matches("calc\\(.*\\)")) {
+            return new int[] { (int) Math.round(calculateCssExpression(value.substring(5, value.length()-1))), Units.px };
+        }
         if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|%)$")) {
             String ch = value.substring(0, 1);
             String n = "";
@@ -5160,6 +5163,146 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return new int[] {val, units};
         }
         return null;
+    }
+
+    public double calculateCssExpression(String str) {
+        int pos = 0;
+        int state = 0;
+        String token = "";
+        Vector<String> tokens = new Vector<String>();
+        while (pos < str.length()) {
+            char ch = str.charAt(pos);
+            if (java.lang.Character.isWhitespace(ch) || ch == '(' || ch == ')') {
+                if (!token.isEmpty()) {
+                    tokens.add(token);
+                    token = "";
+                }
+                if (java.lang.Character.isWhitespace(ch)) {
+                    pos++;
+                }
+                if (ch == '(') {
+                    int level = 1;
+                    int pos2 = pos+1;
+                    while (pos2 < str.length() && level > 0) {
+                        if (str.charAt(pos2) == '(') level++;
+                        if (str.charAt(pos2) == ')') level--;
+                        pos2++;
+                    }
+                    if (level == 0) {
+                        double val = calculateCssExpression(str.substring(pos+1, pos2-1));
+                        if (val < 0) {
+                            return -1;
+                        }
+                        tokens.add(val + "px");
+                    }
+                    pos = pos2;
+                }
+                continue;
+            }
+            token += ch;
+            if (pos == str.length()-1 && !token.isEmpty()) {
+                tokens.add(token);
+                token = "";
+            }
+            pos++;
+        }
+        return calc(tokens);
+    }
+
+    private double calc(Vector<String> tokens) {
+        double result = -1;
+        Vector<Integer> p = new Vector<Integer>();
+        for (int i = 0; i < tokens.size(); i++) {
+            String token = tokens.get(i);
+            if (token.matches("[*/+-]") && (i == 0 || i == tokens.size()-1)) {
+                return -1;
+            }
+            if (token.matches("[*/]")) {
+                String leftOp = tokens.get(i-1);
+                String rightOp = tokens.get(i+1);
+                if (!leftOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?.*") || !rightOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?.*")) {
+                    return -1;
+                }
+                if (leftOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?") && rightOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?")) {
+                    p.add(2);
+                } else {
+                    p.add(3);
+                }
+            }
+            else if (token.matches("[+-]")) {
+                String leftOp = tokens.get(i-1);
+                String rightOp = tokens.get(i+1);
+                if (!leftOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?.*") || !rightOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?.*")) {
+                    return -1;
+                }
+                p.add(1);
+            }
+            else {
+                p.add(0);
+            }
+        }
+        for (int j = 3; j >= 1; j--) {
+            if (tokens.size() == 1) break;
+            for (int i = 0; i < tokens.size(); i++) {
+                if (p.get(i) == j) {
+                    if (tokens.get(i).equals("*")) {
+                        String leftOp = tokens.get(i-1);
+                        String rightOp = tokens.get(i+1);
+                        if (leftOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?") && rightOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?")) {
+                            return -1;
+                        }
+                        double a = 0;
+                        double b = 0;
+                        if (leftOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?")) {
+                            a = Double.parseDouble(leftOp);
+                            b = getValueInCssPixels(rightOp);
+                        } else if (leftOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?")) {
+                            a = Double.parseDouble(rightOp);
+                            b = getValueInCssPixels(leftOp);
+                        }
+                        tokens.add(i-1, (a * b) + "px");
+                        p.add(i-1, 0);
+                        for (int k = 0; k < 3; k++) {
+                            tokens.remove(i);
+                            p.remove(i);
+                        }
+                    } else if (tokens.get(i).equals("/")) {
+                        String leftOp = tokens.get(i-1);
+                        String rightOp = tokens.get(i+1);
+                        if (leftOp.matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?")) {
+                            return -1;
+                        }
+                        double a = getValueInCssPixels(leftOp);
+                        double b = Double.parseDouble(rightOp);
+                        tokens.add(i-1, (a / b) + "px");
+                        p.add(i-1, 0);
+                        for (int k = 0; k < 3; k++) {
+                            tokens.remove(i);
+                            p.remove(i);
+                        }
+                    } else if (tokens.get(i).equals("+") || tokens.get(i).equals("-")) {
+                        String leftOp = tokens.get(i-1);
+                        String rightOp = tokens.get(i+1);
+                        double a = getValueInCssPixels(leftOp);
+                        double b = getValueInCssPixels(rightOp);
+                        double res = tokens.get(i).equals("+") ? a + b : a - b;
+                        tokens.add(i-1, res + "px");
+                        p.add(i-1, 0);
+                        for (int k = 0; k < 3; k++) {
+                            tokens.remove(i);
+                            p.remove(i);
+                        }
+                    }
+                }
+            }
+        }
+        if (tokens.size() > 1) {
+            return -1;
+        }
+        if (tokens.get(0).matches("([0-9]|[1-9][0-9]*)(\\.[0-9]+)?px")) {
+            result = Double.parseDouble(tokens.get(0).substring(0, tokens.get(0).length()-2));
+        }
+        return result;
     }
 
     public class CssLength {
@@ -5192,6 +5335,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public int getValueInPixels(String value, String units_list) {
+        if (value.matches("calc\\(.*\\)")) {
+            return (int) Math.round(calculateCssExpression(value.substring(5, value.length()-1)) * ratio);
+        }
         String ch = value.substring(0, 1);
         String n = "";
         int index = 0;
@@ -5208,6 +5354,27 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (u.equals("%")) {
             val = (int)Math.round(Float.parseFloat(n) / 100 * (parent != null ? parent.viewport_width :
                 document.width - document.borderSize * 2));
+        }
+
+        return val;
+    }
+
+    public float getValueInCssPixels(String value) {
+        String ch = value.substring(0, 1);
+        String n = "";
+        int index = 0;
+        while (ch.matches("[0-9.]")) {
+            n += ch;
+            index++;
+            ch = value.substring(index, index+1);
+        }
+        String u = value.substring(index);
+
+        float val = Float.parseFloat(n);
+        if (u.equals("em")) val = (int)Math.round(Integer.parseInt(n) * 16);
+        if (u.equals("%")) {
+            val = Float.parseFloat(n) / 100 * (parent != null ? parent.viewport_width :
+                document.width - document.borderSize * 2);
         }
 
         return val;
