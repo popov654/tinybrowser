@@ -16,10 +16,10 @@ import java.util.Vector;
  *
  * @author Alex
  */
-public class HTMLElement extends JSObject {
+public class HTMLElement extends HTMLNode {
 
     private HTMLElement(Node node) {
-        this.node = node;
+        super(node);
 
         if (node.nodeType == 1) {
             items.put("getElementById", new getElementByIdFunction());
@@ -92,7 +92,8 @@ public class HTMLElement extends JSObject {
 
     };
 
-    private Vector<HTMLElement> getParents() {
+    @Override
+    protected Vector<HTMLElement> getParents() {
         Vector<HTMLElement> result = new Vector<HTMLElement>();
         result.add(this);
         JSValue p = items.get("parentNode");
@@ -104,7 +105,7 @@ public class HTMLElement extends JSObject {
     }
 
     public static HTMLElement create(Node node) {
-        HTMLElement element = map.get(node);
+        HTMLElement element = (HTMLElement) map.get(node);
         if (element == null) {
             element = new HTMLElement(node);
             map.put(node, element);
@@ -113,24 +114,11 @@ public class HTMLElement extends JSObject {
         return element;
     }
 
+    @Override
     public void calculateValues() {
-        items.put("nodeValue", new JSString(node.nodeValue));
-        items.put("textContent", new JSString(node.getTextContent()));
-        items.put("nodeType", new JSInt(node.nodeType));
-        if (node.nodeType == 1) {
-            items.put("tagName", new JSString(node.tagName));
-        }
+        super.calculateValues();
 
-        Node parent = node != null ? node.parent : null;
-        items.put("parentNode", parent != null ? HTMLElement.create(parent) : Null.getInstance());
-        Node prev = node != null ? node.previousSibling : null;
-        items.put("previousSibling", prev != null ? HTMLElement.create(prev) : Null.getInstance());
-        Node next = node != null ? node.nextSibling : null;
-        items.put("nextSibling", next != null ? HTMLElement.create(next) : Null.getInstance());
-        Node prev_el = node != null ? node.previousElementSibling() : null;
-        items.put("previousElementSibling", prev_el != null ? HTMLElement.create(prev_el) : Null.getInstance());
-        Node next_el = node != null ? node.nextElementSibling() : null;
-        items.put("nextElementSibling", next_el != null ? HTMLElement.create(next_el) : Null.getInstance());
+        items.put("tagName", new JSString(node.tagName));
 
         updateChildren();
 
@@ -440,21 +428,14 @@ public class HTMLElement extends JSObject {
         });
     }
 
+    @Override
     public void updateChildren() {
-        Node first_child = node != null ? node.firstChild() : null;
-        items.put("firstChild", first_child != null ? HTMLElement.create(first_child) : Null.getInstance());
-        Node last_child = node != null ? node.lastChild() : null;
-        items.put("lastChild", last_child != null ? HTMLElement.create(last_child) : Null.getInstance());
+        super.updateChildren();
+
         Node first_el_child = node != null ? node.firstElementChild() : null;
         items.put("firstElementChild", first_el_child != null ? HTMLElement.create(first_el_child) : Null.getInstance());
         Node last_el_child = node != null ? node.lastElementChild() : null;
         items.put("lastElementChild", last_el_child != null ? HTMLElement.create(last_el_child) : Null.getInstance());
-
-        JSArray childNodes = new JSArray();
-        for (Node child: node.children) {
-            childNodes.push(HTMLElement.create(child));
-        }
-        items.put("childNodes", childNodes);
 
         JSArray children = new JSArray();
         for (Node child: node.children) {
@@ -548,17 +529,22 @@ public class HTMLElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            if (!(args.get(0) instanceof HTMLElement)) {
-                JSError e = new JSError(null, "TypeError: argument is not an element", getCaller().getStack());
+            if (!(args.get(0) instanceof HTMLNode)) {
+                JSError e = new JSError(null, "TypeError: argument is not a node", getCaller().getStack());
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            render.Block block = Mapper.get(((HTMLElement)args.get(0)).node);
-            boolean result = node.addChild(((HTMLElement)args.get(0)).node);
+            Node newNode = ((HTMLNode)args.get(0)).node;
+            render.Block block = Mapper.get(newNode);
+            boolean result = node.addChild(newNode);
 
             if (result) {
                 render.Block parent_block = Mapper.get(node);
-                parent_block.addElement(block, true);
+                if (newNode.nodeType == 1) {
+                    parent_block.addElement(block, true);
+                } else if (newNode.nodeType == 3) {
+                    parent_block.addText(newNode.nodeValue);
+                }
             }
 
             updateChildren();
@@ -575,23 +561,28 @@ public class HTMLElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            if (!(args.get(0) instanceof HTMLElement)) {
-                JSError e = new JSError(null, "TypeError: argument 1 is not an element", getCaller().getStack());
+            if (!(args.get(0) instanceof HTMLNode)) {
+                JSError e = new JSError(null, "TypeError: argument 1 is not a node", getCaller().getStack());
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            if (!(args.get(1) instanceof HTMLElement)) {
-                JSError e = new JSError(null, "TypeError: argument 2 is not an element", getCaller().getStack());
+            if (!(args.get(1) instanceof HTMLNode)) {
+                JSError e = new JSError(null, "TypeError: argument 2 is not a node", getCaller().getStack());
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            render.Block block = Mapper.get(((HTMLElement)args.get(0)).node);
-            boolean result = node.insertChild(((HTMLElement)args.get(0)).node, ((HTMLElement)args.get(1)).node);
+            Node newNode = ((HTMLNode)args.get(0)).node;
+            render.Block block = Mapper.get(newNode);
+            boolean result = node.insertChild(newNode, ((HTMLNode)args.get(1)).node);
 
             if (result) {
-                int pos = node.children.indexOf(((HTMLElement)args.get(0)).node);
+                int pos = node.children.indexOf(newNode);
                 render.Block parent_block = Mapper.get(node);
-                parent_block.addElement(block, pos, true);
+                if (newNode.nodeType == 1) {
+                    parent_block.addElement(block, pos, true);
+                } else if (newNode.nodeType == 3) {
+                    parent_block.addText(newNode.nodeValue, pos);
+                }
             }
 
             updateChildren();
@@ -613,8 +604,8 @@ public class HTMLElement extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            render.Block block = Mapper.get(((HTMLElement)args.get(0)).node);
-            boolean result = node.removeChild(((HTMLElement)args.get(0)).node);
+            render.Block block = Mapper.get(((HTMLNode)args.get(0)).node);
+            boolean result = node.removeChild(((HTMLNode)args.get(0)).node);
 
             if (result) {
                 render.Block parent_block = Mapper.get(node);
@@ -760,12 +751,6 @@ public class HTMLElement extends JSObject {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
-        if (str.equals("nodeValue")) {
-            node.nodeValue = value.asString().getValue();
-            items.put("nodeValue", new JSString(node.nodeValue));
-            items.put("textContent", new JSString(node.getTextContent()));
-            node.fireEvent("valueChanged", "node");
-        }
         super.set(str, value);
     }
 
@@ -780,12 +765,6 @@ public class HTMLElement extends JSObject {
                 args.add(add ? value : items.get(str.getValue()));
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
-        }
-        if (str.getValue().equals("nodeValue")) {
-            node.nodeValue = value.asString().getValue();
-            items.put("nodeValue", new JSString(node.nodeValue));
-            items.put("textContent", new JSString(node.getTextContent()));
-            node.fireEvent("valueChanged", "node");
         }
         super.set(str, value);
     }
@@ -823,10 +802,7 @@ public class HTMLElement extends JSObject {
         return "HTMLElement {" + result + "}";
     }
 
-    public static HashMap<Node, HTMLElement> map = new HashMap<Node, HTMLElement>();
-
     LinkedHashMap<String, Vector<Function>> listeners = new LinkedHashMap<String, Vector<Function>>();
     LinkedHashMap<String, Vector<Function>> listeners_0 = new LinkedHashMap<String, Vector<Function>>();
     HashMap<String, String> styles = new HashMap<String, String>();
-    public Node node;
 }

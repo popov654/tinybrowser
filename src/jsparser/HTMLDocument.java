@@ -145,7 +145,7 @@ public class HTMLDocument extends JSObject {
                 render.Block root_block = bridge.Mapper.get(root.get(0));
                 root_block.builder.buildElement(root_block.document, null, n);
             }
-            return HTMLElement.create(n);
+            return HTMLNode.create(n);
         }
     }
 
