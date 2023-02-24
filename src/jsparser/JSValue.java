@@ -1,5 +1,6 @@
 package jsparser;
 
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -100,10 +101,55 @@ public abstract class JSValue {
         return call(null, args);
     }
 
+    public void incrementRefCount() {
+        if (this instanceof Null || this instanceof Undefined) {
+            return;
+        }
+        ref_count++;
+    }
+
+    public void decrementRefCount() {
+        if (this instanceof Null || this instanceof Undefined) {
+            return;
+        }
+        ref_count--;
+        if (ref_count <= 0) {
+            if (this instanceof JSArray) {
+                JSArray obj = (JSArray) this;
+                Set<String> keys = obj._items.keySet();
+                for (String key: keys) {
+                    JSValue val = obj._items.get(key);
+                    if (val != null) {
+                        val.decrementRefCount();
+                    }
+                }
+                for (int i = 0; i < obj.items.size(); i++) {
+                    obj.items.get(i).decrementRefCount();
+                }
+                obj._items.clear();
+                obj.items.clear();
+            }
+            if (this instanceof JSObject && !(this instanceof HTMLNode)) {
+                JSObject obj = (JSObject) this;
+                Set<String> keys = obj.items.keySet();
+                for (String key: keys) {
+                    if (key.equals("__proto__")) continue;
+                    JSValue val = obj.items.get(key);
+                    if (val != null) {
+                        val.decrementRefCount();
+                    }
+                }
+                obj.items.clear();
+            }
+        }
+    }
+
     public abstract JSString asString();
     public abstract JSInt asInt();
     public abstract JSFloat asFloat();
     public abstract JSBool asBool();
+
+    public int ref_count = 0;
 
     private String type;
 }

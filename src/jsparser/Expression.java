@@ -1330,7 +1330,7 @@ public class Expression {
                             }
                         }
                         accessObjectProperties(ct.next);
-                        types = op.prev.val.getType() + "|" + JSValue.getType(op.next.getContent());
+                        types = (op.prev.val != null ? op.prev.val.getType() : "null") + "|" + (op.next.val != null ? op.next.val.getType() : JSValue.getType(op.next.getContent()));
                         type = getResultType(types, c);
                     }
                     if (op.next.next != null && op.next.next.getType() == Token.BRACE_OPEN) {
@@ -1730,6 +1730,12 @@ public class Expression {
                             ((JSArray)op.prev.ctx).set((int)((JSInt)index).getValue(), result);
                         }
                         if (op.prev.ctx.getType().matches("Object|Function")) {
+                            JSValue old_val = ((JSObject)op.prev.ctx).get(index.asString().getValue());
+                            if (!(old_val != null && old_val == result)) {
+                                if (old_val != null) {
+                                    old_val.decrementRefCount();
+                                }
+                            }
                             ((JSObject)op.prev.ctx).set(index.asString().getValue(), result);
                         }
                         op.prev.val = result;
@@ -1738,6 +1744,13 @@ public class Expression {
                         if (op.prev.getType() != Token.VAR_NAME) {
                             parent_block.error = new JSError(null, "Assignment error", getStack());
                         } else {
+                            JSValue val = Expression.getVar(op.prev.getContent(), this);
+                            if (val != result) {
+                                if (val != Undefined.getInstance()) {
+                                    val.decrementRefCount();
+                                }
+                                result.incrementRefCount();
+                            }
                             Expression.setVar(op.prev.getContent(), result, this, mode);
                         }
                     }
@@ -2118,12 +2131,39 @@ public class Expression {
         return ret;
     }
 
+    public void incrementRefCount() {
+        ref_count++;
+        Block b = parent_block;
+        while (b != null) {
+            b.ref_count++;
+            b = b.parent_block;
+        }
+    }
+
+    public void decrementRefCount() {
+        ref_count--;
+        if (ref_count == 0 && this instanceof Block) {
+            //System.err.println("Clearing scope");
+            ((Block)this).scope.clear();
+        }
+        Block b = parent_block;
+        while (b != null) {
+            b.ref_count--;
+            if (b.ref_count == 0 && b instanceof Block) {
+                //System.err.println("Clearing scope");
+                ((Block)b).scope.clear();
+            }
+            b = b.parent_block;
+        }
+    }
+
     @Override
     public String toString() {
         return source;
     }
 
     private int n = 0;
+    public int ref_count = 0;
 
     private Token start;
     private Token end;

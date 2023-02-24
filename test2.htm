@@ -52,34 +52,20 @@ p::after {
 </style>
 <script>
 window.addEventListener('load', function() {
-   /* document.body.setAttribute('class', 'ready full')
-   console.log(document.body.classList)
-   document.body.classList.remove('full')
-   console.log(document.body.classList) */
-   
-   // alert('Test')
-   /* if (confirm('Are you sure you want to continue?')) {
-      console.log(document.getElementsByTagName('i')[0].textContent)
-   } */
-   // console.log(prompt("Please enter any text"))
-   
    var span = document.getElementsByTagName('i')[0]
-   console.log(span.attributes)
-   console.log(document.body.dataset)
-   //console.log(getComputedStyle(document.getElementsByTagName('p')[0]))
-   document.getElementsByTagName('p')[0].style.borderColor = 'green'
-   console.log("CSS size: " + span.clientWidth + 'x' + span.clientHeight)
-   console.log("Pixel size: " + span.screenWidth + 'x' + span.screenHeight)
-   console.log("Viewport size: " + window.innerWidth + 'x' + window.innerHeight)
-   console.log("Screen size: " + window.screen.width + 'x' + window.screen.height)
-   console.log(document.createElement('div'))
-   window.el = document.getElementsByTagName('i')[0]
+   window.el = span
+   window.el.onclick = function() {
+      var x = { n: 1 }
+      console.log("clicked")
+      span = null
+   }
 }, false)
 document.body.onclick = function() {
    var p = document.getElementsByTagName('p')[0]
    if (!document.body.hasAttribute('user-id')) {
       document.body.setAttribute('user-id', '2')
       p.removeChild(window.el)
+      //window.el = null
       //document.getElementsByTagName('p')[0].firstChild.nodeValue = 'Test '
    } else {
       document.body.removeAttribute('user-id')

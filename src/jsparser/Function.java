@@ -126,6 +126,14 @@ public class Function extends JSObject {
         return params.size();
     }
 
+    public Block getBody() {
+        return body;
+    }
+
+    public void setBody(Block block) {
+        body = block;
+    }
+
     public Function bind(JSObject context, Vector<JSValue> args) {
         if (bound_ctx == null) {
             bound_ctx = context;
@@ -159,6 +167,24 @@ public class Function extends JSObject {
         if (str.equals("length") || str.equals("displayName") ||
                 str.equals("name") || str.equals("caller")) return;
         super.set(str, value);
+    }
+    
+    @Override
+    public void incrementRefCount() {
+        if (body != null) {
+            body.incrementRefCount();
+        }
+        super.incrementRefCount();
+    }
+
+    @Override
+    public void decrementRefCount() {
+        if (body != null) {
+            body.decrementRefCount();
+            body.func = null;
+            body = null;
+        }
+        super.decrementRefCount();
     }
 
     @Override

@@ -20,6 +20,7 @@ public class HTMLNode extends JSObject {
 
     protected HTMLNode(Node node) {
         this.node = node;
+        if (node.parent != null) ref_count = 1;
         //node.addListener(eventListener, node, "any");
     }
 
@@ -71,13 +72,20 @@ public class HTMLNode extends JSObject {
     public void updateChildren() {
         Node first_child = node != null ? node.firstChild() : null;
         items.put("firstChild", first_child != null ? HTMLNode.create(first_child) : Null.getInstance());
+        if (items.get("firstChild") instanceof HTMLNode && items.get("firstChild").ref_count == 0) items.get("firstChild").ref_count++;
         Node last_child = node != null ? node.lastChild() : null;
         items.put("lastChild", last_child != null ? HTMLNode.create(last_child) : Null.getInstance());
+        if (items.get("lastChild") instanceof HTMLNode && items.get("lastChild").ref_count == 0) items.get("lastChild").ref_count++;
 
         JSArray childNodes = new JSArray();
         for (Node child: node.children) {
-            childNodes.push(HTMLNode.create(child));
+            HTMLNode childNode = HTMLNode.create(child);
+            childNodes.items.add(childNode);
+            if (childNode.ref_count == 0) {
+                childNode.ref_count++;
+            }
         }
+        childNodes.ref_count++;
         items.put("childNodes", childNodes);
     }
 

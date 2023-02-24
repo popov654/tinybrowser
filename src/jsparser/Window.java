@@ -284,6 +284,7 @@ public class Window extends JSObject {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
+        value.incrementRefCount();
         items.put(str, value);
     }
 
@@ -299,6 +300,7 @@ public class Window extends JSObject {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
+        value.incrementRefCount();
         items.put(str.getValue(), value);
     }
 
@@ -340,12 +342,14 @@ public class Window extends JSObject {
     }
 
     public int addTimer(Function func, int interval, boolean run_once, Vector<JSValue> params) {
+        func.incrementRefCount();
         timers.add(new Timer(this, func, interval, run_once, params));
         if (timers.size() > 0 && !tr.started) startTaskRunner();
         return timers.lastElement().getId();
     }
 
     public void removeTimer(Timer t) {
+        t.getFunction().decrementRefCount();
         timers.remove(t);
         if (timers.size() == 0 && tr.started) stopTaskRunner();
     }
@@ -353,6 +357,7 @@ public class Window extends JSObject {
     public void removeTimer(int id) {
         for (int i = 0; i < timers.size(); i++) {
             if (timers.get(i).getId() == id) {
+                timers.get(i).getFunction().decrementRefCount();
                 timers.remove(i);
                 if (timers.size() == 0 && tr.started) stopTaskRunner();
                 break;

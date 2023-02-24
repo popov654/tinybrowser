@@ -54,7 +54,7 @@ public class HTMLDocument extends JSObject {
                 }
                 Vector<Node> nodes = document.getElementsByTagName(args.get(i).asString().getValue());
                 for (Node node: nodes) {
-                    array.push(HTMLElement.create(node));
+                    array.items.add(HTMLElement.create(node));
                 }
             }
             return array;
@@ -73,7 +73,7 @@ public class HTMLDocument extends JSObject {
                 }
                 Vector<Node> nodes = document.getElementsByName(args.get(i).asString().getValue());
                 for (Node node: nodes) {
-                    array.push(HTMLElement.create(node));
+                    array.items.add(HTMLElement.create(node));
                 }
             }
             return array;
@@ -92,7 +92,7 @@ public class HTMLDocument extends JSObject {
                 }
                 Vector<Node> nodes = document.getElementsByClassName(args.get(i).asString().getValue());
                 for (Node node: nodes) {
-                    array.push(HTMLElement.create(node));
+                    array.items.add(HTMLElement.create(node));
                 }
             }
             return array;

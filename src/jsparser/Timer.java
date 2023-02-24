@@ -32,6 +32,10 @@ public class Timer {
         }
     }
 
+    public Function getFunction() {
+        return func;
+    }
+
     public int getId() {
         return uid;
     }

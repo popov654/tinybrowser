@@ -446,9 +446,11 @@ public class HTMLElement extends HTMLNode {
         JSArray children = new JSArray();
         for (Node child: node.children) {
             if (child.nodeType == 1) {
-                children.push(HTMLElement.create(child));
+                HTMLElement childElement = HTMLElement.create(child);
+                children.items.add(childElement);
             }
         }
+        children.ref_count++;
         items.put("children", children);
     }
 
@@ -461,11 +463,13 @@ public class HTMLElement extends HTMLNode {
             }
         }
         DOMStringMap attrs = new DOMStringMap(data, node);
+        attrs.ref_count++;
         items.put("dataset", attrs);
     }
 
     public void updateClassList() {
         NodeClassList classes = new NodeClassList(node);
+        classes.ref_count++;
         items.put("classList", classes);
     }
 
@@ -551,6 +555,7 @@ public class HTMLElement extends HTMLNode {
                 } else if (newNode.nodeType == 3) {
                     parent_block.addText(newNode.nodeValue);
                 }
+                args.get(0).incrementRefCount();
             }
 
             updateChildren();
@@ -589,6 +594,7 @@ public class HTMLElement extends HTMLNode {
                 } else if (newNode.nodeType == 3) {
                     parent_block.addText(newNode.nodeValue, pos);
                 }
+                args.get(0).incrementRefCount();
             }
 
             updateChildren();
@@ -616,6 +622,7 @@ public class HTMLElement extends HTMLNode {
             if (result) {
                 render.Block parent_block = Mapper.get(node);
                 parent_block.removeElement(block);
+                args.get(0).decrementRefCount();
             }
 
             updateChildren();
@@ -651,6 +658,7 @@ public class HTMLElement extends HTMLNode {
                 else listeners_0.put(event_type, funcs);
             }
             funcs.add((Function) args.get(1));
+            args.get(1).incrementRefCount();
             return Undefined.getInstance();
         }
     }
@@ -679,6 +687,7 @@ public class HTMLElement extends HTMLNode {
             for (int i = 0; i < funcs.size(); i++) {
                 if (funcs.get(i) == args.get(1)) {
                     funcs.remove(i);
+                    args.get(1).decrementRefCount();
                     if (items.get("on" + event_type) == args.get(1)) {
                         items.remove("on" + event_type);
                     }
@@ -786,6 +795,48 @@ public class HTMLElement extends HTMLNode {
             }
         }
         super.set(str, value);
+    }
+
+    @Override
+    public void incrementRefCount() {
+        if (ref_count == 0) {
+            Set<String> keys = listeners_0.keySet();
+            for (String key: keys) {
+                Vector<Function> funcs = listeners_0.get(key);
+                for (int i = 0; i < funcs.size(); i++) {
+                    funcs.get(i).incrementRefCount();
+                }
+            }
+            keys = listeners.keySet();
+            for (String key: keys) {
+                Vector<Function> funcs = listeners.get(key);
+                for (int i = 0; i < funcs.size(); i++) {
+                    funcs.get(i).incrementRefCount();
+                }
+            }
+        }
+        super.incrementRefCount();
+    }
+
+    @Override
+    public void decrementRefCount() {
+        if (ref_count <= 1) {
+            Set<String> keys = listeners_0.keySet();
+            for (String key: keys) {
+                Vector<Function> funcs = listeners_0.get(key);
+                for (int i = 0; i < funcs.size(); i++) {
+                    funcs.get(i).decrementRefCount();
+                }
+            }
+            keys = listeners.keySet();
+            for (String key: keys) {
+                Vector<Function> funcs = listeners.get(key);
+                for (int i = 0; i < funcs.size(); i++) {
+                    funcs.get(i).decrementRefCount();
+                }
+            }
+        }
+        super.decrementRefCount();
     }
 
     public boolean equals(HTMLElement element) {

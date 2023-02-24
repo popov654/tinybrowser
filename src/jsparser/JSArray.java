@@ -137,21 +137,25 @@ public class JSArray extends JSObject {
 
     public JSArray push(JSValue v) {
         items.add(v);
+        v.incrementRefCount();
         return this;
     }
 
     public JSArray pop() {
+        items.lastElement().decrementRefCount();
         items.remove(items.size()-1);
         return this;
     }
 
     public JSArray shift() {
+        items.firstElement().decrementRefCount();
         items.remove(0);
         return this;
     }
 
     public JSArray unshift(JSValue v) {
         items.insertElementAt(v, 0);
+        v.incrementRefCount();
         return this;
     }
 

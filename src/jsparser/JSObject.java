@@ -63,6 +63,10 @@ public class JSObject extends JSValue {
                         t.next.getType() == Token.OBJECT_END)) {
                     items.put(key, JSValue.create(JSValue.getType(t.getContent()), t.getContent()));
                 } else if (t.getType() == Token.OBJECT_ENTITY) {
+                    t.val.incrementRefCount();
+                    if (t.val instanceof Function) {
+                        exp.incrementRefCount();
+                    }
                     items.put(key, t.val);
                 } else {
                     Token ct = t;
@@ -79,6 +83,10 @@ public class JSObject extends JSValue {
                     e.silent = true;
                     e.eval();
                     JSValue val = e.getValue();
+                    val.incrementRefCount();
+                    if (val instanceof Function && exp instanceof Block) {
+                        ((Block)exp).incrementRefCount();
+                    }
                     items.put(key, (val != null ? val : Undefined.getInstance()));
                     if (ct != null) {
                         ct.next = tt;
@@ -107,10 +115,16 @@ public class JSObject extends JSValue {
 
     public void set(JSString str, JSValue value) {
         items.put(str.getValue(), value);
+        if (!(str.getValue().startsWith("on") && value instanceof HTMLElement)) {
+            value.incrementRefCount();
+        }
     }
 
     public void set(String str, JSValue value) {
         items.put(str, value);
+        if (!(str.startsWith("on") && this instanceof HTMLElement && value instanceof Function) && !str.equals("constructor")) {
+            value.incrementRefCount();
+        }
     }
 
     public HashMap<String, JSValue> getProperties() {
