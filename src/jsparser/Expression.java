@@ -68,7 +68,7 @@ public class Expression {
                     if (t != start) {
                         System.err.println("Syntax error");
                     }
-                    if (t == start) {
+                    if (t == start && t.next != null) {
                         start = t.next;
                     }
                     t = t.next;
@@ -91,7 +91,7 @@ public class Expression {
                     continue;
                 }
 
-                if (type == 15 && end.getContent().matches("break|continue")) {
+                else if (type == 15 && end.getContent().matches("break|continue")) {
                     if (t != start) {
                         System.err.println("Syntax error");
                     }
@@ -100,7 +100,7 @@ public class Expression {
                     break;
                 }
 
-                if (type == 15 && end.getContent().equals("delete")) {
+                else if (type == 15 && end.getContent().equals("delete")) {
                     del = true;
                     t.prev.next = t.next;
                     if (t.next != null) {
@@ -124,7 +124,7 @@ public class Expression {
                 end = t;
                 t = t.next;
 
-                if (type == 15 && !end.getContent().matches("var|let|new|yield")) {
+                if (type == 15 && !end.getContent().matches("if|var|let|new|yield")) {
                     end.next = null;
                     break;
                 }
@@ -147,8 +147,10 @@ public class Expression {
             source += "  ";
         }
 
+        boolean is_condition = false;
+
         while (token != null && token.getType() != Token.SEMICOLON) {
-            if (token.getType() == Token.OP && !token.getContent().equals("!")) {
+            if (token.getType() == Token.OP && !token.getContent().equals("!") && !token.getContent().matches("break|continue")) {
                 source += " ";
             }
             String content = "";
@@ -158,7 +160,10 @@ public class Expression {
             } else if (token.val != null) {
                 content = token.val.toString();
             }
-            if (content.matches("(if|switch)")) {
+            if (content.equals("if")) {
+                is_condition = true;
+            }
+            if (content.matches("switch")) {
                 Block parent = parent_block;
                 for (int i = 0; i < parent.children.size(); i++) {
                     if (parent.children.get(i) == this && i < parent.children.size()-1) {
@@ -177,12 +182,12 @@ public class Expression {
                 break;
             }
             source += content;
-            if (token.getType() == Token.OP && !token.getContent().equals("!") || token.getType() == Token.KEYWORD) {
+            if (token.getType() == Token.OP && !token.getContent().equals("!") || token.getType() == Token.KEYWORD && !token.getContent().matches("break|continue")) {
                 source += " ";
             }
             token = token.next;
         }
-        if (!source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}")) source += ";";
+        if (!is_condition && !source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}")) source += ";";
     }
 
     public static Expression create(Token head) {
@@ -941,6 +946,7 @@ public class Expression {
        Token t2prev = new Token("");
        Token th = t2prev;
        Token t = start;
+       t.prev = start.prev;
        while (t != null) {
            String value = t.getContent();
            if (t.getType() == Token.FIELD_NAME) {
@@ -965,7 +971,7 @@ public class Expression {
     }
 
     public Expression eval() {
-        if (isKeyword()) {
+        if (isKeyword() && !getContent().equals("if")) {
             if (start.getContent().equals("break")) {
                 parent_block.state = Block.BREAK;
             }
@@ -994,6 +1000,9 @@ public class Expression {
 
         if (parent_block.error != null) {
             return this;
+        }
+        if (start.getContent().equals("if")) {
+            start = start.next;
         }
         while (start.next != null) {
             n++;
@@ -2059,11 +2068,11 @@ public class Expression {
     }
 
     public boolean isKeyword() {
-        return start.next == null && start.getType() == Token.KEYWORD;
+        return (start.next == null || start.getContent().equals("if")) && start.getType() == Token.KEYWORD || start.prev != null && start.prev.getType() == Token.KEYWORD;
     }
 
     public String getContent() {
-        return start.getContent();
+        return start.prev != null && start.prev.getType() == Token.KEYWORD ? start.prev.getContent() : start.getContent();
     }
 
     private static Hashtable<String, Integer> priorities = new Hashtable<String, Integer>();

@@ -39,8 +39,8 @@ public class Block extends Expression {
         int level = 0;
         while (end != null) {
             type = end.getType();
-            if ((type <= 6 || (end.getType() >= 9 && end.getType() <= 12) ||
-                end.getType() == 15 && end.getContent().matches("let|var|break|continue|return|throw|delete|new|yield")) && start == null) {
+            if ((type <= 6 || (type >= 9 && type <= 12) ||
+                type == 15 && end.getContent().matches("let|var|break|continue|return|throw|delete|new|yield")) && start == null) {
                 start = end;
             }
             if (start != null && (end.next == null || type == Token.SEMICOLON ||
@@ -63,14 +63,15 @@ public class Block extends Expression {
                 Token t = new Token("");
                 start.prev = t;
                 t.next = start;
-                Expression e = new Expression(start, this);
-                e.silent = silent;
-                children.add(e);
 
                 if (type == Token.SEMICOLON ||
                     type == Token.BLOCK_START || type == Token.BLOCK_END) {
                     end.prev.next = null;
                 }
+
+                Expression e = new Expression(start, this);
+                e.silent = silent;
+                children.add(e);
 
                 if (end.next == null) return;
 
@@ -94,22 +95,15 @@ public class Block extends Expression {
                         System.err.println("Syntax error");
                         return;
                     }
-
-                    Token th = new Token("");
-                    th.next = end.next.next;
-                    end.next.next.prev = th;
-                    t.prev.next = null;
+                    Token th = t.next;
+                    t.next = null;
 
                     Expression if_exp = new Expression(end, this);
                     children.add(if_exp);
-                                        
-                    Expression e = new Expression(th.next, this);
-                    children.add(e);
-                    e.is_cond = true;
 
-                    updateSource();
+                    //updateSource();
                     
-                    end = t.next;
+                    end = th;
                     continue;
                 } else {
                     System.err.println("Syntax error");
@@ -117,7 +111,7 @@ public class Block extends Expression {
                 }
             }
             else if (type == Token.KEYWORD && end.getContent().equals("else")) {
-                int n = children.size()-3;
+                int n = children.size()-2;
                 if (n < 0 || !children.get(n).isKeyword() || !children.get(n).getContent().equals("if")) {
                     System.err.println("Unexpected token else");
                     return;
@@ -762,12 +756,12 @@ public class Block extends Expression {
             if (!(e instanceof Block) && e.isKeyword()) {
                 if (e.getContent().equals("if")) {
                     if (i == children.size()-1) return this;
-                    JSValue v = children.get(i+1).eval().getValue().asBool();
-                    if (((JSBool)v).getValue() && i + 2 < children.size()) {
-                        children.get(i+2).eval();
-                        last = i+2;
-                        i += 2;
-                        if (i + 1 < children.size()) {
+                    JSValue v = e.eval().getValue().asBool();
+                    if (((JSBool)v).getValue() && i + 1 < children.size()) {
+                        children.get(i+1).eval();
+                        last = i+1;
+                        i += 1;
+                        if (i+1 < children.size()) {
                             e = children.get(i+1);
                             if (!(e instanceof Block)
                                 && e.isKeyword() && e.getContent().equals("else")) {
@@ -776,8 +770,8 @@ public class Block extends Expression {
                         }
                         continue;
                     }
-                    i += 2;
-                    if (i + 1 < children.size()) {
+                    i += 1;
+                    if (i+1 < children.size()) {
                         e = children.get(i+1);
                         if (!(e instanceof Block)
                             && e.isKeyword() && e.getContent().equals("else")) {
@@ -1066,7 +1060,6 @@ public class Block extends Expression {
         }
         boolean open_else = false;
         for (int i = 0; i < children.size(); i++) {
-            if (children.get(i).is_cond) continue;
             String str = children.get(i).toString();
             result += str;
             if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
