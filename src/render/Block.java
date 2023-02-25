@@ -4690,6 +4690,44 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (prop.equals("text-shadow")) {
+            Color col = null;
+            String[] s = value.split("(?<=[^,])\\s");
+            int seriesLength = 0;
+            int offsetX = 1;
+            int offsetY = 1;
+            int blurRadius = 0;
+            boolean readSeries = false;
+            for (int i = 0; i < s.length; i++) {
+                boolean colorWasSet = col != null;
+                col = parseColor(s[i]);
+                if (!colorWasSet && col != null) {
+                    readSeries = false;
+                    continue;
+                }
+                if (s[i].matches("[0-9]+[.0-9]*px")) {
+                    // Do not allow to put shadow color in the middle of the string
+                    if (seriesLength > 0 && !readSeries) return;
+                    readSeries = true;
+                    seriesLength++;
+                    if (seriesLength == 1) {
+                        offsetX = Integer.parseInt(s[i].substring(0, s[i].length()-2));
+                    } else if (seriesLength == 2) {
+                        offsetY = Integer.parseInt(s[i].substring(0, s[i].length()-2));
+                    }
+                     else if (seriesLength == 3) {
+                        blurRadius = Integer.parseInt(s[i].substring(0, s[i].length()-2));
+                    }
+                }
+            }
+            setTextShadow(col, offsetX, offsetY, blurRadius);
+            if (textRenderingMode == 0) {
+                removeTextLayers();
+            }
+            forceRepaint();
+            return;
+        }
+
         if (prop.equals("border(-left|-right|-bottom|-top)-width")) {
             if (value.matches("^[0-9]+.*(px|em)$")) {
                 int val = getValueInPixels(value);

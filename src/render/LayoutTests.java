@@ -400,6 +400,8 @@ public class LayoutTests extends JFrame {
 
         /*
 
+        //document.root.setProp("text-shadow", "1px 1px 2px rgba(123, 123, 128, 0.47)");
+
         document.root.setTextShadow(new Color(123, 123, 128, 120), 1, 1, 0);
         Timer t1 = new Timer(1500, new ActionListener() {
             @Override
