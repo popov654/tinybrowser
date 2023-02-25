@@ -424,6 +424,7 @@ public class Builder {
                     scope = ((jsparser.Block)exp).scope;
                 } else {
                     ((jsparser.Block)exp).scope = scope;
+                    ((jsparser.Block)exp).setConsole((jsparser.Console)scope.get("console"));
                 }
                 ((jsparser.Block)exp).setDocument(parser);
                 ((jsparser.Block)exp).setWindowFrame(windowFrame);

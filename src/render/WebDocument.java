@@ -4,29 +4,48 @@ import bridge.Mapper;
 import htmlparser.Node;
 import htmlparser.TagLibrary;
 import inspector.Entry;
+import inspector.JSConsole;
+import inspector.WebInspector;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Vector;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import jsparser.Console;
+import jsparser.JSParser;
+import jsparser.Expression;
+import jsparser.JSValue;
+import jsparser.Undefined;
 import org.apache.batik.swing.JSVGCanvas;
+import service.FontManager;
 
 /**
  *
@@ -359,40 +378,27 @@ public class WebDocument extends JPanel {
         last_height = getHeight();
     }
 
-    public JFrame openInspector(JFrame parent) {
+    public JFrame openInspector(final JFrame parent) {
         if (root.node == null) return null;
 
         final JFrame frame = new JFrame("Document Inspector");
         JPanel cp = new JPanel();
         cp.setBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10));
         frame.setContentPane(cp);
-        cp.setLayout(new BorderLayout());
+        cp.setLayout(new BoxLayout(cp, BoxLayout.PAGE_AXIS));
 
-        final JPanel contentpane = new JPanel();
-        contentpane.setBackground(Color.WHITE);
-        contentpane.setOpaque(true);
-        
-        //contentpane.setBounds(0, 0, 490, 380);
-        final int width = 510, height = 438;
+        cp.setSize(new Dimension(500, 438));
+        WebInspector.insertTreeInspector(frame, cp, this);
 
-        final JScrollPane scrollpane = new JScrollPane(contentpane);
-        scrollpane.getVerticalScrollBar().setUnitIncrement(20);
-        scrollpane.getHorizontalScrollBar().setUnitIncrement(20);
-        scrollpane.setOpaque(false);
-        scrollpane.getInsets();
+        JSConsole.insertConsole(frame, cp, this);
 
-        cp.add(scrollpane);
-        scrollpane.setBackground(Color.WHITE);
-        scrollpane.setOpaque(true);
-        scrollpane.setPreferredSize(new Dimension(width, height));
-        //setSize(518, 420);
         frame.setLocationRelativeTo(parent);
-        frame.setLocation(parent.getX() - getWidth() - 86, parent.getY() - 90);
+        frame.setLocation(parent.getX() - getWidth() - 98, parent.getY() - 90);
         frame.pack();
         frame.setVisible(true);
 
-        ((JComponent)frame.getContentPane().getComponents()[0]).getInputMap().put(KeyStroke.getKeyStroke("F12"), "close");
-        ((JComponent)frame.getContentPane().getComponents()[0]).getActionMap().put("close", new Action() {
+        ((JComponent)frame.getContentPane()).getInputMap().put(KeyStroke.getKeyStroke("F12"), "close");
+        ((JComponent)frame.getContentPane()).getActionMap().put("close", new Action() {
 
             public void actionPerformed(ActionEvent e) {
                 frame.setVisible(false);
@@ -421,43 +427,7 @@ public class WebDocument extends JPanel {
 
         });
 
-        final WebDocument instance = this;
-
         //final boolean showAttributes = true;
-
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                TagLibrary.init();
-                final Entry rootEntry = new Entry(root.node.parent != null ? root.node.parent : root.node, instance);
-                contentpane.add(rootEntry);
-
-                final JScrollPane sp = scrollpane;
-
-                int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() + sp.getVerticalScrollBar().getPreferredSize().width;
-                rootEntry.inflate(width);
-
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        scrollpane.getHorizontalScrollBar().setValue(0);
-                    }
-                });
-                
-                contentpane.addComponentListener(new java.awt.event.ComponentAdapter() {
-                    @Override
-                    public void componentMoved(java.awt.event.ComponentEvent evt) {}
-
-                    @Override
-                    public void componentResized(java.awt.event.ComponentEvent evt) {
-                        int width = sp.getVerticalScrollBar().isVisible() ? sp.getWidth() - sp.getVerticalScrollBar().getPreferredSize().width - 12 : sp.getWidth() - 12;
-                        rootEntry.setWidth(width);
-                    }
-                });
-            }
-
-        });
 
         return frame;
         
