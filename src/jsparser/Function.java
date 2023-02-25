@@ -192,6 +192,16 @@ public class Function extends JSObject {
         return type;
     }
 
+    public String getArguments() {
+        String result = "";
+        if (params == null) return result;
+        for (int i = 0; i < params.size(); i++) {
+            if (i > 0) result += ", ";
+            result += params.get(i);
+        }
+        return result;
+    }
+
     @Override
     public Function clone() {
        return new Function((Vector<String>)params.clone(), (Block)body.clone(), display_name);
@@ -199,21 +209,26 @@ public class Function extends JSObject {
 
     @Override
     public String toString() {
-        return "function()" + (body != null ? " {\n" + body.toString().replaceAll("\\s+$", "") + "}" : "");
+        String func_body = "{}";
+        if (body != null) {
+            func_body = body.toString(0).replaceAll("\\s+$", "");
+            if (func_body.matches("\\{\\s+\\}")) {
+                func_body = "{}";
+            }
+        }
+        return "function(" + getArguments() + ")" + (body != null ? " " + func_body : "");
     }
 
-    public String toPaddedString() {
-        int level = 0;
-        Block b = body;
-        while (b.parent_block != null) {
-            level++;
-            b = b.parent_block;
-        }
+    public String toPaddedString(int level) {
         String pad = "";
         for (int i = 0; i < level; i++) {
             pad += "  ";
         }
-        return pad + "function()" + (body != null ? " {\n" + body.toString() + "}" : "");
+        return pad + "function()" + (body != null ? " " + body.toString(level+1) : "");
+    }
+
+    public String toPaddedString() {
+        return toPaddedString(1);
     }
 
     private Vector<String> params;

@@ -143,17 +143,23 @@ public class Expression {
             b = b.parent_block;
         }
 
+        String pad  = "";
         for (int i = 0; i < level; i++) {
-            source += "  ";
+            pad += "  ";
         }
+
+        source += pad;
 
         boolean is_condition = false;
 
         while (token != null && token.getType() != Token.SEMICOLON) {
-            if (token.getType() == Token.OP && !token.getContent().equals("!") && !token.getContent().matches("break|continue")) {
+            if (token.getType() == Token.OP && !token.getContent().equals("!") && !token.getContent().matches("break|continue|return")) {
                 source += " ";
             }
             String content = "";
+            if (ret && !token.getContent().equals("return")) {
+                content += "return" + (token.next != null ? " " : "");
+            }
             if (token.val == null) content = token.getContent();
             if (token.val instanceof Function) {
                 content = ((Function)token.val).toPaddedString().trim();
@@ -182,10 +188,15 @@ public class Expression {
                 break;
             }
             source += content;
-            if (token.getType() == Token.OP && !token.getContent().equals("!") || token.getType() == Token.KEYWORD && !token.getContent().matches("break|continue")) {
+            if (token.getType() == Token.OP && !token.getContent().equals("!") || token.getType() == Token.KEYWORD &&
+                    !token.getContent().matches("break|continue|return")) {
                 source += " ";
             }
             token = token.next;
+        }
+        source = source.replaceAll(";\\s*", ";\n" + pad);
+        if (ret && !source.matches("^\\s*return.*")) {
+            source = source.replaceAll("^(\\s*)", "$1return ").replaceAll("return (;|$)", "return$1");
         }
         if (!is_condition && !source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}")) source += ";";
     }
@@ -2169,6 +2180,14 @@ public class Expression {
     @Override
     public String toString() {
         return source;
+    }
+
+    public String toString(int level) {
+        String pad  = "";
+        for (int i = 0; i < level; i++) {
+            pad += "  ";
+        }
+        return source.replaceAll("(?<=^|\\n)\\s+", pad);
     }
 
     private int n = 0;

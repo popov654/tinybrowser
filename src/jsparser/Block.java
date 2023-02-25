@@ -1074,14 +1074,39 @@ public class Block extends Expression {
             }
             result += "}";
         }
-        if (is_func) {
+        result += "\n";
+        for (int k = 0; k < level; k++) {
+            result += "  ";
+        }
+        return "{" + result + "}";
+    }
+    
+    @Override
+    public String toString(int level) {
+        String result = "";
+        boolean open_else = false;
+        for (int i = 0; i < children.size(); i++) {
+            String str = children.get(i).toString(level+1);
+            result += str;
+            if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
+                open_else = true;
+            }
+            if (i < children.size()-1) result += "\n";
+        }
+        if (open_else) {
             result += "\n";
-            for (int k = 0; k < level; k++) {
+            for (int k = 0; k < level+1; k++) {
                 result += "  ";
             }
+            result += "}";
         }
-        return result;
+        result += "\n";
+        for (int k = 0; k < level; k++) {
+            result += "  ";
+        }
+        return "{\n" + result + "}";
     }
+
 
     public int state;
 
