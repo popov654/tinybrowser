@@ -236,7 +236,7 @@ public class Node {
     public String getTextContent() {
         String result = "";
         for (int i = 0; i < children.size(); i++) {
-            result += children.get(i).getTextContent();
+            result += children.get(i).getTextContent() + " ";
         }
         if (isLeaf()) {
             result += nodeValue + " ";
