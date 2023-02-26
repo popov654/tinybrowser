@@ -5679,17 +5679,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         d.pos = getComponentCount()-1;
 
-        Block b = this;
-        while (b.parent != null) {
-            if (b.hasParentLink || b.href != null) {
+        Block root = this;
+        while (root.parent != null) {
+            if (root.hasParentLink || root.href != null) {
                 d.hasParentLink = true;
             }
-            b = b.parent;
+            root = root.parent;
         }
-        if (document != null && (b.width <= 0 || b.height <= 0)) {
-            b = document.root;
+        if (document != null && (root.width <= 0 || root.height <= 0)) {
+            root = document.root;
         }
-        d.setBounds(0, 0, b.width, b.height);
+        d.setBounds(0, 0, root.width, root.height);
 
         d.document = document;
 
@@ -5711,6 +5711,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (document != null && document.prevent_mixed_content) {
             normalizeContent();
         }
+        addToLayout(d, root);
+    }
+
+    private void addToLayout(Block d, Block root) {
         if (document != null && document.ready) {
             if (d.display_type == Display.BLOCK && d.auto_width && d.parent != null && d.width != d.parent.viewport_width - d.parent.borderWidth[3] - d.parent.borderWidth[1] - d.parent.paddings[3] - d.parent.paddings[1] - d.margins[3] - d.margins[1]) {
                 d.setWidth(-1, false);
@@ -5720,7 +5724,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Line line = layouter.last_line;
                 boolean found = false;
                 Block last_block = null;
-                
+
                 Block ref_block = pos < children.size()-1 ? children.get(pos+1) : children.get(pos);
                 if (ref_block.parts.size() > 0) {
                     ref_block = ref_block.parts.get(0);
@@ -5729,7 +5733,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 for (int i = 0; i < lines.size(); i++) {
                     Vector<Drawable> elements = (Vector<Drawable>) lines.get(i).elements.clone();
                     for (int j = 0; j < elements.size(); j++) {
-                        
+
                         if (lines.get(i).elements.get(j) == ref_block) {
                             layouter.last_line = lines.get(i);
                             for (int k = i+1; k < lines.size(); k++) {
@@ -5741,7 +5745,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                 lines.get(i).cur_pos -= b0.width + b0.margins[3] + b0.margins[1];
                             }
                             layouter.addBlock(d);
-                            
+
                             found = true;
                             if (pos < children.size()-1) j--;
                             continue;
@@ -5757,7 +5761,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                     continue;
                                 }
                                 last_block = b0;
-                                boolean val = b.no_layout;
+                                boolean val = root.no_layout;
                                 b0.no_layout = true;
                                 layouter.addBlock(b0);
                                 b0.no_layout = val;
@@ -5827,6 +5831,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         d.hasParentLink = false;
         d.removeTextLayers();
         children.remove(d);
+        removeFromLayout(d);
+    }
+
+    public void removeElement(int index) {
+        removeElement(children.get(index));
+    }
+
+    public void removeAllElements() {
+        for (int i = 0; i < children.size(); i++) {
+            if (document != null) document.root.remove(children.get(i));
+            if (children.get(i).text_layer != null) {
+                children.get(i).text_layer.removeAll();
+            }
+            children.get(i).removeAll();
+        }
+        children.clear();
+        if (document != null && document.ready) {
+            performLayout();
+            forceRepaint();
+            document.repaint();
+        }
+    }
+
+    private void removeFromLayout(Block d) {
         if (document != null) {
             if (d.display_type == Display.INLINE && d.parts.size() > 0 && d.parts.get(0).line != null) {
                 Line line = d.parts.get(0).line;
@@ -5853,23 +5881,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             document.root.setNeedRestoreSelection(false);
             document.repaint();
         }
-    }
-
-    public void removeElement(int index) {
-        removeElement(children.get(index));
-    }
-
-    public void removeAllElements() {
-        for (int i = 0; i < children.size(); i++) {
-            if (document != null) document.root.remove(children.get(i));
-            if (children.get(i).text_layer != null) {
-                children.get(i).text_layer.removeAll();
-            }
-            children.get(i).removeAll();
-        }
-        children.clear();
-        //performLayout();
-        //forceRepaint();
     }
 
     public void applyHoverStyles() {
