@@ -2,7 +2,6 @@ package bridge;
 
 import cssparser.CSSParser;
 import cssparser.QuerySelector;
-import cssparser.SelectorGroup;
 import cssparser.StyleMap;
 import cssparser.Styles;
 import htmlparser.HTMLParser;
@@ -13,7 +12,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.awt.event.ComponentListener;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
@@ -137,18 +135,6 @@ public class Builder {
             if (!src.isEmpty()) {
                 createMediaPlayer(b, src);
             }
-        } else if (BlockElements.contains(node.tagName)) {
-            b.display_type = Block.Display.BLOCK;
-        } else if (InlineElements.contains(node.tagName)) {
-            b.display_type = Block.Display.INLINE;
-        } else if (node.tagName.equals("table")) {
-            b.display_type = Block.Display.TABLE;
-        } else if (node.tagName.equals("tr")) {
-            b.display_type = Block.Display.TABLE_ROW;
-        } else if (node.tagName.equals("td")) {
-            b.display_type = Block.Display.TABLE_CELL;
-            b.colspan = Integer.parseInt(node.getAttribute("colspan"));
-            b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
         } else if (node.tagName.equals("svg")) {
             Document svgDoc = createSVGDocument(document, node);
             JSVGCanvas svgCanvas = new JSVGCanvas(null, false, false) {
@@ -204,12 +190,32 @@ public class Builder {
             b.setBackgroundColor(node.getAttribute("bgcolor"));
 
             if (!customElements.containsKey(node.tagName)) {
-                applyDefaultStyles(node, b);
-                applyParentFontStyles(b, b.parent);
-
-                applyStyles(node, b);
-                applyInlineStyles(node, b);
+                setDefaultDisplayType(b, false);
+                applyDefaultStyles(b);
+                applyParentFontStyles(b);
+                applyStyles(b);
             }
+        }
+    }
+
+    public void setDefaultDisplayType(Block b, boolean force_update) {
+        Node node = b.node;
+        int old_value = b.display_type;
+        if (BlockElements.contains(node.tagName)) {
+            b.display_type = Block.Display.BLOCK;
+        } else if (InlineElements.contains(node.tagName)) {
+            b.display_type = Block.Display.INLINE;
+        } else if (node.tagName.equals("table")) {
+            b.display_type = Block.Display.TABLE;
+        } else if (node.tagName.equals("tr")) {
+            b.display_type = Block.Display.TABLE_ROW;
+        } else if (node.tagName.equals("td")) {
+            b.display_type = Block.Display.TABLE_CELL;
+            b.colspan = Integer.parseInt(node.getAttribute("colspan"));
+            b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
+        }
+        if (b.document != null && b.document.ready && force_update && b.display_type != old_value) {
+            b.setDisplayType(b.display_type);
         }
     }
 
@@ -270,12 +276,17 @@ public class Builder {
                 Set<Entry<String, String>> new_rules = StyleMap.getNodeStyles(e.target).runtimeStyles.entrySet();
                 new_rules.removeAll(b.cssStyles.entrySet());
 
-                for (Entry<String, String> entry: new_rules) {
-                    String key = entry.getKey();
-                    b.setProp(key, entry.getValue());
+                if (new_rules.size() > 0) {
+                    for (Entry<String, String> entry: new_rules) {
+                        String key = entry.getKey();
+                        b.setProp(key, entry.getValue());
+                    }
+                    b.cssStyles.putAll(StyleMap.getNodeStyles(e.target).runtimeStyles);
+                } else {
+                    b.cssStyles.clear();
+                    setDefaultDisplayType(b, true);
+                    resetStyles(b, false, true);
                 }
-
-                b.cssStyles.putAll(StyleMap.getNodeStyles(e.target).runtimeStyles);
 
                 System.out.println(document.ready ? "ready" : "not ready");
             }
@@ -283,7 +294,8 @@ public class Builder {
         node.addListener(callback3, node, "stylesChanged");
     }
 
-    private void applyParentFontStyles(Block block, Block parent) {
+    private void applyParentFontStyles(Block block) {
+        Block parent = block.parent;
         if (parent == null) return;
         block.color = parent.color;
         block.fontFamily = parent.fontFamily;
@@ -468,7 +480,8 @@ public class Builder {
         this.windowFrame = window;
     }
 
-    public void applyDefaultStyles(Node node, Block b) {
+    public void applyDefaultStyles(Block b) {
+        Node node = b.node;
         if (node == null) return;
         if (node.tagName.equals("a")) {
             b.href = baseUrl + node.getAttribute("href");
@@ -561,7 +574,8 @@ public class Builder {
         resetStylesRecursive(document.root, false, true);
     }
 
-    public void applyStyles(Node node, Block b) {
+    public void applyStyles(Block b) {
+        Node node = b.node;
         if (b instanceof render.ReplacedBlock || node.nodeType != 1) return;
         Styles st = StyleMap.getNodeStyles(node);
         Set<String> keys = st.styles.keySet();
@@ -575,7 +589,14 @@ public class Builder {
                 }
             }
         }
-        keys = st.runtimeStyles.keySet();
+        applyInlineStyles(node, b);
+        applyRuntimeStyles(node, b);
+        if (node.nodeType == 1) generatePseudoElements(node, b);
+    }
+
+    public void applyRuntimeStyles(Node node, Block b) {
+        Styles st = StyleMap.getNodeStyles(node);
+        Set<String> keys = st.runtimeStyles.keySet();
         for (String key: keys) {
             if (!key.trim().isEmpty()) {
                 if (key.trim().equals("content")) continue;
@@ -586,7 +607,6 @@ public class Builder {
                 }
             }
         }
-        if (node.nodeType == 1) generatePseudoElements(node, b);
     }
 
     public void applyInlineStyles(Node node, Block b) {
@@ -616,7 +636,7 @@ public class Builder {
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
-        
+
         b.document.ready = false;
         b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
         if (!b.special) {
@@ -630,7 +650,7 @@ public class Builder {
         b.setMargins(0);
         b.setPaddings(0);
         b.setBorderRadius(0);
-        applyDefaultStyles(b.node, b);
+        applyDefaultStyles(b);
 
         if (b.document.lastSetProperties == null) {
             b.document.lastSetProperties = new java.util.HashSet<String>();
@@ -646,8 +666,7 @@ public class Builder {
                 }
             }
         } else if (b.node != null) {
-            applyStyles(b.node, b);
-            applyInlineStyles(b.node, b);
+            applyStyles(b);
         }
         b.document.ready = true;
 

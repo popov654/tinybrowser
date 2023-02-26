@@ -66,12 +66,14 @@ document.body.onclick = function() {
    var p = document.getElementsByTagName('p')[0]
    if (!document.body.hasAttribute('user-id')) {
       document.body.setAttribute('user-id', '2')
-      p.removeChild(window.el)
+      window.el.style.display = 'none'
+      //p.removeChild(window.el)
       //window.el = null
       //document.getElementsByTagName('p')[0].firstChild.nodeValue = 'Test '
    } else {
       document.body.removeAttribute('user-id')
-      p.insertBefore(window.el, p.childNodes[1])
+      //p.insertBefore(window.el, p.childNodes[1])
+      window.el.style.display = ''
       //document.getElementsByTagName('p')[0].firstChild.nodeValue = 'This is a '
    }
    //document.body.onclick = null

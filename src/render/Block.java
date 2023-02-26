@@ -2725,7 +2725,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setZIndices() {
         LinkedList<Block> list = getZIndexList();
-        int offset = (this == document.root) ? list.size()-1 : getParent().getComponentZOrder(this);
+        int offset = (this == document.root) ? list.size()-1 : (getParent() != null ? getParent().getComponentZOrder(this) : pos);
         for (int i = list.size()-1; i >= 0; i--) {
             Block b = list.get(i);
             java.awt.Container c = b.getParent();
@@ -4175,7 +4175,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         Block last = this;
 
-        if (layouter != null) {
+        if (layouter != null || parts.size() > 0 && parts.get(0).layouter != null) {
             boolean use_fast_update = document.fast_update;
             document.no_layout = use_fast_update;
             performLayout(use_fast_update);
@@ -4382,7 +4382,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (display_type != Display.BLOCK && (auto_width || display_type == Display.INLINE)) {
             width = borderWidth[3] + paddings[3] + paddings[1] + borderWidth[1];
             if (height < 0 || display_type == Display.INLINE) {
-                height = fontSize + borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
+                height = borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
             }
         }
         if (display_type == Display.INLINE_BLOCK && auto_width) {
@@ -4391,6 +4391,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (display_type == Display.NONE) {
             removeTextLayers();
+            for (Block part: parts) {
+                part.clearBuffer();
+            }
+            if (parent != null) {
+                parent.removeFromLayout(this);
+            }
+        } else {
+            Block root = this;
+            while (root.parent != null) {
+                root = root.parent;
+            }
+            parent.addToLayout(this, parent.children.indexOf(this), root);
         }
         Block b = doIncrementLayout(viewport_width, viewport_height, false);
         if (b != null && !no_draw) {
@@ -4448,6 +4460,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         prop = toHyphens(prop);
         if (original != null) {
             original.setProp(prop, value);
+        }
+        if (prop.equals("display")) {
+            String[] display_types = new String[] { "block", "inline-block", "inline", "none",  "table", "inline-table", "table-row", "table-cell" };
+            for (int i = 0; i < display_types.length; i++) {
+                if (display_types[i].equals(value)) {
+                    setDisplayType(i);
+                    return;
+                }
+            }
         }
         if (prop.equals("font-family")) {
             setFontFamily(value);
@@ -5711,10 +5732,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (document != null && document.prevent_mixed_content) {
             normalizeContent();
         }
-        addToLayout(d, root);
+        addToLayout(d, pos, root);
     }
 
-    private void addToLayout(Block d, Block root) {
+    private void addToLayout(Block d, int pos, Block root) {
         if (document != null && document.ready) {
             if (d.display_type == Display.BLOCK && d.auto_width && d.parent != null && d.width != d.parent.viewport_width - d.parent.borderWidth[3] - d.parent.borderWidth[1] - d.parent.paddings[3] - d.parent.paddings[1] - d.margins[3] - d.margins[1]) {
                 d.setWidth(-1, false);

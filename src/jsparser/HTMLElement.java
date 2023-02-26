@@ -400,7 +400,12 @@ public class HTMLElement extends HTMLNode {
                 Set<String> keys = items.keySet();
                 for (String key: keys) {
                     if (key.equals("__proto__")) continue;
-                    st.put(key, items.get(key).asString().getValue());
+                    String value = items.get(key).asString().getValue();
+                    if (value.isEmpty()) {
+                        items.remove(key);
+                        continue;
+                    }
+                    st.put(key, value);
                 }
                 node.fireEvent("stylesChanged", "node");
             }
