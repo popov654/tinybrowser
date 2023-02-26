@@ -53,6 +53,7 @@ p::after {
 <script>
 window.addEventListener('load', function() {
    console.log("Document loaded")
+   document.getElementsByTagName('p')[0].style.borderColor = 'green'
    var span = document.getElementsByTagName('i')[0]
    window.el = span
    window.el.onclick = function() {

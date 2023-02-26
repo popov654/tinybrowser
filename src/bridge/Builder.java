@@ -16,6 +16,8 @@ import java.awt.Rectangle;
 import java.awt.event.ComponentListener;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -264,8 +266,17 @@ public class Builder {
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
                 Block b = Mapper.get(e.target);
-                b.cssStyles.clear();
-                resetStyles(b, false, true);
+
+                Set<Entry<String, String>> new_rules = StyleMap.getNodeStyles(e.target).runtimeStyles.entrySet();
+                new_rules.removeAll(b.cssStyles.entrySet());
+
+                for (Entry<String, String> entry: new_rules) {
+                    String key = entry.getKey();
+                    b.setProp(key, entry.getValue());
+                }
+
+                b.cssStyles.putAll(StyleMap.getNodeStyles(e.target).runtimeStyles);
+
                 System.out.println(document.ready ? "ready" : "not ready");
             }
         };
