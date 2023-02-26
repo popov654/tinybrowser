@@ -202,6 +202,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void mouseWheel(MouseWheelEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
         Block[] blocks = new Block[layer_list.size()];
         blocks = layer_list.toArray(blocks);
 
@@ -262,6 +265,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
         Block b0 = this;
         while (b0.parent != null) {
             b0 = b0.parent;
@@ -6599,6 +6605,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void mouseClicked(MouseEvent e) {
 
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
+
         if (childDocument != null) {
             childDocument.getRoot().mouseClicked(e);
             return;
@@ -6797,6 +6807,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void mousePressed(MouseEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
         Block d = this;
         while (d.parent != null || d.document.getParentDocument() != null) {
             if (d.parent != null) d = d.parent;
@@ -6819,23 +6832,35 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void mouseReleased(MouseEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
         getSelectedText();
         fireEventForNode(e, node, null, "mouseUp");
     }
 
     public void mouseEntered(MouseEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
         if (e.getSource() instanceof JTextField || e.getSource() instanceof JTextArea) {
             document.panel.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
         }
     }
 
     public void mouseExited(MouseEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
         if (e.getSource() instanceof JTextField || e.getSource() instanceof JTextArea) {
             document.panel.setCursor(Cursor.getDefaultCursor());
         }
     }
 
     public void mouseDragged(MouseEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
         if (sel == null) sel = new int[2];
         int x = e.getX();
         int y = e.getY();
