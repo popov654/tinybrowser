@@ -306,7 +306,7 @@ public class LayoutTests extends JFrame {
 
         document.root.addElement(d);
 
-        Block d2 = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
+        final Block d2 = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d2.setPositioning(Block.Position.STATIC);
         //d2.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d2.setMargins(4);
@@ -328,13 +328,42 @@ public class LayoutTests extends JFrame {
         //d2.setProp("border-right", "2px dashed #0f0");
         //d2.setProp("border-bottom", "2px dotted #0cf");
 
-        Block d04 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        final Block d04 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         d04.setPositioning(Block.Position.STATIC);
         d04.setDisplayType(Block.Display.INLINE_BLOCK);
         d04.addText("Text");
         d2.addElement(d04);
 
         document.root.addElement(d2);
+
+        /*
+         
+        Timer t1 = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Block d03 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+                d03.setPositioning(Block.Position.STATIC);
+                d03.setDisplayType(Block.Display.INLINE);
+                d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+                d03.addText(" !!");
+                document.root.getChildren().get(0).addElement(d03);
+            }
+        });
+        t1.setRepeats(false);
+        t1.start();
+
+        Timer t2 = new Timer(3000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Block b = document.root.getChildren().get(0).children.lastElement();
+                document.root.getChildren().get(0).removeElement(b);
+                document.root.getChildren().get(1).addElement(b);
+            }
+        });
+        t2.setRepeats(false);
+        t2.start();
+
+        */
 
         /*
 

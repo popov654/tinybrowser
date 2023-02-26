@@ -2168,7 +2168,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block el = blocks.get(i);
 
             if (el.type == NodeTypes.TEXT) {
-                if (el.white_space != WhiteSpace.PRE_WRAP && el.textContent.matches("^\\s*$")) {
+                if (el.white_space != WhiteSpace.PRE_WRAP && el.textContent.matches("^\\s*$") && (parent.layouter.last_line == null || parent.layouter.last_line.elements.isEmpty())) {
                     continue;
                 }
                 if (parent == null || !isPseudoElement()) {
@@ -4030,7 +4030,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setAutoXMargin();
         }
 
-        if (no_recalc || !document.ready) return;
+        if (no_recalc || document != null && !document.ready) return;
 
         Block b = doIncrementLayout(old_width, old_height, no_recalc);
 

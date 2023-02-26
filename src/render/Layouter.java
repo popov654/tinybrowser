@@ -293,7 +293,7 @@ public class Layouter {
             int i = 0; int j = 0;
             while (i < b.parent.lines.size()) {
                 if ((Block)b.parent.lines.get(i).elements.get(j) == block && prev != null) {
-                    if (prev.display_type != Block.Display.INLINE) return true;
+                    if (prev.display_type != Block.Display.INLINE) return false;
                     return endsWithWhitespace(prev.parts.size() > 0 ? prev.parts.lastElement() : prev);
                 }
                 if (j+1 < b.parent.lines.get(i).elements.size()) {
@@ -541,7 +541,7 @@ public class Layouter {
                     last_line = d.parts.get(0).line;
                 }
 
-                if (last_line.elements.contains(d.parts.get(0))) {
+                if (last_line != null && last_line.elements.contains(d.parts.get(0))) {
 
                     if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
                             ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK || d.parts.size() > 0 && last_line.width - last_line.cur_pos < d.parts.get(0).width) {
