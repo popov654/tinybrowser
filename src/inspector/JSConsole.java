@@ -1,15 +1,20 @@
 package inspector;
 
 import bridge.Builder;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -19,10 +24,22 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.ExpandVetoException;
 import jsparser.Console;
 import jsparser.Expression;
+import jsparser.Function;
 import jsparser.HTMLElement;
+import jsparser.HTMLNode;
+import jsparser.JSArray;
+import jsparser.JSObject;
 import jsparser.JSParser;
 import jsparser.JSValue;
 import jsparser.Undefined;
@@ -54,7 +71,7 @@ public class JSConsole {
 
         consolepane.setLayout(new BoxLayout(consolepane, BoxLayout.PAGE_AXIS));
 
-        final JPanel console = new JPanel();
+        console = new JPanel();
         console.setBackground(Color.WHITE);
         console.setLayout(new BoxLayout(console, BoxLayout.PAGE_AXIS));
 
@@ -123,7 +140,13 @@ public class JSConsole {
                         }
                     }
 
-                    addEntry(console, exp.getValue().toString());
+                    JSValue result = exp.getValue();
+
+                    if (result.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") || result instanceof Function) {
+                        addEntry(console, exp.getValue().toString());
+                    } else {
+                        addObjectEntry(console, result);
+                    }
 
                     ((JTextArea)e.getSource()).setText("");
                     e.consume();
@@ -268,17 +291,70 @@ public class JSConsole {
         }
 
         console.add(resultPanel);
-        if (height > console.getHeight()) {
-            if (allowSelection) height = (line_height + 3) * lines.size();
-            console.setPreferredSize(new Dimension(console.getWidth(), height));
-            console.getParent().validate();
-            //console.getParent().setPreferredSize(new Dimension(console.getWidth(), height));
+
+        recalculateContentHeight();
+    }
+
+    private static void addObjectEntry(JPanel console, JSValue val) {
+        if (!(val instanceof JSArray) && (!(val instanceof JSObject) || val instanceof Function)) {
+            return;
         }
+        JPanel resultPanel = new JPanel();
+        resultPanel.setOpaque(false);
+        resultPanel.setBorder(BorderFactory.createEmptyBorder(1, 3, 1, 3));
+        resultPanel.setLayout(new BoxLayout(resultPanel, BoxLayout.PAGE_AXIS));
+        resultPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+
+        JPanel tree = createObjectTree((JSObject)val);
+        resultPanel.add(tree);
+
+        console.add(resultPanel);
+
+        recalculateContentHeight();
+    }
+
+    static void recalculateContentHeight() {
+        int height = 0;
+        Component[] c = console.getComponents();
+        for (int i = 0; i < c.length; i++) {
+            height += c[i].getPreferredSize().height;
+        }
+        console.setPreferredSize(new Dimension(console.getWidth(), height));
+        console.getParent().validate();
+        //console.getParent().setPreferredSize(new Dimension(console.getWidth(), height));
+    }
+
+    static JPanel console;
+
+    static class TreeExpandListener implements TreeWillExpandListener {
+
+        @Override
+        public void treeWillExpand(final TreeExpansionEvent e) throws ExpandVetoException {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
+            if (node.getChildCount() == 0) {
+                loadNodeDirectChildren(node, false);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((JTree)e.getSource()).invalidate();
+                        ((JTree)e.getSource()).getParent().validate();
+                        recalculateContentHeight();
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void treeWillCollapse(TreeExpansionEvent e) {}
+
+        public void treeExpanded(TreeExpansionEvent e) {}
+
+        public void treeCollapsed(TreeExpansionEvent e) {}
     }
 
     public static class FontMetricsWrapper extends FontMetrics {
 
-        private final FontMetrics target;
+        protected final FontMetrics target;
 
         public FontMetricsWrapper(FontMetrics target) {
             super(target.getFont());
@@ -308,6 +384,134 @@ public class JSConsole {
         @Override
         public int stringWidth(String str) {
             return target.stringWidth(str);
+        }
+    }
+
+    public static class JSValueWrapper {
+
+        public JSValueWrapper(String label, JSValue val) {
+            this.label = label;
+            this.val = val;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public JSValue getValue() {
+            return val;
+        }
+
+        @Override
+        public String toString() {
+            String result = (label != null && !label.isEmpty()) ? label + ": " : "";
+            if (val instanceof Function) {
+                result += "{ Function }";
+            }
+            else if (val instanceof JSArray) {
+                result += "Array[]";
+            }
+            else if (val instanceof HTMLElement) {
+                result += "HTMLElement[" + ((HTMLElement)val).node.tagName + "]";
+            }
+            else if (val instanceof HTMLNode && ((HTMLNode)val).node.nodeType == 3) {
+                result += "TextNode \"" + ((HTMLNode)val).node.nodeValue + "\"";
+            }
+            else if (val instanceof HTMLNode && ((HTMLNode)val).node.nodeType == 8) {
+                result += "CommentNode \"" + ((HTMLNode)val).node.nodeValue + "\"";
+            }
+            else if (val instanceof JSObject && !val.getType().matches("String|Integer|Float|Number|Boolean|null|undefined")) {
+                result += "Object";
+            }
+            else result += val.toString();
+
+            return result;
+        }
+
+        private String label;
+        private JSValue val;
+    }
+
+    private static JPanel createObjectTree(JSObject obj) {
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new JSValueWrapper(null, obj));
+        loadNodeDirectChildren(rootNode, false);
+
+        DefaultTreeModel treeModel = new DefaultTreeModel(rootNode, true);
+        final JTree tree = new JTree(treeModel);
+        TreeExpandListener expansionListener = new TreeExpandListener();
+        tree.addTreeWillExpandListener(expansionListener);
+
+        DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+        renderer.setFont(new Font("Consolas", Font.PLAIN, 16));
+        renderer.setLeafIcon(null);
+        renderer.setIcon(null);
+        renderer.setClosedIcon(null);
+        renderer.setOpenIcon(null);
+        renderer.setMinimumSize(new Dimension(0, 20));
+        tree.setForeground(new Color(120, 25, 0));
+        tree.setCellRenderer(renderer);
+        tree.setRowHeight(23);
+
+        final JPanel contentpane = new JPanel();
+        contentpane.setBackground(Color.WHITE);
+        contentpane.setOpaque(true);
+        contentpane.setLayout(new BorderLayout());
+        contentpane.add(tree);
+
+        return contentpane;
+    }
+
+    private static void processNodeChildren(DefaultMutableTreeNode node, boolean show_prototypes) {
+        JSValue val = ((JSValueWrapper)node.getUserObject()).getValue();
+        if (val instanceof JSArray) {
+            Vector<JSValue> items = ((JSArray)val).getItems();
+            for (int i = 0; i < items.size(); i++) {
+                DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(new JSValueWrapper("[" + i + "]", items.get(i)));
+                node.add(newNode);
+                processNodeChildren(newNode, show_prototypes);
+            }
+        } else if (!(val instanceof Function) && !val.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") && val instanceof JSObject) {
+            HashMap<String, JSValue> props = ((JSObject)val).getProperties();
+            Set<String> keys = props.keySet();
+            for (String key: keys) {
+                if (!show_prototypes && key.equals("__proto__")) continue;
+                DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(new JSValueWrapper(key, props.get(key)));
+                node.add(newNode);
+                if (!key.equals("__proto__")) {
+                    processNodeChildren(newNode, show_prototypes);
+                } else {
+                    newNode.setAllowsChildren(false);
+                }
+            }
+        } else {
+            node.setAllowsChildren(false);
+        }
+    }
+
+    private static void loadNodeDirectChildren(DefaultMutableTreeNode node, boolean show_prototypes) {
+        JSValue val = ((JSValueWrapper)node.getUserObject()).getValue();
+        if (val instanceof JSArray) {
+            Vector<JSValue> items = ((JSArray)val).getItems();
+            for (int i = 0; i < items.size(); i++) {
+                DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(new JSValueWrapper("[" + i + "]", items.get(i)));
+                node.add(newNode);
+            }
+        } else if (!(val instanceof Function) && !val.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") && val instanceof JSObject) {
+            HashMap<String, JSValue> props = ((JSObject)val).getProperties();
+            Set<String> keys = props.keySet();
+            for (String key: keys) {
+                if (!show_prototypes && key.equals("__proto__")) continue;
+                DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(new JSValueWrapper(key, props.get(key)));
+                node.add(newNode);
+                if (props.get(key) instanceof Function || props.get(key).getType().matches("Boolean|Integer|Float|Number|String|null|undefined")) {
+                    newNode.setAllowsChildren(false);
+                }
+                if (key.equals("__proto__")) {
+                    newNode.setAllowsChildren(false);
+                }
+            }
+        } else {
+            node.setAllowsChildren(false);
         }
     }
 
