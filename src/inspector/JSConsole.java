@@ -183,18 +183,34 @@ public class JSConsole {
 
         final Vector<String> lines = new Vector<String>();
 
-        int width = console.getWidth();
+        int width = console.getWidth() - 30;
 
         if (fm.stringWidth(str) > width) {
-            String[] words = str.split("\\b(?=\\s)|(?<=\\s)\\b|(?<=\n)[^\n]");
+            String[] words = str.split("((?<=\\s+)|(?=\\s+))");
             String line = "";
             for (int i = 0; i < words.length; i++) {
-                if (line.isEmpty() && (fm.stringWidth(words[i]) > width || words[i].endsWith("\n"))) {
-                    lines.add(words[i]);
-                    continue;
-                } else if (!line.isEmpty() && fm.stringWidth(line + words[i]) > width) {
+                if (words[i].isEmpty()) continue;
+                if (fm.stringWidth(line + words[i]) > width || words[i].endsWith("\n")) {
+                    if (words[i].endsWith("\n")) i++;
+
+                    int n = 0;
+                    while (i < words.length && words[i].matches("\\s*")) {
+                        n++;
+                        i++;
+                    }
+                    if (n > 1 && !line.matches("\\s+")) {
+                        line += " ";
+                    }
+
+                    if (line.isEmpty()) {
+                        line += words[i];
+                    } else {
+                        i--;
+                    }
                     lines.add(line);
                     line = "";
+                    
+                    continue;
                 }
                 line += words[i];
                 if (line.endsWith("\n")) {
@@ -240,7 +256,7 @@ public class JSConsole {
             textarea.setFont(text.getFont());
             textarea.setForeground(text.getForeground());
             textarea.setEditable(false);
-            textarea.setMargin(new java.awt.Insets(0, 0, 0, 0));
+            textarea.setMargin(new java.awt.Insets(0, 2, 0, 2));
 
             //textarea.setSize(new Dimension(width, height));
             height = lines.size() == 1 ? line_height : (line_height + 3) * lines.size();
