@@ -7,9 +7,11 @@ import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Frame;
+import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +19,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
@@ -32,9 +35,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
+import javax.swing.text.JTextComponent;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -103,7 +106,7 @@ public class JSConsole {
         separator.setPreferredSize(new Dimension(width - 20, 1));
         consolepane.add(separator);
 
-        final JTextArea consoleInput = new JTextArea();
+        consoleInput = new JTextArea();
         consoleInput.setPreferredSize(new Dimension(width, line_height));
         consoleInput.setBorder(null);
         consolepane.add(consoleInput);
@@ -162,7 +165,9 @@ public class JSConsole {
             }
 
             @Override
-            public void keyReleased(KeyEvent e) {}
+            public void keyReleased(KeyEvent e) {
+                findCurrentTokenSuggestions((JTextComponent) e.getSource());
+            }
 
         });
 
@@ -380,10 +385,171 @@ public class JSConsole {
         if (!(c instanceof Undefined)) {
             ((Console)c).getData().clear();
         }
+//        Vector<String> list = new Vector<String>();
+//        list.add("window");
+//        list.add("document");
+//        list.add("console");
+//        showSuggestions(consoleInput, list);
+    }
+
+    static void showSuggestions(JTextComponent c, Vector<String> options) {
+        if (options.size() == 0) return;
+        if (suggestions == null) {
+            suggestions = new JPopupMenu() {
+                @Override
+                public void paintComponent(final Graphics g) {
+                    g.setColor(Color.WHITE);
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            };
+            suggestions.setOpaque(true);
+            suggestions.setBackground(Color.WHITE);
+            suggestions.setLayout(new BoxLayout(suggestions, BoxLayout.PAGE_AXIS));
+        } else {
+            suggestions.removeAll();
+        }
+        int height = 24;
+        for (String s: options) {
+            Suggestion item = new Suggestion(s, c);
+            suggestions.add(item);
+        }
+        suggestions.setPreferredSize(new Dimension(c.getWidth() + 2, options.size() == 1 ? height + 4 : options.size() * (height + 1) + 2));
+        suggestions.revalidate();
+        suggestions.show(c, -1, c.getHeight());
+        c.requestFocus();
+    }
+
+    static void findCurrentTokenSuggestions(JTextComponent input) {
+        String str = input.getText();
+        if (str.isEmpty()) return;
+        int pos = input.getCaretPosition();
+        int from = pos;
+        int to = pos;
+        while (from > 0 && (Character.isLetter(str.charAt(from-1)) || Character.isDigit(str.charAt(from-1)))) {
+            from--;
+        }
+        while (to < str.length() && (Character.isLetter(str.charAt(to)) || Character.isDigit(str.charAt(to)))) {
+            to++;
+        }
+        String token = str.substring(from, to);
+        if (token.isEmpty()) return;
+        //System.out.println("Current token: " + token);
+        Vector<String> words = new Vector(Arrays.asList("body", "childNodes", "children", "classList", "className", "console", "document", "getElementById", "getElementsByTagName", "getElementsByClassName", "getElementsByName", "parentNode", "nextSibling", "nextElementSibling", "previousSibling", "previousElementSibling", "length", "push", "pop", "slice", "splice", "shift", "unshift", "substring", "screen", "tagName", "window"));
+        Vector<String> list = new Vector<String>();
+        for (String word: words) {
+            if (word.startsWith(token)) {
+                list.add(word);
+            }
+        }
+        if (list.isEmpty() && suggestions != null) {
+            suggestions.setVisible(false);
+            input.requestFocus();
+        } else {
+            showSuggestions(input, list);
+        }
+    }
+
+    static void updateCurrentToken(JTextComponent input, String token) {
+        String str = input.getText();
+        if (str.isEmpty()) return;
+        int pos = input.getCaretPosition();
+        int from = pos;
+        int to = pos;
+        while (from > 0 && (Character.isLetter(str.charAt(from-1)) || Character.isDigit(str.charAt(from-1)))) {
+            from--;
+        }
+        while (to < str.length() && (Character.isLetter(str.charAt(to)) || Character.isDigit(str.charAt(to)))) {
+            to++;
+        }
+        String text = str.substring(0, from) + token + str.substring(to);
+        input.setText(text);
+        input.setCaretPosition(from + token.length());
+        if (suggestions != null) {
+            suggestions.setVisible(false);
+        }
+        input.requestFocus();
+    }
+
+    static class Suggestion extends JPanel {
+        Suggestion(String text, final JTextComponent owner) {
+            super();
+            setOpaque(true);
+            setBackground(Color.WHITE);
+            FlowLayout fl = new FlowLayout();
+            fl.setAlignment(FlowLayout.LEADING);
+            fl.setVgap(1);
+            fl.setHgap(2);
+            setLayout(fl);
+            label = new JLabel(text);
+            //label.setHorizontalAlignment(JLabel.LEFT);
+            //label.setHorizontalTextPosition(JLabel.LEFT);
+            label.setVerticalTextPosition(JLabel.CENTER);
+            label.setFont(new Font("Consolas", Font.PLAIN, 16));
+            label.setPreferredSize(new Dimension(getPreferredSize().width, getPreferredSize().height-2));
+            add(label);
+            
+            addMouseListener(new MouseListener() {
+
+                @Override
+                public void mouseClicked(MouseEvent e) {}
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    System.out.println(label.getText());
+                    updateCurrentToken(owner, label.getText());
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {}
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    hovered = true;
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    hovered = false;
+                    repaint();
+                }
+
+            });
+        }
+
+        private JLabel label;
+        private int height = 24;
+
+        @Override
+        public Dimension getPreferredSize() {
+            if (getParent() != null) {
+                return new Dimension(getParent().getWidth(), height);
+            }
+            return new Dimension(100, height);
+        }
+        
+        @Override
+        public Dimension getMinimumSize() {
+            return getPreferredSize();
+        }
+
+
+        @Override
+        public void paintComponent(Graphics g) {
+            if (hovered) {
+                setBackground(new Color(228, 235, 238));
+            } else {
+                setBackground(null);
+            }
+            super.paintComponent(g);
+        }
+
+        public boolean hovered = false;
     }
 
     static JPanel console;
+    static JTextArea consoleInput;
     static JPopupMenu consoleMenu;
+    static JPopupMenu suggestions;
 
 
     static class TreeExpandListener implements TreeWillExpandListener {
