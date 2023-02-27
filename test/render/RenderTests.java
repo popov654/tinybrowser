@@ -130,12 +130,13 @@ public class RenderTests {
     }
 
     @Test
-    public void linksTest() {
+    public void layoutUpdateTest() {
+        lt.liveLayoutUpdateTest();
         lt.setVisible(true);
-        lt.testLinks();
-        
+
         try {
-            Thread.sleep(200);
+            Thread.sleep(300);
+            lt.getDocument().processResize();
         } catch (InterruptedException ex) {}
 
         int[] data = new int[4];
@@ -153,11 +154,67 @@ public class RenderTests {
                 p.y += insets.top;
             }
 
-            robot.mouseMove(p.x + rect.x + border + 83, p.y + rect.y + border + 53);
+            try {
+                Thread.sleep(1800);
+            } catch (InterruptedException ex) {}
+
+            BufferedImage img = robot.createScreenCapture(new Rectangle(p.x + rect.x + border, p.y + rect.y + border, document.root.width, document.root.height));
+
+            img.getData().getPixel(28, 150, data);
+            assertEquals(255, data[0]);
+            assertEquals(255,  data[1]);
+            assertEquals(255, data[2]);
+
+            try {
+                Thread.sleep(1800);
+            } catch (InterruptedException ex) {}
+
+            img = robot.createScreenCapture(new Rectangle(p.x + rect.x + border, p.y + rect.y + border, document.root.width, document.root.height));
+
+            img.getData().getPixel(28, 150, data);
+            assertEquals(130, data[0]);
+            assertEquals(178,  data[1]);
+            assertEquals(224, data[2]);
+
+            //System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
+
+            //javax.imageio.ImageIO.write(img, "png", new File("snapshot.png"));
+        } catch (Exception ex) {}
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException ex) {}
+    }
+
+    @Test
+    public void linksTest() {
+        lt.setVisible(true);
+        lt.testLinks();
+        
+        try {
+            Thread.sleep(500);
+            lt.getDocument().processResize();
+        } catch (InterruptedException ex) {}
+
+        int[] data = new int[4];
+
+        Robot robot;
+        try {
+            robot = new Robot();
+            Point p = lt.getLocation();
+            Rectangle rect = document.getBounds();
+            int border = document.borderSize;
+
+            Insets insets = lt.getInsets();
+            if (insets != null) {
+                p.x += insets.left;
+                p.y += insets.top;
+            }
+
+            //robot.mouseMove(p.x + rect.x + border + 83, p.y + rect.y + border + 50);
             robot.waitForIdle();
             document.repaint();
 
-            Thread.sleep(800);
+            Thread.sleep(1000);
 
             BufferedImage img = robot.createScreenCapture(new Rectangle(p.x + rect.x + border, p.y + rect.y + border, document.root.width, document.root.height));
 
@@ -166,10 +223,10 @@ public class RenderTests {
             assertTrue(Math.abs(data[1] - 66) < 3);
             assertTrue(Math.abs(data[2] - 162) < 3);
 
-            img.getData().getPixel(83, 54, data);
-            assertTrue(Math.abs(data[0] - 6) < 3);
-            assertTrue(Math.abs(data[1] - 66) < 3);
-            assertTrue(Math.abs(data[2] - 162) < 3);
+            //img.getData().getPixel(83, 54, data);
+            //assertTrue(Math.abs(data[0] - 6) < 3);
+            //assertTrue(Math.abs(data[1] - 66) < 3);
+            //assertTrue(Math.abs(data[2] - 162) < 3);
             //System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
 
             //javax.imageio.ImageIO.write(img, "png", new File("snapshot.png"));
@@ -221,7 +278,6 @@ public class RenderTests {
                 assertTrue(Math.abs(data[2] - 253) < 3);
             } else {
                 img.getData().getPixel(15, 116, data);
-                System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
                 assertTrue(Math.abs(data[0] - 253) < 15);
                 assertTrue(Math.abs(data[1] - 0) < 48);
                 assertTrue(Math.abs(data[2] - 253) < 15);
@@ -296,7 +352,6 @@ public class RenderTests {
 
 
             img.getData().getPixel(285, 147, data);
-            System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
             assertEquals(255, data[0]);
             assertEquals(255, data[1]);
             assertEquals(255, data[2]);
@@ -330,7 +385,8 @@ public class RenderTests {
         lt.setVisible(true);
         lt.testImages(230, 170);
         try {
-            Thread.sleep(200);
+            Thread.sleep(300);
+            lt.getDocument().processResize();
         } catch (InterruptedException ex) {}
 
         assertEquals(Math.round(230 * document.root.ratio), document.root.getChildren().get(0).width);

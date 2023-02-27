@@ -341,8 +341,41 @@ public class LayoutTests extends JFrame {
         //System.out.println(d.calculateCssExpression(expr));
         //System.out.println(d.getValueInPixels("calc(" + expr + ")", ""));
 
+        //d2.setBold(true);
+        //d2.setItalic(true);
 
-        /*
+        //d2.setTransform(true);
+
+        //d.has_shadow = true;
+        //d.shadow_x = 1;
+        //d.shadow_y = -1;
+        //d.shadow_blur = 2;
+        //d.shadow_size = 0;
+        //d.shadow_color = new Color(0, 0, 0, 114);
+        //d.setProp("box-shadow", "0px 0px 3px 1px #c0c0c0");
+
+        //d.setAlpha(0.42f);
+        //d03.setAlpha(0.64f);
+
+        //root.setBackgroundImage("400.jpg");
+        //root.setBackgroundRepeat(Block.BackgroundRepeat.REPEAT_XY);
+
+        //d.display_type = Block.Display.NONE;
+        //d.visibility = Block.Visibility.HIDDEN;
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+            document.repaint();
+        }
+    }
+
+    public void liveLayoutUpdateTest() {
+        basicTest();
+
+        final Block d = document.root.getChildren().get(0);
         
         Timer t1 = new Timer(1500, new ActionListener() {
             @Override
@@ -378,13 +411,12 @@ public class LayoutTests extends JFrame {
         });
         t3.setRepeats(false);
         t3.start();
+    }
 
-        */
-
-        /*
-
+    public void testTextShadow() {
+        basicTest();
+        
         //document.root.setProp("text-shadow", "1px 1px 2px rgba(123, 123, 128, 0.47)");
-
         document.root.setTextShadow(new Color(123, 123, 128, 120), 1, 1, 0);
         Timer t1 = new Timer(1500, new ActionListener() {
             @Override
@@ -402,38 +434,6 @@ public class LayoutTests extends JFrame {
         });
         t2.setRepeats(false);
         t2.start();
-
-        */
-
-        //d2.setBold(true);
-        //d2.setItalic(true);
-
-        //d2.setTransform(true);
-
-        //d.has_shadow = true;
-        //d.shadow_x = 1;
-        //d.shadow_y = -1;
-        //d.shadow_blur = 2;
-        //d.shadow_size = 0;
-        //d.shadow_color = new Color(0, 0, 0, 114);
-        //d.setProp("box-shadow", "0px 0px 3px 1px #c0c0c0");
-
-        //d.setAlpha(0.42f);
-        //d03.setAlpha(0.64f);
-
-        //root.setBackgroundImage("400.jpg");
-        //root.setBackgroundRepeat(Block.BackgroundRepeat.REPEAT_XY);
-
-        //d.display_type = Block.Display.NONE;
-        //d.visibility = Block.Visibility.HIDDEN;
-
-        document.ready = true;
-
-        if (this.isVisible()) {
-            document.root.performLayout();
-            document.root.forceRepaintAll();
-            document.repaint();
-        }
     }
 
     public void testLinks() {

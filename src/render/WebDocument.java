@@ -337,45 +337,49 @@ public class WebDocument extends JPanel {
         panel.setBounds(borderSize, borderSize, getWidth() - borderSize * 2, getHeight() - borderSize * 2);
         if (getWidth() != last_width || getHeight() != last_height) {
             //System.err.println("Size updated");
-            if (keep_root_scrollbars_outside) {
-                root.setBounds(0, 0, width - root.getScrollbarYSize() - borderSize * 2, height - root.getScrollbarXSize() - borderSize * 2);
-                root.width = root.viewport_width = width - root.getScrollbarYSize() - borderSize * 2;
-                root.height = root.viewport_height = height - root.getScrollbarXSize() - borderSize * 2;
-            } else {
-                root.setBounds(0, 0, width - borderSize * 2, height - borderSize * 2);
-                root.width = width - borderSize * 2;
-                root.height = height - borderSize * 2;
-                root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
-                root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
-            }
-            root.orig_width = (int) (root.width / root.ratio);
-            root.orig_height = (int) (root.height / root.ratio);
-            root.max_height = root.height;
-
-            glass.setBounds(root.getBounds());
-
-            Component[] c = root.getComponents();
-            for (int i = 0; i < c.length; i++) {
-                c[i].setBounds(0, 0, root.width, root.height);
-            }
-
-            //System.err.println("Root width: " + root.width);
-            //System.err.println("Viewport width: " + root.viewport_width);
-            if (root.document.ready && !resizing) {
-                resizing = true;
-                if (root.builder != null) {
-                    root.builder.reapplyDocumentStyles(this);
-                } else {
-                    root.flushBuffersRecursively();
-                    root.performLayout();
-                    root.forceRepaint();
-                }
-                resizing = false;
-                getParent().repaint();
-            }
+            processResize();
         }
         last_width = getWidth();
         last_height = getHeight();
+    }
+
+    public void processResize() {
+        if (keep_root_scrollbars_outside) {
+            root.setBounds(0, 0, width - root.getScrollbarYSize() - borderSize * 2, height - root.getScrollbarXSize() - borderSize * 2);
+            root.width = root.viewport_width = width - root.getScrollbarYSize() - borderSize * 2;
+            root.height = root.viewport_height = height - root.getScrollbarXSize() - borderSize * 2;
+        } else {
+            root.setBounds(0, 0, width - borderSize * 2, height - borderSize * 2);
+            root.width = width - borderSize * 2;
+            root.height = height - borderSize * 2;
+            root.viewport_width = !root.hasVerticalScrollbar() ? root.width : root.width - root.getScrollbarYSize();
+            root.viewport_height = !root.hasHorizontalScrollbar() ? root.height : root.height - root.getScrollbarXSize();
+        }
+        root.orig_width = (int) (root.width / root.ratio);
+        root.orig_height = (int) (root.height / root.ratio);
+        root.max_height = root.height;
+
+        glass.setBounds(root.getBounds());
+
+        Component[] c = root.getComponents();
+        for (int i = 0; i < c.length; i++) {
+            c[i].setBounds(0, 0, root.width, root.height);
+        }
+
+        //System.err.println("Root width: " + root.width);
+        //System.err.println("Viewport width: " + root.viewport_width);
+        if (root.document.ready && !resizing) {
+            resizing = true;
+            if (root.builder != null) {
+                root.builder.reapplyDocumentStyles(this);
+            } else {
+                root.flushBuffersRecursively();
+                root.performLayout();
+                root.forceRepaint();
+            }
+            resizing = false;
+            getParent().repaint();
+        }
     }
 
     public JFrame openInspector(final JFrame parent) {

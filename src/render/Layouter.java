@@ -574,8 +574,9 @@ public class Layouter {
                 if (d.parts.size() > 0 && d.parts.get(0).getParent() != null) {
                     Block p = d.parts.get(0);
                     index = p.getParent().getComponentZOrder(p) - d.parts.size() + 1;
+                    if (index < 0) index = 0;
                 } else {
-                    index = d.pos;
+                    index = d.pos >= 0 ? d.pos : (d.parent != null ? d.parent.children.indexOf(d) : 0);
                 }
                 for (int i = 0; i < d.parts.size(); i++) {
                     Block part = d.parts.get(i);
@@ -730,7 +731,7 @@ public class Layouter {
             b.no_draw = false;
             last_block = b;
 
-            stack.remove(stack.lastIndexOf(d));
+            stack.remove(d);
 
             if (b.node != null) {
                b.node.fireEvent("layout", "render");
