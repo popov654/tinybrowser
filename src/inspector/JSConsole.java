@@ -204,7 +204,7 @@ public class JSConsole {
         text.setForeground(new Color(120, 25, 0));
         FontMetrics fm = text.getFontMetrics(text.getFont());
 
-        final Vector<String> lines = new Vector<String>();
+        Vector<String> lines = new Vector<String>();
 
         int width = console.getWidth() - 30;
 
