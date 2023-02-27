@@ -4,15 +4,19 @@ import bridge.Builder;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Frame;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
@@ -21,7 +25,9 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
@@ -74,6 +80,8 @@ public class JSConsole {
         console = new JPanel();
         console.setBackground(Color.WHITE);
         console.setLayout(new BoxLayout(console, BoxLayout.PAGE_AXIS));
+
+        initPopupMenu();
 
         final JScrollPane scrollpane2 = new JScrollPane(console);
         scrollpane2.getVerticalScrollBar().setUnitIncrement(20);
@@ -171,6 +179,7 @@ public class JSConsole {
                         }
                     }
                 }
+                consoleInput.requestFocus();
             }
         });
 
@@ -190,6 +199,42 @@ public class JSConsole {
                     }
                 });
             }
+        });
+    }
+
+    private static void initPopupMenu() {
+        consoleMenu = new JPopupMenu();
+        JMenuItem clearItem = new JMenuItem("Clear");
+        clearItem.setMargin(new Insets(2, 10, 2, -10));
+        clearItem.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
+        clearItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clearConsole();
+            }
+        });
+        consoleMenu.add(clearItem);
+        console.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+}
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON3) {
+                    consoleMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
         });
     }
 
@@ -324,7 +369,22 @@ public class JSConsole {
         //console.getParent().setPreferredSize(new Dimension(console.getWidth(), height));
     }
 
+    static void clearConsole() {
+        console.removeAll();
+        console.revalidate();
+        console.repaint();
+        recalculateContentHeight();
+        JSParser jp = new JSParser("null");
+        Expression exp = Expression.create(jp.getHead());
+        JSValue c = ((jsparser.Block)exp).scope.get("console");
+        if (!(c instanceof Undefined)) {
+            ((Console)c).getData().clear();
+        }
+    }
+
     static JPanel console;
+    static JPopupMenu consoleMenu;
+
 
     static class TreeExpandListener implements TreeWillExpandListener {
 
