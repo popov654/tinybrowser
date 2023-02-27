@@ -250,7 +250,7 @@ public class LayoutTests extends JFrame {
 
         document.root.removeAllElements();
 
-        Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
+        final Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d.setMargins(4);
@@ -336,15 +336,27 @@ public class LayoutTests extends JFrame {
 
         document.root.addElement(d2);
 
+
         //String expr = "2 * (15px / 4)";
         //System.out.println(d.calculateCssExpression(expr));
         //System.out.println(d.getValueInPixels("calc(" + expr + ")", ""));
 
+
         /*
-         
+        
         Timer t1 = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                document.root.removeElement(0);
+            }
+        });
+        t1.setRepeats(false);
+        t1.start();
+
+        Timer t2 = new Timer(3000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                document.root.addElement(d, 0);
                 Block d03 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
                 d03.setPositioning(Block.Position.STATIC);
                 d03.setDisplayType(Block.Display.INLINE);
@@ -353,10 +365,10 @@ public class LayoutTests extends JFrame {
                 document.root.getChildren().get(0).addElement(d03);
             }
         });
-        t1.setRepeats(false);
-        t1.start();
+        t2.setRepeats(false);
+        t2.start();
 
-        Timer t2 = new Timer(3000, new ActionListener() {
+        Timer t3 = new Timer(4500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Block b = document.root.getChildren().get(0).children.lastElement();
@@ -364,37 +376,8 @@ public class LayoutTests extends JFrame {
                 document.root.getChildren().get(1).addElement(b);
             }
         });
-        t2.setRepeats(false);
-        t2.start();
-
-        */
-
-        /*
-
-        Timer t1 = new Timer(1500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Block d03 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
-                d03.setPositioning(Block.Position.STATIC);
-                d03.setDisplayType(Block.Display.INLINE);
-                d03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
-                d03.addText(" !!");
-                document.root.getChildren().get(0).addElement(d03, 2);
-            }
-        });
-        t1.setRepeats(false);
-        t1.start();
-
-        Timer t2 = new Timer(3000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Block d03 = document.root.getChildren().get(0).getChildren().get(2);
-                document.root.getChildren().get(0).removeElement(d03);
-                document.root.getChildren().get(0).addElement(d03);
-            }
-        });
-        t2.setRepeats(false);
-        t2.start();
+        t3.setRepeats(false);
+        t3.start();
 
         */
 

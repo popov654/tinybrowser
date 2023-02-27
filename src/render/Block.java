@@ -475,7 +475,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (buffer == null) return;
 
-        Shape rect = new RoundedRect(0, 0, width, height, arc[0], arc[1], arc[2], arc[3]);
+        Shape rect = new RoundedRect(0, 0, width, height, arc[0] / 1.9, arc[1] / 1.9, arc[2] / 1.9, arc[3] / 1.9);
 
         Graphics g = buffer.getGraphics();
         Graphics2D g2d = (Graphics2D) g;
@@ -4397,7 +4397,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (parent != null) {
                 parent.removeFromLayout(this);
             }
-        } else {
+        } else if (parent != null) {
             Block root = this;
             while (root.parent != null) {
                 root = root.parent;
@@ -5694,10 +5694,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             children.add(d);
         }
-        
-        if (document != null) {
-            document.root.add(d, 0);
-        }
+        d.addToContainer(pos);
+
         d.pos = getComponentCount()-1;
 
         Block root = this;
@@ -5852,7 +5850,46 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         d.hasParentLink = false;
         d.removeTextLayers();
         children.remove(d);
+        d.removeFromContainer();
         removeFromLayout(d);
+        //d.flushBuffersRecursively();
+        document.repaint();
+    }
+
+    private void addToContainer(int pos) {
+        if (document != null && getParent() != document.root) {
+            if (pos < document.root.getComponentCount()) {
+                document.root.add(this, pos++);
+            } else {
+                document.root.add(this);
+            }
+        } else {
+            for (Block part: parts) {
+                if (pos < document.root.getComponentCount()) {
+                    document.root.add(part, pos++);
+                } else {
+                    document.root.add(part);
+                }
+            }
+        }
+        for (int i = 0; i < children.size(); i++) {
+            if (children.get(i).type == NodeTypes.ELEMENT) {
+                children.get(i).addToContainer(pos);
+            }
+        }
+    }
+
+    private void removeFromContainer() {
+        if (getParent() == document.root) {
+            document.root.remove(this);
+        } else {
+            for (Block part: parts) {
+                document.root.remove(part);
+            }
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).removeFromContainer();
+        }
     }
 
     public void removeElement(int index) {
@@ -5894,7 +5931,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
             boolean val = document.fast_update;
-            if (line != line.parent.lines.lastElement()) document.fast_update = false;
+            if (parent == null || line != line.parent.lines.lastElement()) document.fast_update = false;
             Block block = doIncrementLayout(viewport_width, viewport_height, false);
             document.fast_update = val;
             document.root.setNeedRestoreSelection(true);
