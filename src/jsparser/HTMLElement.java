@@ -48,6 +48,13 @@ public class HTMLElement extends HTMLNode {
         @Override
         public void nodeChanged(NodeEvent e, String source) {
             if (!source.split(":")[0].equals("render") && e.target.nodeType == 1) {
+                if (source.split(":")[1].equals("stylesChanged")) {
+                    return;
+                }
+                if (source.split(":")[1].equals("attributesChanged")) {
+                    updateAttributesList();
+                    return;
+                }
                 updateClassList();
                 updateStyles();
                 updateAttributesList();
