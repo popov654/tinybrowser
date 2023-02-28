@@ -5456,12 +5456,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.remove("left");
         }
         else if (units == Units.percent) {
-            if (parent != null) {
-                Block p = parent;
-                while (p != null && !p.isRoot()) {
-                    p = p.parent;
-                }
-            }
             int w = parent != null ? parent.width - parent.borderWidth[1] - parent.borderWidth[3] :
                                      document.width - document.borderSize * 2;
             value = (int)Math.round(w * (val / 100));
@@ -5471,12 +5465,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(16 * val);
             rules_for_recalc.remove("left");
         }
-        if (!auto_width && auto_right) {
-            right = left + width;
-        }
-        if (auto_width && !auto_right) {
-            width = right - left;
-        }
+//        if (!auto_width && auto_right) {
+//            right = left + width;
+//        }
+//        if (auto_width && !auto_right) {
+//            width = right - left;
+//        }
         auto_left = false;
         left = units != Units.percent ? (int)Math.round(value * ratio) : value;
         Block b = this;
@@ -5504,12 +5498,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rules_for_recalc.remove("right");
         }
         else if (units == Units.percent) {
-            if (parent != null) {
-                Block p = parent;
-                while (p != null && !p.isRoot()) {
-                    p = p.parent;
-                }
-            }
             int w = parent != null ? parent.width - parent.borderWidth[1] - parent.borderWidth[3] :
                                      document.width - document.borderSize * 2;
             value = (int)Math.round(w * (1 - (val / 100)));
@@ -5519,12 +5507,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(16 * val);
             rules_for_recalc.remove("right");
         }
-        if (!auto_width && auto_left) {
-            left = right - width;
-        }
-        if (auto_width && !auto_left) {
-            width = right - left;
-        }
+//        if (!auto_width && auto_left) {
+//            left = right - width;
+//        }
+//        if (auto_width && !auto_left) {
+//            width = right - left;
+//        }
         auto_right = false;
         right = units != Units.percent ? (int)Math.round(value * ratio) : value;
         Block b = this;

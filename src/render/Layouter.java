@@ -450,7 +450,12 @@ public class Layouter {
                 d.setY(d._getY() + d.top);
             }
 
-            if (checkAbsolutePositioning(d)) return;
+            if (checkAbsolutePositioning(d)) {
+                d.no_draw = false;
+                last_block = d;
+                stack.remove(stack.lastIndexOf(d));
+                return;
+            }
 
             d.no_draw = false;
 
@@ -516,7 +521,12 @@ public class Layouter {
                 d.setY(d._getY() + d.top);
             }
 
-            if (checkAbsolutePositioning(d)) return;
+            if (checkAbsolutePositioning(d)) {
+                d.no_draw = false;
+                last_block = d;
+                stack.remove(stack.lastIndexOf(d));
+                return;
+            }
 
             if (last_block != null && last_block.line == last_line) {
                 applyVerticalAlignment(d);

@@ -668,13 +668,13 @@ public class LayoutTests extends JFrame {
         block2.addText("Text2");
         b.addElement(block2);
 
+        block2.performLayout();
+
         block2.setPositioning(Block.Position.ABSOLUTE);
         block2.setLeft(50, Block.Units.percent);
         block2.setTop(50, Block.Units.percent);
-        block2.setProp("margin-left", -block.width / 2, Block.Units.px);
-        block2.setProp("margin-top", -block.height / 2, Block.Units.px);
-
-        document.ready = true;
+        block2.setProp("margin-left", -block2.width / 2, Block.Units.px);
+        block2.setProp("margin-top", -block2.height / 2, Block.Units.px);
 
         if (this.isVisible()) {
             document.root.performLayout();
