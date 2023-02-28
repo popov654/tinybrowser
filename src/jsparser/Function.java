@@ -224,7 +224,7 @@ public class Function extends JSObject {
         for (int i = 0; i < level; i++) {
             pad += "  ";
         }
-        return pad + "function()" + (body != null ? " " + body.toString(level+1) : "");
+        return pad + "function(" + getArguments() + ")" + (body != null ? " " + body.toString(level+1) : "");
     }
 
     public String toPaddedString() {
