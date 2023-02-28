@@ -216,7 +216,8 @@ public class Function extends JSObject {
                 func_body = "{}";
             }
         }
-        return "function(" + getArguments() + ")" + (body != null ? " " + func_body : "");
+        String signature = is_lambda ? "(" + getArguments() + ") => " : "function" + (is_generator ? "*" : "") + " (" + getArguments() + ")";
+        return signature + (body != null ? " " + func_body : "");
     }
 
     public String toPaddedString(int level) {
@@ -224,11 +225,12 @@ public class Function extends JSObject {
         for (int i = 0; i < level; i++) {
             pad += "  ";
         }
-        return pad + "function(" + getArguments() + ")" + (body != null ? " " + body.toString(level+1) : "");
+        String signature = is_lambda ? "(" + getArguments() + ") => " : "function" + (is_generator ? "*" : "") + " (" + getArguments() + ")";
+        return pad + signature + (body != null ? " " + body.toString(level) : "");
     }
 
     public String toPaddedString() {
-        return toPaddedString(1);
+        return toPaddedString(0);
     }
 
     private Vector<String> params;

@@ -8,7 +8,7 @@ import java.util.Vector;
  *
  * @author Alex
  */
-public class Generator  extends JSObject {
+public class Generator extends JSObject {
 
     class nextFunction extends Function {
         @Override
@@ -70,15 +70,8 @@ public class Generator  extends JSObject {
 
     @Override
     public String toString() {
-        String result = "";
-        Set keys = items.keySet();
-        Iterator it = keys.iterator();
-        while (it.hasNext()) {
-            if (result.length() > 0) result += ", ";
-            String str = (String)it.next();
-            result += str + ": " + items.get(str).toString();
-        }
-        return "{" + result + "}";
+        if (block.func == null) return "{Generator}";
+        return block.func.toPaddedString(0);
     }
 
     @Override
