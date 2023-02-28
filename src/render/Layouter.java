@@ -448,6 +448,10 @@ public class Layouter {
             if (d.positioning == Block.Position.RELATIVE) {
                 d.setX(d._getX() + d.left);
                 d.setY(d._getY() + d.top);
+                if (d.childDocument != null) {
+                    d.childDocument.setBounds(d._x_, d._y_, d.viewport_width, d.viewport_height);
+                    d.childDocument.setSize(d.viewport_width, d.viewport_height);
+                }
             }
 
             if (checkAbsolutePositioning(d)) {
@@ -519,6 +523,10 @@ public class Layouter {
             if (d.positioning == Block.Position.RELATIVE) {
                 d.setX(d._getX() + d.left);
                 d.setY(d._getY() + d.top);
+                if (d.childDocument != null) {
+                    d.childDocument.setBounds(d._x_, d._y_, d.viewport_width, d.viewport_height);
+                    d.childDocument.setSize(d.viewport_width, d.viewport_height);
+                }
             }
 
             if (checkAbsolutePositioning(d)) {
@@ -712,6 +720,10 @@ public class Layouter {
             if (b.positioning == Block.Position.RELATIVE) {
                 b.setX(b._getX() + b.left);
                 b.setY(b._getY() + b.top);
+                if (b.childDocument != null) {
+                    b.childDocument.setBounds(b._x_, b._y_, b.viewport_width, b.viewport_height);
+                    b.childDocument.setSize(b.viewport_width, b.viewport_height);
+                }
             }
 
             // a quick hack to enable vertical alignment with symbols
@@ -795,6 +807,10 @@ public class Layouter {
             if (last_line != null) {
                 cur_x = last_line.getX() + last_line.cur_pos;
                 cur_y = last_line.getY();
+            }
+            if (d.childDocument != null) {
+                d.childDocument.setBounds(d._x_, d._y_, d.viewport_width, d.viewport_height);
+                d.childDocument.setSize(d.viewport_width, d.viewport_height);
             }
             return true;
         }

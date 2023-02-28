@@ -682,6 +682,53 @@ public class LayoutTests extends JFrame {
         }
     }
 
+    public void testChildDocuments() {
+        prepareBlock();
+
+        Block b = document.root.children.get(0);
+
+        b.setPositioning(Block.Position.RELATIVE);
+        b.removeAllElements();
+
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        block.setPositioning(Block.Position.STATIC);
+        block.setDisplayType(Block.Display.INLINE_BLOCK);
+        block.addText("Text1");
+        b.addElement(block);
+
+        Block block2 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+
+        WebDocument child = new WebDocument();
+        child.setSize(100, 60);
+
+        Block block_child1 = new Block(child, null, -1, -1, 0, 0, Color.BLACK);
+        block_child1.setPositioning(Block.Position.STATIC);
+        block_child1.setDisplayType(Block.Display.INLINE_BLOCK);
+        
+        block_child1.setAutoXMargin();
+        block_child1.setAutoYMargin();
+        child.root.setTextAlign(Block.TextAlign.ALIGN_CENTER);
+        block_child1.addText("Text2");
+        
+        child.root.addElement(block_child1);
+
+        block2.setWidthHeight(150, 80);
+        block2.addChildDocument(child);
+
+        b.addElement(block2);
+
+        block2.setPositioning(Block.Position.ABSOLUTE);
+        block2.setLeft(30, Block.Units.percent);
+        block2.setTop(40, Block.Units.percent);
+        block2.setWidth(40, Block.Units.percent);
+        block2.setHeight(20, Block.Units.percent);
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
     public void testAutoMargins(int left, int right) {
         prepareBlock();
 
@@ -1045,6 +1092,7 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("lists")) test = 15;
             else if (args[0].equals("borders")) test = 16;
             else if (args[0].equals("gradients")) test = 17;
+            else if (args[0].equals("iframes")) test = 18;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -1091,6 +1139,8 @@ public class LayoutTests extends JFrame {
             case 16: lt.testBorders();
                      break;
             case 17: lt.testGradients();
+                     break;
+            case 18: lt.testChildDocuments();
                      break;
         }
 

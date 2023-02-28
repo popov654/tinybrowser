@@ -245,6 +245,12 @@ public class WebDocument extends JPanel {
         this.width = width;
         this.height = height;
         setPreferredSize(new Dimension(width, height));
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                resized();
+            }
+        });
     }
 
     public void insertSubtree(Block b, Block insert) {

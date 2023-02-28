@@ -361,6 +361,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public synchronized void forceRepaint(Graphics g) {
         document.isPainting = true;
         buffer = null;
+        if (childDocument != null) {
+            childDocument.root.flushBuffersRecursively();
+        }
         draw();
         document.isPainting = false;
     }
@@ -400,7 +403,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         //g.clearRect(0, 0, width, height);
 
         if (childDocument != null) {
-            childDocument.getRoot().paintComponent(g);
+            scroll_x = (parent != null ? parent.scroll_x : 0) + scroll_left;
+            scroll_y = (parent != null ? parent.scroll_y : 0) + scroll_top;
+            childDocument.setBounds(_x_ - scroll_x, _y_ - scroll_y, width, height);
+            childDocument.repaint();
             return;
         }
 
@@ -453,7 +459,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 root.setAttributeNS(null, "width", width + "");
                 root.setAttributeNS(null, "height", height + "");
                 root.setAttributeNS(null, "viewBox", "0 0 " + width + " " + height);
-                c[i].setBounds(_x_ - scroll_x, _y_ -scroll_y, width, height);
+                c[i].setBounds(_x_ - scroll_x, _y_ - scroll_y, width, height);
                 c[i].repaint();
                 continue;
             }
@@ -2083,21 +2089,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (processImage()) return;
         if (processInput()) return;
 
-        if (childDocument != null) {
-            Block root = childDocument.getRoot();
-            root.width = root.viewport_width = width;
-            root.height = root.viewport_height = height;
-            root.orig_width = (int)Math.floor(root.width / root.ratio);
-            root.orig_height = (int)Math.floor(root.height / root.ratio);
-            document.panel.add(childDocument, 0);
-            childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
-            //childDocument.setOpaque(true);
-            childDocument.setBackground(Color.RED);
-            childDocument.root.setBounds(0, 0, width, height);
-            root.performLayout();
-            return;
-        }
-
         if (children.size() == 0 && getComponents().length == 1 && getComponents()[0] instanceof MediaPlayer.VideoRenderer) {
             int delta = parent.width - width;
             width = parent.width;
@@ -2281,11 +2272,34 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (display_type != Display.INLINE) performSizeCheck();
 
-        if (childDocument != null) {
-            childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
-            childDocument.setBounds(_x_, _y_, viewport_width, viewport_height);
-            childDocument.root.setBounds(0, 0, viewport_width, viewport_height);
-            return;
+        if (childDocument != null && viewport_width > 0 && (auto_height || viewport_height > 0)) {
+            Block root = childDocument.getRoot();
+            root.width = root.viewport_width = width;
+            root.height = root.viewport_height = height;
+            root.orig_width = (int)Math.floor(root.width / root.ratio);
+            root.orig_height = (int)Math.floor(root.height / root.ratio);
+            //childDocument.setBorder(javax.swing.BorderFactory.createLineBorder(Color.BLACK, 1));
+
+            childDocument.width = childDocument.root.width = viewport_width;
+
+            if (auto_height) {
+                root.auto_height = true;
+                root.height = -1;
+                root.performLayout();
+                childDocument.height = root.viewport_height;
+                height = viewport_height = root.viewport_height;
+                orig_height = (int) Math.floor((double) height / ratio);
+                childDocument.setBounds(_x_, _y_, viewport_width, viewport_height);
+                childDocument.setSize(viewport_width, viewport_height);
+                //childDocument.root.setBounds(0, 0, viewport_width, viewport_height);
+            } else {
+                childDocument.setBounds(_x_, _y_, viewport_width, viewport_height);
+                childDocument.setSize(viewport_width, viewport_height);
+                //childDocument.root.setBounds(0, 0, viewport_width, viewport_height);
+                childDocument.root.auto_height = false;
+                childDocument.height = childDocument.root.height = viewport_height;
+                root.performLayout();
+            }
         }
         if (text_align != TextAlign.ALIGN_LEFT) {
             Layouter.applyHorizontalAlignment(this);
@@ -5820,6 +5834,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         childDocument = d;
         d.parent_document = this.document;
         d.parent_document_block = this;
+        add(d);
     }
 
     public void removeChildDocument() {
@@ -5828,6 +5843,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         childDocument.parent_document = null;
         childDocument.parent_document_block = null;
         childDocument = null;
+        remove(childDocument);
     }
 
     public void removeElement(Block d) {
