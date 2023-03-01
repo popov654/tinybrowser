@@ -1485,11 +1485,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 ((Block)v.get(i)).selectAll();
             } else {
                 Character c = (Character) v.get(i);
-//                if (c.glyph != null) {
-//                    c.glyph.setOpaque(true);
-//                    c.glyph.setForeground(Color.WHITE);
-//                    c.glyph.setBackground(selection_color);
-//                }
                 selectCharacter(c);
             }
         }
@@ -3337,6 +3332,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             to_element = a;
         }
 
+        Color sel_color = WebDocument.active_document == document ? selection_color : selection_inactive_color;
+
         if (from_element > -1 && to_element > -1) {
 
             for (int k = 0; k < v.size(); k++) {
@@ -3348,10 +3345,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (label != null) {
                     label.setForeground(Color.WHITE);
                     if (!text_italic) {
-                        label.setBackground(selection_color);
+                        label.setBackground(sel_color);
                         label.setOpaque(true);
                     } else {
-                        g.setColor(selection_color);
+                        g.setColor(sel_color);
                         g.fillRect(c.getX(), c.getY(), label.getWidth()-1, label.getHeight());
                     }
                 } else {
@@ -5832,6 +5829,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void addChildDocument(WebDocument d) {
         removeAllElements();
         childDocument = d;
+        if (document != null) {
+            document.child_documents.add(d);
+        }
         d.parent_document = this.document;
         d.parent_document_block = this;
         add(d);
@@ -5840,6 +5840,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void removeChildDocument() {
         if (childDocument == null) return;
         childDocument.getRoot().removeAllElements();
+        if (document != null) {
+            document.child_documents.remove(childDocument);
+        }
         childDocument.parent_document = null;
         childDocument.parent_document_block = null;
         childDocument = null;
@@ -6151,6 +6154,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int letter_spacing = 0;
     public int word_spacing = 0;
     private Color selection_color = new Color(0, 0, 196, 186);
+    private Color selection_inactive_color = new Color(120, 120, 120, 186);
     private int[] sel = null;
     private volatile int from_x = -1;
     private volatile int from_y = -1;
@@ -6830,13 +6834,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 return;
             }
             clearSelection();
+            Color sel_color = WebDocument.active_document == document ? this.selection_color : this.selection_inactive_color;
             for (int i = 0; i < text_layer.getComponents().length; i++) {
                 JLabel c = (JLabel)text_layer.getComponents()[i];
                 if (x >= c.getX() && x <= c.getX() + c.getWidth() &&
                     y >= c.getY() && y <= c.getY() + c.getHeight()) {
                     int i1 = i;
                     while (i1 >= 0 && ((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) {
-                        ((JLabel)text_layer.getComponents()[i1]).setBackground(selection_color);
+                        ((JLabel)text_layer.getComponents()[i1]).setBackground(sel_color);
                         ((JLabel)text_layer.getComponents()[i1]).setForeground(Color.WHITE);
                         ((JLabel)text_layer.getComponents()[i1]).setOpaque(true);
                         i1--;
@@ -6846,7 +6851,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                     int i2 = i;
                     while (i2 <= text_layer.getComponents().length-1 && ((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) {
-                        ((JLabel)text_layer.getComponents()[i2]).setBackground(selection_color);
+                        ((JLabel)text_layer.getComponents()[i2]).setBackground(sel_color);
                         ((JLabel)text_layer.getComponents()[i2]).setForeground(Color.WHITE);
                         ((JLabel)text_layer.getComponents()[i2]).setOpaque(true);
                         i2++;
@@ -6888,9 +6893,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (d.parent != null) d = d.parent;
             else d = d.document.getParentDocumentBlock();
         }
-        d.clearSelection();
+        WebDocument.active_document = document;
+        //d.clearSelection();
         d.forceRepaint();
         document.repaint();
+        if (document != null) {
+            for (WebDocument doc: document.child_documents) {
+                doc.root.updateTextSelectionColor();
+                doc.repaint();
+            }
+            WebDocument doc = document.parent_document;
+            while (doc != null) {
+                doc.root.updateTextSelectionColor();
+                doc = doc.parent_document;
+            }
+        }
         from_x = -1;
         from_y = -1;
         for (int i = 0; i < lines.size(); i++) {
@@ -7058,9 +7075,27 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void updateTextSelectionColor() {
+        if (textRenderingMode == 0 && text_layer != null) {
+            Component[] c = text_layer.getComponents();
+            for (int i = 0; i < c.length; i++) {
+                c[i].setBackground(WebDocument.active_document == document ? selection_color : selection_inactive_color);
+            }
+        } else {
+            forceRepaint();
+        }
+        for (int i = 0; i < parts.size(); i++) {
+            parts.get(i).updateTextSelectionColor();
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).updateTextSelectionColor();
+        }
+    }
+
     private void selectCharacter(Character c) {
+        Color sel_color = WebDocument.active_document == document ? this.selection_color : this.selection_inactive_color;
         if (c.glyph == null) {
-            c.setBackground(selection_color);
+            c.setBackground(sel_color);
             c.setColor(Color.WHITE);
             return;
         }
@@ -7068,7 +7103,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             //System.out.println("Selected line element '" + c.getText() + "'");
             c.glyph.setOpaque(true);
             c.glyph.setForeground(Color.WHITE);
-            c.glyph.setBackground(selection_color);
+            c.glyph.setBackground(sel_color);
         }
     }
 

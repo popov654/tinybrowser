@@ -587,6 +587,8 @@ public class WebDocument extends JPanel {
     public volatile boolean fast_update = true;
 
     public Block active_block;
+    public static WebDocument active_document;
+    public HashSet<WebDocument> child_documents = new HashSet<WebDocument>();
 
     public boolean ready = true;
 
