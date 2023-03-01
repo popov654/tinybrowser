@@ -856,12 +856,14 @@ public class ExpressionTest {
         System.out.println("var a = [1, 2, 3]; for (var i in a) { i }");
         Expression exp = Expression.create(jp.getHead());
         exp.eval();
+        assertEquals("{\n  var a = [1, 2, 3];\n  for (var i in a) {\n    i;\n  }\n}", exp.toString());
         assertEquals("2", exp.getValue().toString());
         assertEquals("2", Expression.getVar("i", exp).toString());
         jp = new JSParser("var obj = { x: 1, y: 2 }; for (let i in obj) { i }");
         System.out.println("var obj = { x: 1, y: 2 }; for (let i in obj) { i }");
         exp = Expression.create(jp.getHead());
         exp.eval();
+        assertEquals("{\n  var obj = {x: 1, y: 2}\n  for (let i in obj) {\n    i;\n  }\n}", exp.toString());
         assertEquals("\"y\"", exp.getValue().toString());
         assertEquals("undefined", Expression.getVar("i", exp).toString());
     }
@@ -1364,11 +1366,13 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"str3\"", exp.getValue().toString());
+
         jp = new JSParser("var i = 0; do { \"str\" + (++i); } while (i > 1)");
         System.out.println("var i = 0; do { \"str\" + (++i); } while (i > 1)");
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"str1\"", exp.getValue().toString());
+        
         jp = new JSParser("var i = 0; do { \"str\" + (++i); } while (i < 2)");
         System.out.println("var i = 0; do { \"str\" + (++i); } while (i < 2)");
         exp = Expression.create(jp.getHead());

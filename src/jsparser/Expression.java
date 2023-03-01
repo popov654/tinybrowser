@@ -45,10 +45,6 @@ public class Expression {
             } else {
                 if (type == 15 && t.getContent().matches("var|let")) {
                     mode = t.getContent().equals("var") ? var : let;
-                    t.prev.next = t.next;
-                    if (t.next != null) {
-                        t.next.prev = t.prev;
-                    }
                     if (t == start && (t.next == null || t.next.getType() != Token.VAR_NAME)) {
                         System.err.println("Syntax error");
                     }
@@ -152,19 +148,26 @@ public class Expression {
 
         boolean is_condition = false;
 
+        if (ret && !token.getContent().equals("return")) {
+            source += "return" + (token.next != null ? " " : "");
+        }
+        if (getContent().matches("var|let")) {
+            source += getContent() + " ";
+        }
+
         while (token != null && token.getType() != Token.SEMICOLON) {
-            if (token.getType() == Token.OP && !token.getContent().equals("!") && !token.getContent().matches("\\+\\+|--") &&
+            if (token.getType() == Token.OP && !token.getContent().matches("[!:,]") && !token.getContent().matches("\\+\\+|--") &&
                   !token.getContent().matches("break|continue|return")) {
                 source += " ";
             }
             String content = "";
-            if (ret && !token.getContent().equals("return")) {
-                content += "return" + (token.next != null ? " " : "");
+            if (token.val == null) {
+                content += !token.getContent().matches("\\{\\{|\\}\\}") ? token.getContent() : token.getContent().charAt(0);
             }
-            if (token.val == null) content = token.getContent();
             if (token.val instanceof Function) {
-                content = ((Function)token.val).toPaddedString().trim();
-            } else if (token.val != null) {
+                content += ((Function)token.val).toPaddedString().trim();
+            }
+            if (token.val != null) {
                 content = token.val.toString();
             }
             if (content.equals("if")) {
@@ -358,9 +361,11 @@ public class Expression {
                 if (t.next != null) {
                     t.prev.next = null;
                 }
-                Token t2 = new Token("");
-                last.prev = t2;
-                t2.next = last;
+                if (last != start || last.prev.getType() != Token.KEYWORD) {
+                    Token t2 = new Token("");
+                    last.prev = t2;
+                    t2.next = last;
+                }
                 Expression exp = new Expression(last, parent_block);
                 exp.silent = true;
                 e.add(exp);

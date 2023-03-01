@@ -1059,10 +1059,41 @@ public class Block extends Expression {
             result += "}";
         }
         result += "\n";
+
+        String pad = "";
         for (int k = 0; k < level; k++) {
-            result += "  ";
+            pad += "  ";
         }
-        return (block_type != Block.CASE ? "{\n" : "\n") + result + "}";
+        result += pad;
+
+        result = (block_type != Block.CASE ? "{\n" : "\n") + result + "}";
+        if (c_exp != null || f_in_obj != null) {
+            result = pad + (!post_check ? getLoopHeader() + " " + result : "do " + result + " " + getLoopHeader());
+        }
+        return result;
+    }
+
+    private String getLoopHeader() {
+        String result = "";
+        if (c_exp != null || f_in_obj != null) {
+
+            if (c_exp != null) {
+                for (int i = 0; i < c_exp.length; i++) {
+                    if (c_exp[i] != null) {
+                        result += c_exp[i].toString().trim() + " ";
+                    }
+                }
+                result = result.replaceAll(";\\s*$", "").trim();
+                if (c_exp[0] != null) {
+                    result = "for (" + result + ")";
+                } else {
+                    result = "while (" + result + ")";
+                }
+            } else {
+                result = "for (" + (f_in_vsc == Block.let ? "let" : "var") + " " + f_in_var + " in " + f_in_obj + ")";
+            }
+        }
+        return result;
     }
 
 
