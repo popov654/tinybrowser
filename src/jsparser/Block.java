@@ -1049,7 +1049,7 @@ public class Block extends Expression {
             if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
                 open_else = true;
             }
-            if (i < children.size()-1 && !children.get(i).getContent().equals("switch")) result += "\n";
+            if (i < children.size()-1 && (children.get(i) instanceof Block || !children.get(i).getContent().equals("switch"))) result += "\n";
         }
         if (open_else) {
             result += "\n";

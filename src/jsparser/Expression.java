@@ -153,7 +153,8 @@ public class Expression {
         boolean is_condition = false;
 
         while (token != null && token.getType() != Token.SEMICOLON) {
-            if (token.getType() == Token.OP && !token.getContent().equals("!") && !token.getContent().matches("break|continue|return")) {
+            if (token.getType() == Token.OP && !token.getContent().equals("!") && !token.getContent().matches("\\+\\+|--") &&
+                  !token.getContent().matches("break|continue|return")) {
                 source += " ";
             }
             String content = "";
@@ -178,8 +179,8 @@ public class Expression {
                 break;
             }
             source += content;
-            if (token.getType() == Token.OP && !token.getContent().equals("!") || token.getType() == Token.KEYWORD &&
-                    !token.getContent().matches("break|continue|return")) {
+            if (token.getType() == Token.OP && !token.getContent().equals("!") && !token.getContent().matches("\\+\\+|--") || 
+                  token.getType() == Token.KEYWORD && !token.getContent().matches("break|continue|return")) {
                 source += " ";
             }
             token = token.next;
