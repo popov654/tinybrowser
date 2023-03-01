@@ -103,11 +103,27 @@ public class JSConsole {
 
         JPanel separator = new JPanel();
         separator.setBackground(new Color(228, 228, 235));
-        separator.setPreferredSize(new Dimension(width - 20, 1));
+        separator.setPreferredSize(new Dimension(width, 1));
+        separator.setMaximumSize(new Dimension(width, 1));
         consolepane.add(separator);
 
-        consoleInput = new JTextArea();
-        consoleInput.setPreferredSize(new Dimension(width, line_height));
+        consoleInput = new JTextArea() {
+            @Override
+            public Dimension getPreferredSize() {
+                int rows = Math.max(1, getRows());
+                return new Dimension(getParent().getSize().width, rows * line_height + 2);
+            }
+            @Override
+            public Dimension getMinimumSize() {
+                return getPreferredSize();
+            }
+            @Override
+            public Dimension getMaximumSize() {
+                return getPreferredSize();
+            }
+        };
+        //consoleInput.setPreferredSize(new Dimension(width, line_height + 2));
+        //consoleInput.setMaximumSize(new Dimension(width, line_height + 2));
         consoleInput.setBorder(null);
         consolepane.add(consoleInput);
 
@@ -124,6 +140,28 @@ public class JSConsole {
 
             @Override
             public void keyPressed(KeyEvent e) {
+                int key_code = e.getKeyCode();
+                if (key_code == KeyEvent.VK_BACK_SPACE || key_code == KeyEvent.VK_DELETE ||
+                      key_code == KeyEvent.VK_ENTER && (e.isShiftDown() || e.isControlDown())) {
+                    int n = consoleInput.getText().split("\n").length;
+                    Frame frame = (Frame) SwingUtilities.getWindowAncestor(consoleInput);
+                    Dimension dim = frame.getSize();
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        consoleInput.setText(consoleInput.getText() + "\n");
+                        frame.setSize(dim.width, dim.height + line_height);
+                        consoleInput.setRows(n + 1);
+                        consolepane.setPreferredSize(new Dimension(consolepane.getPreferredSize().width, consolepane.getSize().height + line_height));
+                    } else {
+                        int pos = consoleInput.getCaretPosition();
+                        if (pos > 0 && key_code == KeyEvent.VK_BACK_SPACE && consoleInput.getText().charAt(pos-1) == '\n' ||
+                              pos < consoleInput.getText().length() - 1 && key_code == KeyEvent.VK_DELETE && consoleInput.getText().charAt(pos+1) == '\n') {
+                            frame.setSize(dim.width, dim.height - line_height);
+                            consoleInput.setRows(n - 1);
+                            consolepane.setPreferredSize(new Dimension(consolepane.getPreferredSize().width, consolepane.getSize().height - line_height));
+                        }
+                    }
+                    return;
+                }
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     String code = ((JTextArea)e.getSource()).getText();
                     JSParser jp = new JSParser(code);
@@ -160,6 +198,8 @@ public class JSConsole {
                     }
 
                     ((JTextArea)e.getSource()).setText("");
+
+                    consoleInput.setRows(0);
                     e.consume();
                 }
             }
@@ -196,11 +236,12 @@ public class JSConsole {
 
             @Override
             public void componentResized(java.awt.event.ComponentEvent evt) {
+                //final JPanel consolepane = (JPanel) evt.getSource();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        scrollpane2.setPreferredSize(new Dimension(consolepane.getWidth(), consolepane.getHeight() - line_height - 6));
-                        console.setPreferredSize(new Dimension(console.getWidth(), Math.max(console.getPreferredSize().height, consolepane.getHeight() - line_height - 6)));
+                        scrollpane2.setPreferredSize(new Dimension(consolepane.getWidth(), consolepane.getHeight() - consoleInput.getSize().height - 4));
+                        console.setPreferredSize(new Dimension(console.getWidth(), Math.max(console.getPreferredSize().height, consolepane.getHeight() - consoleInput.getSize().height - 4)));
                     }
                 });
             }
