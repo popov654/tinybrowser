@@ -124,7 +124,7 @@ public class Expression {
                 end = t;
                 t = t.next;
 
-                if (type == 15 && !end.getContent().matches("if|var|let|new|yield")) {
+                if (type == 15 && !end.getContent().matches("if|switch|case|var|let|new|yield")) {
                     end.next = null;
                     break;
                 }
@@ -169,16 +169,6 @@ public class Expression {
             if (content.equals("if")) {
                 is_condition = true;
             }
-            if (content.matches("switch")) {
-                Block parent = parent_block;
-                for (int i = 0; i < parent.children.size(); i++) {
-                    if (parent.children.get(i) == this && i < parent.children.size()-1) {
-                        content += " (" + parent.children.get(i+1).source.trim().replaceAll(";$", "") + ") {";
-                    }
-                }
-                source += content;
-                break;
-            }
             if (content.equals("else") && token.next != null && token.next.getContent().equals("if")) {
                 content = "} " + content + " ";
             }
@@ -198,7 +188,14 @@ public class Expression {
         if (ret && !source.matches("^\\s*return.*")) {
             source = source.replaceAll("^(\\s*)", "$1return ").replaceAll("return (;|$)", "return$1");
         }
-        if (!is_condition && !source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}")) source += ";";
+        if (!is_condition && !source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}") && !getContent().equals("switch")) source += ";";
+        if (getContent().equals("switch")) {
+            source = source + " {";
+        } else if (getContent().equals("case")) {
+            source = source.replaceAll(";$", ":");
+        } else if (parent_block != null && parent_block.getType() == Block.CASE) {
+            source = "  " + source;
+        }
     }
 
     public static Expression create(Token head) {
@@ -982,7 +979,7 @@ public class Expression {
     }
 
     public Expression eval() {
-        if (isKeyword() && !getContent().equals("if")) {
+        if (isKeyword() && !getContent().matches("if|switch|case")) {
             if (start.getContent().equals("break")) {
                 parent_block.state = Block.BREAK;
             }
@@ -1012,7 +1009,7 @@ public class Expression {
         if (parent_block.error != null) {
             return this;
         }
-        if (start.getContent().equals("if")) {
+        if (start.getContent().matches("if|switch|case")) {
             start = start.next;
         }
         while (start.next != null) {
@@ -2079,7 +2076,7 @@ public class Expression {
     }
 
     public boolean isKeyword() {
-        return (start.next == null || start.getContent().equals("if")) && start.getType() == Token.KEYWORD || start.prev != null && start.prev.getType() == Token.KEYWORD;
+        return (start.next == null || start.getContent().matches("if|switch|case")) && start.getType() == Token.KEYWORD;
     }
 
     public String getContent() {
@@ -2184,6 +2181,7 @@ public class Expression {
 
     public String toString(int level) {
         String pad  = "";
+        if (!getContent().equals("case") && parent_block != null && parent_block.getType() == Block.CASE) level++;
         for (int i = 0; i < level; i++) {
             pad += "  ";
         }

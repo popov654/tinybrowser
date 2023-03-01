@@ -23,7 +23,7 @@ public class Block extends Expression {
     }
 
     public Block(Token head) {
-        this(head, Block.basic);
+        this(head, Block.BASIC);
     }
 
     public Block(Token head, int bt) {
@@ -100,8 +100,6 @@ public class Block extends Expression {
 
                     Expression if_exp = new Expression(end, this);
                     children.add(if_exp);
-
-                    //updateSource();
                     
                     end = th;
                     continue;
@@ -142,14 +140,13 @@ public class Block extends Expression {
                         return;
                     }
 
-                    Token th = new Token("");
-                    th.next = end.next.next;
-                    end.next.next.prev = th;
-                    t.prev.next = null;
+                    Token th = t.next;
+                    t.next = null;
 
-                    switch_exp = new Expression(th.next, this);
+                    switch_exp = new Expression(end, this);
+                    children.add(switch_exp);
 
-                    end = t.next;
+                    end = th;
                     continue;
                 } else {
                     System.err.println("Syntax error");
@@ -157,34 +154,21 @@ public class Block extends Expression {
                 }
             }
             else if (type == Token.KEYWORD && end.getContent().equals("case")) {
-                if (block_type != Block.swcase) {
+                if (block_type != Block.CASE) {
                     System.err.println("Unexpected token case");
                     return;
                 }
-                Token t = end.next;
-                int lvl = 0;
-                while (t != null && (t.getType() != Token.OP || !t.getContent().equals(":") || lvl > 0)) {
-                    if (t.getType() == Token.BRACE_OPEN) lvl++;
-                    if (t.getType() == Token.BRACE_CLOSE) lvl--;
-                    t = t.next;
-                }
-                if (t == null || t.prev == end) {
+                Token th = end.next.next;
+                if (th == null || !th.getContent().equals(":")) {
                     System.err.println("Syntax error");
                     return;
                 }
-                Token th = new Token("");
-                th.next = end.next;
-                end.next.prev = th;
-                t.prev.next = null;
+                end.next.next = null;
 
-                Expression case_exp = new Expression(end, this);
-                children.add(case_exp);
+                Expression exp = new Expression(end, this);
+                children.add(exp);
+                end = th.next;
 
-                Expression e = new Expression(th.next, this);
-                children.add(e);
-                e.is_cond = true;
-
-                end = t.next;
                 continue;
             }
             else if (type == Token.KEYWORD && end.getContent().equals("for")) {
@@ -292,7 +276,7 @@ public class Block extends Expression {
                 if (post_cycle) {
                     Expression e = children.lastElement();
                     if (e instanceof Block) {
-                        ((Block)e).block_type = cycle;
+                        ((Block)e).block_type = CYCLE;
                         ((Block)e).setReusable(true);
                         ((Block)e).setPostCheck(true);
                         ((Block)e).setCycleExp(cycle_exp);
@@ -552,10 +536,10 @@ public class Block extends Expression {
                     return;
                 }
                 h.prev = null;
-                int t = Block.basic;
-                if (switch_exp != null) t = Block.swcase;
+                int t = Block.BASIC;
+                if (switch_exp != null) t = Block.CASE;
                 else if (cycle_exp != null || for_in_obj != null) {
-                    t = Block.cycle;
+                    t = Block.CYCLE;
                 }
                 Block b = new Block(h.next, t, this);
                 if (switch_exp != null) {
@@ -701,8 +685,8 @@ public class Block extends Expression {
             }
             w_exp = null;
         }
-        if (block_type == Block.swcase && sw_exp != null) sw_exp.eval();
-        if (block_type == Block.cycle && c_exp != null) {
+        if (block_type == Block.CASE && sw_exp != null) sw_exp.eval();
+        if (block_type == Block.CYCLE && c_exp != null) {
             if (c_exp[0] != null) c_exp[0].eval();
             if (!post_check && c_exp[1] != null && !c_exp[1].eval().getValue().asBool().getValue()) {
                 return this;
@@ -744,7 +728,7 @@ public class Block extends Expression {
             }
         }
         for (int i = from; i < children.size(); i++) {
-            if (block_type == Block.cycle && i == 0 && f_in_obj != null) {
+            if (block_type == Block.CYCLE && i == 0 && f_in_obj != null) {
                 if (f_in_vsc == Expression.let || parent_block == null) {
                     scope.put(f_in_var, keys.get(cur_index));
                 } else {
@@ -780,28 +764,25 @@ public class Block extends Expression {
                     }
                     continue;
                 }
-                else if (block_type == Block.swcase && e.getContent().equals("case")) {
+                else if (block_type == Block.CASE && e.getContent().equals("case")) {
                     if (sw_exp == null) {
                         continue;
                     }
-                    if (i + 1 < children.size()) {
-                        JSValue val = children.get(i+1).eval().getValue();
-                        if (Expression.equals(sw_exp.getValue(), val)) sw_flag = true;
-                        i++;
-                        continue;
-                    }
+                    JSValue val = e.eval().getValue();
+                    if (Expression.equals(sw_exp.getValue(), val)) sw_flag = true;
+                    continue;
                 }
             }
             if (!(e instanceof Block) && e.isKeyword() && e.getContent().equals("break") &&
-                    (block_type != Block.swcase || sw_flag) || state == Block.BREAK) {
-                if (block_type == Block.basic) {
+                    (block_type != Block.CASE || sw_flag) || state == Block.BREAK) {
+                if (block_type == Block.BASIC) {
                     parent_block.state = Block.BREAK;
                 }
                 return this;
             }
             if (!(e instanceof Block) && e.isKeyword() && e.getContent().equals("continue") &&
-                    (block_type != Block.swcase || sw_flag) || state == Block.CONTINUE) {
-                if (block_type != Block.cycle) {
+                    (block_type != Block.CASE || sw_flag) || state == Block.CONTINUE) {
+                if (block_type != Block.CYCLE) {
                     parent_block.state = Block.CONTINUE;
                 } else {
                     state = Block.NORMAL;
@@ -816,7 +797,7 @@ public class Block extends Expression {
                     }
                 }
             }
-            if (block_type != Block.swcase || sw_flag) {
+            if (block_type != Block.CASE || sw_flag) {
                 if (is_gen && error != null) {
                     error = new JSError(error.getValue(), error.getText(), e.getStack());
                 }
@@ -830,7 +811,7 @@ public class Block extends Expression {
                 if (i == children.size()-1 && is_gen) done = true;
             }
             if (!(e instanceof Block) && e.isReturn() &&
-                    (block_type != Block.swcase || sw_flag) || state == Block.RETURN) {
+                    (block_type != Block.CASE || sw_flag) || state == Block.RETURN) {
                 if (!is_func && parent_block != null) {
                     parent_block.state = Block.RETURN;
                 }
@@ -869,7 +850,7 @@ public class Block extends Expression {
                 }
             }
             if (i == children.size()-1) {
-                if (block_type == Block.cycle) {
+                if (block_type == Block.CYCLE) {
                     if (f_in_obj != null) {
                         if (cur_index < keys.size()) {
                             i = -1;
@@ -1042,6 +1023,10 @@ public class Block extends Expression {
         console = c;
     }
 
+    public int getType() {
+        return block_type;
+    }
+
     @Override
     public void updateSource() {
         for (int i = 0; i < children.size(); i++) {
@@ -1051,34 +1036,7 @@ public class Block extends Expression {
 
     @Override
     public String toString() {
-        String result = "";
-        int level = 0;
-        Block b = this;
-        while (b.parent_block != null) {
-            level++;
-            b = b.parent_block;
-        }
-        boolean open_else = false;
-        for (int i = 0; i < children.size(); i++) {
-            String str = children.get(i).toString();
-            result += str;
-            if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
-                open_else = true;
-            }
-            if (i < children.size()-1) result += "\n";
-        }
-        if (open_else) {
-            result += "\n";
-            for (int k = 0; k < level+1; k++) {
-                result += "  ";
-            }
-            result += "}";
-        }
-        result += "\n";
-        for (int k = 0; k < level; k++) {
-            result += "  ";
-        }
-        return "{" + result + "}";
+        return toString(0);
     }
     
     @Override
@@ -1091,7 +1049,7 @@ public class Block extends Expression {
             if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
                 open_else = true;
             }
-            if (i < children.size()-1) result += "\n";
+            if (i < children.size()-1 && !children.get(i).getContent().equals("switch")) result += "\n";
         }
         if (open_else) {
             result += "\n";
@@ -1104,7 +1062,7 @@ public class Block extends Expression {
         for (int k = 0; k < level; k++) {
             result += "  ";
         }
-        return "{\n" + result + "}";
+        return (block_type != Block.CASE ? "{\n" : "\n") + result + "}";
     }
 
 
@@ -1142,7 +1100,7 @@ public class Block extends Expression {
     public boolean is_finally = false;
     public String exc_var_name = null;
 
-    private int block_type = basic;
+    private int block_type = BASIC;
     private boolean sw_flag = false;
     private Expression sw_exp = null;
     private Expression[] c_exp = null;
@@ -1161,9 +1119,9 @@ public class Block extends Expression {
     public JSError last_error = null;
     public boolean strict_mode = false;
 
-    private static int basic = 4;
-    private static int swcase = 5;
-    private static int cycle = 6;
+    public static int BASIC = 4;
+    public static int CASE = 5;
+    public static int CYCLE = 6;
 
     protected static int NORMAL = 0;
     protected static int BREAK = 1;
