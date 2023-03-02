@@ -284,8 +284,6 @@ public class LayoutTests extends JFrame {
         d01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         d01.addText("Test ");
         d.addElement(d01, true);
-        //d01.setHref("http://popov654.pp.ru");
-        //d01.underlineLinksMode = 1;
 
         Block d02 = new Block(document, d, -1, -1, 0, 0, Color.BLACK);
         d02.setPositioning(Block.Position.STATIC);
@@ -380,6 +378,7 @@ public class LayoutTests extends JFrame {
         Timer t1 = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //d.setVisibility(Block.Visibility.HIDDEN);
                 document.root.removeElement(0);
             }
         });
@@ -389,6 +388,7 @@ public class LayoutTests extends JFrame {
         Timer t2 = new Timer(3000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //d.setVisibility(Block.Visibility.VISIBLE);
                 document.root.addElement(d, 0);
                 Block d03 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
                 d03.setPositioning(Block.Position.STATIC);
@@ -411,6 +411,30 @@ public class LayoutTests extends JFrame {
         });
         t3.setRepeats(false);
         t3.start();
+    }
+
+    public void liveVisibilityUpdateTest() {
+        basicTest();
+
+        final Block d = document.root.getChildren().get(0);
+
+        Timer t1 = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                d.setVisibility(Block.Visibility.HIDDEN);
+            }
+        });
+        t1.setRepeats(false);
+        t1.start();
+
+        Timer t2 = new Timer(3000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                d.setVisibility(Block.Visibility.VISIBLE);
+            }
+        });
+        t2.setRepeats(false);
+        t2.start();
     }
 
     public void testTextShadow() {

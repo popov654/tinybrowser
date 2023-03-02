@@ -401,6 +401,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     @Override
     protected void paintComponent(Graphics g) {
         //g.clearRect(0, 0, width, height);
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            return;
+        }
 
         if (childDocument != null) {
             scroll_x = (parent != null ? parent.scroll_x : 0) + scroll_left;
@@ -3602,6 +3605,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         white_space = value;
     }
 
+    public void setVisibility(int type) {
+        visibility = type;
+        if (text_layer != null) {
+            text_layer.setVisible(type != Visibility.HIDDEN);
+        }
+        for (int i = 0; i < parts.size(); i++) {
+            parts.get(i).setVisibility(type);
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setVisibility(type);
+        }
+        document.repaint();
+    }
+
     public void setTextShadow(Color color, int offsetX, int offsetY) {
         setTextShadow(color, offsetX, offsetY, 0, false);
     }
@@ -4480,6 +4497,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     return;
                 }
             }
+        }
+        if (prop.equals("visibility")) {
+            setVisibility(value.equals("hidden") ? Visibility.HIDDEN : Visibility.VISIBLE);
+            return;
         }
         if (prop.equals("font-family")) {
             setFontFamily(value);
