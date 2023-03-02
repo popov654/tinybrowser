@@ -249,7 +249,7 @@ public class Builder {
                         b0 = b0.parent;
                     }
                     if (b0.parent != null) {
-                        b0.doIncrementLayout(b0.viewport_width, b0.viewport_height, false);
+                        b0.doIncrementLayout();
                     } else {
                         b0.performLayout();
                     }

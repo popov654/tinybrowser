@@ -3671,7 +3671,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             children.get(i).setFontFamily(value, true);
         }
         
-        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        Block b = doIncrementLayout();
         if (b != null && !no_draw) b.forceRepaint();
         if (document != null && document.ready) {
             document.repaint();
@@ -3691,7 +3691,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFontSizePx(value);
         }
-        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        Block b = doIncrementLayout();
         if (b != null && !no_draw) b.forceRepaint();
         if (document != null && document.ready) {
             document.repaint();
@@ -3922,7 +3922,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         margins[2] = (int)Math.round(c*ratio);
         margins[3] = (int)Math.round(d*ratio);
 
-        Block block = doIncrementLayout(viewport_width, viewport_height, false);
+        Block block = doIncrementLayout();
         if (block != null && !no_draw) block.forceRepaint();
     }
 
@@ -3944,7 +3944,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         paddings[2] = (int)Math.round(c*ratio);
         paddings[3] = (int)Math.round(d*ratio);
 
-        Block block = doIncrementLayout(viewport_width, viewport_height, false);
+        Block block = doIncrementLayout();
         if (block != null && !no_draw) block.forceRepaint();
     }
 
@@ -4167,7 +4167,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (content_y_max > 0 && parent != null) {
                 height = viewport_height = content_y_max + paddings[2] + borderWidth[2];
                 orig_height = (int)Math.round(height / ratio);
-                b = parent.doIncrementLayout(parent.viewport_width, parent.viewport_height, false);
+                b = parent.doIncrementLayout();
             } else if (document != null && document.ready) {
                 orig_height = height = -1;
                 b.performLayout(false);
@@ -4215,6 +4215,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value = (int)Math.round(16 * ratio * h);
         }
         setHeight(value, false);
+    }
+
+    public Block doIncrementLayout() {
+        return doIncrementLayout(viewport_width, viewport_height, false);
+    }
+
+    public Block doIncrementLayout(boolean no_recalc) {
+        return doIncrementLayout(viewport_width, viewport_height, no_recalc);
     }
 
     public Block doIncrementLayout(int old_width, int old_height, boolean no_recalc) {
@@ -4423,7 +4431,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setPositioning(int value) {
         positioning = value;
-        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        Block b = doIncrementLayout();
         if (b != null && !no_draw) {
             b.forceRepaint();
         }
@@ -4456,7 +4464,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             parent.addToLayout(this, parent.children.indexOf(this), root);
         }
-        Block b = doIncrementLayout(viewport_width, viewport_height, false);
+        Block b = doIncrementLayout();
         if (b != null && !no_draw) {
             b.forceRepaint();
         }
@@ -4608,7 +4616,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int old_height = height;
             if (value.matches("auto|unset")) {
                 max_height_percent = -1;
-                doIncrementLayout(viewport_width, viewport_height, false);
+                doIncrementLayout();
                 return;
             } else if (!value.endsWith("%")) {
                 setMaxHeight(getValueInPixels(value));
@@ -5010,7 +5018,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (prop.matches("margin(-bottom)?")) {
                 margins[2] = (int)Math.round(value * ratio);
             }
-            Block b = doIncrementLayout(viewport_width, viewport_height, false);
+            Block b = doIncrementLayout();
             if (b != null && !no_draw) b.forceRepaint();
             return;
         }
@@ -5744,10 +5752,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if ((display_type == Display.INLINE_BLOCK || display_type == Display.INLINE) && parent != null) {
                 boolean val = document.fast_update;
                 document.fast_update = false;
-                block = parent.doIncrementLayout(parent.viewport_width, parent.viewport_height, false);
+                block = parent.doIncrementLayout();
                 document.fast_update = val;
             } else {
-                block = doIncrementLayout(viewport_width, viewport_height, false);
+                block = doIncrementLayout();
             }
             document.root.setNeedRestoreSelection(true);
             if (block != null) block.forceRepaint();
@@ -5881,7 +5889,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 sortBlocks();
             } else {
                 d.performLayout();
-                block = doIncrementLayout(viewport_width, viewport_height, false);
+                block = doIncrementLayout();
             }
             document.root.setNeedRestoreSelection(true);
             block.forceRepaint();
@@ -6025,7 +6033,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             boolean val = document.fast_update;
             if (parent == null || line != line.parent.lines.lastElement()) document.fast_update = false;
-            Block block = doIncrementLayout(viewport_width, viewport_height, false);
+            Block block = doIncrementLayout();
             document.fast_update = val;
             document.root.setNeedRestoreSelection(true);
             block.forceRepaint();
@@ -6578,7 +6586,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.ready = true;
 
         if (block != null) {
-            Block b0 = block.doIncrementLayout(block.viewport_width, block.viewport_height, false);
+            Block b0 = block.doIncrementLayout();
             block.setNeedRestoreSelection(true);
             b0.forceRepaint();
         } else {
