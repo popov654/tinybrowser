@@ -4012,6 +4012,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setMaxWidthPercentage(double value) {
+        max_width_percent = value;
+        if (!(parent.auto_width && parent.display_type == Display.INLINE_BLOCK)) {
+            max_width = (int) Math.round((parent.viewport_width - parent.borderWidth[3] - parent.borderWidth[1] - parent.paddings[3] - parent.paddings[1]) * (double) max_width_percent / 100);
+        }
+    }
+
+    public void setMaxHeightPercentage(double value) {
+        max_height_percent = value;
+        if (!parent.auto_height) {
+            max_height = (int) Math.round((parent.viewport_height - parent.borderWidth[0] - parent.borderWidth[2] - parent.paddings[0] - parent.paddings[2]) * (double) max_width_percent / 100);
+        }
+    }
+
     public void setWidth(int w, boolean no_recalc) {
         int old_width = viewport_width;
         int old_height = viewport_height;
@@ -4101,6 +4115,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         auto_height = h < 0;
 
         orig_width = w;
+        if (max_width_percent >= 0 && !(parent.auto_width && parent.display_type == Display.INLINE_BLOCK)) {
+            max_width = (int) Math.round((parent.viewport_width - parent.borderWidth[3] - parent.borderWidth[1] - parent.paddings[3] - parent.paddings[1]) * (double) max_width_percent / 100);
+        }
         if (max_width > 0 && width > max_width) width = max_width;
         rules_for_recalc.remove("width");
         auto_width = false;
@@ -4214,7 +4231,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 background_size_y = (int) Math.max(0, old_size_y * viewport_height);
             }
             Block b = this;
-            while (old_width != b.viewport_width && old_height != b.viewport_height && b.parent != null && !no_recalc) {
+            while ((old_width != b.viewport_width || old_height != b.viewport_height) && b.parent != null && !no_recalc) {
                 b = b.parent;
                 old_width = b.viewport_width;
                 old_height = b.viewport_height;
@@ -4551,6 +4568,47 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (prop.equals("width") && value.equals("auto")) {
             setWidth(-1);
+            return;
+        }
+        if (prop.equals("height") && value.equals("auto")) {
+            int old_height = viewport_height;
+            auto_height = true;
+            viewport_height = height = -1;
+            Block b = doIncrementLayout(viewport_width, old_height, false);
+            b.forceRepaint();
+            if (document != null) document.repaint();
+            return;
+        }
+        if (prop.equals("max-width")) {
+            int old_width = width;
+            if (value.matches("auto|unset")) {
+                max_width_percent = -1;
+                Block b = doIncrementLayout(viewport_width, viewport_height, false);
+                b.forceRepaint();
+                if (document != null) document.repaint();
+                return;
+            } else if (!value.endsWith("%")) {
+                setMaxWidth(getValueInPixels(value));
+            } else {
+                setMaxWidthPercentage(Float.parseFloat(value.replaceAll("[a-z%]+$", "")));
+            }
+            Block b = doIncrementLayout(old_width, viewport_height, false);
+            b.forceRepaint();
+            if (document != null) document.repaint();
+            return;
+        }
+        if (prop.equals("max-height")) {
+            int old_height = height;
+            if (value.matches("auto|unset")) {
+                max_height_percent = -1;
+                doIncrementLayout(viewport_width, viewport_height, false);
+                return;
+            } else if (!value.endsWith("%")) {
+                setMaxHeight(getValueInPixels(value));
+            } else {
+                setMaxHeightPercentage(Float.parseFloat(value.replaceAll("[a-z%]+$", "")));
+            }
+            doIncrementLayout(viewport_width, old_height, false);
             return;
         }
         if (prop.equals("left") && value.equals("auto")) {
@@ -6265,6 +6323,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public int max_width;
     public int max_height;
+
+    public double max_width_percent = -1;
+    public double max_height_percent = -1;
 
     public int width;
     public int height;
