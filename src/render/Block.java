@@ -4154,7 +4154,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             orig_height = h;
             max_height = height;
             auto_height = false;
-            doIncrementLayout(old_width, old_height, no_recalc);
             Block b = doIncrementLayout(old_width, old_height, no_recalc);
             if (b != null && !no_draw) {
                 b.forceRepaint();
@@ -4162,14 +4161,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
         
-        if (h < 0 && document != null) {
-            if (textContent == null) {
-                height = borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
-            } else {
-                height = content_y_max + paddings[2] + borderWidth[2];
-            }
-            orig_height = (int)Math.round(height / ratio);
+        if (h < 0) {
             auto_height = true;
+            Block b = parent != null ? parent : this;
+            if (content_y_max > 0 && parent != null) {
+                height = viewport_height = content_y_max + paddings[2] + borderWidth[2];
+                orig_height = (int)Math.round(height / ratio);
+                b = parent.doIncrementLayout(parent.viewport_width, parent.viewport_height, false);
+            } else if (document != null && document.ready) {
+                orig_height = height = -1;
+                b.performLayout(false);
+            }
+            if (!b.no_draw) {
+                b.forceRepaint();
+            }
+            document.repaint();
+            return;
         } else {
             height = (int)Math.round(h*ratio);
             viewport_height = height;
