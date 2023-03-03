@@ -426,11 +426,6 @@ public class JSConsole {
         if (!(c instanceof Undefined)) {
             ((Console)c).getData().clear();
         }
-//        Vector<String> list = new Vector<String>();
-//        list.add("window");
-//        list.add("document");
-//        list.add("console");
-//        showSuggestions(consoleInput, list);
     }
 
     static void showSuggestions(JTextComponent c, Vector<String> options) {
