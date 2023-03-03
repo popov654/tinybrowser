@@ -56,6 +56,22 @@ public class ResourceManager {
         }
     }
 
+    public Vector<Resource> getStyles() {
+        return styles;
+    }
+
+    public Vector<Resource> getScripts() {
+        return scripts;
+    }
+
+    public Vector<Resource> getImages() {
+        return images;
+    }
+
+    public Vector<Resource> getIFrames() {
+        return iframes;
+    }
+
     private Document document;
     private Vector<Resource> resources = new Vector<Resource>();
     private Vector<Resource> styles = new Vector<Resource>();

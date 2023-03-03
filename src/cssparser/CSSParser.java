@@ -88,21 +88,32 @@ public class CSSParser {
         return result;
     }
 
+    public void addStyle(Node node) {
+        styles.add(new StyleElement(node));
+    }
+
+    public void removeStyles() {
+        styles.clear();
+    }
+
     public void findStyles(Node node) {
-        if (node.tagName.equals("style")) {
-            styles.add(node);
-            NodeActionCallback l = new NodeActionCallback() {
+        if (node.tagName.equals("style") || (node.tagName.equals("link") && node.getAttribute("rel") != null &&
+              node.getAttribute("rel").equals("stylesheet") && node.getAttribute("href") != null)) {
+            if (node.tagName.equals("style")) {
+                NodeActionCallback l = new NodeActionCallback() {
 
-                @Override
-                public void nodeChanged(NodeEvent e, String source) {
-                    Block b = Mapper.get(hp.getRootNode().lastElementChild());
-                    if (b != null) {
-                        b.builder.reapplyDocumentStyles(b.document);
+                    @Override
+                    public void nodeChanged(NodeEvent e, String source) {
+                        Block b = Mapper.get(hp.getRootNode().lastElementChild());
+                        if (b != null) {
+                            b.builder.reapplyDocumentStyles(b.document);
+                        }
                     }
-                }
 
-            };
-            node.children.get(0).addListener(l, this, "valueChanged");
+                };
+                node.children.get(0).addListener(l, this, "valueChanged");
+            }
+            styles.add(new StyleElement(node));
         }
         for (int i = 0; i < node.children.size(); i++) {
             findStyles(node.children.get(i));
@@ -110,8 +121,9 @@ public class CSSParser {
     }
 
     public void applyStyles() {
-        for (Node style: styles) {
-            Vector<QuerySelector> qs = parseString(style.children.get(0).nodeValue);
+        for (StyleElement style: styles) {
+            if (style.content == null) continue;
+            Vector<QuerySelector> qs = parseString(style.content);
             for (int i = 0; i < qs.size(); i++) {
                 qs.get(i).apply();
             }
@@ -119,8 +131,9 @@ public class CSSParser {
     }
 
     public void applyStyles(int width, int height, double dpi) {
-        for (Node style: styles) {
-            Vector<QuerySelector> qs = parseString(style.children.get(0).nodeValue);
+        for (StyleElement style: styles) {
+            if (style.content == null) continue;
+            Vector<QuerySelector> qs = parseString(style.content);
             for (int i = 0; i < qs.size(); i++) {
                 qs.get(i).apply(width, height, dpi);
             }
@@ -189,12 +202,20 @@ public class CSSParser {
         return hp;
     }
 
-    public Vector<Node> getStyleNodes() {
+    public Vector<StyleElement> getStyles() {
         return styles;
     }
 
+    public Vector<Node> getStyleNodes() {
+        Vector<Node> result = new Vector<Node>();
+        for (StyleElement style: styles) {
+            result.add(style.node);
+        }
+        return result;
+    }
+
     HashMap<String, HashMap<String, String>> global_rules;
-    Vector<Node> styles = new Vector<Node>();
+    Vector<StyleElement> styles = new Vector<StyleElement>();
 
     SelectorGroup defaultGroup = new SelectorGroup();;
     

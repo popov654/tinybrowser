@@ -3,13 +3,16 @@ package tinybrowser;
 import bridge.Builder;
 import bridge.Document;
 import bridge.Mapper;
+import bridge.Resource;
 import cssparser.CSSParser;
 import htmlparser.HTMLParser;
+import htmlparser.Node;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.util.HashMap;
+import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -40,20 +43,26 @@ public class Reader {
         builder.setBaseUrl(Main.getInstallPath());
         builder.customElements = customElements;
 
+        Document document = new Document(builder, hp.getRootNode(), null);
+        builder.documentWrap = document;
+
         CSSParser parser = new CSSParser(hp);
         builder.cssParser = parser;
+        Vector<Resource> styles = document.getResourceManager().getStyles();
+        for (Resource style: styles) {
+            Node node = new Node(1);
+            parser.addStyle(node);
+        }
         parser.findStyles(hp.getRootNode());
         parser.applyStyles();
 
         builder.findScripts(hp.getRootNode());
 
         final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
+        document.rootBlock = root;
         if (debug) root.printTree();
 
         parser.applyGlobalRules(builder.baseUrl);
-
-        Document document = new Document(builder, hp.getRootNode(), root);
-        builder.documentWrap = document;
 
         return document;
     }

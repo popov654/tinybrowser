@@ -22,6 +22,10 @@ public class Document {
         return rootBlock;
     }
 
+    public ResourceManager getResourceManager() {
+        return resourceManager;
+    }
+
     private ResourceManager resourceManager;
 
     public Builder builder;
