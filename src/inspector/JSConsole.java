@@ -36,6 +36,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.text.JTextComponent;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -651,39 +652,33 @@ public class JSConsole {
     JPopupMenu suggestions;
 
 
-    class TreeExpandListener implements TreeWillExpandListener {
+    class TreeExpandListener implements TreeWillExpandListener, TreeExpansionListener {
 
         @Override
         public void treeWillExpand(final TreeExpansionEvent e) throws ExpandVetoException {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
             if (node.getChildCount() == 0) {
                 loadNodeDirectChildren(node, false);
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((JTree)e.getSource()).invalidate();
-                        ((JTree)e.getSource()).getParent().validate();
-                        recalculateContentHeight();
-                    }
-                });
             }
         }
 
         @Override
-        public void treeWillCollapse(final TreeExpansionEvent e) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    ((JTree)e.getSource()).invalidate();
-                    ((JTree)e.getSource()).getParent().validate();
-                    recalculateContentHeight();
-                }
-            });
+        public void treeWillCollapse(final TreeExpansionEvent e) {}
+
+        @Override
+        public void treeExpanded(TreeExpansionEvent e) {
+            revalidateContentHeight((JTree)e.getSource());
         }
 
-        public void treeExpanded(TreeExpansionEvent e) {}
+        @Override
+        public void treeCollapsed(TreeExpansionEvent e) {
+            revalidateContentHeight((JTree)e.getSource());
+        }
+    }
 
-        public void treeCollapsed(TreeExpansionEvent e) {}
+    private void revalidateContentHeight(final JTree tree) {
+        ((JPanel)tree.getParent()).revalidate();
+        recalculateContentHeight();
     }
 
     public class FontMetricsWrapper extends FontMetrics {
@@ -774,6 +769,7 @@ public class JSConsole {
         final JTree tree = new JTree(treeModel);
         TreeExpandListener expansionListener = new TreeExpandListener();
         tree.addTreeWillExpandListener(expansionListener);
+        tree.addTreeExpansionListener(expansionListener);
 
         DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
         renderer.setFont(new Font("Consolas", Font.PLAIN, 16));
