@@ -161,7 +161,7 @@ public class Main {
     public static void testBuilder() {
         Reader reader = new Reader();
         reader.addCustomElement("player", CustomPlayer.class);
-        Block root = reader.readDocument("test2.htm");
+        Block root = reader.readDocument("test2.htm").getRootBlock();
         visualBuilderTest(reader, root);
 
         //System.out.println();

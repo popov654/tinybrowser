@@ -62,6 +62,8 @@ public class Builder {
 
         InlineElements.add("::before");
         InlineElements.add("::after");
+
+
     }
 
     public Builder(WebDocument document) {
@@ -860,6 +862,7 @@ public class Builder {
     }
 
     public HashMap<String, Class> customElements = new HashMap<String, Class>();
+    public bridge.Document documentWrap;
 
     public String baseUrl = "";
     public WebDocument document;

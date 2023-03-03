@@ -1,6 +1,7 @@
 package tinybrowser;
 
 import bridge.Builder;
+import bridge.Document;
 import bridge.Mapper;
 import cssparser.CSSParser;
 import htmlparser.HTMLParser;
@@ -23,7 +24,7 @@ import render.WebDocument;
  */
 public class Reader {
 
-    public Block readDocument(String file) {
+    public Document readDocument(String file) {
         if (debug) System.out.println(Main.getInstallPath() + file);
 
         HTMLParser hp = new HTMLParser(Main.getInstallPath() + file);
@@ -51,7 +52,18 @@ public class Reader {
 
         parser.applyGlobalRules(builder.baseUrl);
 
-        return root;
+        Document document = new Document(builder, hp.getRootNode(), root);
+        builder.documentWrap = document;
+
+        return document;
+    }
+
+    public WebDocument createDocumentView(final Document documentWrap, final String title, JFrame frame) {
+        WebDocument webDocument = createDocumentView(documentWrap.rootBlock, title, frame);
+        documentWrap.frame = frame;
+        documentWrap.title = title;
+        documentWrap.document = webDocument;
+        return webDocument;
     }
 
     public WebDocument createDocumentView(final Block root, final String title, JFrame frame) {
