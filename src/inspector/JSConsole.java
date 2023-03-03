@@ -181,13 +181,13 @@ public class JSConsole {
                         pos = data.size();
                     }
 
-                    exp.eval();
-
                     if (data != null) {
                         for (int i = pos; i < data.size(); i++) {
                             addEntry(console, data.get(i));
                         }
                     }
+
+                    exp.eval();
 
                     JSValue result = exp.getValue();
 
@@ -211,6 +211,8 @@ public class JSConsole {
 
         });
 
+        
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -222,6 +224,17 @@ public class JSConsole {
                         for (String line: data) {
                             addEntry(console, line);
                         }
+                        ((Console)con).addListener(new Console.Listener() {
+                            @Override
+                            public void log(String message) {
+                                addEntry(console, message);
+                            }
+
+                            @Override
+                            public void clear() {
+                                clearConsole();
+                            }
+                        });
                     }
                 }
                 consoleInput.requestFocus();
