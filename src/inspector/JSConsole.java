@@ -81,7 +81,17 @@ public class JSConsole {
 
         consolepane.setLayout(new BoxLayout(consolepane, BoxLayout.PAGE_AXIS));
 
-        console = new JPanel();
+        console = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                int height = 0;
+                Component[] c = getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    height += c[i].getPreferredSize().height;
+                }
+                return new Dimension(getParent().getWidth(), height);
+            }
+        };
         console.setBackground(Color.WHITE);
         console.setLayout(new BoxLayout(console, BoxLayout.PAGE_AXIS));
 
@@ -414,7 +424,6 @@ public class JSConsole {
         console.add(resultPanel);
         resultPanel.addMouseListener(contextMenuListener);
 
-        recalculateContentHeight();
     }
 
     private void addObjectEntry(JPanel console, JSValue val) {
@@ -432,25 +441,12 @@ public class JSConsole {
 
         console.add(resultPanel);
 
-        recalculateContentHeight();
-    }
-
-    private void recalculateContentHeight() {
-        int height = 0;
-        Component[] c = console.getComponents();
-        for (int i = 0; i < c.length; i++) {
-            height += c[i].getPreferredSize().height;
-        }
-        console.setPreferredSize(new Dimension(console.getWidth(), height));
-        console.getParent().validate();
-        //console.getParent().setPreferredSize(new Dimension(console.getWidth(), height));
     }
 
     public void clearConsole() {
         console.removeAll();
         console.revalidate();
         console.repaint();
-        recalculateContentHeight();
         JSParser jp = new JSParser("null");
         Expression exp = Expression.create(jp.getHead());
         JSValue c = ((jsparser.Block)exp).scope.get("console");
@@ -678,7 +674,6 @@ public class JSConsole {
 
     private void revalidateContentHeight(final JTree tree) {
         ((JPanel)tree.getParent()).revalidate();
-        recalculateContentHeight();
     }
 
     public class FontMetricsWrapper extends FontMetrics {
