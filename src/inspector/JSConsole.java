@@ -63,10 +63,10 @@ import service.FontManager;
  */
 public class JSConsole {
 
-    public static boolean allowSelection = true;
-    public static int line_height = 24;
+    public boolean allowSelection = true;
+    public int line_height = 24;
 
-    public static void insertConsole(final JFrame frame, Container c, final WebDocument document) {
+    public void insertConsole(final JFrame frame, Container c, final WebDocument document) {
         final Block root = document.root;
         int width = c.getPreferredSize().width;
 
@@ -261,7 +261,7 @@ public class JSConsole {
         });
     }
 
-    private static void initPopupMenu() {
+    private void initPopupMenu() {
         consoleMenu = new JPopupMenu();
         JMenuItem clearItem = new JMenuItem("Clear");
         clearItem.setMargin(new Insets(2, 10, 2, -10));
@@ -297,7 +297,7 @@ public class JSConsole {
         });
     }
 
-    private static void addEntry(JPanel console, String str) {
+    private void addEntry(JPanel console, String str) {
         JPanel resultPanel = new JPanel();
         resultPanel.setOpaque(false);
         resultPanel.setBorder(BorderFactory.createEmptyBorder(1, 3, 1, 3));
@@ -399,7 +399,7 @@ public class JSConsole {
         recalculateContentHeight();
     }
 
-    private static void addObjectEntry(JPanel console, JSValue val) {
+    private void addObjectEntry(JPanel console, JSValue val) {
         if (!(val instanceof JSArray) && (!(val instanceof JSObject) || val instanceof Function)) {
             return;
         }
@@ -417,7 +417,7 @@ public class JSConsole {
         recalculateContentHeight();
     }
 
-    static void recalculateContentHeight() {
+    private void recalculateContentHeight() {
         int height = 0;
         Component[] c = console.getComponents();
         for (int i = 0; i < c.length; i++) {
@@ -428,7 +428,7 @@ public class JSConsole {
         //console.getParent().setPreferredSize(new Dimension(console.getWidth(), height));
     }
 
-    static void clearConsole() {
+    public void clearConsole() {
         console.removeAll();
         console.revalidate();
         console.repaint();
@@ -441,7 +441,7 @@ public class JSConsole {
         }
     }
 
-    static void showSuggestions(JTextComponent c, Vector<String> options) {
+    public void showSuggestions(JTextComponent c, Vector<String> options) {
         if (options.size() == 0) return;
         if (suggestions == null) {
             suggestions = new JPopupMenu() {
@@ -468,7 +468,7 @@ public class JSConsole {
         c.requestFocus();
     }
 
-    static void findCurrentTokenSuggestions(JTextComponent input) {
+    private void findCurrentTokenSuggestions(JTextComponent input) {
         String str = input.getText();
         if (str.isEmpty()) return;
         int pos = input.getCaretPosition();
@@ -498,7 +498,7 @@ public class JSConsole {
         }
     }
 
-    static void updateCurrentToken(JTextComponent input, String token) {
+    private void updateCurrentToken(JTextComponent input, String token) {
         String str = input.getText();
         if (str.isEmpty()) return;
         int pos = input.getCaretPosition();
@@ -519,7 +519,7 @@ public class JSConsole {
         input.requestFocus();
     }
 
-    static class Suggestion extends JPanel {
+    class Suggestion extends JPanel {
         Suggestion(String text, final JTextComponent owner) {
             super();
             setOpaque(true);
@@ -595,13 +595,13 @@ public class JSConsole {
         public boolean hovered = false;
     }
 
-    static JPanel console;
-    static JTextArea consoleInput;
-    static JPopupMenu consoleMenu;
-    static JPopupMenu suggestions;
+    JPanel console;
+    JTextArea consoleInput;
+    JPopupMenu consoleMenu;
+    JPopupMenu suggestions;
 
 
-    static class TreeExpandListener implements TreeWillExpandListener {
+    class TreeExpandListener implements TreeWillExpandListener {
 
         @Override
         public void treeWillExpand(final TreeExpansionEvent e) throws ExpandVetoException {
@@ -627,7 +627,7 @@ public class JSConsole {
         public void treeCollapsed(TreeExpansionEvent e) {}
     }
 
-    public static class FontMetricsWrapper extends FontMetrics {
+    public class FontMetricsWrapper extends FontMetrics {
 
         protected final FontMetrics target;
 
@@ -662,7 +662,7 @@ public class JSConsole {
         }
     }
 
-    public static class JSValueWrapper {
+    public class JSValueWrapper {
 
         public JSValueWrapper(String label, JSValue val) {
             this.label = label;
@@ -707,7 +707,7 @@ public class JSConsole {
         private JSValue val;
     }
 
-    private static JPanel createObjectTree(JSObject obj) {
+    private JPanel createObjectTree(JSObject obj) {
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(new JSValueWrapper(null, obj));
         loadNodeDirectChildren(rootNode, false);
 
@@ -736,7 +736,7 @@ public class JSConsole {
         return contentpane;
     }
 
-    private static void processNodeChildren(DefaultMutableTreeNode node, boolean show_prototypes) {
+    private void processNodeChildren(DefaultMutableTreeNode node, boolean show_prototypes) {
         JSValue val = ((JSValueWrapper)node.getUserObject()).getValue();
         if (val instanceof JSArray) {
             Vector<JSValue> items = ((JSArray)val).getItems();
@@ -763,7 +763,7 @@ public class JSConsole {
         }
     }
 
-    private static void loadNodeDirectChildren(DefaultMutableTreeNode node, boolean show_prototypes) {
+    private void loadNodeDirectChildren(DefaultMutableTreeNode node, boolean show_prototypes) {
         JSValue val = ((JSValueWrapper)node.getUserObject()).getValue();
         if (val instanceof JSArray) {
             Vector<JSValue> items = ((JSArray)val).getItems();

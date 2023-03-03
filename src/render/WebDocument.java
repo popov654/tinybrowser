@@ -380,7 +380,8 @@ public class WebDocument extends JPanel {
         cp.setSize(new Dimension(500, 438));
         WebInspector.insertTreeInspector(frame, cp, this);
 
-        JSConsole.insertConsole(frame, cp, this);
+        JSConsole console = new JSConsole();
+        console.insertConsole(frame, cp, this);
 
         frame.setLocationRelativeTo(parent);
         frame.setLocation(parent.getX() - getWidth() - 98, parent.getY() - 90);

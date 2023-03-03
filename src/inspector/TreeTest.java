@@ -216,6 +216,41 @@ public class TreeTest {
         }
     }
 
+    static class FontMetricsWrapper extends FontMetrics {
+
+        protected final FontMetrics target;
+
+        public FontMetricsWrapper(FontMetrics target) {
+            super(target.getFont());
+            this.target = target;
+        }
+
+        @Override
+        public int bytesWidth(byte[] data, int off, int len) {
+            return target.bytesWidth(data, off, len);
+        }
+
+        @Override
+        public int charWidth(char ch) {
+            return target.charWidth(ch);
+        }
+
+        @Override
+        public int charWidth(int codePoint) {
+            return target.charWidth(codePoint);
+        }
+
+        @Override
+        public int charsWidth(char data[], int off, int len) {
+            return target.stringWidth(new String(data, off, len));
+        }
+
+        @Override
+        public int stringWidth(String str) {
+            return target.stringWidth(str);
+        }
+    }
+
 
     public static void main(String[] args) {
 
@@ -240,7 +275,7 @@ public class TreeTest {
         final JTree tree = new JTree(treeModel) {
             @Override
             public FontMetrics getFontMetrics(Font font) {
-                return new JSConsole.FontMetricsWrapper(super.getFontMetrics(font)) {
+                return new FontMetricsWrapper(super.getFontMetrics(font)) {
                     @Override
                     public int getHeight() {
                         return target.getHeight() + 3;
