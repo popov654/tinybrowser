@@ -84,8 +84,6 @@ public class JSConsole {
         console.setBackground(Color.WHITE);
         console.setLayout(new BoxLayout(console, BoxLayout.PAGE_AXIS));
 
-        initPopupMenu();
-
         final JScrollPane scrollpane2 = new JScrollPane(console);
         scrollpane2.getVerticalScrollBar().setUnitIncrement(20);
         scrollpane2.getHorizontalScrollBar().setUnitIncrement(20);
@@ -101,10 +99,21 @@ public class JSConsole {
 
         consolepane.add(scrollpane2);
 
-        JPanel separator = new JPanel();
+        JPanel separator = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(getParent().getSize().width, 1);
+            }
+            @Override
+            public Dimension getMinimumSize() {
+                return getPreferredSize();
+            }
+            @Override
+            public Dimension getMaximumSize() {
+                return getPreferredSize();
+            }
+        };
         separator.setBackground(new Color(228, 228, 235));
-        separator.setPreferredSize(new Dimension(width, 1));
-        separator.setMaximumSize(new Dimension(width, 1));
         consolepane.add(separator);
 
         consoleInput = new JTextArea() {
@@ -198,6 +207,9 @@ public class JSConsole {
                     }
 
                     ((JTextArea)e.getSource()).setText("");
+                    if (suggestions != null) {
+                        suggestions.setVisible(false);
+                    }
 
                     consoleInput.setRows(0);
                     e.consume();
@@ -211,7 +223,7 @@ public class JSConsole {
 
         });
 
-        
+        initPopupMenu();
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -273,29 +285,31 @@ public class JSConsole {
             }
         });
         consoleMenu.add(clearItem);
-        console.addMouseListener(new MouseListener() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-}
-
-            @Override
-            public void mousePressed(MouseEvent e) {}
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON3) {
-                    consoleMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {}
-
-            @Override
-            public void mouseExited(MouseEvent e) {}
-        });
+        console.addMouseListener(contextMenuListener);
+        consoleInput.addMouseListener(contextMenuListener);
     }
+
+    private MouseListener contextMenuListener = new MouseListener() {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {}
+
+        @Override
+        public void mousePressed(MouseEvent e) {}
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            if (e.getButton() == MouseEvent.BUTTON3) {
+                consoleMenu.show(e.getComponent(), e.getX(), e.getY());
+            }
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {}
+
+        @Override
+        public void mouseExited(MouseEvent e) {}
+    };
 
     private void addEntry(JPanel console, String str) {
         JPanel resultPanel = new JPanel();
@@ -359,6 +373,7 @@ public class JSConsole {
                 JLabel label = new JLabel(s, JLabel.LEFT);
                 label.setPreferredSize(new Dimension(Math.max(console.getWidth(), fm.stringWidth(s)), line_height - 2));
                 resultPanel.add(label);
+                label.addMouseListener(contextMenuListener);
             }
 
             resultPanel.setPreferredSize(new Dimension(console.getWidth(), height));
@@ -392,9 +407,11 @@ public class JSConsole {
             textarea.setMaximumSize(new Dimension(width, height));
             //textarea.setBackground(new Color(230, 236, 238));
             resultPanel.add(textarea);
+            textarea.addMouseListener(contextMenuListener);
         }
 
         console.add(resultPanel);
+        resultPanel.addMouseListener(contextMenuListener);
 
         recalculateContentHeight();
     }
@@ -441,19 +458,45 @@ public class JSConsole {
         }
     }
 
+    class SuggestionsList extends JPopupMenu {
+
+        public SuggestionsList(JTextComponent c) {
+            owner = c;
+            setOpaque(true);
+            setBackground(Color.WHITE);
+            setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        }
+
+        @Override
+        public void paintComponent(final Graphics g) {
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            int rows = Math.min(5, getComponents().length);
+            return new Dimension(owner.getWidth() + 2, rows == 1 ? height + 4 : rows * (height + 1) + 2);
+        }
+
+        @Override
+        public Dimension getMinimumSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            return getPreferredSize();
+        }
+
+        public JTextComponent owner;
+        int height = 24;
+    };
+
     public void showSuggestions(JTextComponent c, Vector<String> options) {
         if (options.size() == 0) return;
         if (suggestions == null) {
-            suggestions = new JPopupMenu() {
-                @Override
-                public void paintComponent(final Graphics g) {
-                    g.setColor(Color.WHITE);
-                    g.fillRect(0, 0, getWidth(), getHeight());
-                }
-            };
-            suggestions.setOpaque(true);
-            suggestions.setBackground(Color.WHITE);
-            suggestions.setLayout(new BoxLayout(suggestions, BoxLayout.PAGE_AXIS));
+            suggestions = new SuggestionsList(c);
         } else {
             suggestions.removeAll();
         }
@@ -462,9 +505,12 @@ public class JSConsole {
             Suggestion item = new Suggestion(s, c);
             suggestions.add(item);
         }
-        suggestions.setPreferredSize(new Dimension(c.getWidth() + 2, options.size() == 1 ? height + 4 : options.size() * (height + 1) + 2));
-        suggestions.revalidate();
+        
         suggestions.show(c, -1, c.getHeight());
+
+        suggestions.revalidate();
+        suggestions.repaint();
+
         c.requestFocus();
     }
 
@@ -581,6 +627,10 @@ public class JSConsole {
             return getPreferredSize();
         }
 
+        @Override
+        public Dimension getMaximumSize() {
+            return getPreferredSize();
+        }
 
         @Override
         public void paintComponent(Graphics g) {
@@ -620,7 +670,16 @@ public class JSConsole {
         }
 
         @Override
-        public void treeWillCollapse(TreeExpansionEvent e) {}
+        public void treeWillCollapse(final TreeExpansionEvent e) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    ((JTree)e.getSource()).invalidate();
+                    ((JTree)e.getSource()).getParent().validate();
+                    recalculateContentHeight();
+                }
+            });
+        }
 
         public void treeExpanded(TreeExpansionEvent e) {}
 
@@ -732,6 +791,7 @@ public class JSConsole {
         contentpane.setOpaque(true);
         contentpane.setLayout(new BorderLayout());
         contentpane.add(tree);
+        tree.addMouseListener(contextMenuListener);
 
         return contentpane;
     }
@@ -770,6 +830,9 @@ public class JSConsole {
             for (int i = 0; i < items.size(); i++) {
                 DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(new JSValueWrapper("[" + i + "]", items.get(i)));
                 node.add(newNode);
+                if (items.get(i) instanceof Function || items.get(i).getType().matches("Boolean|Integer|Float|Number|String|null|undefined")) {
+                    newNode.setAllowsChildren(false);
+                }
             }
         } else if (!(val instanceof Function) && !val.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") && val instanceof JSObject) {
             HashMap<String, JSValue> props = ((JSObject)val).getProperties();
