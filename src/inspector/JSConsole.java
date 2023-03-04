@@ -53,6 +53,7 @@ import jsparser.JSObject;
 import jsparser.JSParser;
 import jsparser.JSValue;
 import jsparser.Undefined;
+import jsparser.Window;
 import render.Block;
 import render.Util;
 import render.WebDocument;
@@ -185,17 +186,24 @@ public class JSConsole {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     String code = ((JTextArea)e.getSource()).getText();
                     JSParser jp = new JSParser(code);
-                    Expression exp = Expression.create(jp.getHead());
+                    jsparser.Block b = (jsparser.Block) Expression.create(jp.getHead());
                     if (root.node != null) {
-                        ((jsparser.Block)exp).setDocument(root.node.document);
+                        b.setDocument(root.node.document);
+                        Builder builder = document.root.builder;
+                        b.scope = scope = builder.scope;
+                        if (scope == null) {
+                            b.setDocument(root.node.document);
+                            scope = b.scope;
+                        }
+                        b.setConsole((jsparser.Console)scope.get("console"));
                     }
                     Frame parent = frame.getOwner() != null ? (Frame) frame.getOwner() : frame;
-                    ((jsparser.Block)exp).setWindowFrame(parent);
+                    b.setWindowFrame(parent);
 
                     int pos = 0;
                     Vector<String> data = null;
 
-                    JSValue c = ((jsparser.Block)exp).scope.get("console");
+                    JSValue c = b.scope.get("console");
                     if (!(c instanceof Undefined)) {
                         data = ((Console)c).getData();
                         pos = data.size();
@@ -207,12 +215,12 @@ public class JSConsole {
                         }
                     }
 
-                    exp.eval();
+                    b.eval();
 
-                    JSValue result = exp.getValue();
+                    JSValue result = b.getValue();
 
                     if (result.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") || result instanceof Function) {
-                        addEntry(console, exp.getValue().toString());
+                        addEntry(console, b.getValue().toString());
                     } else {
                         addObjectEntry(console, result);
                     }
@@ -646,6 +654,7 @@ public class JSConsole {
     JTextArea consoleInput;
     JPopupMenu consoleMenu;
     JPopupMenu suggestions;
+    HashMap<String, JSValue> scope;
 
 
     class TreeExpandListener implements TreeWillExpandListener, TreeExpansionListener {
