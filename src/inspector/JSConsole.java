@@ -77,7 +77,7 @@ public class JSConsole {
         final JPanel consolepane = new JPanel();
         consolepane.setBackground(Color.WHITE);
         consolepane.setOpaque(true);
-        consolepane.setPreferredSize(new Dimension(width, 100));
+        consolepane.setPreferredSize(new Dimension(width, 110));
         consolepane.setBorder(BorderFactory.createLineBorder(new Color(136, 138, 143), 1));
 
         consolepane.setLayout(new BoxLayout(consolepane, BoxLayout.PAGE_AXIS));
@@ -211,7 +211,7 @@ public class JSConsole {
 
                     if (data != null) {
                         for (int i = pos; i < data.size(); i++) {
-                            addEntry(console, data.get(i));
+                            addEntry(data.get(i));
                         }
                     }
 
@@ -219,10 +219,11 @@ public class JSConsole {
 
                     JSValue result = b.getValue();
 
+                    addEntry(((JTextArea)e.getSource()).getText(), false);
                     if (result.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") || result instanceof Function) {
-                        addEntry(console, b.getValue().toString());
+                        addEntry(b.getValue().toString());
                     } else {
-                        addObjectEntry(console, result);
+                        addObjectEntry(result);
                     }
 
                     ((JTextArea)e.getSource()).setText("");
@@ -253,12 +254,12 @@ public class JSConsole {
                     if (con != null && con instanceof Console) {
                         Vector<String> data = ((Console)con).getData();
                         for (String line: data) {
-                            addEntry(console, line);
+                            addEntry(line);
                         }
                         ((Console)con).addListener(new Console.Listener() {
                             @Override
                             public void log(String message) {
-                                addEntry(console, message);
+                                addEntry(message);
                             }
 
                             @Override
@@ -330,7 +331,11 @@ public class JSConsole {
         public void mouseExited(MouseEvent e) {}
     };
 
-    private void addEntry(JPanel console, String str) {
+    private void addEntry(String str) {
+        addEntry(str, true);
+    }
+
+    private void addEntry(String str, boolean isResult) {
         JPanel resultPanel = new JPanel();
         resultPanel.setOpaque(false);
         resultPanel.setBorder(BorderFactory.createEmptyBorder(1, 3, 1, 3));
@@ -338,7 +343,11 @@ public class JSConsole {
         resultPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
         JLabel text = new JLabel(str, JLabel.LEFT);
         text.setFont(new Font("Consolas", Font.PLAIN, 16));
-        text.setForeground(new Color(120, 25, 0));
+        if (isResult) {
+            text.setForeground(new Color(120, 25, 0));
+        } else {
+            text.setFont(new Font("Consolas", Font.ITALIC, 16));
+        }
         FontMetrics fm = text.getFontMetrics(text.getFont());
 
         Vector<String> lines = new Vector<String>();
@@ -385,7 +394,7 @@ public class JSConsole {
             lines.add(str);
         }
 
-        int height = (line_height + 3) * lines.size() + 2;
+        int height = (line_height + 2) * lines.size() + 2;
 
         if (!allowSelection) {
             for (String s: lines) {
@@ -403,7 +412,7 @@ public class JSConsole {
                     return new FontMetricsWrapper(super.getFontMetrics(font)) {
                         @Override
                         public int getHeight() {
-                            return line_height + 2;
+                            return line_height + 1;
                         }
                     };
                 }
@@ -434,7 +443,7 @@ public class JSConsole {
 
     }
 
-    private void addObjectEntry(JPanel console, JSValue val) {
+    private void addObjectEntry(JSValue val) {
         if (!(val instanceof JSArray) && (!(val instanceof JSObject) || val instanceof Function)) {
             return;
         }
