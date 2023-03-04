@@ -3707,7 +3707,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setFontSizePx((int) Math.round(value * ratio));
     }
 
-    public void setFontSize(int val, int units) {
+    public void setFontSize(double val, int units) {
         int value = 0;
         if (units == Units.px) {
             value = (int)Math.round(val * ratio);
@@ -5961,7 +5961,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     private void addToLayout(Block d, int pos, Block root) {
-        if (document != null && document.ready && layouter != null) {
+        if (document != null && document.ready && layouter != null && parent != null) {
             if (d.display_type == Display.BLOCK && d.auto_width && d.parent != null && d.width != d.parent.viewport_width - d.parent.borderWidth[3] - d.parent.borderWidth[1] - d.parent.paddings[3] - d.parent.paddings[1] - d.margins[3] - d.margins[1]) {
                 d.setWidth(-1, false);
             }
