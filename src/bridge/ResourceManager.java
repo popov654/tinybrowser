@@ -3,6 +3,7 @@ package bridge;
 import htmlparser.Node;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -150,6 +151,43 @@ public class ResourceManager {
                             Block b = block.doIncrementLayout();
                             b.forceRepaint();
                             document.document.repaint();
+                        }
+                    }
+                });
+                thread.start();
+            } else if (res.type == Resource.Type.STYLE) {
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String content = null;
+                        String path = resource.getURL();
+                        if (path.startsWith("http")) {
+                            content = Request.makeRequest(path);
+                        } else {
+                            try {
+                                content = "";
+                                StringBuilder sb = new StringBuilder();
+                                char[] buffer = new char[1000];
+                                int offset = 0;
+                                File f = new File(path);
+                                FileReader fr = new FileReader(f);
+                                while (fr.ready() && offset < f.length()) {
+                                    int len = fr.read(buffer);
+                                    offset += len;
+                                    sb.append(buffer);
+                                }
+                                fr.close();
+                                content = sb.toString();
+                            } catch (IOException ex) {
+                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        if (content != null && !content.isEmpty()) {
+                            resource.setContent(content);
+                            document.builder.cssParser.setStyleForNode(resource.getNode(), content);
+                            if (document.document != null) {
+                                document.builder.reapplyDocumentStyles(document.document);
+                            }
                         }
                     }
                 });

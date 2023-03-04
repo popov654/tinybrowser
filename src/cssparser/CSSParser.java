@@ -214,6 +214,15 @@ public class CSSParser {
         return result;
     }
 
+    public void setStyleForNode(Node node, String content) {
+        for (StyleElement style: styles) {
+            if (style.node == node && style.isExternal) {
+                style.content = content;
+                return;
+            }
+        }
+    }
+
     HashMap<String, HashMap<String, String>> global_rules;
     Vector<StyleElement> styles = new Vector<StyleElement>();
 
