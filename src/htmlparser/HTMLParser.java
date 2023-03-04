@@ -175,14 +175,15 @@ public class HTMLParser {
         } else if (state == READ_ATTRIBUTE_NAME && !cur_attr_name.isEmpty() && cur_attr_value.isEmpty()) {
             if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z' || ch == '-' || ch == '_') {
                 cur_attr_name += ch;
-            } else if (ch != ' ' && ch != '	' && ch != '=') {
-                cur_attr_name = "";
-                state = SEEK_END;
-            } else if (ch == ' ' || ch == '	') {
-                attrs.put(cur_attr_name.toLowerCase(), "");
             } else if (ch == '=') {
                 state = READ_ATTRIBUTE_VALUE;
                 cur_attr_value = "";
+            } else if (!Character.isWhitespace(ch) && ch != '=') {
+                if (Character.isWhitespace(ch) || ch == '>') {
+                    attrs.put(cur_attr_name.toLowerCase(), "");
+                }
+                cur_attr_name = "";
+                state = SEEK_END;
             }
         } else if (state == READ_ATTRIBUTE_VALUE && !cur_attr_name.isEmpty()) {
             if (!quotes && ch == '"' && cur_attr_value.isEmpty()) {
