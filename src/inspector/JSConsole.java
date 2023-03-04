@@ -53,7 +53,6 @@ import jsparser.JSObject;
 import jsparser.JSParser;
 import jsparser.JSValue;
 import jsparser.Undefined;
-import jsparser.Window;
 import render.Block;
 import render.Util;
 import render.WebDocument;
@@ -184,6 +183,12 @@ public class JSConsole {
                     return;
                 }
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    if (suggestions != null && suggestions.selectedItem != null) {
+                        String text = ((JLabel)((Container)suggestions.selectedItem).getComponent(0)).getText();
+                        updateCurrentToken(((JTextArea)e.getSource()), text);
+                        e.consume();
+                        return;
+                    }
                     String code = ((JTextArea)e.getSource()).getText();
                     JSParser jp = new JSParser(code);
                     jsparser.Block b = (jsparser.Block) Expression.create(jp.getHead());
@@ -233,12 +238,24 @@ public class JSConsole {
 
                     consoleInput.setRows(0);
                     e.consume();
+                    return;
+                }
+                if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) && suggestions != null && suggestions.isVisible()) {
+                    Suggestion s = (Suggestion) suggestions.getSelectedItem();
+                    if (s == null) {
+                        suggestions.setSelectedItem(suggestions.getComponent(0));
+                    } else {
+                        suggestions.setSelectedItem(e.getKeyCode() == KeyEvent.VK_UP ? s.prev : s.next);
+                    }
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                findCurrentTokenSuggestions((JTextComponent) e.getSource());
+                if (e.getKeyCode() != KeyEvent.VK_LEFT && e.getKeyCode() != KeyEvent.VK_RIGHT &&
+                      e.getKeyCode() != KeyEvent.VK_UP && e.getKeyCode() != KeyEvent.VK_DOWN) {
+                    findCurrentTokenSuggestions((JTextComponent) e.getSource());
+                }
             }
 
         });
@@ -481,6 +498,37 @@ public class JSConsole {
             setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         }
 
+        public void add(Suggestion c) {
+            super.add((Component)c);
+            if (first == null) {
+                first = c;
+                last = c;
+            }
+            last.next = c;
+            c.prev = last;
+            last = c;
+            first.prev = last;
+            last.next = first;
+        }
+        
+        public void add(Suggestion c, int pos) {
+            Suggestion old = (Suggestion) getComponent(pos);
+            super.add((Component)c, pos);
+            if (pos == 0) {
+                first = c;
+            }
+            c.prev = old.prev;
+            old.prev.next = c;
+            old.prev = c;
+            c.next = old;
+        }
+
+        @Override
+        public void removeAll() {
+            super.removeAll();
+            first = last = null;
+        }
+
         @Override
         public void paintComponent(final Graphics g) {
             g.setColor(Color.WHITE);
@@ -503,6 +551,23 @@ public class JSConsole {
             return getPreferredSize();
         }
 
+        public Component getSelectedItem() {
+            return selectedItem;
+        }
+
+        public void setSelectedItem(Component c) {
+            if (selectedItem != null) {
+                ((Suggestion)selectedItem).hovered = false;
+            }
+            selectedItem = c;
+            ((Suggestion)c).hovered = true;
+            super.setSelected(c);
+            super.repaint();
+        }
+
+        public Component selectedItem;
+        Suggestion first;
+        Suggestion last;
         public JTextComponent owner;
         int height = 24;
     };
@@ -541,7 +606,12 @@ public class JSConsole {
             to++;
         }
         String token = str.substring(from, to);
-        if (token.isEmpty()) return;
+        if (token.isEmpty()) {
+            if (suggestions != null) {
+                suggestions.setVisible(false);
+            }
+            return;
+        }
         //System.out.println("Current token: " + token);
         Vector<String> words = new Vector(Arrays.asList("body", "childNodes", "children", "classList", "className", "console", "document", "getElementById", "getElementsByTagName", "getElementsByClassName", "getElementsByName", "parentNode", "nextSibling", "nextElementSibling", "previousSibling", "previousElementSibling", "length", "push", "pop", "slice", "splice", "shift", "unshift", "substring", "screen", "tagName", "window"));
         Vector<String> list = new Vector<String>();
@@ -604,7 +674,6 @@ public class JSConsole {
 
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    System.out.println(label.getText());
                     updateCurrentToken(owner, label.getText());
                 }
 
@@ -614,6 +683,9 @@ public class JSConsole {
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     hovered = true;
+                    if (getParent() instanceof SuggestionsList) {
+                        ((SuggestionsList)getParent()).setSelectedItem((Component)e.getSource());
+                    }
                 }
 
                 @Override
@@ -648,7 +720,8 @@ public class JSConsole {
 
         @Override
         public void paintComponent(Graphics g) {
-            if (hovered) {
+            int index = ((JPopupMenu)getParent()).getSelectionModel().getSelectedIndex();
+            if (hovered || index >= 0 && getParent().getComponent(index) == this) {
                 setBackground(new Color(228, 235, 238));
             } else {
                 setBackground(null);
@@ -657,12 +730,14 @@ public class JSConsole {
         }
 
         public boolean hovered = false;
+        Suggestion prev;
+        Suggestion next;
     }
 
     JPanel console;
     JTextArea consoleInput;
     JPopupMenu consoleMenu;
-    JPopupMenu suggestions;
+    SuggestionsList suggestions;
     HashMap<String, JSValue> scope;
 
 
