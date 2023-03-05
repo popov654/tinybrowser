@@ -29,9 +29,19 @@ public class Reader {
 
     public Document readDocument(String file) {
         if (debug) System.out.println(Main.getInstallPath() + file);
-
         HTMLParser hp = new HTMLParser(Main.getInstallPath() + file);
+        return createDocument(hp);
+    }
 
+    public Document createDocumentFromString(String content) {
+        if (debug) System.out.println(content);
+        HTMLParser hp = new HTMLParser();
+        hp.data = content;
+        hp.scan();
+        return createDocument(hp);
+    }
+
+    public Document createDocument(HTMLParser hp) {
         if (debug) {
             System.out.println("----------------------------------");
             hp.printTree();
