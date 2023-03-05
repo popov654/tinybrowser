@@ -578,6 +578,7 @@ public class JSConsole {
             suggestions = new SuggestionsList(c);
         } else {
             suggestions.removeAll();
+            suggestions.selectedItem = null;
         }
         int height = 24;
         for (String s: options) {
@@ -616,7 +617,7 @@ public class JSConsole {
         Vector<String> words = new Vector(Arrays.asList("body", "childNodes", "children", "classList", "className", "console", "document", "getElementById", "getElementsByTagName", "getElementsByClassName", "getElementsByName", "parentNode", "nextSibling", "nextElementSibling", "previousSibling", "previousElementSibling", "length", "push", "pop", "slice", "splice", "shift", "unshift", "substring", "screen", "tagName", "window"));
         Vector<String> list = new Vector<String>();
         for (String word: words) {
-            if (word.startsWith(token)) {
+            if (word.startsWith(token) && token.length() < word.length()) {
                 list.add(word);
             }
         }
@@ -656,15 +657,12 @@ public class JSConsole {
             setBackground(Color.WHITE);
             FlowLayout fl = new FlowLayout();
             fl.setAlignment(FlowLayout.LEADING);
-            fl.setVgap(1);
+            fl.setVgap(2);
             fl.setHgap(2);
             setLayout(fl);
             label = new JLabel(text);
-            //label.setHorizontalAlignment(JLabel.LEFT);
-            //label.setHorizontalTextPosition(JLabel.LEFT);
             label.setVerticalTextPosition(JLabel.CENTER);
             label.setFont(new Font("Consolas", Font.PLAIN, 16));
-            label.setPreferredSize(new Dimension(getPreferredSize().width, getPreferredSize().height-2));
             add(label);
             
             addMouseListener(new MouseListener() {
