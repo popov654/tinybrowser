@@ -1,8 +1,14 @@
 package cache;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -91,20 +97,46 @@ public class DefaultCache extends Cache {
         f = new File(path);
 
         if (!f.exists() || f.lastModified() < System.currentTimeMillis() / 1000 - maxAge) {
-            String content = Request.makeRequest(url + "/" + filename, true);
-            // Network problem of malformed URL
-            if (content == null) {
-                return f.exists() ? path : url + "/" + filename;
-            }
-            try {
-                f = new File(path);
-                f.createNewFile();
-                FileWriter fw = new FileWriter(f);
-                fw.append(content);
-                fw.close();
-            } catch (IOException ex) {
-                Logger.getLogger(DefaultCache.class.getName()).log(Level.SEVERE, null, ex);
-                return url + "/" + filename;
+            boolean binary = filename.matches("\\.(bmp|ico|jpg|jpeg|png|gif|webp|wav|mp3|aac|mp2|m4a|flac|ogg|avi|mp4|mpg|m4v|mkv|docx?|xlsx?|pptx?|exe|msi|zip|rar)$");
+            if (!binary) {
+                String content = Request.makeRequest(url + "/" + filename, true);
+                // Network problem of malformed URL
+                if (content == null) {
+                    return f.exists() ? path : url + "/" + filename;
+                }
+                try {
+                    f = new File(path);
+                    f.createNewFile();
+                    FileWriter fw = new FileWriter(f);
+                    fw.append(content);
+                    fw.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(DefaultCache.class.getName()).log(Level.SEVERE, null, ex);
+                    return url + "/" + filename;
+                }
+            } else {
+                File file = Request.makeBinaryRequest(url + "/" + filename, true);
+                // Network problem of malformed URL
+                if (file == null) {
+                    return f.exists() ? path : url + "/" + filename;
+                }
+                try {
+                    InputStream in = new BufferedInputStream(new FileInputStream(file));
+                    OutputStream out = new BufferedOutputStream(new FileOutputStream(f));
+
+                    byte[] buffer = new byte[1024];
+                    int lengthRead;
+                    while ((lengthRead = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, lengthRead);
+                        out.flush();
+                    }
+                    file.delete();
+
+                    return url + "/" + filename;
+
+                } catch (IOException ex) {
+                    Logger.getLogger(DefaultCache.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
         
