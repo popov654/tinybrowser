@@ -460,6 +460,44 @@ public class LayoutTests extends JFrame {
         t2.start();
     }
 
+    public void testFontSize() {
+        prepareBlock();
+
+        Block d1 = document.root.children.get(0);
+        
+        Block d2 = d1.clone();
+        document.root.addElement(d2);
+        document.root.setFontSize(12);
+
+        d1.setFontSize(2f, Block.Units.em);
+        d2.setFontSize(2f, Block.Units.em);
+
+        Block d01 = new Block(document, d1, -1, -1, 0, 0, Color.BLACK);
+        d01.setPositioning(Block.Position.STATIC);
+        d01.setDisplayType(Block.Display.INLINE);
+        d01.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d01.setFontSize(0.625, Block.Units.em);
+        d01.addText("Block one: 0.625em inside 2em");
+        d1.addElement(d01, true);
+
+        Block d02 = new Block(document, d2, -1, -1, 0, 0, Color.BLACK);
+        d02.setPositioning(Block.Position.STATIC);
+        d02.setDisplayType(Block.Display.INLINE);
+        d02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d02.setFontSize(1, Block.Units.rem);
+        d02.addText("Block two: 1rem inside 2em");
+        d2.addElement(d02, true);
+
+        System.out.println("Font size of text 1: " + d01.fontSize);
+        System.out.println("Font size of text 2: " + d02.fontSize);
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+            document.repaint();
+        }
+    }
+
     public void testLinks() {
         prepareBlock();
 
@@ -1117,6 +1155,7 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("borders")) test = 16;
             else if (args[0].equals("gradients")) test = 17;
             else if (args[0].equals("iframes")) test = 18;
+            else if (args[0].equals("font-size")) test = 19;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -1165,6 +1204,8 @@ public class LayoutTests extends JFrame {
             case 17: lt.testGradients();
                      break;
             case 18: lt.testChildDocuments();
+                     break;
+            case 19: lt.testFontSize();
                      break;
         }
 
