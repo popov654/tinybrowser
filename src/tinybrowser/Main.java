@@ -2,6 +2,7 @@ package tinybrowser;
 
 import bridge.CustomElement;
 import bridge.Document;
+import cache.DefaultCache;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
 import htmlparser.Node;

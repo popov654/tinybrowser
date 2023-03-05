@@ -33,7 +33,7 @@ public class Request {
     public static String baseURL = "";
     public static final String defaultCharset = "UTF-8";
 
-    public static String makeRequest(String path, String method, HashMap<String, String> params, String charset) {
+    public static String makeRequest(String path, String method, HashMap<String, String> params, String charset, boolean noCache) {
         try {
             URL url = new URL(baseURL + path);
             URLConnection con = url.openConnection();
@@ -104,12 +104,16 @@ public class Request {
         return null;
     }
     
-    public static String makeRequest(String path, String method, HashMap<String, String> params) {
-        return makeRequest(path, method, params, defaultCharset);
+    public static String makeRequest(String path, String method, HashMap<String, String> params, boolean noCache) {
+        return makeRequest(path, method, params, defaultCharset, noCache);
     }
 
     public static String makeRequest(String path) {
-        return makeRequest(path, "GET", new HashMap<String, String>(), defaultCharset);
+        return makeRequest(path, "GET", new HashMap<String, String>(), defaultCharset, false);
+    }
+
+    public static String makeRequest(String path, boolean noCache) {
+        return makeRequest(path, "GET", new HashMap<String, String>(), defaultCharset, noCache);
     }
 
     public static byte[] getBytes(InputStream is, int size) {
