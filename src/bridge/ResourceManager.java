@@ -74,13 +74,11 @@ public class ResourceManager {
                         String path = resource.getURL();
                         File f = null;
                         try {
-                            if (path.startsWith("http")) {
-                                image = ImageIO.read(new URL(path));
-                                String[] str = path.split("/");
-                                f = File.createTempFile("tmp_", str[str.length - 1]);
-                                ImageIO.write(image, "png", f);
-                            } else {
-                                f = new File(path);
+                            if (document.cache != null) {
+                                path = document.cache.get(path);
+                            }
+                            f = new File(path);
+                            if (f != null) {
                                 image = ImageIO.read(f);
                             }
                         } catch (IOException ex) {

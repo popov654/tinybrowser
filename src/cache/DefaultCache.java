@@ -97,7 +97,7 @@ public class DefaultCache extends Cache {
         f = new File(path);
 
         if (!f.exists() || f.lastModified() < System.currentTimeMillis() / 1000 - maxAge) {
-            boolean binary = filename.matches("\\.(bmp|ico|jpg|jpeg|png|gif|webp|wav|mp3|aac|mp2|m4a|flac|ogg|avi|mp4|mpg|m4v|mkv|docx?|xlsx?|pptx?|exe|msi|zip|rar)$");
+            boolean binary = filename.matches(".*\\.(bmp|ico|jpg|jpeg|png|gif|webp|wav|mp3|aac|mp2|m4a|flac|ogg|avi|mp4|mov|3gpp|mpg|mpeg|m4v|mkv|docx?|xlsx?|pptx?|exe|msi|zip|rar|psd|tar|gz)$");
             if (!binary) {
                 String content = Request.makeRequest(url + "/" + filename, true);
                 // Network problem of malformed URL
@@ -131,8 +131,6 @@ public class DefaultCache extends Cache {
                         out.flush();
                     }
                     file.delete();
-
-                    return url + "/" + filename;
 
                 } catch (IOException ex) {
                     Logger.getLogger(DefaultCache.class.getName()).log(Level.SEVERE, null, ex);
