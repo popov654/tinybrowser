@@ -283,7 +283,7 @@ public class HTMLParser {
             data += '>';
             scanNext();
         }
-        if (!cur_text.isEmpty()) {
+        if (!cur_text.isEmpty() && curNode != null) {
             Node text = new Node(curNode, 3);
             text.nodeValue = cur_text;
             cur_text = "";
