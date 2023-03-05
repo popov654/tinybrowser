@@ -13,8 +13,10 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.JFrame;
 import network.Request;
 import render.Block;
+import render.WebDocument;
 import tinybrowser.Reader;
 
 /**
@@ -126,28 +128,20 @@ public class ResourceManager {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        String content = null;
-                        String path = resource.getURL();
-                        if (path.startsWith("http")) {
-                            try {
-                                content = Request.makeRequest(path);
-                                resource.setContent(content);
-                                String[] str = path.split("/");
-                                File f = File.createTempFile("tmp_", str[str.length - 1]);
-                                FileWriter fw = new FileWriter(f);
-                                fw.append(content);
-                                fw.close();
-                                path = f.getPath();
-                            } catch (IOException ex) {
-                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
+//                        try {
+//                            Thread.sleep(1200);
+//                        } catch (InterruptedException ex) {
+//                            Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+//                        }
+                        loadResourceContent(resource);
+                        String content = resource.getContent();
                         Reader reader = new Reader();
-                        Document doc = reader.readDocument(path);
+                        Document doc = reader.createDocumentFromString(content);
                         resource.setDocument(doc);
                         Block block = Mapper.get(resource.getNode());
                         if (block != null) {
-                            block.addChildDocument(doc.document);
+                            WebDocument childView = reader.createDocumentView(doc, "", (JFrame) doc.builder.windowFrame);
+                            block.addChildDocument(childView);
                             Block b = block.doIncrementLayout();
                             b.forceRepaint();
                             document.document.repaint();
@@ -255,7 +249,7 @@ public class ResourceManager {
                     sb.append(buffer);
                 }
                 fr.close();
-                content = sb.toString();
+                content = sb.toString().trim();
             } catch (IOException ex) {
                 Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
             }

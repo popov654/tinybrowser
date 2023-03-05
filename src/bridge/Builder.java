@@ -205,10 +205,21 @@ public class Builder {
             if (b.height < 0) b.auto_height = true;
 
             Reader reader = new Reader();
-            bridge.Document childDocument = reader.readDocument(node.getAttribute("src"));
-            
-            WebDocument childView = reader.createDocumentView(childDocument, "", (JFrame) windowFrame);
-            b.addChildDocument(childView);
+            bridge.Document childDocument = null;
+
+            if (!useDocumentCache) {
+                childDocument = reader.readDocument(node.getAttribute("src"));
+            } else {
+                Resource res = documentWrap.getResourceManager().getResourceForBlock(b);
+                if (res == null || res.type != Resource.Type.IFRAME || res.document == null) {
+                    return;
+                }
+                childDocument = res.document;
+            }
+            if (childDocument != null) {
+                WebDocument childView = reader.createDocumentView(childDocument, "", (JFrame) windowFrame);
+                b.addChildDocument(childView);
+            }
         }
 
         if (node.nodeType == 1) {
@@ -918,6 +929,7 @@ public class Builder {
     public bridge.Document documentWrap;
 
     public boolean useImageCache = true;
+    public boolean useDocumentCache = true;
 
     public String baseUrl = "";
     public WebDocument document;
