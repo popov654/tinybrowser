@@ -207,7 +207,7 @@ public class Builder {
             Reader reader = new Reader();
             bridge.Document childDocument = null;
 
-            if (!useDocumentCache) {
+            if (!documentWrap.asyncIframeLoad) {
                 childDocument = reader.readDocument(node.getAttribute("src"));
             } else {
                 Resource res = documentWrap.getResourceManager().getResourceForBlock(b);
@@ -507,6 +507,7 @@ public class Builder {
 
 
     public synchronized void runScripts() {
+        if (!documentWrap.enableScripts) return;
         boolean chain = true;
         for (ScriptElement script: scripts) {
             if (script.finished) continue;
@@ -550,7 +551,7 @@ public class Builder {
             b.auto_width = false;
             b.width = -1;
             b.isImage = true;
-            if (!useImageCache) {
+            if (!documentWrap.asyncImageLoad) {
                 b.setBackgroundImage(baseUrl + node.getAttribute("src"));
             } else {
                 Resource res = documentWrap.getResourceManager().getResourceForBlock(b);
@@ -927,9 +928,6 @@ public class Builder {
 
     public HashMap<String, Class> customElements = new HashMap<String, Class>();
     public bridge.Document documentWrap;
-
-    public boolean useImageCache = true;
-    public boolean useDocumentCache = true;
 
     public String baseUrl = "";
     public WebDocument document;

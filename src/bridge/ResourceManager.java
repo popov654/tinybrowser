@@ -41,14 +41,14 @@ public class ResourceManager {
     private void findResources(Node node) {
         if (node.nodeType != 1 || node.isPseudo()) return;
         Resource res = null;
-        if (node.tagName.equals("img") && node.getAttribute("src") != null) {
+        if (node.tagName.equals("img") && node.getAttribute("src") != null && document.asyncImageLoad) {
             res = new Resource(node.getAttribute("src"), node, Resource.Type.IMAGE);
-        } else if (node.tagName.equals("iframe") && node.getAttribute("src") != null) {
+        } else if (node.tagName.equals("iframe") && node.getAttribute("src") != null && document.asyncIframeLoad) {
             res = new Resource(node.getAttribute("src"), node, Resource.Type.IFRAME);
         } else if (node.tagName.equals("link") && node.getAttribute("rel") != null &&
-              node.getAttribute("rel").equals("stylesheet") &&  node.getAttribute("href") != null) {
+              node.getAttribute("rel").equals("stylesheet") &&  node.getAttribute("href") != null && document.enableExternalStyles) {
             res = new Resource(node.getAttribute("href"), node, Resource.Type.STYLE);
-        } else if (node.tagName.equals("script") && node.getAttribute("src") != null) {
+        } else if (node.tagName.equals("script") && node.getAttribute("src") != null && document.enableScripts) {
             res = new Resource(node.getAttribute("src"), node, Resource.Type.SCRIPT);
         }
         if (res != null) addResource(res);

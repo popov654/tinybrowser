@@ -32,6 +32,18 @@ public class Document {
         return resourceManager;
     }
 
+    public void setAsyncImageLoad(boolean value) {
+        asyncImageLoad = value;
+    }
+
+    public void setIframeImageLoad(boolean value) {
+        asyncIframeLoad = value;
+    }
+
+    public void setEnableScripts(boolean value) {
+        enableScripts = value;
+    }
+
     private ResourceManager resourceManager;
 
     public Builder builder;
@@ -39,6 +51,11 @@ public class Document {
     public Block rootBlock;
     public WebDocument document;
     public Cache cache;
+
+    public boolean asyncImageLoad = true;
+    public boolean asyncIframeLoad = true;
+    public boolean enableExternalStyles = true;
+    public boolean enableScripts = true;
 
     public String title = "";
     public JFrame frame;
