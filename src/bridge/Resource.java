@@ -2,6 +2,7 @@ package bridge;
 
 import htmlparser.Node;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import render.WebDocument;
 
 /**
@@ -16,6 +17,14 @@ public class Resource {
         this.type = type;
     }
 
+    public String getURL() {
+        return url;
+    }
+
+    public Node getNode() {
+        return node;
+    }
+
     public String url;
     public Node node;
 
@@ -24,7 +33,8 @@ public class Resource {
     public String content = "";
     public BufferedImage image;
     public Builder builder;
-    public WebDocument document;
+    public Document document;
+    public File file;
     private boolean loaded = false;
 
     public boolean isLoaded() {
@@ -37,6 +47,26 @@ public class Resource {
 
     public BufferedImage getImage() {
         return image;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setImage(BufferedImage image) {
+        this.image = image;
+    }
+
+    public void setFile(File f) {
+        this.file = f;
+    }
+
+    public void setDocument(Document document) {
+        this.document = document;
     }
 
     public void unset() {

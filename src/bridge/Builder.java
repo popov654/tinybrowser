@@ -493,7 +493,14 @@ public class Builder {
             b.auto_width = false;
             b.width = -1;
             b.isImage = true;
-            b.setBackgroundImage(baseUrl + node.getAttribute("src"));
+            if (!useImageCache) {
+                b.setBackgroundImage(baseUrl + node.getAttribute("src"));
+            } else {
+                Resource res = documentWrap.getResourceManager().getResourceForBlock(b);
+                if (res != null && res.type == Resource.Type.IMAGE && res.getFile() != null) {
+                    b.setBackgroundImage(res.getFile().getPath());
+                }
+            }
         }
         else if (node.tagName.equals("hr")) {
             b.height = b.viewport_height = (int) b.ratio + 2;
@@ -863,6 +870,8 @@ public class Builder {
 
     public HashMap<String, Class> customElements = new HashMap<String, Class>();
     public bridge.Document documentWrap;
+
+    public boolean useImageCache = true;
 
     public String baseUrl = "";
     public WebDocument document;

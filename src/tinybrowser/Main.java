@@ -1,6 +1,7 @@
 package tinybrowser;
 
 import bridge.CustomElement;
+import bridge.Document;
 import cssparser.QuerySelector;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
@@ -161,8 +162,8 @@ public class Main {
     public static void testBuilder() {
         Reader reader = new Reader();
         reader.addCustomElement("player", CustomPlayer.class);
-        Block root = reader.readDocument("test2.htm").getRootBlock();
-        visualBuilderTest(reader, root);
+        Document document = reader.readDocument("test2.htm");
+        visualBuilderTest(reader, document);
 
         //System.out.println();
         //render.Util.compareTrees(root, visualBuilderSyntheticTest());
@@ -170,8 +171,8 @@ public class Main {
         //getSyntheticTree();
     }
 
-    public static void visualBuilderTest(Reader reader, Block root) {
-        reader.displayDocument(root, "Render Test", 460, 240);
+    public static void visualBuilderTest(Reader reader, Document document) {
+        reader.displayDocument(document, "Render Test", 460, 240);
         //documentResizeTest(frame, panel, document, 1000, 400);
     }
 

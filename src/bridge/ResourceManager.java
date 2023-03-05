@@ -1,7 +1,21 @@
 package bridge;
 
 import htmlparser.Node;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Set;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import network.Request;
+import render.Block;
+import render.WebDocument;
+import tinybrowser.Reader;
 
 /**
  *
@@ -43,6 +57,107 @@ public class ResourceManager {
         }
     }
 
+    public void downloadResources() {
+        for (Resource res: resources) {
+            final Resource resource = res;
+            if (res.type == Resource.Type.IMAGE) {
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+//                            try {
+//                                Thread.sleep(800);
+//                            } catch (InterruptedException ex) {
+//                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+//                            }
+                            BufferedImage image = null;
+                            String path = resource.getURL();
+                            File f = null;
+                            try {
+                                if (path.startsWith("http")) {
+                                    image = ImageIO.read(new URL(path));
+                                    String[] str = path.split("/");
+                                    f = File.createTempFile("tmp_", str[str.length - 1]);
+                                    ImageIO.write(image, "png", f);
+                                } else {
+                                    f = new File(path);
+                                    image = ImageIO.read(f);
+                                }
+                            } catch (IOException ex) {
+                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            if (image != null) {
+                                resource.setImage(image);
+                                resource.setFile(f);
+                                Block block = Mapper.get(resource.getNode());
+                                if (block != null) {
+                                    int old_width = block.parts.size() == 0 ? block.width : block.parts.get(0).width;
+                                    int old_height = block.parts.size() == 0 ? block.height : block.parts.get(0).height;
+                                    block.auto_width = false;
+                                    block.width = -1;
+                                    block.height = -1;
+                                    for (Block part: block.parts) {
+                                        part.auto_width = false;
+                                        part.width = -1;
+                                        part.height = -1;
+                                    }
+                                    block.document.ready = false;
+                                    block.setBackgroundImage(path);
+                                    Set<String> keys = block.cssStyles.keySet();
+                                    for (String key: keys) {
+                                        if (key.startsWith("border")) {
+                                            block.setProp(key, block.cssStyles.get(key));
+                                            for (Block part: block.parts) {
+                                                part.setProp(key, block.cssStyles.get(key));
+                                            }
+                                        }
+                                    }
+                                    block.document.ready = true;
+                                    Block b = block.doIncrementLayout(old_width, old_height, false);
+                                    b.forceRepaint();
+                                    document.document.repaint();
+                                }
+                            }
+                        
+                    }
+                });
+                thread.start();
+            } else if (res.type == Resource.Type.IFRAME) {
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String content = null;
+                        String path = resource.getURL();
+                        if (path.startsWith("http")) {
+                            try {
+                                content = Request.makeRequest(path);
+                                resource.setContent(content);
+                                String[] str = path.split("/");
+                                File f = File.createTempFile("tmp_", str[str.length - 1]);
+                                FileWriter fw = new FileWriter(f);
+                                fw.append(content);
+                                fw.close();
+                                path = f.getPath();
+                            } catch (IOException ex) {
+                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        Reader reader = new Reader();
+                        Document doc = reader.readDocument(path);
+                        resource.setDocument(doc);
+                        Block block = Mapper.get(resource.getNode());
+                        if (block != null) {
+                            block.addChildDocument(doc.document);
+                            Block b = block.doIncrementLayout();
+                            b.forceRepaint();
+                            document.document.repaint();
+                        }
+                    }
+                });
+                thread.start();
+            }
+        }
+    }
+
     public void addResource(Resource res) {
         resources.add(res);
         if (res.type == Resource.Type.STYLE) {
@@ -54,6 +169,14 @@ public class ResourceManager {
         } else if (res.type == Resource.Type.IFRAME) {
             iframes.add(res);
         }
+    }
+
+    public Resource getResourceForBlock(Block b) {
+        for (Resource res: resources) {
+            Block block = Mapper.get(res.getNode());
+            if (block == b) return res;
+        }
+        return null;
     }
 
     public Vector<Resource> getStyles() {

@@ -1735,6 +1735,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     auto_height = true;
                 }
             }
+            borderWidth = new int[] {0, 0, 0, 0};
+            this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+            bgcolor = null;
             background_pos_x = 0;
             background_pos_y = 0;
             background_size_x = viewport_width;
@@ -3512,7 +3515,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        if (parts.size() == 1) {
+            parts.get(0).setBackgroundImage(path);
+        }
         forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setLinearGradient(Vector<Color> colors, Vector<Float> positions, int angle) {
@@ -3531,6 +3540,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         gradient = new Gradient(angle, cs);
         forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setLinearGradientWithUnits(Vector<Color> colors, Vector<String> positions, double angle) {
@@ -3549,6 +3561,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         gradient = new Gradient(angle, cs);
         forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setRadialGradientWithUnits(int[] center, double[] size, Vector<Color> colors, Vector<String> positions) {
@@ -3569,6 +3584,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         gradient.setType(Gradient.RADIAL);
         gradient.setRadialParams(center[0], center[1], size[0], size[1]);
         forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setRadialGradient(int[] center, double[] radius, Vector<Color> colors, Vector<Float> positions) {
@@ -3589,6 +3607,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         gradient.setType(Gradient.RADIAL);
         gradient.setRadialParams(center[0], center[1], radius[0], radius[1]);
         forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setTextAlign(int value) {
@@ -4268,6 +4289,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 background_size_x = (int) Math.max(0, old_size_x * viewport_width);
                 background_size_y = (int) Math.max(0, old_size_y * viewport_height);
             }
+        } else if (isImage) {
+            last = parts.size() == 0 ? this : parts.get(0);
+            last.processImage();
         }
         document.repaint();
         return last;

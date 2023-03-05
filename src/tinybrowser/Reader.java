@@ -48,13 +48,10 @@ public class Reader {
 
         CSSParser parser = new CSSParser(hp);
         builder.cssParser = parser;
-        Vector<Resource> styles = document.getResourceManager().getStyles();
-        for (Resource style: styles) {
-            Node node = new Node(1);
-            parser.addStyle(node);
-        }
         parser.findStyles(hp.getRootNode());
         parser.applyStyles();
+
+        document.getResourceManager().downloadResources();
 
         builder.findScripts(hp.getRootNode());
 
@@ -68,15 +65,14 @@ public class Reader {
     }
 
     public WebDocument createDocumentView(final Document documentWrap, final String title, JFrame frame) {
-        WebDocument webDocument = createDocumentView(documentWrap.rootBlock, title, frame);
+        final WebDocument document = new WebDocument();
+
         documentWrap.frame = frame;
         documentWrap.title = title;
-        documentWrap.document = webDocument;
-        return webDocument;
-    }
+        documentWrap.document = document;
 
-    public WebDocument createDocumentView(final Block root, final String title, JFrame frame) {
-        final WebDocument document = new WebDocument();
+        Block root = documentWrap.rootBlock;
+
         root.builder.setWindowFrame(frame);
         document.setBaseUrl(Main.getInstallPath());
 
@@ -130,7 +126,7 @@ public class Reader {
                 document.resized();
                 document.root.builder.updateWindowObjects();
                 if (!document.loadEventFired) {
-                    root.builder.runScripts();
+                    document.root.builder.runScripts();
                     document.fireLoadEvent();
                 }
             }
@@ -142,8 +138,11 @@ public class Reader {
         return document;
     }
 
-    public void insertDocumentView(final Block root, Container c, boolean auto_height) {
+    public void insertDocumentView(final Document documentWrap, Container c, boolean auto_height) {
         final WebDocument document = new WebDocument();
+        documentWrap.document = document;
+
+        Block root = documentWrap.getRootBlock();
         java.awt.Frame frame = (java.awt.Frame) SwingUtilities.getWindowAncestor(c);
         root.builder.setWindowFrame(frame);
         document.setBaseUrl(Main.getInstallPath());
@@ -202,7 +201,7 @@ public class Reader {
                 document.resized();
                 document.root.builder.updateWindowObjects();
                 if (!document.loadEventFired && document.getParent().getWidth() > 0) {
-                    root.builder.runScripts();
+                    document.root.builder.runScripts();
                     document.fireLoadEvent();
                 }
             }
@@ -212,11 +211,11 @@ public class Reader {
         root.builder.compileScripts();
     }
 
-    public void displayDocument(final Block root, final String title) {
-        displayDocument(root, title, 640, 480);
+    public void displayDocument(final Document document, final String title) {
+        displayDocument(document, title, 640, 480);
     }
 
-    public void displayDocument(final Block root, final String title, final int width, final int height) {
+    public void displayDocument(final Document document, final String title, final int width, final int height) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -230,7 +229,7 @@ public class Reader {
                 panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(9, 10, 9, 10), BorderFactory.createLineBorder(Color.BLACK, 1)));
 
                 frame.setContentPane(panel);
-                insertDocumentView(root, panel, false);
+                insertDocumentView(document, panel, false);
                 
                 frame.pack();
                 frame.setLocationRelativeTo(null);
