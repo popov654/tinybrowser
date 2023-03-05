@@ -4,6 +4,7 @@ import bridge.Builder;
 import bridge.Document;
 import bridge.Mapper;
 import bridge.Resource;
+import cache.DefaultCache;
 import cssparser.CSSParser;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
@@ -53,7 +54,7 @@ public class Reader {
         builder.setBaseUrl(Main.getInstallPath());
         builder.customElements = customElements;
 
-        Document document = new Document(builder, hp.getRootNode(), null);
+        Document document = new Document(builder, hp.getRootNode(), null, new DefaultCache());
         builder.documentWrap = document;
 
         CSSParser parser = new CSSParser(hp);

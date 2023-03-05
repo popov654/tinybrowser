@@ -5,6 +5,9 @@
 
 package network;
 
+import cache.Cache;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,7 +38,39 @@ public class Request {
 
     public static String makeRequest(String path, String method, HashMap<String, String> params, String charset, boolean noCache) {
         try {
-            URL url = new URL(baseURL + path);
+            String fullPath = baseURL + path;
+            if (cache != null && !noCache) {
+                fullPath = cache.get(fullPath);
+                if (!fullPath.startsWith("http")) {
+                    try {
+                        long start = System.currentTimeMillis();
+
+                        String content = "";
+                        StringBuilder sb = new StringBuilder();
+                        char[] buffer = new char[1000];
+                        int offset = 0;
+                        File f = new File(fullPath);
+                        FileReader fr = new FileReader(f);
+                        while (fr.ready() && offset < f.length()) {
+                            int len = fr.read(buffer);
+                            offset += len;
+                            sb.append(buffer);
+                        }
+                        fr.close();
+
+                        long end = System.currentTimeMillis();
+                        System.out.println("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
+
+                        content = sb.toString().trim();
+                        return content;
+                    } catch (IOException ex) {
+                        Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
+                        return null;
+                    }
+                }
+            }
+            long start = System.currentTimeMillis();
+            URL url = new URL(fullPath);
             URLConnection con = url.openConnection();
             HttpURLConnection http = (HttpURLConnection) con;
             http.setRequestMethod(method);
@@ -93,6 +128,9 @@ public class Request {
 
             InputStream is = http.getInputStream();
             response = new String(getBytes(is, 10000000), charset);
+            
+            long end = System.currentTimeMillis();
+            System.out.println("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
 
             return response;
         } catch (MalformedURLException ex) {
@@ -138,4 +176,10 @@ public class Request {
 
         return Arrays.copyOf(result, index);
     }
+
+    public static void setCache(Cache cache) {
+        Request.cache = cache;
+    }
+
+    private static Cache cache;
 }

@@ -1,5 +1,6 @@
 package bridge;
 
+import cache.Cache;
 import htmlparser.Node;
 import javax.swing.JFrame;
 import render.Block;
@@ -18,6 +19,11 @@ public class Document {
         resourceManager = new ResourceManager(this);
     }
 
+    public Document(Builder builder, Node rootNode, Block rootBlock, Cache cache) {
+        this(builder, rootNode, rootBlock);
+        this.cache = cache;
+    }
+
     public Block getRootBlock() {
         return rootBlock;
     }
@@ -32,6 +38,7 @@ public class Document {
     public Node rootNode;
     public Block rootBlock;
     public WebDocument document;
+    public Cache cache;
 
     public String title = "";
     public JFrame frame;

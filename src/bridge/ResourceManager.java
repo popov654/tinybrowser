@@ -4,9 +4,7 @@ import htmlparser.Node;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
 import java.util.Vector;
@@ -60,6 +58,7 @@ public class ResourceManager {
     }
 
     public void downloadResources() {
+        Request.setCache(document.cache);
         for (Resource res: resources) {
             final Resource resource = res;
             if (res.type == Resource.Type.IMAGE) {
