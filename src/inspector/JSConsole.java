@@ -35,6 +35,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeWillExpandListener;
@@ -179,6 +180,7 @@ public class JSConsole {
                             consoleInput.setRows(n - 1);
                             consolepane.setPreferredSize(new Dimension(consolepane.getPreferredSize().width, consolepane.getSize().height - line_height));
                         }
+                        timer.start();
                     }
                     return;
                 }
@@ -252,11 +254,19 @@ public class JSConsole {
 
             @Override
             public void keyReleased(KeyEvent e) {
+                if (timer.isRunning()) timer.stop();
                 if (e.getKeyCode() != KeyEvent.VK_LEFT && e.getKeyCode() != KeyEvent.VK_RIGHT &&
                       e.getKeyCode() != KeyEvent.VK_UP && e.getKeyCode() != KeyEvent.VK_DOWN) {
                     findCurrentTokenSuggestions((JTextComponent) e.getSource());
                 }
             }
+
+            Timer timer = new Timer(100, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    findCurrentTokenSuggestions(consoleInput);
+                }
+            });
 
         });
 
@@ -579,12 +589,14 @@ public class JSConsole {
         } else {
             suggestions.removeAll();
             suggestions.selectedItem = null;
+            suggestions.setVisible(false);
         }
         int height = 24;
         for (String s: options) {
             Suggestion item = new Suggestion(s, c);
             suggestions.add(item);
         }
+        suggestions.setVisible(true);
         
         suggestions.show(c, -1, c.getHeight());
 
@@ -596,7 +608,12 @@ public class JSConsole {
 
     private void findCurrentTokenSuggestions(JTextComponent input) {
         String str = input.getText();
-        if (str.isEmpty()) return;
+        if (str.isEmpty()) {
+            if (suggestions != null) {
+                suggestions.setVisible(false);
+            }
+            return;
+        }
         int pos = input.getCaretPosition();
         int from = pos;
         int to = pos;
