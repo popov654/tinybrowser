@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import network.Request;
 
 /**
  *
@@ -75,6 +76,11 @@ public class HTMLParser {
     }
 
     public void loadFile(String filename) {
+        if (filename.startsWith("http")) {
+            data = Request.makeRequest(filename);
+            System.out.println(data);
+            return;
+        }
         ObjectInputStream is = null;
         try {
             FileInputStream in = new FileInputStream(filename);

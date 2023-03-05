@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
 import jsparser.Expression;
 import jsparser.JSParser;
 import jsparser.JSValue;
@@ -32,6 +33,7 @@ import render.Block;
 import render.MediaPlayer;
 import render.RoundedBorder;
 import render.WebDocument;
+import tinybrowser.Reader;
 
 /**
  *
@@ -184,6 +186,29 @@ public class Builder {
                     Logger.getLogger(Builder.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+        } else if (node.tagName.equals("iframe") && node.getAttribute("src") != null &&
+                !node.getAttribute("src").isEmpty()) {
+            int width = -1;
+            int height = -1;
+            try {
+                if (node.getAttribute("width") != null) {
+                    width = Integer.parseInt(node.getAttribute("width"));
+                }
+                if (node.getAttribute("height") != null) {
+                    height = Integer.parseInt(node.getAttribute("height"));
+                }
+            } catch (NumberFormatException e) {}
+            
+            b.width = width;
+            b.height = height;
+            if (b.width < 0) b.auto_width = true;
+            if (b.height < 0) b.auto_height = true;
+
+            Reader reader = new Reader();
+            bridge.Document childDocument = reader.readDocument(node.getAttribute("src"));
+            
+            WebDocument childView = reader.createDocumentView(childDocument, "", (JFrame) windowFrame);
+            b.addChildDocument(childView);
         }
 
         if (node.nodeType == 1) {
@@ -347,13 +372,17 @@ public class Builder {
             int width = vw;
             int height = vh;
             if (node.getAttribute("width") != null) {
-                width = (int) Math.round(Integer.parseInt(node.getAttribute("width")) * ratio);
-                height = (int) ((double) width / vw * vh);
-                node.setAttribute("height", height + "");
+                try {
+                    width = (int) Math.round(Integer.parseInt(node.getAttribute("width")) * ratio);
+                    height = (int) ((double) width / vw * vh);
+                    node.setAttribute("height", height + "");
+                } catch (NumberFormatException e) {}
             } else if (node.getAttribute("height") != null) {
-                height = (int) Math.round(Integer.parseInt(node.getAttribute("height")) * ratio);
-                width = (int) ((double) height / vh * vw);
-                node.setAttribute("width", width + "");
+                try {
+                    height = (int) Math.round(Integer.parseInt(node.getAttribute("height")) * ratio);
+                    width = (int) ((double) height / vh * vw);
+                    node.setAttribute("width", width + "");
+                } catch (NumberFormatException e) {}
             } else {
                 width = (int) (vw * ratio);
                 height = (int) (vh * ratio);

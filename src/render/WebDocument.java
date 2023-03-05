@@ -266,6 +266,9 @@ public class WebDocument extends JPanel {
             }
         }
         b.document = this;
+        if (b.childDocument != null) {
+            b.childDocument.parent_document = this;
+        }
         if (b.parent != null) {
             int index = b.parent.children.indexOf(b);
             b.parent.children.remove(b);

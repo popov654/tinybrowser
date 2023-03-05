@@ -116,23 +116,6 @@ public class Reader {
 
         root.builder.reapplyDocumentStyles(document);
 
-        document.getParent().addComponentListener(new java.awt.event.ComponentAdapter() {
-            @Override
-            public void componentMoved(java.awt.event.ComponentEvent evt) {}
-
-            @Override
-            public void componentResized(java.awt.event.ComponentEvent evt) {
-                document.resized();
-                document.root.builder.updateWindowObjects();
-                if (!document.readyEventFired) {
-                    document.root.builder.runScripts();
-                    document.fireReadyEvent();
-                    documentWrap.getResourceManager().checkResourcesStatus();
-                }
-            }
-        });
-        document.getParent().dispatchEvent(new java.awt.event.ComponentEvent(document.getParent(), java.awt.event.ComponentEvent.COMPONENT_RESIZED));
-
         root.builder.compileScripts();
 
         return document;
