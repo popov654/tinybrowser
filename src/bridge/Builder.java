@@ -430,7 +430,7 @@ public class Builder {
     public void findScripts(Node node, boolean clean) {
         if (clean) scripts.clear();
         if (node.tagName.equals("script")) {
-            scripts.add(node);
+            scripts.add(new ScriptElement(node));
         }
         for (int i = 0; i < node.children.size(); i++) {
             findScripts(node.children.get(i), false);
@@ -438,45 +438,61 @@ public class Builder {
     }
 
     public void compileScripts() {
-        HTMLParser parser = this.document.root.node.document;
-        compiledScripts.clear();
-        for (Node script: scripts) {
+        for (ScriptElement script: scripts) {
             try {
-                String code = script.children.get(0).nodeValue;
-                JSParser jp = new JSParser(code);
-                Expression exp = Expression.create(jp.getHead());
-                if (scope == null) {
-                    scope = ((jsparser.Block)exp).scope;
-                } else {
-                    ((jsparser.Block)exp).scope = scope;
-                    ((jsparser.Block)exp).setConsole((jsparser.Console)scope.get("console"));
-                }
-                ((jsparser.Block)exp).setDocument(parser);
-                ((jsparser.Block)exp).setWindowFrame(windowFrame);
-                compiledScripts.add(exp);
+                if (script.content == null || script.compiled) continue;
+                compileScript(script);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
 
-    public void runScripts() {
-        for (Expression exp: compiledScripts) {
-            exp.eval();
+    public void compileScript(ScriptElement script) {
+        HTMLParser parser = this.document.root.node.document;
+        JSParser jp = new JSParser(script.content);
+        jsparser.Block block = (jsparser.Block)Expression.create(jp.getHead());
+        if (scope == null) {
+            scope = block.scope;
+        } else {
+            block.scope = scope;
+            block.setConsole((jsparser.Console)scope.get("console"));
+        }
+        block.setDocument(parser);
+        block.setWindowFrame(windowFrame);
+        script.setBody(block);
+        script.compiled = true;
+    }
+
+
+    public synchronized void runScripts() {
+        boolean chain = true;
+        for (ScriptElement script: scripts) {
+            if (script.finished) continue;
+            if ((script.getBody() == null || !script.compiled) && !script.isAsync) {
+                chain = false;
+            }
+            if (!script.compiled && script.loaded) {
+                compileScript(script);
+            }
+            if (script.compiled && (chain || script.isAsync)) {
+                script.getBody().eval();
+                script.finished = true;
+            }
         }
     }
 
     public void updateWindowObjects() {
-        for (Expression exp: compiledScripts) {
-            jsparser.Window window = (jsparser.Window)((jsparser.Block)exp).scope.get("window");
+        for (ScriptElement script: scripts) {
+            if (script.getBody() == null) continue;
+            jsparser.Window window = (jsparser.Window) script.getBody().scope.get("window");
             if (window.resizeListener != null) {
                 window.resizeListener.componentResized(new java.awt.event.ComponentEvent(windowFrame, java.awt.event.ComponentEvent.COMPONENT_RESIZED));
             }
         }
     }
 
-    public Vector<Expression> compiledScripts = new Vector<Expression>();
-    public HashMap<String, JSValue> scope = null;
+    public volatile HashMap<String, JSValue> scope = null;
 
     public void setWindowFrame(java.awt.Frame window) {
         this.windowFrame = window;
@@ -877,7 +893,7 @@ public class Builder {
     public WebDocument document;
     public CSSParser cssParser;
     public java.awt.Frame windowFrame;
-    public Vector<Node> scripts = new Vector<Node>();
+    public Vector<ScriptElement> scripts = new Vector<ScriptElement>();
 
     public final static Vector<String> BlockElements = new Vector<String>();
     public final static Vector<String> InlineElements = new Vector<String>();

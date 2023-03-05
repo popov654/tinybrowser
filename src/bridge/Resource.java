@@ -25,6 +25,10 @@ public class Resource {
         return node;
     }
 
+    public void setLoaded(boolean value) {
+        loaded = value;
+    }
+
     public String url;
     public Node node;
 
@@ -35,7 +39,7 @@ public class Resource {
     public Builder builder;
     public Document document;
     public File file;
-    private boolean loaded = false;
+    private volatile boolean loaded = false;
 
     public boolean isLoaded() {
         return loaded;

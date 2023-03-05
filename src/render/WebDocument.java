@@ -476,9 +476,15 @@ public class WebDocument extends JPanel {
         events.add(event);
     }
 
-    public void fireLoadEvent() {
-        loadEventFired = true;
+    public synchronized void fireReadyEvent() {
+        if (readyEventFired) return;
+        readyEventFired = true;
         root.node.fireEvent("DOMContentLoaded", "render", null, null);
+    }
+
+    public synchronized void fireLoadEvent() {
+        if (loadEventFired) return;
+        loadEventFired = true;
         root.node.fireEvent("load", "render", null, null);
     }
 
@@ -585,7 +591,8 @@ public class WebDocument extends JPanel {
     public Block highlighted_block;
 
     public HashMap<Node, HashSet<String>> eventsFired = new HashMap<Node, HashSet<String>>();
-    public boolean loadEventFired = false;
+    public volatile boolean readyEventFired = false;
+    public volatile boolean loadEventFired = false;
 
     private Watcher w;
 

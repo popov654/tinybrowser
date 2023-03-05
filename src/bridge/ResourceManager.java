@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import network.Request;
 import render.Block;
-import render.WebDocument;
 import tinybrowser.Reader;
 
 /**
@@ -65,60 +64,61 @@ public class ResourceManager {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-//                            try {
-//                                Thread.sleep(800);
-//                            } catch (InterruptedException ex) {
-//                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
-//                            }
-                            BufferedImage image = null;
-                            String path = resource.getURL();
-                            File f = null;
-                            try {
-                                if (path.startsWith("http")) {
-                                    image = ImageIO.read(new URL(path));
-                                    String[] str = path.split("/");
-                                    f = File.createTempFile("tmp_", str[str.length - 1]);
-                                    ImageIO.write(image, "png", f);
-                                } else {
-                                    f = new File(path);
-                                    image = ImageIO.read(f);
-                                }
-                            } catch (IOException ex) {
-                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+//                        try {
+//                            Thread.sleep(800);
+//                        } catch (InterruptedException ex) {
+//                            Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+//                        }
+                        BufferedImage image = null;
+                        String path = resource.getURL();
+                        File f = null;
+                        try {
+                            if (path.startsWith("http")) {
+                                image = ImageIO.read(new URL(path));
+                                String[] str = path.split("/");
+                                f = File.createTempFile("tmp_", str[str.length - 1]);
+                                ImageIO.write(image, "png", f);
+                            } else {
+                                f = new File(path);
+                                image = ImageIO.read(f);
                             }
-                            if (image != null) {
-                                resource.setImage(image);
-                                resource.setFile(f);
-                                Block block = Mapper.get(resource.getNode());
-                                if (block != null) {
-                                    int old_width = block.parts.size() == 0 ? block.width : block.parts.get(0).width;
-                                    int old_height = block.parts.size() == 0 ? block.height : block.parts.get(0).height;
-                                    block.auto_width = false;
-                                    block.width = -1;
-                                    block.height = -1;
-                                    for (Block part: block.parts) {
-                                        part.auto_width = false;
-                                        part.width = -1;
-                                        part.height = -1;
-                                    }
-                                    block.document.ready = false;
-                                    block.setBackgroundImage(path);
-                                    Set<String> keys = block.cssStyles.keySet();
-                                    for (String key: keys) {
-                                        if (key.startsWith("border")) {
-                                            block.setProp(key, block.cssStyles.get(key));
-                                            for (Block part: block.parts) {
-                                                part.setProp(key, block.cssStyles.get(key));
-                                            }
+                        } catch (IOException ex) {
+                            Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        if (image != null) {
+                            resource.setImage(image);
+                            resource.setFile(f);
+                            Block block = Mapper.get(resource.getNode());
+                            if (block != null) {
+                                int old_width = block.parts.size() == 0 ? block.width : block.parts.get(0).width;
+                                int old_height = block.parts.size() == 0 ? block.height : block.parts.get(0).height;
+                                block.auto_width = false;
+                                block.width = -1;
+                                block.height = -1;
+                                for (Block part: block.parts) {
+                                    part.auto_width = false;
+                                    part.width = -1;
+                                    part.height = -1;
+                                }
+                                block.document.ready = false;
+                                block.setBackgroundImage(path);
+                                Set<String> keys = block.cssStyles.keySet();
+                                for (String key: keys) {
+                                    if (key.startsWith("border")) {
+                                        block.setProp(key, block.cssStyles.get(key));
+                                        for (Block part: block.parts) {
+                                            part.setProp(key, block.cssStyles.get(key));
                                         }
                                     }
-                                    block.document.ready = true;
-                                    Block b = block.doIncrementLayout(old_width, old_height, false);
-                                    b.forceRepaint();
-                                    document.document.repaint();
                                 }
+                                block.document.ready = true;
+                                Block b = block.doIncrementLayout(old_width, old_height, false);
+                                b.forceRepaint();
+                                document.document.repaint();
                             }
-                        
+                        }
+                        resource.setLoaded(true);
+                        checkResourcesStatus();
                     }
                 });
                 thread.start();
@@ -152,6 +152,8 @@ public class ResourceManager {
                             b.forceRepaint();
                             document.document.repaint();
                         }
+                        resource.setLoaded(true);
+                        checkResourcesStatus();
                     }
                 });
                 thread.start();
@@ -159,40 +161,65 @@ public class ResourceManager {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        String content = null;
-                        String path = resource.getURL();
-                        if (path.startsWith("http")) {
-                            content = Request.makeRequest(path);
-                        } else {
-                            try {
-                                content = "";
-                                StringBuilder sb = new StringBuilder();
-                                char[] buffer = new char[1000];
-                                int offset = 0;
-                                File f = new File(path);
-                                FileReader fr = new FileReader(f);
-                                while (fr.ready() && offset < f.length()) {
-                                    int len = fr.read(buffer);
-                                    offset += len;
-                                    sb.append(buffer);
-                                }
-                                fr.close();
-                                content = sb.toString();
-                            } catch (IOException ex) {
-                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
+                        loadResourceContent(resource);
+                        String content = resource.getContent();
                         if (content != null && !content.isEmpty()) {
-                            resource.setContent(content);
                             document.builder.cssParser.setStyleForNode(resource.getNode(), content);
                             if (document.document != null) {
                                 document.builder.reapplyDocumentStyles(document.document);
                             }
                         }
+                        resource.setLoaded(true);
+                        checkResourcesStatus();
+                    }
+                });
+                thread.start();
+            } else if (res.type == Resource.Type.SCRIPT) {
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+//                        if (!resource.getNode().getAttribute("src").contains("async")) {
+//                            try {
+//                                Thread.sleep(1500);
+//                            } catch (InterruptedException ex) {
+//                                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+//                            }
+//                        }
+                        loadResourceContent(resource);
+                        String content = resource.getContent();
+                        if (content != null && !content.isEmpty()) {
+                            for (ScriptElement script: document.builder.scripts) {
+                                if (script.node == resource.getNode()) {
+                                    script.content = content;
+                                    script.loaded = true;
+                                    if (document.document != null) {
+                                        document.builder.compileScript(script);
+                                    }
+                                    break;
+                                }
+                            }
+                            if (document.document != null) {
+                                document.builder.runScripts();
+                            }
+                        }
+                        resource.setLoaded(true);
+                        checkResourcesStatus();
                     }
                 });
                 thread.start();
             }
+        }
+    }
+
+    public void checkResourcesStatus() {
+        boolean flag = true;
+        for (Resource res: resources) {
+            if (!res.isLoaded()) {
+                flag = false;
+            }
+        }
+        if (flag && document.document != null && !document.document.loadEventFired) {
+            document.document.fireLoadEvent();
         }
     }
 
@@ -209,10 +236,45 @@ public class ResourceManager {
         }
     }
 
+    public void loadResourceContent(Resource resource) {
+        String content = null;
+        String path = resource.getURL();
+        if (path.startsWith("http")) {
+            content = Request.makeRequest(path);
+        } else {
+            try {
+                content = "";
+                StringBuilder sb = new StringBuilder();
+                char[] buffer = new char[1000];
+                int offset = 0;
+                File f = new File(path);
+                FileReader fr = new FileReader(f);
+                while (fr.ready() && offset < f.length()) {
+                    int len = fr.read(buffer);
+                    offset += len;
+                    sb.append(buffer);
+                }
+                fr.close();
+                content = sb.toString();
+            } catch (IOException ex) {
+                Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        resource.setContent(content);
+        //System.out.println(content);
+    }
+
     public Resource getResourceForBlock(Block b) {
         for (Resource res: resources) {
             Block block = Mapper.get(res.getNode());
             if (block == b) return res;
+        }
+        return null;
+    }
+
+    public Resource getResourceForNode(Node node) {
+        for (Resource res: resources) {
+            if (res.getNode() == node) return res;
         }
         return null;
     }

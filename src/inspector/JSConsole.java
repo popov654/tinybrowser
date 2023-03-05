@@ -266,8 +266,8 @@ public class JSConsole {
             @Override
             public void run() {
                 Builder builder = document.root.builder;
-                if (builder.compiledScripts.size() > 0) {
-                    JSValue con = Expression.getVar("console", builder.compiledScripts.get(0));
+                if (builder.scripts.size() > 0) {
+                    JSValue con = Expression.getVar("console", builder.scripts.get(0).getBody());
                     if (con != null && con instanceof Console) {
                         Vector<String> data = ((Console)con).getData();
                         for (String line: data) {

@@ -51,9 +51,8 @@ public class Reader {
         parser.findStyles(hp.getRootNode());
         parser.applyStyles();
 
-        document.getResourceManager().downloadResources();
-
         builder.findScripts(hp.getRootNode());
+        document.getResourceManager().downloadResources();
 
         final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
         document.rootBlock = root;
@@ -125,9 +124,10 @@ public class Reader {
             public void componentResized(java.awt.event.ComponentEvent evt) {
                 document.resized();
                 document.root.builder.updateWindowObjects();
-                if (!document.loadEventFired) {
+                if (!document.readyEventFired) {
                     document.root.builder.runScripts();
-                    document.fireLoadEvent();
+                    document.fireReadyEvent();
+                    documentWrap.getResourceManager().checkResourcesStatus();
                 }
             }
         });
@@ -200,9 +200,10 @@ public class Reader {
             public void componentResized(java.awt.event.ComponentEvent evt) {
                 document.resized();
                 document.root.builder.updateWindowObjects();
-                if (!document.loadEventFired && document.getParent().getWidth() > 0) {
+                if (!document.readyEventFired && document.getParent().getWidth() > 0) {
                     document.root.builder.runScripts();
-                    document.fireLoadEvent();
+                    document.fireReadyEvent();
+                    documentWrap.getResourceManager().checkResourcesStatus();
                 }
             }
         });
