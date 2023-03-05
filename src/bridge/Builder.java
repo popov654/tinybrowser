@@ -433,6 +433,7 @@ public class Builder {
             int player_width = 230; //b.parent.width > 0 ? b.parent.width - b.parent.borderWidth[1] - b.parent.borderWidth[3] - b.parent.paddings[1] - b.parent.paddings[3] : -1;
             b.width = (int) Math.round(player_width * b.ratio);
             b.orig_width = player_width;
+            b.auto_width = false;
             b.auto_height = true;
             b.height = -1;
             mp = new MediaPlayer(b, player_width);
@@ -685,8 +686,9 @@ public class Builder {
 
     public void resetStyles(Block b, boolean no_update, boolean force) {
         if (b instanceof render.ReplacedBlock) return;
+        if (b.node == null) return;
         Styles st = StyleMap.getNodeStyles(b.node);
-        if (b.node == null || st != null && st.stateStyles.size() == 0 && !force) return;
+        if (st != null && st.stateStyles.size() == 0 && !force) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -730,10 +732,8 @@ public class Builder {
     }
 
     public void applyStateStyles(Block b) {
+        if (b.node == null) return;
         Styles st = StyleMap.getNodeStyles(b.node);
-        if (b.node == null) {
-            return;
-        }
         Vector<QuerySelector> stateStyles = st.stateStyles;
         for (int i = 0; i < stateStyles.size(); i++) {
             if (!stateStyles.get(i).getElements().contains(b.node)) continue;
@@ -762,8 +762,9 @@ public class Builder {
     }
 
     public void applyStateStyles(Block b, boolean no_update) {
+        if (b.node == null) return;
         Styles st = StyleMap.getNodeStyles(b.node);
-        if (b.node == null || b.node.nodeType != 1 || st.stateStyles.size() == 0) return;
+        if (b.node.nodeType != 1 || st.stateStyles.size() == 0) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -778,7 +779,7 @@ public class Builder {
     }
 
     public void applyStateStylesRecursive(Block b, boolean no_rec) {
-        if (b.type != Block.NodeTypes.ELEMENT) return;
+        if (b.node == null || b.type != Block.NodeTypes.ELEMENT) return;
         
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -806,7 +807,7 @@ public class Builder {
     }
 
     public void resetStylesRecursive(Block b, boolean no_rec, boolean force) {
-        if (b.type != Block.NodeTypes.ELEMENT) return;
+        if (b.node == null || b.type != Block.NodeTypes.ELEMENT) return;
         
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
