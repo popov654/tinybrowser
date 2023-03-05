@@ -2456,7 +2456,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (content_y_max > viewport_height - borderWidth[0] - borderWidth[2] && !auto_height && overflow == Overflow.SCROLL) {
             boolean had_scroll = scrollbar_y != null;
             addScrollbarY();
-            if (!had_scroll) performLayout(true, true);
+            if (!had_scroll) performLayout(false, true);
         } else if (content_y_max > viewport_height - borderWidth[0] - borderWidth[2] && auto_height) {
             boolean had_scroll = scrollbar_y != null;
             if (this == document.root && document.keep_root_scrollbars_outside && had_scroll) {
@@ -2464,12 +2464,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 width += scrollbar_x.getPreferredSize().height;
             }
             removeScrollbarY();
-            if (had_scroll) performLayout(true, true);
+            if (had_scroll) performLayout(false, true);
         } else if (content_y_max <= viewport_height - borderWidth[0] - borderWidth[2]) {
             boolean had_scroll = scrollbar_y != null;
             removeScrollbarY();
             if (had_scroll) {
-                performLayout(true, true);
+                performLayout(false, true);
             }
         }
     }
