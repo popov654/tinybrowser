@@ -13,6 +13,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -420,6 +422,36 @@ public class WebDocument extends JPanel {
             public void addPropertyChangeListener(PropertyChangeListener listener) {}
 
             public void removePropertyChangeListener(PropertyChangeListener listener) {}
+
+        });
+        frame.addWindowListener(new WindowListener() {
+
+            @Override
+            public void windowOpened(WindowEvent e) {}
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (highlighted_block != null) {
+                    highlighted_block = null;
+                    root.forceRepaintAll();
+                    repaint();
+                }
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {}
+
+            @Override
+            public void windowIconified(WindowEvent e) {}
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+
+            @Override
+            public void windowActivated(WindowEvent e) {}
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
 
         });
 
