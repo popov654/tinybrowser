@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -19,6 +20,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
@@ -68,11 +70,32 @@ public class JSConsole {
     public boolean allowSelection = true;
     public int line_height = 24;
 
-    public void insertConsole(final JFrame frame, Container c, final WebDocument document) {
+
+    public void insertConsole(final JFrame frame, final Container c, final WebDocument document) {
         final Block root = document.root;
         int width = c.getPreferredSize().width;
 
-        c.add(Box.createRigidArea(new Dimension(0, 10)));
+        divider = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(getParent().getWidth(), height);
+            }
+            @Override
+            public Dimension getMinimumSize() {
+                return new Dimension(getParent().getWidth(), height);
+            }
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(getParent().getWidth(), height);
+            }
+
+            public int height = 10;
+        };
+        divider.setCursor(new Cursor(Cursor.S_RESIZE_CURSOR));
+        DividerMouseListener ml = new DividerMouseListener();
+        divider.addMouseListener(ml);
+        divider.addMouseMotionListener(ml);
+        c.add(divider);
 
         final JPanel consolepane = new JPanel();
         consolepane.setBackground(Color.WHITE);
@@ -105,7 +128,6 @@ public class JSConsole {
         consolepane.add(scrollpane2);
         scrollpane2.setBackground(Color.WHITE);
         scrollpane2.setOpaque(true);
-        scrollpane2.setPreferredSize(new Dimension(width, 100 - line_height - 6));
         scrollpane2.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollpane2.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -749,6 +771,8 @@ public class JSConsole {
         Suggestion next;
     }
 
+
+    JPanel divider;
     JPanel console;
     JTextArea consoleInput;
     JPopupMenu consoleMenu;
@@ -950,6 +974,43 @@ public class JSConsole {
         } else {
             node.setAllowsChildren(false);
         }
+    }
+
+    class DividerMouseListener implements MouseListener, MouseMotionListener {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {}
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            delta = e.getY();
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            delta = 0;
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {}
+
+        @Override
+        public void mouseExited(MouseEvent e) {}
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            int dy = e.getY() - delta;
+            Container parent = ((Component)e.getSource()).getParent();
+            Dimension dim = parent.getComponent(2).getPreferredSize();
+            Container consolepane = (Container) parent.getComponent(2);
+            consolepane.setPreferredSize(new Dimension(dim.width, dim.height - dy));
+            ((JPanel)consolepane).revalidate();
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {}
+
+        int delta = 0;
     }
 
 }
