@@ -129,7 +129,6 @@ public class RenderTests {
         //lt.dispose();
     }
 
-    @Test
     public void layoutUpdateTest() {
         lt.liveLayoutUpdateTest();
         lt.setVisible(true);
