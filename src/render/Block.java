@@ -3709,22 +3709,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setFontSize(double val, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val * ratio);
-        }
-        else if (units == Units.percent) {
-            value = (int)Math.round((double) viewport_width / 100 * val * ratio);
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        setFontSizePx(value);
+        setFontSizePx(getValueInPixels(val, units));
     }
 
     public void setFontSizePx(int value) {
@@ -4133,21 +4118,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setWidth(int w, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = w;
-        }
-        else if (units == Units.percent) {
-            value = (int)Math.round((double) viewport_width / 100 * w);
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? (double) b.fontSize / ratio : 16) * w);
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? (double) b.fontSize / ratio : 16) * w);
-        }
+        int value = (int) Math.round(getValueInCssPixels(w, units));
         setWidth(value, false);
     }
 
@@ -4250,21 +4221,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setHeight(int h, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = h;
-        }
-        else if (units == Units.percent) {
-            value = (int)Math.round((double) viewport_width / 100 * h);
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? (double) b.fontSize / ratio : 16) * h);
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? (double) b.fontSize / ratio : 16) * h);
-        }
+        int value = (int) Math.round(getValueInCssPixels(h, units));
         setHeight(value, false);
     }
 
@@ -4328,44 +4285,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundPositionX(double val, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val * ratio);
-        }
-        else if (units == Units.percent) {
-            int bw = background_size_x < 0 && bgImage != null ? bgImage.getWidth() : background_size_x;
-            value = (int)Math.round((width-borderWidth[1]-borderWidth[3]-bw)*(val/100));
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        background_pos_x = value;
+        background_pos_x = getValueInPixels(val, units);
         forceRepaint();
     }
 
     public void setBackgroundPositionY(double val, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val * ratio);
-        }
-        else if (units == Units.percent) {
-            int bh = background_size_y < 0 && bgImage != null ? bgImage.getHeight() : background_size_y;
-            value = (int)Math.round((height-borderWidth[0]-borderWidth[2]-bh)*(val/100));
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        background_pos_y = value;
+        background_pos_y = getValueInPixels(val, units);
         forceRepaint();
     }
 
@@ -4375,22 +4300,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             forceRepaint();
             return;
         }
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val * ratio);
-        }
-        else if (units == Units.percent) {
-            value = (int)Math.ceil((width-borderWidth[1]-borderWidth[3])*(val/100));
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        background_size_x = value;
+        background_size_x = getValueInPixels(val, units);
         background_size_x_auto = false;
         if (background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
             background_size_y = (int)Math.round(background_size_x / ((double) bgImage.getWidth() / bgImage.getHeight()));
@@ -4404,22 +4314,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             forceRepaint();
             return;
         }
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val * ratio);
-        }
-        else if (units == Units.percent) {
-            value = (int)Math.ceil((height-borderWidth[0]-borderWidth[2])*(val/100));
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-        }
-        background_size_y = value;
+        background_size_y = getValueInPixels(val, units);
         background_size_y_auto = false;
         if (background_size_x_auto && bgImage != null) {
             background_size_x = (int)Math.round(background_size_y * ((double) bgImage.getWidth() / bgImage.getHeight()));
@@ -5072,42 +4967,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
         if (prop.matches("margin(-left|-right|-top|-bottom)?")) {
-            int value = 0;
-            if (units == Units.px) {
-                value = (int)Math.round(val);
-                rules_for_recalc.remove(prop);
-            }
-            else if (units == Units.percent) {
-                if (parent != null) {
-                    value = (int)Math.round(parent.width * (val / 100));
-                } else {
-                    value = (int)Math.round(document.width * (val / 100));
-                }
-                rules_for_recalc.put(prop, val + "%");
-            }
-            else if (units == Units.em) {
-                Block b = parent != null ? parent : (document != null ? document.root : null);
-                double size = (b != null ? b.fontSize : 16 * ratio);
-                value *= size;
-                rules_for_recalc.remove(prop);
-            }
-            else if (units == Units.rem) {
-                Block b = document != null ? document.root : null;
-                double size = (b != null ? b.fontSize : 16 * ratio);
-                value *= size;
-                rules_for_recalc.remove(prop);
-            }
+            int value = getValueInPixels(val, units);
             if (prop.matches("margin(-left)?")) {
-                margins[3] = (units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+                margins[3] = value;
             }
             if (prop.matches("margin(-right)?")) {
-                margins[1] = (units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+                margins[1] = value;
             }
             if (prop.matches("margin(-top)?")) {
-                margins[0] = (units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+                margins[0] = value;
             }
             if (prop.matches("margin(-bottom)?")) {
-                margins[2] = (units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+                margins[2] = value;
             }
             Block b = doIncrementLayout();
             if (b != null && !no_draw) b.forceRepaint();
@@ -5608,6 +5479,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return null;
     }
 
+    public int getValueInPixels(double value, int units) {
+        int val = (int)Math.round(value * ratio);
+        if (units == Units.em) {
+            Block b = parent != null ? parent : (document != null ? document.root : null);
+            double size = (b != null ? b.fontSize : 16 * ratio);
+            val = (int)Math.round(value * size);
+        }
+        else if (units == Units.rem) {
+            Block b = document != null ? document.root : null;
+            double size = (b != null ? b.fontSize : 16 * ratio);
+            val = (int)Math.round(value * size);
+        }
+        else if (units == Units.percent) {
+            val = (int)Math.round(value / 100 * (parent != null ? parent.viewport_width :
+                document.width - document.borderSize * 2));
+        }
+
+        return val;
+    }
+
     public int getValueInPixels(String value, String units_list) {
         if (value.matches("calc\\(.*\\)")) {
             return (int) Math.round(calculateCssExpression(value.substring(5, value.length()-1)) * ratio);
@@ -5623,26 +5514,32 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         String u = value.substring(index);
         if (!u.matches(units_list)) return 0;
 
-        int val = (int)Math.round(Float.parseFloat(n) * ratio);
-        if (u.equals("em")) {
+        List<String> units = Arrays.asList(new String[] { "px", "%", "em", "rem" });
+
+        return getValueInPixels(Double.parseDouble(n), units.indexOf(u));
+    }
+
+    public double getValueInCssPixels(double value, int units) {
+        double val = value;
+        if (units == Units.em) {
             Block b = parent != null ? parent : (document != null ? document.root : null);
-            double size = (b != null ? b.fontSize : 16 * ratio);
-            val = (int)Math.round(Float.parseFloat(n) * size);
+            double size = (b != null ? (double) b.fontSize / ratio : 16);
+            val = (int)Math.round(value * size);
         }
-        else if (u.equals("rem")) {
+        else if (units == Units.rem) {
             Block b = document != null ? document.root : null;
-            double size = (b != null ? b.fontSize : 16 * ratio);
-            val = (int)Math.round(Float.parseFloat(n) * size);
+            double size = (b != null ? (double) b.fontSize / ratio : 16);
+            val = (int)Math.round(value * size);
         }
-        else if (u.equals("%")) {
-            val = (int)Math.round(Float.parseFloat(n) / 100 * (parent != null ? parent.viewport_width :
-                document.width - document.borderSize * 2));
+        else if (units == Units.percent) {
+            val = value / 100 * (parent != null ? parent.viewport_width :
+                document.width - document.borderSize * 2);
         }
 
         return val;
     }
 
-    public float getValueInCssPixels(String value) {
+    public double getValueInCssPixels(String value) {
         String ch = value.substring(0, 1);
         String n = "";
         int index = 0;
@@ -5653,24 +5550,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         String u = value.substring(index);
 
-        float val = Float.parseFloat(n);
+        List<String> units = Arrays.asList(new String[] { "px", "%", "em", "rem" });
 
-        if (u.equals("em")) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            double size = (b != null ? (double) b.fontSize / ratio : 16);
-            val = (int)Math.round(Float.parseFloat(n) * size);
-        }
-        else if (u.equals("rem")) {
-            Block b = document != null ? document.root : null;
-            double size = (b != null ? (double) b.fontSize / ratio : 16);
-            val = (int)Math.round(Float.parseFloat(n) * size);
-        }
-        else if (u.equals("%")) {
-            val = Float.parseFloat(n) / 100 * (parent != null ? parent.viewport_width :
-                document.width - document.borderSize * 2);
-        }
-
-        return val;
+        return getValueInCssPixels(Double.parseDouble(n), units.indexOf(u));
     }
 
     public int getValueInPixels(String value) {
@@ -5678,29 +5560,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setLeft(double val, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val);
-            rules_for_recalc.remove("left");
-        }
-        else if (units == Units.percent) {
-            int w = parent != null ? parent.width - parent.borderWidth[1] - parent.borderWidth[3] :
-                                     document.width - document.borderSize * 2;
-            value = (int)Math.round(w * (val / 100));
-            rules_for_recalc.put("left", val + "%");
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("left");
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("left");
-        }
         auto_left = false;
-        left = (units != Units.percent && units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+        left = getValueInPixels(val, units);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -5720,29 +5581,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setRight(double val, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val);
-            rules_for_recalc.remove("right");
-        }
-        else if (units == Units.percent) {
-            int w = parent != null ? parent.width - parent.borderWidth[1] - parent.borderWidth[3] :
-                                     document.width - document.borderSize * 2;
-            value = (int)Math.round(w * (1 - (val / 100)));
-            rules_for_recalc.put("right", val + "%");
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("right");
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("right");
-        }
         auto_right = false;
-        right = (units != Units.percent && units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+        right = getValueInPixels(val, units);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -5762,35 +5602,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setTop(double val, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val);
-            rules_for_recalc.remove("top");
-        }
-        else if (units == Units.percent) {
-            if (parent != null) {
-                Block p = parent;
-                while (p != null && !p.isRoot()) {
-                    p = p.parent;
-                }
-            }
-            int h = parent != null ? parent.height - parent.borderWidth[0] - parent.borderWidth[2] :
-                                     document.height - document.borderSize * 2;
-            value = (int)Math.round(h * (val / 100));
-            rules_for_recalc.put("top", val + "%");
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("top");
-        }
-        else if (units == Units.rem) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("top");
-        }
         auto_top = false;
-        top = (units != Units.percent && units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+        top = getValueInPixels(val, units);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -5810,35 +5623,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBottom(double val, int units) {
-        int value = 0;
-        if (units == Units.px) {
-            value = (int)Math.round(val);
-            rules_for_recalc.remove("bottom");
-        }
-        else if (units == Units.percent) {
-            if (parent != null) {
-                Block p = parent;
-                while (p != null && !p.isRoot()) {
-                    p = p.parent;
-                }
-            }
-            int h = parent != null ? parent.height - parent.borderWidth[0] - parent.borderWidth[2] :
-                                     document.height - document.borderSize * 2;
-            value = (int)Math.round(h * (1 - (val / 100)));
-            rules_for_recalc.put("bottom", val + "%");
-        }
-        else if (units == Units.em) {
-            Block b = parent != null ? parent : (document != null ? document.root : null);
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("bottom");
-        }
-        else if (units == Units.em) {
-            Block b = document != null ? document.root : null;
-            value = (int)Math.round((b != null ? b.fontSize : 16 * ratio) * val);
-            rules_for_recalc.remove("bottom");
-        }
         auto_bottom = false;
-        bottom = (units != Units.percent && units != Units.em && units != Units.rem) ? (int)Math.round(value * ratio) : value;
+        bottom = getValueInPixels(val, units);
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
