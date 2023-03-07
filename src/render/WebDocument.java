@@ -34,11 +34,13 @@ import org.apache.batik.swing.JSVGCanvas;
 public class WebDocument extends JPanel {
 
     public WebDocument() {
+        
         setLayout(null);
         panel.setLayout(null);
         add(panel);
         setOpaque(false);
         panel.setOpaque(false);
+        root = new Block(this, null, -1, -1);
         setRoot(root);
 
         final WebDocument instance = this;
@@ -569,7 +571,7 @@ public class WebDocument extends JPanel {
 
     protected Layouter layouter = new Layouter(this);
 
-    public Block root = new Block(this, null, -1, -1);
+    public Block root;
 
     public volatile boolean inLayout = false;
     public volatile boolean isPainting = false;
@@ -615,6 +617,7 @@ public class WebDocument extends JPanel {
     public static boolean scale_borders = true;
     public int borderSize = 0;
     public Color borderColor;
+    public int fontSize = 14;
     public final JPanel panel = new JPanel();
     public JPanel glass;
     public int width = 0;
