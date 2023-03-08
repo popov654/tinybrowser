@@ -5462,7 +5462,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public CssLength parseValueString(String value) {
-        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|%)$")) {
+        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|rem|%)$")) {
             String ch = value.substring(0, 1);
             String n = "";
             int index = 0;
