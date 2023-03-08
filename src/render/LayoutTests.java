@@ -334,6 +334,18 @@ public class LayoutTests extends JFrame {
 
         document.root.addElement(d2);
 
+        /* SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                //Transition.resolution = 50;
+                Transition t1 = new Transition(d2, "border-color", 1200, Color.MAGENTA, new Color(208, 36, 28), Transition.TimingFunction.LINEAR);
+                t1.start();
+                Transition t2 = new Transition(d2, "color", 1200, Color.BLACK, new Color(20, 38, 210), Transition.TimingFunction.LINEAR);
+                t2.start();
+                Transition t3 = new Transition(d2, "width", 1200, "auto", "80%", Transition.TimingFunction.BOUNCE, 100);
+                t3.start();
+            }
+        }); */
 
         //String expr = "2 * (15px / 4)";
         //System.out.println(d.calculateCssExpression(expr));

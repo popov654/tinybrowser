@@ -3475,6 +3475,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setTextColorRecursive(Color col) {
+        color = col;
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setTextColorRecursive(col);
+        }
+        if (this.textRenderingMode == 0) {
+            updateTextLayer();
+        } else {
+            forceRepaint();
+        }
+        if (document != null && document.ready) {
+            document.repaint();
+        }
+    }
+
     public void setBackgroundColor(Color col) {
         bgcolor = col;
         forceRepaint();
@@ -5303,7 +5318,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setRadialGradientWithUnits(new int[] {cx, cy}, new double[] {dx, dy}, cols, positions);
     }
 
-    private int[] parseValueStringToArray(String value) {
+    public int[] parseValueStringToArray(String value) {
         if (value.matches("calc\\(.*\\)")) {
             return new int[] { (int) Math.round(calculateCssExpression(value.substring(5, value.length()-1))), Units.px };
         }
@@ -5546,7 +5561,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = (int)Math.round(value * size);
         }
         else if (units == Units.percent) {
-            val = value / 100 * (parent != null ? (double) parent.viewport_width / ratio :
+            val = value / 100 * (parent != null ? (double) (parent.viewport_width - parent.paddings[3] - parent.paddings[1] - parent.borderWidth[3] - parent.borderWidth[1]) / ratio :
                 (double) (document.width - document.borderSize * 2) / ratio);
         }
 
@@ -5571,6 +5586,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public int getValueInPixels(String value) {
         return getValueInPixels(value, "px|em|rem|%");
+    }
+
+    public static int[] parseValueStringToArrayStatic(String value) {
+        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|rem|%)$")) {
+            String ch = value.substring(0, 1);
+            String n = "";
+            int index = 0;
+            while (ch.matches("[0-9.]")) {
+                n += ch;
+                index++;
+                ch = value.substring(index, index+1);
+            }
+            String u = value.substring(index);
+            int val = (int)Math.round(Float.parseFloat(n));
+            int units = u.equals("px") ? Units.px : (u.matches("em|rem") ? (u.equals("em") ? Units.em : Units.rem) : Units.percent);
+            return new int[] {val, units};
+        }
+        return null;
     }
 
     public void setLeft(double val, int units) {
