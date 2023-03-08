@@ -4562,6 +4562,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setWidth(-1);
             return;
         }
+        if (prop.equals("width")) {
+            setWidth((int)Math.round(getValueInCssPixels(value)));
+            return;
+        }
         if (prop.equals("height") && value.equals("auto")) {
             int old_height = viewport_height;
             auto_height = true;
@@ -4569,6 +4573,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block b = doIncrementLayout(viewport_width, old_height, false);
             b.forceRepaint();
             if (document != null) document.repaint();
+            return;
+        }
+        if (prop.equals("height")) {
+            setHeight((int)Math.round(getValueInCssPixels(value)));
             return;
         }
         if (prop.equals("max-width")) {
@@ -5538,8 +5546,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = (int)Math.round(value * size);
         }
         else if (units == Units.percent) {
-            val = value / 100 * (parent != null ? parent.viewport_width :
-                document.width - document.borderSize * 2);
+            val = value / 100 * (parent != null ? (double) parent.viewport_width / ratio :
+                (double) (document.width - document.borderSize * 2) / ratio);
         }
 
         return val;
