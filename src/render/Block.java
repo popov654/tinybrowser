@@ -4639,6 +4639,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (prop.contains("-right")) borderColor[1] = parseColor(value);
             if (prop.contains("-top")) borderColor[0] = parseColor(value);
             if (prop.contains("-bottom")) borderColor[2] = parseColor(value);
+            for (Block part: parts) {
+                part.borderColor[0] = borderColor[0];
+                part.borderColor[1] = borderColor[1];
+                part.borderColor[2] = borderColor[2];
+                part.borderColor[3] = borderColor[3];
+            }
             forceRepaint();
             return;
         }
