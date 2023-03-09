@@ -334,20 +334,6 @@ public class LayoutTests extends JFrame {
 
         document.root.addElement(d2);
 
-        /* SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                //Transition.resolution = 50;
-                Transition t1 = new Transition(d2, "border-color", 1200, Color.MAGENTA, new Color(218, 156, 28), Transition.TimingFunction.LINEAR);
-                t1.start();
-                Transition t2 = new Transition(d2, "color", 1200, Color.BLACK, new Color(248, 243, 248), Transition.TimingFunction.LINEAR);
-                t2.start();
-                Transition t3 = new Transition(d2, "width", 1200, "auto", "80%", Transition.TimingFunction.BOUNCE, 100);
-                t3.start();
-                Transition t4 = new Transition(d2, "background", 1300, null, "radial-gradient(at bottom, #e66465, #9198e5)", Transition.TimingFunction.LINEAR);
-                t4.start();
-            }
-        }); */
 
         //String expr = "2 * (15px / 4)";
         //System.out.println(d.calculateCssExpression(expr));
@@ -472,6 +458,40 @@ public class LayoutTests extends JFrame {
         });
         t2.setRepeats(false);
         t2.start();
+    }
+
+    public void testTransitions() {
+        basicTest();
+
+        final Block d2 = document.root.getChildren().get(1);
+
+        final Transition trans = new Transition(d2, "background", 1300, null, "radial-gradient(at bottom, #e66465, #9198e5)", Transition.TimingFunction.LINEAR);
+        final Transition trans2 = new Transition(d2, "color", 1200, Color.BLACK, new Color(248, 243, 248), Transition.TimingFunction.LINEAR);
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                //Transition.resolution = 50;
+                Transition t1 = new Transition(d2, "border-color", 1200, Color.MAGENTA, new Color(218, 156, 28), Transition.TimingFunction.LINEAR);
+                t1.start();
+                //Transition t2 = new Transition(d2, "width", 1200, "auto", "80%", Transition.TimingFunction.BOUNCE, 100);
+                //t2.start();
+                trans.start();
+                trans2.start();
+            }
+        });
+
+        Timer t = new Timer(600, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Transition t = new Transition(d2, "background", 1300, null, "rgb(230, 238, 243)", Transition.TimingFunction.LINEAR);
+                trans.joinAndStart(t);
+                Transition t2 = new Transition(d2, "color", 800, null, "black", Transition.TimingFunction.LINEAR);
+                trans2.joinAndStart(t2);
+            }
+        });
+        t.setRepeats(false);
+        t.start();
     }
 
     public void testFontSize() {
@@ -1170,6 +1190,7 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("gradients")) test = 17;
             else if (args[0].equals("iframes")) test = 18;
             else if (args[0].equals("font-size")) test = 19;
+            else if (args[0].equals("transitions")) test = 20;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -1220,6 +1241,8 @@ public class LayoutTests extends JFrame {
             case 18: lt.testChildDocuments();
                      break;
             case 19: lt.testFontSize();
+                     break;
+            case 20: lt.testTransitions();
                      break;
         }
 

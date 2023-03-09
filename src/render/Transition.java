@@ -18,8 +18,15 @@ public class Transition {
         this.property = property;
         this.time = time;
 
-        if (start_value != null) {
-            startColor = b.parseColor(start_value);
+        if (start_value != null || property.endsWith("color") ||
+                end_value != null && b.parseColor(end_value) != null) {
+            if (start_value != null) {
+                startColor = b.parseColor(start_value);
+            }
+            if (startColor == null) {
+                startColor = property.equals("color") ? b.color : (b.target_background != null ? b.target_background.bgcolor :
+                    (b.background != null ? b.background.bgcolor : new Color(0, 0, 0, 0)));
+            }
             if (startColor != null) {
                 value_type = "color";
                 endColor = b.parseColor(end_value);
@@ -151,50 +158,80 @@ public class Transition {
             @Override
             public void actionPerformed(ActionEvent e) {
                 double q = Math.max(0, Math.min(1, (double)(System.currentTimeMillis() - startedAt) / time));
-                if (value_type.equals("background")) {
-                    block.backgroundState = getMultiplier(q);
-                    block.forceRepaint();
-                    block.document.repaint();
-                } else if (!value_type.equals("color")) {
-                    double value = interpolate(start_value, end_value, q);
-                    //System.out.println(value);
-                    updateProperty(value);
-                } else {
-                    if (startColor == null || endColor == null) {
-                        q = 1;
-                    } else {
-                        int r = (int) interpolate(startColor.getRed(), endColor.getRed(), q);
-                        int g = (int) interpolate(startColor.getGreen(), endColor.getGreen(), q);
-                        int b = (int) interpolate(startColor.getBlue(), endColor.getBlue(), q);
-                        int a = (int) interpolate(startColor.getAlpha(), endColor.getAlpha(), q);
-                        updateProperty(new Color(r, g, b, a));
-                        //System.out.println("color(" + r + ", " + g + ", " + b + ", " + a + ")");
-                    }
-                }
-                if (q >= 1) {
-                    if (value_type.equals("background") && block.target_background != null) {
-                        block.background = block.target_background;
-                    }
-                    if (end_width_auto && !block.auto_width) {
-                        block.auto_width = true;
-                        Block b = block.doIncrementLayout();
-                        b.forceRepaint();
-                        b.document.repaint();
-                    }
-                    if (end_height_auto && !block.auto_height) {
-                        block.auto_height = true;
-                        Block b = block.doIncrementLayout();
-                        b.forceRepaint();
-                        b.document.repaint();
-                    }
-                    block.backgroundState = 0;
-                    timer.stop();
-                }
+                update(q);
             }
         });
         timer.setInitialDelay(delay + 50);
         timer.start();
         startedAt = System.currentTimeMillis();
+    }
+
+    public void stop() {
+        timer.stop();
+        update(1);
+        if (value_type.equals("background")) {
+            block.background = block.target_background;
+            block.forceRepaint();
+        }
+    }
+
+    public void joinAndStart(Transition transition) {
+        stop();
+        try {
+            Thread.sleep(50);
+        } catch (Exception ex) {}
+        transition.start();
+        transition.timer.stop();
+        if (!property.equals(transition.property) || !value_type.equals(transition.value_type)) {
+            return;
+        }
+        if (value_type.equals("background")) {
+            transition.startedAt = System.currentTimeMillis() - startedAt + 100;
+            block.backgroundState = Math.max(0, (System.currentTimeMillis() - startedAt - 100) / time);
+        }
+        transition.timer.start();
+    }
+
+    public void update(double q) {
+        if (value_type.equals("background")) {
+            block.backgroundState = getMultiplier(q);
+            block.forceRepaint();
+            block.document.repaint();
+        } else if (!value_type.equals("color")) {
+            double value = interpolate(start_value, end_value, q);
+            //System.out.println(value);
+            updateProperty(value);
+        } else {
+            if (startColor == null || endColor == null) {
+                q = 1;
+            } else {
+                int r = (int) interpolate(startColor.getRed(), endColor.getRed(), q);
+                int g = (int) interpolate(startColor.getGreen(), endColor.getGreen(), q);
+                int b = (int) interpolate(startColor.getBlue(), endColor.getBlue(), q);
+                int a = (int) interpolate(startColor.getAlpha(), endColor.getAlpha(), q);
+                updateProperty(new Color(r, g, b, a));
+                //System.out.println("color(" + r + ", " + g + ", " + b + ", " + a + ")");
+            }
+        }
+        if (q >= 1) {
+            if (value_type.equals("background") && block.target_background != null) {
+                block.background = block.target_background;
+            }
+            if (end_width_auto && !block.auto_width) {
+                block.auto_width = true;
+                Block b = block.doIncrementLayout();
+                b.forceRepaint();
+                b.document.repaint();
+            }
+            if (end_height_auto && !block.auto_height) {
+                block.auto_height = true;
+                Block b = block.doIncrementLayout();
+                b.forceRepaint();
+                b.document.repaint();
+            }
+            block.backgroundState = 0;
+            timer.stop();
+        }
     }
 
     public double interpolate(double from, double to, double q) {
