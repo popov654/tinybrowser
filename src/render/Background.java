@@ -112,6 +112,26 @@ public class Background {
         gradient.setType(Gradient.RADIAL);
         gradient.setRadialParams(center[0], center[1], size[0], size[1]);
     }
+
+    @Override
+    public Background clone() {
+        Background background = new Background();
+        background.gradient = gradient;
+        background.bgcolor = bgcolor;
+        background.bgImage = bgImage;
+        background.imgSrc = imgSrc;
+
+        background.bg_alpha = bg_alpha;
+        background.background_repeat = background_repeat;
+        background.background_size_x = background_size_x;
+        background.background_size_y = background_size_y;
+        background.background_size_x_auto = background_size_x_auto;
+        background.background_size_y_auto = background_size_y_auto;
+        background.background_pos_x = background_pos_x;
+        background.background_pos_x = background_pos_x;
+
+        return background;
+    }
     
 
     public Gradient gradient;

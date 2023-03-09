@@ -338,12 +338,14 @@ public class LayoutTests extends JFrame {
             @Override
             public void run() {
                 //Transition.resolution = 50;
-                Transition t1 = new Transition(d2, "border-color", 1200, Color.MAGENTA, new Color(208, 36, 28), Transition.TimingFunction.LINEAR);
+                Transition t1 = new Transition(d2, "border-color", 1200, Color.MAGENTA, new Color(218, 156, 28), Transition.TimingFunction.LINEAR);
                 t1.start();
-                Transition t2 = new Transition(d2, "color", 1200, Color.BLACK, new Color(20, 38, 210), Transition.TimingFunction.LINEAR);
+                Transition t2 = new Transition(d2, "color", 1200, Color.BLACK, new Color(248, 243, 248), Transition.TimingFunction.LINEAR);
                 t2.start();
                 Transition t3 = new Transition(d2, "width", 1200, "auto", "80%", Transition.TimingFunction.BOUNCE, 100);
                 t3.start();
+                Transition t4 = new Transition(d2, "background", 1300, null, "radial-gradient(at bottom, #e66465, #9198e5)", Transition.TimingFunction.LINEAR);
+                t4.start();
             }
         }); */
 

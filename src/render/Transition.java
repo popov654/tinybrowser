@@ -17,12 +17,61 @@ public class Transition {
         this.block = b;
         this.property = property;
         this.time = time;
-        startColor = b.parseColor(start_value);
-        if (startColor != null) {
-            value_type = "color";
-            endColor = b.parseColor(end_value);
-            return;
+
+        if (start_value != null) {
+            startColor = b.parseColor(start_value);
+            if (startColor != null) {
+                value_type = "color";
+                endColor = b.parseColor(end_value);
+                if (endColor == null) {
+                    endColor = new Color(0, 0, 0, 0);
+                }
+            }
         }
+        if (property.startsWith("background")) {
+
+            if ((property.equals("background-color") || property.equals("background")) && end_value != null && block.background.gradient == null && block.background.bgImage == null &&
+                  block.target_background.gradient == null && block.target_background.bgImage == null) {
+                
+                value_type = "color";
+
+                startColor = b.parseColor(start_value);
+                if (startColor == null) {
+                    startColor = block.background != null && block.background.bgcolor != null ? block.background.bgcolor : new Color(0, 0, 0, 0);
+                }
+                endColor = b.parseColor(end_value);
+                if (endColor == null) {
+                    endColor = new Color(0, 0, 0, 0);
+                }
+
+                block.target_background = new Background();
+                block.target_background.bgcolor = endColor;
+
+                return;
+            }
+
+            value_type = "background";
+
+            block.document.ready = false;
+            if (block.background == null) {
+                block.background = new Background();
+            }
+            Background old_background = block.background;
+            block.background = block.background.clone();
+            block.background.gradient = null;
+            block.setProp(property, end_value);
+            block.target_background = block.background;
+            block.background = old_background;
+            block.backgroundState = 0;
+            block.document.ready = true;
+        }
+        if (startColor != null) return;
+
+        if (start_value == null) {
+            start_value = block.cssStyles.get(property);
+            if (start_value == null) return;
+        }
+
         if (block.display_type == Block.Display.BLOCK && block.auto_width == true && property.equals("width")) {
             block.auto_width = false;
             if (start_value.equals("auto")) {
@@ -102,7 +151,11 @@ public class Transition {
             @Override
             public void actionPerformed(ActionEvent e) {
                 double q = Math.max(0, Math.min(1, (double)(System.currentTimeMillis() - startedAt) / time));
-                if (!value_type.equals("color")) {
+                if (value_type.equals("background")) {
+                    block.backgroundState = getMultiplier(q);
+                    block.forceRepaint();
+                    block.document.repaint();
+                } else if (!value_type.equals("color")) {
                     double value = interpolate(start_value, end_value, q);
                     //System.out.println(value);
                     updateProperty(value);
@@ -119,6 +172,9 @@ public class Transition {
                     }
                 }
                 if (q >= 1) {
+                    if (value_type.equals("background") && block.target_background != null) {
+                        block.background = block.target_background;
+                    }
                     if (end_width_auto && !block.auto_width) {
                         block.auto_width = true;
                         Block b = block.doIncrementLayout();
@@ -131,6 +187,7 @@ public class Transition {
                         b.forceRepaint();
                         b.document.repaint();
                     }
+                    block.backgroundState = 0;
                     timer.stop();
                 }
             }
@@ -181,7 +238,8 @@ public class Transition {
             return;
         }
 
-        if (prop.equals("background-color")) {
+        if (prop.equals("background-color") && block.background.gradient == null && block.background.bgImage == null &&
+                block.target_background.gradient == null && block.target_background.bgImage == null) {
             block.background.bgcolor = color;
             for (Block part: block.parts) {
                 part.background.bgcolor = block.background.bgcolor;

@@ -754,26 +754,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
 
         if (background != null) {
-            if (background.gradient != null) {
-                paintGradient(g2d, x0, y0);
+
+            if (target_background != null && backgroundState > 0) {
+                int type = AlphaComposite.SRC_OVER;
+                AlphaComposite composite = AlphaComposite.getInstance(type, alpha * (1 - (float) backgroundState));
+                g2d.setComposite(composite);
             }
-            else if (background.bgcolor != null && !(formType >= 4 && formType <= 5)) {
-                g2d.setColor(background.bgcolor);
-                if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
-                    double[] arcs = new double[4];
-                    for (int i = 0; i < 4; i++) {
-                        arcs[i] = arc[i] / 2.5;
-                    }
-                    adjustCorners(arcs, this);
-                    RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                    g2d.fill(rect);
-                } else {
-                    g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
-                }
-                //if (display_type == 2) System.err.println(width + "x" + height);
-            }
-            else if (background.bgImage != null) {
-                paintBackgroundImage(g2d, x0, y0);
+            
+            paintBackground(background, g2d, x0, y0);
+
+            if (target_background != null && backgroundState > 0) {
+                int type = AlphaComposite.SRC_OVER;
+                AlphaComposite composite = AlphaComposite.getInstance(type, alpha * (float) backgroundState);
+                g2d.setComposite(composite);
+
+                paintBackground(target_background, g2d, x0, y0);
+
+                composite = AlphaComposite.getInstance(type, alpha);
+                g2d.setComposite(composite);
             }
         }
 
@@ -802,8 +800,31 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     }
 
-    public void paintGradient(Graphics2D g2d, int x0, int y0) {
-        Gradient gradient = background.gradient;
+    public void paintBackground(Background background, Graphics2D g2d, int x0, int y0) {
+        if (background.gradient != null) {
+            paintGradient(background.gradient, g2d, x0, y0);
+        }
+        else if (background.bgcolor != null && !(formType >= 4 && formType <= 5)) {
+            g2d.setColor(background.bgcolor);
+            if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+                double[] arcs = new double[4];
+                for (int i = 0; i < 4; i++) {
+                    arcs[i] = arc[i] / 2.5;
+                }
+                adjustCorners(arcs, this);
+                RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                g2d.fill(rect);
+            } else {
+                g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
+            }
+        }
+        //if (display_type == 2) System.err.println(width + "x" + height);
+        else if (background.bgImage != null) {
+            paintBackgroundImage(g2d, x0, y0);
+        }
+    }
+
+    public void paintGradient(Gradient gradient, Graphics2D g2d, int x0, int y0) {
         if (gradient.type == Gradient.LINEAR) {
             Point2D[] p = Gradient.getPoints(gradient.getAngle(), 0, 0, width, height);
             Point2D start = p[0];
@@ -4776,7 +4797,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (prop.equals("background")) {
-            String[] parts = value.split("\\s+");
+            if (value.matches("(-[a-z]+-)?linear-gradient\\(.*\\)")) {
+                setRadialGradientFromCSS(value);
+                return;
+            }
+            if (value.matches("(-[a-z]+-)?radial-gradient\\(.*\\)")) {
+                setRadialGradientFromCSS(value);
+                return;
+            }
+            String[] parts = value.split("(?<=[^,])\\s+");
             int pos = -1;
             int size = -1;
             int slash = -1;
@@ -7590,6 +7619,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public Background background;
     public Background target_background;
+    public double backgroundState = 0;
 
     public boolean selected = false;
     public boolean checked = false;
