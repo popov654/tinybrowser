@@ -589,12 +589,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int bw = viewport_width > 0 ? viewport_width + (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0) : this.width;
         int bh = viewport_height > 0 ? viewport_height + (scrollbar_x != null ? scrollbar_x.getPreferredSize().height : 0): this.height;
 
-        if (parent == null) {
-            g2d.setColor(bgcolor);
+        if (parent == null && background != null && background.bgcolor != null) {
+            g2d.setColor(background.bgcolor);
             g2d.fillRect(0, 0, bw, bh);
         }
-        if (parent != null && parent.bgcolor != null && parent.gradient == null && parent.bgImage == null) {
-            g2d.setColor(parent.bgcolor);
+        Background parentBackground = parent != null ? parent.background : null;
+        if (parentBackground != null && parentBackground.bgcolor != null && parentBackground.gradient == null && parentBackground.bgImage == null) {
+            g2d.setColor(parentBackground.bgcolor);
             //g2d.fillRect(0, 0, bw, bh);
         }
 
@@ -752,26 +753,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
 
-        if (gradient != null) {
-            if (gradient.type == Gradient.LINEAR) {
-                Point2D[] p = Gradient.getPoints(gradient.getAngle(), 0, 0, width, height);
-                Point2D start = p[0];
-                Point2D end = p[1];
-                start.setLocation(start.getX() + x0, start.getY() + y0);
-                end.setLocation(end.getX() + x0, end.getY() + y0);
-                
-                Color[] colors = gradient.getColors();
-                float[] dist = gradient.getPositions(gradient.getAngle(), start, end);
-
-                for (int i = 1; i < dist.length; i++) {
-                    if (dist[i] == dist[i-1]) {
-                        if (dist[i] < 1) dist[i] += 0.000001;
-                        else dist[i-1] -= 0.000001;
-                    }
-                }
-
-                LinearGradientPaint gp = new LinearGradientPaint(start, end, dist, colors);
-                g2d.setPaint(gp);
+        if (background != null) {
+            if (background.gradient != null) {
+                paintGradient(g2d, x0, y0);
+            }
+            else if (background.bgcolor != null && !(formType >= 4 && formType <= 5)) {
+                g2d.setColor(background.bgcolor);
                 if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
                     double[] arcs = new double[4];
                     for (int i = 0; i < 4; i++) {
@@ -783,213 +770,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 } else {
                     g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
                 }
-            } else if (gradient.type == Gradient.RADIAL) {
-                Point2D center = new Point2D.Double(_x_ + gradient.cx, _y_ + gradient.cy);
-                double dx = gradient.dx;
-                double dy = gradient.dy;
-
-                Color[] colors = gradient.getColors();
-                float[] dist = gradient.getPositions();
-
-                for (int i = 1; i < dist.length; i++) {
-                    if (dist[i] == dist[i-1]) {
-                        if (dist[i] < 1) dist[i] += 0.000001;
-                        else dist[i-1] -= 0.000001;
-                    }
-                }
-
-                if (dx <= 0 || dy <= 0) {
-
-                    double[] arcs = new double[4];
-                    for (int i = 0; i < 4; i++) {
-                        arcs[i] = arc[i] / 2.5;
-                    }
-                    adjustCorners(arcs, this);
-                    RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                    g2d.setClip(rect);
-                    g2d.setColor(colors[colors.length-1]);
-                    g2d.fillRect(x0, y0, width, height);
-                    g2d.setClip(null);
-
-                } else if (dx / dy < 3) {
-
-                    RadialGradientPaint gp = new RadialGradientPaint(center, (float) dx, dist, colors);
-                    g2d.setPaint(gp);
-                    AffineTransform t0 = g2d.getTransform();
-                    if (dx != dy) {
-                        AffineTransform t = (AffineTransform) g2d.getTransform().clone();
-                        t.concatenate(AffineTransform.getScaleInstance(dx / dy * 1.005, 1));
-                        t.concatenate(AffineTransform.getTranslateInstance(-1.6, 0));
-                        g2d.setTransform(t);
-                    }
-                    if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
-                        double[] arcs = new double[4];
-                        for (int i = 0; i < 4; i++) {
-                            arcs[i] = arc[i] / 2.5;
-                        }
-                        adjustCorners(arcs, this);
-                        RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                        if (dx != dy) {
-                            g2d.setClip(new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], (double) (width - borderWidth[1] - borderWidth[3]) * dy / dx, height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]));
-                        }
-                        g2d.fill(rect);
-                    } else {
-                        g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
-                    }
-                    if (dx != dy) {
-                        g2d.setClip(null);
-                        g2d.setTransform(t0);
-                    }
-
-                } else {
-
-                    double[] arcs = new double[4];
-                    for (int i = 0; i < 4; i++) {
-                        arcs[i] = arc[i] / 2.5;
-                    }
-                    adjustCorners(arcs, this);
-                    RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                    g2d.setClip(rect);
-
-                    if (dist[0] > 0) {
-                        Color[] colors2 = new Color[colors.length+1];
-                        float[] dist2 = new float[dist.length+1];
-                        colors2[0] = colors[0];
-                        dist2[0] = 0f;
-                        for (int i = 1; i < colors.length; i++) {
-                            colors2[i] = colors[i-1];
-                            dist2[i] = dist[i-1];
-                        }
-                        colors = colors2;
-                        dist = dist2;
-                    }
-
-                    if (dist[dist.length-1] < 1f) {
-                        Color[] colors2 = new Color[colors.length+1];
-                        float[] dist2 = new float[dist.length+1];
-                        for (int i = 0; i < colors.length; i++) {
-                            colors2[i] = colors[i];
-                            dist2[i] = dist[i];
-                        }
-                        colors2[colors.length] = colors[colors.length-1];
-                        dist2[dist.length] = 1f;
-                        colors = colors2;
-                        dist = dist2;
-                    }
-
-                    g2d.setColor(colors[colors.length-1]);
-                    g2d.fillRect(x0, y0, width, height);
-
-                    if (dx <= 0 || dy <= 0) return;
-
-                    for (int i = 0; i < colors.length-1; i++) {
-                        Color col1 = colors[i];
-                        Color col2 = colors[i+1];
-
-                        double r11 = dx * dist[i], r12 = dy * dist[i];
-                        double r21 = dx * dist[i+1], r22 = dy * dist[i+1];
-
-                        double delta_red = (double) (col2.getRed() - col1.getRed()) / (r21 - r11);
-                        double delta_green = (double) (col2.getGreen() - col1.getGreen()) / (r21 - r11);
-                        double delta_blue = (double) (col2.getBlue() - col1.getBlue()) / (r21 - r11);
-                        double delta_alpha = (double) (col2.getAlpha() - col1.getAlpha()) / (r21 - r11);
-
-                        for (double r = r11; r < r21; r += 1) {
-                            double h = r21 > 0 ? r * r22 / r21 : 0;
-                            //System.out.println((int)(col1.getAlpha() + (r - r11) * delta_alpha));
-                            Color col = new Color((int)(col1.getRed() + (r - r11) * delta_red),
-                                                  (int)(col1.getGreen() + (r - r11) * delta_green),
-                                                  (int)(col1.getBlue() + (r - r11) * delta_blue),
-                                                  (int)(col1.getAlpha() + (r - r11) * delta_alpha));
-                            g2d.setColor(col);
-                            g2d.setStroke(new BasicStroke(2));
-                            g2d.drawOval((int)(gradient.cx - r), (int)(gradient.cy - h), (int) (r * 2), (int) (h * 2));
-                        }
-                    }
-                    g2d.setClip(null);
-                }
+                //if (display_type == 2) System.err.println(width + "x" + height);
+            }
+            else if (background.bgImage != null) {
+                paintBackgroundImage(g2d, x0, y0);
             }
         }
-        else if (bgcolor != null && !(formType >= 4 && formType <= 5)) {
-            g2d.setColor(bgcolor);
-            if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
-                double[] arcs = new double[4];
-                for (int i = 0; i < 4; i++) {
-                    arcs[i] = arc[i] / 2.5;
-                }
-                adjustCorners(arcs, this);
-                RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                g2d.fill(rect);
-            } else {
-                g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
-            }
-            //if (display_type == 2) System.err.println(width + "x" + height);
-        }
-        if (bgImage != null) {
-            if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
-                double[] arcs = new double[4];
-                for (int i = 0; i < 4; i++) {
-                    arcs[i] = arc[i] / 2.5;
-                }
-                adjustCorners(arcs, this);
-                RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
-                Shape clip = g2d.getClip();
-                if (clip != null) {
-                    Area clip_area = new Area(clip);
-                    clip_area.intersect(new Area(rect));
-                    g2d.setClip(clip_area);
-                } else {
-                    g2d.setClip(rect);
-                }
-            }
-            if (bg_alpha < 1.0f) {
-                int type = AlphaComposite.SRC_OVER;
-                AlphaComposite composite = AlphaComposite.getInstance(type, alpha * bg_alpha);
-                g2d.setComposite(composite);
-            }
-            if (background_repeat == BackgroundRepeat.NONE) {
-                int x = x0 + borderWidth[3] + background_pos_x;
-                int y = y0 + borderWidth[0] + background_pos_y;
-                int iw = background_size_x < 0 ? bgImage.getWidth() : background_size_x;
-                int ih = background_size_y < 0 ? bgImage.getHeight() : background_size_y;
-                //Image scaledImage = bgImage.getScaledInstance(20, 20, java.awt.Image.SCALE_SMOOTH);
-                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2d.drawImage(bgImage, x, y, x+iw, y+ih, 0, 0, bgImage.getWidth(), bgImage.getHeight(), this);
-            } else {
-                int x = x0 + borderWidth[3] + background_pos_x;
-                int y = y0 + borderWidth[0] + background_pos_y;
 
-                int iw = background_size_x < 1 ? bgImage.getWidth() : background_size_x;
-                int ih = background_size_y < 1 ? bgImage.getHeight() : background_size_y;
-
-                int w = x + iw;
-                int h = y + ih;
-
-                if ((background_repeat & BackgroundRepeat.REPEAT_X) > 0) {
-                    while (x > x0 + borderWidth[3]) x -= iw;
-                    w = width - borderWidth[1];
-                }
-                if ((background_repeat & BackgroundRepeat.REPEAT_Y) > 0) {
-                    while (y > y0 + borderWidth[0]) y -= ih;
-                    h = height - borderWidth[2];
-                }
-
-                while (y < h) {
-                    while (x < w) {
-                        int x1 = Math.max(x0 + borderWidth[3], x);
-                        int y1 = Math.max(y0 + borderWidth[0], y);
-                        int x2 = Math.min(w, x+iw);
-                        int y2 = Math.min(h, y+ih);
-                        int x_from = x < borderWidth[3] ? x0+borderWidth[3]-x : x0;
-                        int y_from = y < borderWidth[0] ? y0+borderWidth[0]-y : y0;
-                        g2d.drawImage(bgImage, x1, y1, x2, y2, x_from, y_from, x_from+x2-x1, y_from+y2-y1, this);
-                        x += iw;
-                    }
-                    y += ih;
-                    x = x0 + borderWidth[3] + background_pos_x;
-                }
-            }
-        }
         if (clipping_block == this) g.setClip(null);
         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
@@ -1013,6 +800,233 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+    }
+
+    public void paintGradient(Graphics2D g2d, int x0, int y0) {
+        Gradient gradient = background.gradient;
+        if (gradient.type == Gradient.LINEAR) {
+            Point2D[] p = Gradient.getPoints(gradient.getAngle(), 0, 0, width, height);
+            Point2D start = p[0];
+            Point2D end = p[1];
+            start.setLocation(start.getX() + x0, start.getY() + y0);
+            end.setLocation(end.getX() + x0, end.getY() + y0);
+
+            Color[] colors = gradient.getColors();
+            float[] dist = gradient.getPositions(gradient.getAngle(), start, end);
+
+            for (int i = 1; i < dist.length; i++) {
+                if (dist[i] == dist[i-1]) {
+                    if (dist[i] < 1) dist[i] += 0.000001;
+                    else dist[i-1] -= 0.000001;
+                }
+            }
+
+            LinearGradientPaint gp = new LinearGradientPaint(start, end, dist, colors);
+            g2d.setPaint(gp);
+            if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+                double[] arcs = new double[4];
+                for (int i = 0; i < 4; i++) {
+                    arcs[i] = arc[i] / 2.5;
+                }
+                adjustCorners(arcs, this);
+                RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                g2d.fill(rect);
+            } else {
+                g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
+            }
+        } else if (gradient.type == Gradient.RADIAL) {
+            Point2D center = new Point2D.Double(_x_ + gradient.cx, _y_ + gradient.cy);
+            double dx = gradient.dx;
+            double dy = gradient.dy;
+
+            Color[] colors = gradient.getColors();
+            float[] dist = gradient.getPositions();
+
+            for (int i = 1; i < dist.length; i++) {
+                if (dist[i] == dist[i-1]) {
+                    if (dist[i] < 1) dist[i] += 0.000001;
+                    else dist[i-1] -= 0.000001;
+                }
+            }
+
+            if (dx <= 0 || dy <= 0) {
+
+                double[] arcs = new double[4];
+                for (int i = 0; i < 4; i++) {
+                    arcs[i] = arc[i] / 2.5;
+                }
+                adjustCorners(arcs, this);
+                RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                g2d.setClip(rect);
+                g2d.setColor(colors[colors.length-1]);
+                g2d.fillRect(x0, y0, width, height);
+                g2d.setClip(null);
+
+            } else if (dx / dy < 3) {
+
+                RadialGradientPaint gp = new RadialGradientPaint(center, (float) dx, dist, colors);
+                g2d.setPaint(gp);
+                AffineTransform t0 = g2d.getTransform();
+                if (dx != dy) {
+                    AffineTransform t = (AffineTransform) g2d.getTransform().clone();
+                    t.concatenate(AffineTransform.getScaleInstance(dx / dy * 1.005, 1));
+                    t.concatenate(AffineTransform.getTranslateInstance(-1.6, 0));
+                    g2d.setTransform(t);
+                }
+                if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+                    double[] arcs = new double[4];
+                    for (int i = 0; i < 4; i++) {
+                        arcs[i] = arc[i] / 2.5;
+                    }
+                    adjustCorners(arcs, this);
+                    RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                    if (dx != dy) {
+                        g2d.setClip(new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], (double) (width - borderWidth[1] - borderWidth[3]) * dy / dx, height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]));
+                    }
+                    g2d.fill(rect);
+                } else {
+                    g2d.fillRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2]);
+                }
+                if (dx != dy) {
+                    g2d.setClip(null);
+                    g2d.setTransform(t0);
+                }
+
+            } else {
+
+                double[] arcs = new double[4];
+                for (int i = 0; i < 4; i++) {
+                    arcs[i] = arc[i] / 2.5;
+                }
+                adjustCorners(arcs, this);
+                RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+                g2d.setClip(rect);
+
+                if (dist[0] > 0) {
+                    Color[] colors2 = new Color[colors.length+1];
+                    float[] dist2 = new float[dist.length+1];
+                    colors2[0] = colors[0];
+                    dist2[0] = 0f;
+                    for (int i = 1; i < colors.length; i++) {
+                        colors2[i] = colors[i-1];
+                        dist2[i] = dist[i-1];
+                    }
+                    colors = colors2;
+                    dist = dist2;
+                }
+
+                if (dist[dist.length-1] < 1f) {
+                    Color[] colors2 = new Color[colors.length+1];
+                    float[] dist2 = new float[dist.length+1];
+                    for (int i = 0; i < colors.length; i++) {
+                        colors2[i] = colors[i];
+                        dist2[i] = dist[i];
+                    }
+                    colors2[colors.length] = colors[colors.length-1];
+                    dist2[dist.length] = 1f;
+                    colors = colors2;
+                    dist = dist2;
+                }
+
+                g2d.setColor(colors[colors.length-1]);
+                g2d.fillRect(x0, y0, width, height);
+
+                if (dx <= 0 || dy <= 0) return;
+
+                for (int i = 0; i < colors.length-1; i++) {
+                    Color col1 = colors[i];
+                    Color col2 = colors[i+1];
+
+                    double r11 = dx * dist[i], r12 = dy * dist[i];
+                    double r21 = dx * dist[i+1], r22 = dy * dist[i+1];
+
+                    double delta_red = (double) (col2.getRed() - col1.getRed()) / (r21 - r11);
+                    double delta_green = (double) (col2.getGreen() - col1.getGreen()) / (r21 - r11);
+                    double delta_blue = (double) (col2.getBlue() - col1.getBlue()) / (r21 - r11);
+                    double delta_alpha = (double) (col2.getAlpha() - col1.getAlpha()) / (r21 - r11);
+
+                    for (double r = r11; r < r21; r += 1) {
+                        double h = r21 > 0 ? r * r22 / r21 : 0;
+                        //System.out.println((int)(col1.getAlpha() + (r - r11) * delta_alpha));
+                        Color col = new Color((int)(col1.getRed() + (r - r11) * delta_red),
+                                              (int)(col1.getGreen() + (r - r11) * delta_green),
+                                              (int)(col1.getBlue() + (r - r11) * delta_blue),
+                                              (int)(col1.getAlpha() + (r - r11) * delta_alpha));
+                        g2d.setColor(col);
+                        g2d.setStroke(new BasicStroke(2));
+                        g2d.drawOval((int)(gradient.cx - r), (int)(gradient.cy - h), (int) (r * 2), (int) (h * 2));
+                    }
+                }
+                g2d.setClip(null);
+            }
+        }
+    }
+
+    public void paintBackgroundImage(Graphics2D g2d, int x0, int y0) {
+        if (background == null || background.bgImage == null) return;
+        if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
+            double[] arcs = new double[4];
+            for (int i = 0; i < 4; i++) {
+                arcs[i] = arc[i] / 2.5;
+            }
+            adjustCorners(arcs, this);
+            RoundedRect rect = new RoundedRect(x0 + borderWidth[3], y0 + borderWidth[0], width - borderWidth[1] - borderWidth[3], height - borderWidth[0] - borderWidth[2], arcs[0], arcs[1], arcs[2], arcs[3]);
+            Shape clip = g2d.getClip();
+            if (clip != null) {
+                Area clip_area = new Area(clip);
+                clip_area.intersect(new Area(rect));
+                g2d.setClip(clip_area);
+            } else {
+                g2d.setClip(rect);
+            }
+        }
+        if (background != null && background.bg_alpha < 1.0f) {
+            int type = AlphaComposite.SRC_OVER;
+            AlphaComposite composite = AlphaComposite.getInstance(type, alpha * background.bg_alpha);
+            g2d.setComposite(composite);
+        }
+        if (background.background_repeat == BackgroundRepeat.NONE) {
+            int x = x0 + borderWidth[3] + background.background_pos_x;
+            int y = y0 + borderWidth[0] + background.background_pos_y;
+            int iw = background.background_size_x < 0 ? background.bgImage.getWidth() : background.background_size_x;
+            int ih = background.background_size_y < 0 ? background.bgImage.getHeight() : background.background_size_y;
+            //Image scaledImage = bgImage.getScaledInstance(20, 20, java.awt.Image.SCALE_SMOOTH);
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.drawImage(background.bgImage, x, y, x+iw, y+ih, 0, 0, background.bgImage.getWidth(), background.bgImage.getHeight(), this);
+        } else {
+            int x = x0 + borderWidth[3] + background.background_pos_x;
+            int y = y0 + borderWidth[0] + background.background_pos_y;
+
+            int iw = background.background_size_x < 1 ? background.bgImage.getWidth() : background.background_size_x;
+            int ih = background.background_size_y < 1 ? background.bgImage.getHeight() : background.background_size_y;
+
+            int w = x + iw;
+            int h = y + ih;
+
+            if ((background.background_repeat & BackgroundRepeat.REPEAT_X) > 0) {
+                while (x > x0 + borderWidth[3]) x -= iw;
+                w = width - borderWidth[1];
+            }
+            if ((background.background_repeat & BackgroundRepeat.REPEAT_Y) > 0) {
+                while (y > y0 + borderWidth[0]) y -= ih;
+                h = height - borderWidth[2];
+            }
+
+            while (y < h) {
+                while (x < w) {
+                    int x1 = Math.max(x0 + borderWidth[3], x);
+                    int y1 = Math.max(y0 + borderWidth[0], y);
+                    int x2 = Math.min(w, x+iw);
+                    int y2 = Math.min(h, y+ih);
+                    int x_from = x < borderWidth[3] ? x0+borderWidth[3]-x : x0;
+                    int y_from = y < borderWidth[0] ? y0+borderWidth[0]-y : y0;
+                    g2d.drawImage(background.bgImage, x1, y1, x2, y2, x_from, y_from, x_from+x2-x1, y_from+y2-y1, this);
+                    x += iw;
+                }
+                y += ih;
+                x = x0 + borderWidth[3] + background.background_pos_x;
+            }
+        }
     }
 
     public void highlightBlock(Graphics g) {
@@ -1372,7 +1386,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void displayNextFrame() {
         if (!has_animation) return;
         current_frame = current_frame + 1 > animation_frames.length - 1 ? 0 : current_frame + 1;
-        bgImage = animation_frames[current_frame].getImage();
+        background.bgImage = animation_frames[current_frame].getImage();
         last_frame_displayed = System.currentTimeMillis();
         forceRepaint();
         repaint();
@@ -1703,29 +1717,34 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean processImage() {
         if (!isImage) return false;
-        if (bgImage == null) {
+        if (background == null) {
+            background = new Background();
+        }
+        if (background.bgImage == null) {
             if (width < 0) width = viewport_width = (int) Math.round(16 * ratio);
             if (height < 0) height = viewport_height = (int) Math.round(16 * ratio);
             setBorderColor("#8a8a9f");
             borderWidth = new int[] {1, 1, 1, 1};
             this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
-            if (bgcolor == null || bgcolor.equals(new Color(0, 0, 0, 0))) bgcolor = new Color(85, 85, 85, 75);
+            if (background.bgcolor == null || background.bgcolor.equals(new Color(0, 0, 0, 0))) {
+                background.bgcolor = new Color(85, 85, 85, 75);
+            }
             setBackgroundImage("res" + File.separatorChar + "photo_16.png");
-            this.background_pos_x = 1;
-            this.background_size_x = 16;
-            this.background_size_y = 16;
-            this.background_size_x_auto = false;
-            this.background_size_y_auto = false;
+            background.background_pos_x = 1;
+            background.background_size_x = 16;
+            background.background_size_y = 16;
+            background.background_size_x_auto = false;
+            background.background_size_y_auto = false;
             setBackgroundRepeat(BackgroundRepeat.NONE);
             special = true;
         } else {
             if (width < 0 && height < 0) {
-                width = viewport_width = bgImage.getWidth();
-                height = viewport_height = bgImage.getHeight();
+                width = viewport_width = background.bgImage.getWidth();
+                height = viewport_height = background.bgImage.getHeight();
                 auto_width = true;
                 auto_height = true;
             } else {
-                double aspect_ratio = (double) bgImage.getWidth() / bgImage.getHeight();
+                double aspect_ratio = (double) background.bgImage.getWidth() / background.bgImage.getHeight();
                 if (width < 0) {
                     width = viewport_width = (int) (height * aspect_ratio);
                     auto_width = true;
@@ -1738,11 +1757,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             borderWidth = new int[] {0, 0, 0, 0};
             this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
-            bgcolor = null;
-            background_pos_x = 0;
-            background_pos_y = 0;
-            background_size_x = viewport_width;
-            background_size_y = viewport_height;
+            background.bgcolor = null;
+            background.background_pos_x = 0;
+            background.background_pos_y = 0;
+            background.background_size_x = viewport_width;
+            background.background_size_y = viewport_height;
             special = false;
         }
 
@@ -1777,7 +1796,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 add(btn);
                 btn.setFocusPainted(false);
                 btn.setBounds(_x_, _y_, width, height);
-                if (bgcolor == null && gradient == null) {
+                if (background == null || background.bgcolor == null && background.gradient == null) {
                     //bgcolor = new Color(207, 210, 218);
                     Vector<Color> c = new Vector<Color>();
                     c.add(new Color(117, 113, 138));
@@ -1802,7 +1821,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         
                     });
                 }
-                final Color col = bgcolor;
+                final Color col = background.bgcolor;
                 final Color new_col = col != null ? new Color((int)Math.min(col.getRed() * 1.03, 255), (int)Math.min(col.getGreen() * 1.03, 255), (int)Math.min(col.getBlue() * 1.03, 255)) : null;
 
                 btn.getModel().addChangeListener(new ChangeListener() {
@@ -1816,10 +1835,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                             if (model.isRollover() != rollover || model.isPressed() != pressed) {
                                 rollover = model.isRollover();
                                 pressed = model.isPressed();
+                                if (((Block)btn.getParent()).background == null) {
+                                    ((Block)btn.getParent()).background = new Background();
+                                }
                                 if (rollover) {
-                                    ((Block)btn.getParent()).bgcolor = new_col;
+                                    ((Block)btn.getParent()).background.bgcolor = new_col;
                                 } else {
-                                    ((Block)btn.getParent()).bgcolor = col;
+                                    ((Block)btn.getParent()).background.bgcolor = col;
                                 }
                             }
                             return;
@@ -1880,9 +1902,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             tf.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
             btn.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
-            if (bgcolor != null) {
-                tf.setBackground(bgcolor);
-                btn.setBackground(bgcolor);
+            if (background != null && background.bgcolor != null) {
+                tf.setBackground(background.bgcolor);
+                btn.setBackground(background.bgcolor);
             } else if (formType == 3) {
                 Vector<Color> c = new Vector<Color>();
                 Vector<Float> p = new Vector<Float>();
@@ -1901,7 +1923,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             btn.setContentAreaFilled(false);
             if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
                    (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||
-                   bgcolor.getAlpha() < 255 || formType == 3 && bgcolor != null && bgcolor.getAlpha() > 0) {
+                   background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || formType == 3 && background.bgcolor.getAlpha() > 0)) {
                 tf.setOpaque(false);
                 tf.setBorder(null);
                 btn.setOpaque(false);
@@ -1941,7 +1963,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         g2d.setColor(new Color(45, 47, 58, 153));
                         g2d.setStroke(new BasicStroke(1));
                         g2d.drawOval(x0 + 2, y0 + 2, size - 4, size - 4);
-                        g2d.setColor(instance.bgcolor != null ? instance.bgcolor : new Color(245, 245, 245));
+                        Color col = instance.background != null && instance.background.bgcolor != null ? instance.background.bgcolor : new Color(245, 245, 245);
+                        g2d.setColor(col);
                         g2d.fillOval(x0 + 3, y0 + 3, size - 6, size - 6);
 
                         if (this.getModel().isSelected()) {
@@ -1980,7 +2003,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         g2d.setColor(new Color(75, 78, 85, 153));
                         g2d.setStroke(new BasicStroke(1));
                         g2d.drawRoundRect(x0 + 2, y0 + 2, size - 4, size - 4, 2, 2);
-                        g2d.setColor(instance.bgcolor != null ? instance.bgcolor : new Color(245, 245, 245));
+                        Color col = instance.background != null && instance.background.bgcolor != null ? instance.background.bgcolor : new Color(245, 245, 245);
+                        g2d.setColor(col);
                         g2d.fillRoundRect(x0 + 3, y0 + 3, size - 6, size - 6, 2, 2);
 
                         if (this.getModel().isSelected()) {
@@ -3491,29 +3515,41 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundColor(Color col) {
-        bgcolor = col;
+        if (background == null && col == null) {
+            return;
+        }
+        if (background == null) {
+            background = new Background();
+        }
+        background.bgcolor = col;
         forceRepaint();
     }
 
     public void setBackgroundImage(String path) {
+        if (background == null && (path == null || path.isEmpty())) {
+            return;
+        }
+        if (background == null) {
+            background = new Background();
+        }
         if (path == null || path.isEmpty()) {
-            bgImage = null;
-            imgSrc = "";
+            background.bgImage = null;
+            background.imgSrc = "";
             forceRepaint();
             return;
         }
         try {
             File f;
-            if (path.equals(imgSrc)) return;
-            imgSrc = path;
+            if (path.equals(background.imgSrc)) return;
+            background.imgSrc = path;
             if (path.startsWith("http")) {
-                bgImage = ImageIO.read(new URL(path));
+                background.bgImage = ImageIO.read(new URL(path));
                 String[] str = path.split("/");
                 f = File.createTempFile("tmp_", str[str.length-1]);
-                ImageIO.write(bgImage, "png", f);
+                ImageIO.write(background.bgImage, "png", f);
             } else {
                 f = new File(path);
-                bgImage = ImageIO.read(f);
+                background.bgImage = ImageIO.read(f);
             }
             ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
             ir.setInput(ImageIO.createImageInputStream(f));
@@ -3540,21 +3576,50 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    public void setLinearGradient(Vector<Color> colors, Vector<Float> positions, int angle) {
-        int n = Math.max(colors.size(), positions.size());
-        Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
-        Color c = new Color(0, 0, 0, 0);
-        float p = 0f;
-        for (int i = 0; i < n; i++) {
-            if (i < colors.size()) {
-                c = colors.get(i);
+    public void setBackground(Background background) {
+        this.background = background;
+        if (background.imgSrc == null) return;
+        try {
+            File f;
+            if (background.imgSrc.startsWith("http")) {
+                background.bgImage = ImageIO.read(new URL(background.imgSrc));
+                String[] str = background.imgSrc.split("/");
+                f = File.createTempFile("tmp_", str[str.length-1]);
+                ImageIO.write(background.bgImage, "png", f);
+            } else {
+                f = new File(background.imgSrc);
+                background.bgImage = ImageIO.read(f);
             }
-            if (i < positions.size()) {
-                p = positions.get(i);
+            ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
+            ir.setInput(ImageIO.createImageInputStream(f));
+            if (ir.getNumImages(true) > 1) {
+                if (has_animation) {
+                    stopWatcher();
+                    w = null;
+                }
+                readGIF(ir);
+                has_animation = true;
+                startWatcher();
+            } else {
+                stopWatcher();
             }
-            cs[i] = new Gradient.ColorStop(c, p);
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
-        gradient = new Gradient(angle, cs);
+        if (parts.size() == 1) {
+            parts.get(0).setBackgroundImage(background.imgSrc);
+        }
+        forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
+    }
+
+    public void setLinearGradient(Vector<Color> colors, Vector<Float> positions, int angle) {
+        if (background == null) {
+            background = new Background();
+        }
+        background.setLinearGradient(colors, positions, angle);
         forceRepaint();
         if (document != null && document.ready) {
             document.repaint();
@@ -3562,20 +3627,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setLinearGradientWithUnits(Vector<Color> colors, Vector<String> positions, double angle) {
-        int n = Math.max(colors.size(), positions.size());
-        Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
-        Color c = new Color(0, 0, 0, 0);
-        for (int i = 0; i < n; i++) {
-            if (i < colors.size()) {
-                c = colors.get(i);
-            }
-            CssLength p = null;
-            if (i < positions.size()) {
-                p = parseValueString(positions.get(i));
-            }
-            cs[i] = new Gradient.ColorStop(c, (float) p.value, p.unit);
+        if (background == null) {
+            background = new Background();
         }
-        gradient = new Gradient(angle, cs);
+        background.setLinearGradientWithUnits(this, colors, positions, angle);
         forceRepaint();
         if (document != null && document.ready) {
             document.repaint();
@@ -3583,22 +3638,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setRadialGradientWithUnits(int[] center, double[] size, Vector<Color> colors, Vector<String> positions) {
-        int n = Math.max(colors.size(), positions.size());
-        Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
-        Color c = new Color(0, 0, 0, 0);
-        for (int i = 0; i < n; i++) {
-            if (i < colors.size()) {
-                c = colors.get(i);
-            }
-            CssLength p = null;
-            if (i < positions.size()) {
-                p = parseValueString(positions.get(i));
-            }
-            cs[i] = new Gradient.ColorStop(c, (float) p.value, p.unit);
+        if (background == null) {
+            background = new Background();
         }
-        gradient = new Gradient(0, cs);
-        gradient.setType(Gradient.RADIAL);
-        gradient.setRadialParams(center[0], center[1], size[0], size[1]);
+        background.setRadialGradientWithUnits(this, center, size, colors, positions);
         forceRepaint();
         if (document != null && document.ready) {
             document.repaint();
@@ -3606,22 +3649,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setRadialGradient(int[] center, double[] radius, Vector<Color> colors, Vector<Float> positions) {
-        int n = Math.max(colors.size(), positions.size());
-        Gradient.ColorStop[] cs = new Gradient.ColorStop[n];
-        Color c = new Color(0, 0, 0, 0);
-        float p = 0f;
-        for (int i = 0; i < n; i++) {
-            if (i < colors.size()) {
-                c = colors.get(i);
-            }
-            if (i < positions.size()) {
-                p = positions.get(i);
-            }
-            cs[i] = new Gradient.ColorStop(c, p);
+        if (background == null) {
+            background = new Background();
         }
-        gradient = new Gradient(0, cs);
-        gradient.setType(Gradient.RADIAL);
-        gradient.setRadialParams(center[0], center[1], radius[0], radius[1]);
+        background.setRadialGradient(center, radius, colors, positions);
         forceRepaint();
         if (document != null && document.ready) {
             document.repaint();
@@ -4251,10 +4282,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Block doIncrementLayout(int old_width, int old_height, boolean no_recalc) {
         if (document == null || document.inLayout || !document.ready) return null;
 
-        double old_pos_x = old_width > 0 ? (double) background_pos_x / old_width : 0;
-        double old_pos_y = old_height > 0 ? (double) background_pos_y / old_height : 0;
-        double old_size_x = old_width > 0 ? (double) background_size_x / old_width : 1;
-        double old_size_y = old_height > 0 ? (double) background_size_y / old_height : 1;
+        double old_pos_x = background != null && old_width > 0 ? (double) background.background_pos_x / old_width : 0;
+        double old_pos_y = background != null && old_height > 0 ? (double) background.background_pos_y / old_height : 0;
+        double old_size_x = background != null && old_width > 0 ? (double) background.background_size_x / old_width : 1;
+        double old_size_y = background != null && old_height > 0 ? (double) background.background_size_y / old_height : 1;
 
         Block last = this;
 
@@ -4262,11 +4293,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             boolean use_fast_update = document.fast_update;
             document.no_layout = use_fast_update;
             performLayout(use_fast_update);
-            if (viewport_height != old_height && bgImage != null) {
-                background_pos_x = (int) (old_pos_x * viewport_width);
-                background_pos_y = (int) (old_pos_y * viewport_height);
-                background_size_x = (int) Math.max(0, old_size_x * viewport_width);
-                background_size_y = (int) Math.max(0, old_size_y * viewport_height);
+            if (viewport_height != old_height && background != null && background.bgImage != null) {
+                background.background_pos_x = (int) (old_pos_x * viewport_width);
+                background.background_pos_y = (int) (old_pos_y * viewport_height);
+                background.background_size_x = (int) Math.max(0, old_size_x * viewport_width);
+                background.background_size_y = (int) Math.max(0, old_size_y * viewport_height);
             }
             Block b = this;
             while ((old_width != b.viewport_width || old_height != b.viewport_height) && b.parent != null && !no_recalc) {
@@ -4285,11 +4316,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         } else if (this == document.root && document.ready) {
             document.root.performLayout();
-            if (viewport_height != old_height && bgImage != null) {
-                background_pos_x = (int) (old_pos_x * viewport_width);
-                background_pos_y = (int) (old_pos_y * viewport_height);
-                background_size_x = (int) Math.max(0, old_size_x * viewport_width);
-                background_size_y = (int) Math.max(0, old_size_y * viewport_height);
+            if (viewport_height != old_height && background != null && background.bgImage != null) {
+                background.background_pos_x = (int) (old_pos_x * viewport_width);
+                background.background_pos_y = (int) (old_pos_y * viewport_height);
+                background.background_size_x = (int) Math.max(0, old_size_x * viewport_width);
+                background.background_size_y = (int) Math.max(0, old_size_y * viewport_height);
             }
         } else if (isImage) {
             last = parts.size() == 0 ? this : parts.get(0);
@@ -4300,46 +4331,61 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundPositionX(double val, int units) {
-        background_pos_x = getValueInPixels(val, units);
+        if (background == null) {
+            background = new Background();
+        }
+        background.background_pos_x = getValueInPixels(val, units);
         forceRepaint();
     }
 
     public void setBackgroundPositionY(double val, int units) {
-        background_pos_y = getValueInPixels(val, units);
+        if (background == null) {
+            background = new Background();
+        }
+        background.background_pos_y = getValueInPixels(val, units);
         forceRepaint();
     }
 
     public void setBackgroundSizeX(double val, int units) {
+        if (background == null) {
+            background = new Background();
+        }
         if (val < 0) {
-            background_size_x_auto = true;
+            background.background_size_x_auto = true;
             forceRepaint();
             return;
         }
-        background_size_x = getValueInPixels(val, units);
-        background_size_x_auto = false;
-        if (background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
-            background_size_y = (int)Math.round(background_size_x / ((double) bgImage.getWidth() / bgImage.getHeight()));
+        background.background_size_x = getValueInPixels(val, units);
+        background.background_size_x_auto = false;
+        if (background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
+            background.background_size_y = (int)Math.round(background.background_size_x / ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
         }
         forceRepaint();
     }
 
     public void setBackgroundSizeY(double val, int units) {
+        if (background == null) {
+            background = new Background();
+        }
         if (val < 0) {
-            background_size_y_auto = true;
+            background.background_size_y_auto = true;
             forceRepaint();
             return;
         }
-        background_size_y = getValueInPixels(val, units);
-        background_size_y_auto = false;
-        if (background_size_x_auto && bgImage != null) {
-            background_size_x = (int)Math.round(background_size_y * ((double) bgImage.getWidth() / bgImage.getHeight()));
+        background.background_size_y = getValueInPixels(val, units);
+        background.background_size_y_auto = false;
+        if (background.background_size_x_auto && background.bgImage != null) {
+            background.background_size_x = (int)Math.round(background.background_size_y * ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
         }
         forceRepaint();
     }
 
     public void setBackgroundSizeXY(double val_x, double val_y, int units) {
-        if (val_x < 0) background_size_x_auto = true;
-        if (val_y < 0) background_size_y_auto = true;
+        if (background == null) {
+            background = new Background();
+        }
+        if (val_x < 0) background.background_size_x_auto = true;
+        if (val_y < 0) background.background_size_y_auto = true;
 
         int value_x = 0, value_y = 0;
         if (units == Units.px) {
@@ -4362,20 +4408,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             value_x = (int)Math.round(size * value_x);
             value_y = (int)Math.round(size * value_y);
         }
-        background_size_x = value_x;
-        background_size_y = value_y;
-        background_size_x_auto = val_x < 0;
-        background_size_y_auto = val_y < 0;
+        background.background_size_x = value_x;
+        background.background_size_y = value_y;
+        background.background_size_x_auto = val_x < 0;
+        background.background_size_y_auto = val_y < 0;
 
-        if (!background_size_x_auto && background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
-            background_size_y = (int)Math.round(background_size_x / ((double) bgImage.getWidth() / bgImage.getHeight()));
+        if (!background.background_size_x_auto && background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
+            background.background_size_y = (int)Math.round(background.background_size_x / ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
         }
-        else if (background_size_x_auto && !background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
-            background_size_x = (int)Math.round(background_size_y * ((double) bgImage.getWidth() / bgImage.getHeight()));
+        else if (background.background_size_x_auto && !background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
+            background.background_size_x = (int)Math.round(background.background_size_y * ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
         }
-        else if (background_size_x_auto && background_size_y_auto && bgImage != null && bgImage.getHeight() > 0) {
-            background_size_x = bgImage.getWidth();
-            background_size_y = bgImage.getHeight();
+        else if (background.background_size_x_auto && background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
+            background.background_size_x = background.bgImage.getWidth();
+            background.background_size_y = background.bgImage.getHeight();
         }
 
         forceRepaint();
@@ -4387,13 +4433,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setBackgroundContain() {
         if (width < 0 || height < 0) return;
-        double r1 = (bgImage != null && bgImage.getHeight() > 0) ? (double) bgImage.getWidth() / bgImage.getHeight() : 0;
+        if (background == null) {
+            background = new Background();
+        }
+        double r1 = (background.bgImage != null && background.bgImage.getHeight() > 0) ? (double) background.bgImage.getWidth() / background.bgImage.getHeight() : 0;
         double r2 = height > 0 ? (double) width / height : 0;
         if (r1 > r2) {
-            background_size_y_auto = true;
+            background.background_size_y_auto = true;
             setBackgroundSizeX(100, Units.percent);
         } else {
-            background_size_x_auto = true;
+            background.background_size_x_auto = true;
             setBackgroundSizeY(100, Units.percent);
         }
         setBackgroundPositionX(50, Units.percent);
@@ -4402,13 +4451,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundCover() {
-        double r1 = (bgImage != null && bgImage.getHeight() > 0) ? (double) bgImage.getWidth() / bgImage.getHeight() : 0;
+        if (background == null) {
+            background = new Background();
+        }
+        double r1 = (background.bgImage != null && background.bgImage.getHeight() > 0) ? (double) background.bgImage.getWidth() / background.bgImage.getHeight() : 0;
         double r2 = height > 0 ? (double) width / height : 0;
         if (r1 < r2) {
-            background_size_y_auto = true;
+            background.background_size_y_auto = true;
             setBackgroundSizeX(100, Units.percent);
         } else {
-            background_size_x_auto = true;
+            background.background_size_x_auto = true;
             setBackgroundSizeY(100, Units.percent);
         }
         setBackgroundPositionX(50, Units.percent);
@@ -4417,7 +4469,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setBackgroundRepeat(int value) {
-        background_repeat = value;
+        if (background == null) {
+            background = new Background();
+        }
+        background.background_repeat = value;
         forceRepaint();
     }
 
@@ -6317,7 +6372,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int borderRadius;
     public int[] arc = {0, 0, 0, 0};
     public Color color = Color.BLACK;
-    public Color bgcolor;
     public int[] borderType = {0, 0, 0, 0};
     public int borderClipMode = 0;
     public Color[] borderColor = {Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK};
@@ -6339,17 +6393,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int vertical_align = 2;
     public boolean sharp = false;
     public float alpha = 1.0f;
-    
-    public float bg_alpha = 1.0f;
-    public BufferedImage bgImage = null;
-    public int background_repeat = 0;
-    public int background_size_x = -1;
-    public int background_size_y = -1;
-    public boolean background_size_x_auto = true;
-    public boolean background_size_y_auto = true;
-    public int background_pos_x = 0;
-    public int background_pos_y = 0;
-    public Gradient gradient = null;
+
     public boolean isImage = false;
     public boolean isMedia = false;
     public String mediaSource = null;
@@ -6648,18 +6692,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.border = new RoundedBorder(b, b.borderWidth, b.arc, b.borderColor, b.borderType);
 
-        b.bgImage = this.bgImage;
-        if (bgImage != null) {
-            b.background_pos_x = this.background_pos_x;
-            b.background_pos_y = this.background_pos_y;
-            b.background_size_x = this.background_size_x;
-            b.background_size_y = this.background_size_y;
-
+        b.background = background;
+        if (background != null) {
             b.has_animation = has_animation;
             b.animation_frames = animation_frames;
         }
-        b.gradient = this.gradient;
-        b.bgcolor = this.bgcolor;
         b.color = this.color;
         b.linkColor = linkColor;
         b.select_enabled = select_enabled;
@@ -7246,7 +7283,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void takeScreenshot(String path) {
         BufferedImage img = new BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         Graphics2D gc = (Graphics2D) img.getGraphics();
-        gc.setBackground(bgcolor);
+        if (background != null && background.bgcolor != null) gc.setBackground(background.bgcolor);
         gc.clearRect(0, 0, document.root.width, document.root.height);
         drawSubtree(gc, _x_, _y_);
         
@@ -7550,6 +7587,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public final Color DEFAULT_INPUT_BORDER_COLOR = new Color(118, 118, 123);
     public final Color DEFAULT_INPUT_BACKGROUND_COLOR = new Color(255, 255, 255);
     public final Color DEFAULT_INPUT_TEXT_COLOR = new Color(34, 34, 36);
+
+    public Background background;
+    public Background target_background;
 
     public boolean selected = false;
     public boolean checked = false;

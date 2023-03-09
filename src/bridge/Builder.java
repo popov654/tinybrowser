@@ -14,7 +14,6 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
@@ -708,8 +707,7 @@ public class Builder {
         b.document.ready = false;
         b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
         if (!b.special) {
-            b.setBackgroundColor(new Color(0, 0, 0, 0));
-            b.setBackgroundImage(null);
+            b.setBackground(new render.Background());
             b.setBorderWidth(0);
             b.setBorderType(RoundedBorder.SOLID);
             b.setBorderColor(Color.BLACK);

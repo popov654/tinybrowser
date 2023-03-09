@@ -598,7 +598,7 @@ public class Layouter {
                 }
                 for (int i = 0; i < d.parts.size(); i++) {
                     Block part = d.parts.get(i);
-                    if (part.bgImage != null && part.has_animation) {
+                    if (part.background != null && part.background.bgImage != null && part.has_animation) {
                         part.stopWatcher();
                     }
                     int[] sel = part.getSelection();
@@ -713,7 +713,7 @@ public class Layouter {
                 d.document.root.remove(d);
             }
 
-            if (b.bgImage != null && b.has_animation) {
+            if (b.background != null && b.background.bgImage != null && b.has_animation) {
                 b.startWatcher();
             }
 

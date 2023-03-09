@@ -182,9 +182,9 @@ public class Transition {
         }
 
         if (prop.equals("background-color")) {
-            block.bgcolor = color;
+            block.background.bgcolor = color;
             for (Block part: block.parts) {
-                part.bgcolor = block.bgcolor;
+                part.background.bgcolor = block.background.bgcolor;
             }
             block.forceRepaint();
             return;
