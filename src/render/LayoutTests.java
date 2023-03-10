@@ -481,12 +481,12 @@ public class LayoutTests extends JFrame {
             }
         });
 
-        Timer t = new Timer(600, new ActionListener() {
+        Timer t = new Timer(680, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Transition t = new Transition(d2, "background", 1300, null, "rgb(230, 238, 243)", Transition.TimingFunction.LINEAR);
                 trans.joinAndStart(t);
-                Transition t2 = new Transition(d2, "color", 800, null, "black", Transition.TimingFunction.LINEAR);
+                Transition t2 = new Transition(d2, "color", 900, null, "black", Transition.TimingFunction.LINEAR);
                 trans2.joinAndStart(t2);
             }
         });

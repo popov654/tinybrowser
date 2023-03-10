@@ -17,6 +17,7 @@ public class Transition {
         this.block = b;
         this.property = property;
         this.time = time;
+        passiveMode = block.passiveTransitionMode;
 
         if (start_value != null || property.endsWith("color") ||
                 end_value != null && b.parseColor(end_value) != null) {
@@ -126,6 +127,7 @@ public class Transition {
         this.block = b;
         this.property = property;
         this.time = time;
+        passiveMode = block.passiveTransitionMode;
         value_type = "color";
         startColor = start_value;
         endColor = end_value;
@@ -156,6 +158,7 @@ public class Transition {
     public void start() {
         for (Transition t: block.transitions) {
             if (t.block == block && t.property.equals(property)) {
+                block.transitions.remove(t);
                 t.joinAndStart(this);
                 return;
             }
@@ -171,6 +174,7 @@ public class Transition {
 
     public void stop() {
         update(1);
+        block.transitions.remove(this);
         if (value_type.equals("background")) {
             block.background = block.target_background;
         }
@@ -199,8 +203,10 @@ public class Transition {
     public void update(double q) {
         if (value_type.equals("background")) {
             block.backgroundState = getMultiplier(q);
-            block.forceRepaint();
-            block.document.repaint();
+            if (!passiveMode) {
+                block.forceRepaint();
+                block.document.repaint();
+            }
         } else if (!value_type.equals("color")) {
             double value = interpolate(start_value, end_value, q);
             //System.out.println(value);
@@ -221,19 +227,22 @@ public class Transition {
             if (value_type.equals("background") && block.target_background != null) {
                 block.background = block.target_background;
             }
+            boolean flag = false;
             if (end_width_auto && !block.auto_width) {
                 block.auto_width = true;
-                Block b = block.doIncrementLayout();
-                b.forceRepaint();
-                b.document.repaint();
+                flag = true;
             }
             if (end_height_auto && !block.auto_height) {
                 block.auto_height = true;
+                flag = true;
+            }
+            block.backgroundState = 0;
+            if (!passiveMode && flag) {
                 Block b = block.doIncrementLayout();
                 b.forceRepaint();
                 b.document.repaint();
             }
-            block.backgroundState = 0;
+            block.transitions.remove(this);
         }
     }
 
@@ -242,8 +251,11 @@ public class Transition {
     }
 
     private void updateProperty(double value) {
+        boolean old_value = block.document.ready;
+        if (passiveMode) block.document.ready = false;
         String[] units = {"px", "%", "em", "rem"};
         block.setProp(property, value + units[value_units]);
+        if (passiveMode) block.document.ready = old_value;
     }
 
     private void updateProperty(Color color) {
@@ -259,7 +271,9 @@ public class Transition {
                 part.borderColor[2] = block.borderColor[2];
                 part.borderColor[3] = block.borderColor[3];
             }
-            block.forceRepaint();
+            if (!passiveMode) {
+                block.forceRepaint();
+            }
             return;
         }
 
@@ -274,7 +288,9 @@ public class Transition {
                 part.borderColor[2] = block.borderColor[2];
                 part.borderColor[3] = block.borderColor[3];
             }
-            block.forceRepaint();
+            if (!passiveMode) {
+                block.forceRepaint();
+            }
             return;
         }
 
@@ -284,12 +300,17 @@ public class Transition {
             for (Block part: block.parts) {
                 part.background.bgcolor = block.background.bgcolor;
             }
-            block.forceRepaint();
+            if (!passiveMode) {
+                block.forceRepaint();
+            }
             return;
         }
 
         if (prop.equals("color")) {
+            boolean old_value = block.document.ready;
+            if (passiveMode) block.document.ready = false;
             block.setTextColorRecursive(color);
+            if (passiveMode) block.document.ready = old_value;
             return;
         }
     }
@@ -333,6 +354,7 @@ public class Transition {
     public Color endColor;
 
     public Timer timer;
+    public boolean passiveMode = true;
 
     public static int resolution = 10;
     

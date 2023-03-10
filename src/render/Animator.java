@@ -2,6 +2,8 @@ package render;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashSet;
+import java.util.Vector;
 
 /**
  *
@@ -15,12 +17,31 @@ public class Animator implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        if (block.document == null) return;
+        
         int count = 0;
-        for (Transition t: block.transitions) {
+        if (block.document.lastSetProperties == null) {
+            block.document.lastSetProperties = new HashSet<String>();
+        }
+        block.document.lastSetProperties.clear();
+        int old_width = block.viewport_width;
+        int old_height = block.viewport_height;
+
+        boolean passiveMode = true;
+        for (Transition t: (Vector<Transition>) block.transitions.clone()) {
             if (t.block != block) continue;
+            if (!t.passiveMode) passiveMode = false;
+            block.document.lastSetProperties.add(t.property);
             t.update();
             count++;
         }
+
+        if (passiveMode) {
+            block.document.smartUpdate(block, old_width, old_height);
+        } else {
+            block.document.lastSetProperties.clear();
+        }
+
         if (count == 0) {
             block.animator.stop();
             block.animator = null;
