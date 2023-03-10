@@ -565,7 +565,6 @@ public class WebDocument extends JPanel {
     public void smartUpdate(Block b, int old_width, int old_height) {
         Set<String> onlyRepaint = new java.util.HashSet<String>();
         onlyRepaint.add("background");
-        onlyRepaint.add("linear-gradient");
         onlyRepaint.add("background-color");
         onlyRepaint.add("border-color");
         onlyRepaint.add("color");
