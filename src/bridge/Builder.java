@@ -93,6 +93,9 @@ public class Builder {
     }
 
     public Block buildElement(WebDocument document, Block parent, Node node) {
+        if (node.nodeType != 1 && (node.nodeType != 3 || node.nodeValue.matches("\n+") && parent.white_space != Block.WhiteSpace.PRE_WRAP)) {
+            return null;
+        }
         if (document == null) document = this.document;
         final Block b = new Block(document);
         b.node = node;
