@@ -14,6 +14,7 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
@@ -315,20 +316,12 @@ public class Builder {
                 if (source.equals("render") || document == null) return;
                 Block b = Mapper.get(e.target);
 
+                LinkedHashMap<String, String> oldStyles = (LinkedHashMap<String, String>) b.cssStyles.clone();
+
                 Set<Entry<String, String>> new_rules = StyleMap.getNodeStyles(e.target).runtimeStyles.entrySet();
                 new_rules.removeAll(b.cssStyles.entrySet());
 
                 if (new_rules.size() > 0) {
-                    for (Entry<String, String> entry: new_rules) {
-                        String key = entry.getKey();
-                        if (isPropertyAnimated(b, key)) {
-                            TransitionInfo info = b.transitions.get(key) != null ? b.transitions.get(key) : b.transitions.get("all");
-                            Transition t = new Transition(b, info, null, entry.getValue());
-                            t.start();
-                        } else {
-                            b.setProp(key, entry.getValue());
-                        }
-                    }
                     b.cssStyles.putAll(StyleMap.getNodeStyles(e.target).runtimeStyles);
                 } else {
                     b.cssStyles.clear();
@@ -336,10 +329,47 @@ public class Builder {
                     resetStyles(b, false, true);
                 }
 
-                System.out.println(document.ready ? "ready" : "not ready");
+                targetStyles.put(b, b.cssStyles);
+                b.cssStyles = oldStyles;
+
+                //System.out.println(document.ready ? "ready" : "not ready");
             }
         };
         node.addListener(stylesChangedCallback, node, "stylesChanged");
+
+        NodeActionCallback scriptFinishedCallback = new NodeActionCallback() {
+            @Override
+            public void nodeChanged(NodeEvent e, String source) {
+                if (source.equals("render") || document == null || e.target != document.root.node) return;
+                Block b = Mapper.get(e.target);
+                applyElementStylesRecursive(b);
+
+                System.out.println("JS function finished callback");
+            }
+        };
+        node.addListener(scriptFinishedCallback, node, "JSFuncFinished");
+    }
+
+    private void applyElementStylesRecursive(Block block) {
+        if (targetStyles.get(block) != null) {
+            LinkedHashMap<String, String> oldStyles = (LinkedHashMap<String, String>) block.cssStyles.clone();
+            block.cssStyles = targetStyles.get(block);
+            targetStyles.remove(block);
+            Set<String> keys = block.cssStyles.keySet();
+            for (String prop: keys) {
+                if (oldStyles.get(prop) != null && oldStyles.get(prop).equals(block.cssStyles.get(prop))) continue;
+                if (isPropertyAnimated(block, prop)) {
+                    TransitionInfo info = block.transitions.get(prop) != null ? block.transitions.get(prop) : block.transitions.get("all");
+                    Transition t = new Transition(block, info, null, block.cssStyles.get(prop));
+                    t.start();
+                } else {
+                    block.setProp(prop, block.cssStyles.get(prop));
+                }
+            }
+        }
+        for (int i = 0; i < block.getChildren().size(); i++) {
+            applyElementStylesRecursive(block.getChildren().get(i));
+        }
     }
 
     private boolean isPropertyAnimated(Block block, String property) {
@@ -945,6 +975,8 @@ public class Builder {
     public void setBaseUrl(String url) {
         baseUrl = url;
     }
+
+    public HashMap<Block, LinkedHashMap<String, String>> targetStyles  = new HashMap<Block, LinkedHashMap<String, String>>();
 
     public HashMap<String, Class> customElements = new HashMap<String, Class>();
     public bridge.Document documentWrap;

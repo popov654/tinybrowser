@@ -1,6 +1,7 @@
 package jsparser;
 
 import htmlparser.HTMLParser;
+import htmlparser.Node;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -863,6 +864,16 @@ public class Block extends Expression {
                             i = -1;
                         }
                     }
+                }
+            }
+        }
+        if (func != null) {
+            JSValue document = Block.getVar("document", this);
+            if (document != null && document instanceof HTMLDocument) {
+                JSValue body = ((HTMLDocument)document).get("body");
+                if (body instanceof HTMLElement) {
+                    Node node = ((HTMLElement)body).node;
+                    node.fireEvent("JSFuncFinished", "jsparser");
                 }
             }
         }
