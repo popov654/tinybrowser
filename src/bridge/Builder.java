@@ -93,7 +93,7 @@ public class Builder {
     }
 
     public Block buildElement(WebDocument document, Block parent, Node node) {
-        if (node.nodeType != 1 && (node.nodeType != 3 || node.nodeValue.matches("\n+") && parent.white_space != Block.WhiteSpace.PRE_WRAP)) {
+        if (node.nodeType != ELEMENT && (node.nodeType != TEXT || node.nodeValue.matches("\n+") && parent.white_space != Block.WhiteSpace.PRE_WRAP)) {
             return null;
         }
         if (document == null) document = this.document;
@@ -263,7 +263,7 @@ public class Builder {
 
     public void addNodeChangeListeners(final Node node) {
         final Builder builder = this;
-        NodeActionCallback callback = new NodeActionCallback() {
+        NodeActionCallback attributesChangedCallback = new NodeActionCallback() {
             @Override
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
@@ -275,8 +275,8 @@ public class Builder {
                 node.removeListener(this);
             }
         };
-        node.addListener(callback, node, "attributesChanged");
-        NodeActionCallback callback2 = new NodeActionCallback() {
+        node.addListener(attributesChangedCallback, node, "attributesChanged");
+        NodeActionCallback valueChangedCallback = new NodeActionCallback() {
             @Override
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
@@ -307,9 +307,9 @@ public class Builder {
                 //node.removeListener(this);
             }
         };
-        node.addListener(callback2, node, "valueChanged");
+        node.addListener(valueChangedCallback, node, "valueChanged");
         
-        NodeActionCallback callback3 = new NodeActionCallback() {
+        NodeActionCallback stylesChangedCallback = new NodeActionCallback() {
             @Override
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
@@ -339,7 +339,7 @@ public class Builder {
                 System.out.println(document.ready ? "ready" : "not ready");
             }
         };
-        node.addListener(callback3, node, "stylesChanged");
+        node.addListener(stylesChangedCallback, node, "stylesChanged");
     }
 
     private boolean isPropertyAnimated(Block block, String property) {
@@ -381,7 +381,7 @@ public class Builder {
         }
 
         for (int i = 0; i < node.children.size(); i++) {
-            if (node.children.get(i).nodeType == 1) { 
+            if (node.children.get(i).nodeType == ELEMENT) {
                 svgRoot.appendChild(processSVGSubtree(doc, node.children.get(i)));
             }
         }
@@ -660,7 +660,7 @@ public class Builder {
 
     public void applyStyles(Block b) {
         Node node = b.node;
-        if (b instanceof render.ReplacedBlock || node.nodeType != 1) return;
+        if (b instanceof render.ReplacedBlock || node.nodeType != ELEMENT) return;
         Styles st = StyleMap.getNodeStyles(node);
         Set<String> keys = st.styles.keySet();
         for (String key: keys) {
@@ -793,7 +793,7 @@ public class Builder {
     public void applyStateStyles(Block b, boolean no_update) {
         if (b.node == null) return;
         Styles st = StyleMap.getNodeStyles(b.node);
-        if (b.node.nodeType != 1 || st.stateStyles.size() == 0) return;
+        if (b.node.nodeType != ELEMENT || st.stateStyles.size() == 0) return;
 
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
@@ -875,7 +875,7 @@ public class Builder {
     }
 
     public void generatePseudoElements(Node node, Block b) {
-        if (node.nodeType != 1) return;
+        if (node.nodeType != ELEMENT) return;
         Styles st = StyleMap.getNodeStyles(node);
         if (document == null) return;
         String content;
