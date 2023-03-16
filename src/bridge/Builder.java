@@ -851,7 +851,10 @@ public class Builder {
         }
 
         if ((b == b.document.root || !no_rec) && !force) {
+            boolean use_fast_update = document.fast_update;
+            document.fast_update = false;
             b.document.smartUpdate(b, old_width, old_height);
+            document.fast_update = use_fast_update;
         } else if (b == b.document.root) {
             b.flushBuffersRecursively();
             b.performLayout();

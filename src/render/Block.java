@@ -6165,6 +6165,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             boolean val = document.fast_update;
             if (parent == null || line != line.parent.lines.lastElement()) document.fast_update = false;
             Block block = doIncrementLayout();
+            if (block == null) return;
             document.fast_update = val;
             document.root.setNeedRestoreSelection(true);
             block.forceRepaint();
