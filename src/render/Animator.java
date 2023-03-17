@@ -28,7 +28,7 @@ public class Animator implements ActionListener {
         int old_height = block.viewport_height;
 
         boolean passiveMode = true;
-        for (Transition t: (Vector<Transition>) block.transitions.clone()) {
+        for (Transition t: (Vector<Transition>) block.activeTransitions.clone()) {
             if (t.block != block) continue;
             if (!t.passiveMode) passiveMode = false;
             block.document.lastSetProperties.add(t.property);

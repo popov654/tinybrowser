@@ -31,6 +31,8 @@ import org.w3c.dom.Element;
 import render.Block;
 import render.MediaPlayer;
 import render.RoundedBorder;
+import render.Transition;
+import render.TransitionInfo;
 import render.WebDocument;
 import tinybrowser.Reader;
 
@@ -316,7 +318,13 @@ public class Builder {
                 if (new_rules.size() > 0) {
                     for (Entry<String, String> entry: new_rules) {
                         String key = entry.getKey();
-                        b.setProp(key, entry.getValue());
+                        if (isPropertyAnimated(b, key)) {
+                            TransitionInfo info = b.transitions.get(key) != null ? b.transitions.get(key) : b.transitions.get("all");
+                            Transition t = new Transition(b, info, null, entry.getValue());
+                            t.start();
+                        } else {
+                            b.setProp(key, entry.getValue());
+                        }
                     }
                     b.cssStyles.putAll(StyleMap.getNodeStyles(e.target).runtimeStyles);
                 } else {
@@ -329,6 +337,13 @@ public class Builder {
             }
         };
         node.addListener(callback3, node, "stylesChanged");
+    }
+
+    private boolean isPropertyAnimated(Block block, String property) {
+        if (property.matches("cursor|(-[a-z]+-)?transition|display|visibility|font-family")) {
+            return false;
+        }
+        return block.transitions.containsKey("all") || block.transitions.containsKey(property);
     }
 
     private void applyParentFontStyles(Block block) {
@@ -705,6 +720,7 @@ public class Builder {
         int old_height = b.viewport_height;
 
         b.document.ready = false;
+        b.transitions.clear();
         b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
         if (!b.special) {
             b.setBackground(new render.Background());

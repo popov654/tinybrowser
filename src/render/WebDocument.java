@@ -569,6 +569,7 @@ public class WebDocument extends JPanel {
         onlyRepaint.add("border-color");
         onlyRepaint.add("color");
         onlyRepaint.add("cursor");
+        onlyRepaint.add("transition");
 
         if (lastSetProperties == null) {
             lastSetProperties = new HashSet<String>();

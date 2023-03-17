@@ -1,10 +1,6 @@
 package render;
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.Timer;
 
 /**
@@ -13,10 +9,14 @@ import javax.swing.Timer;
  */
 public class Transition {
 
-    public Transition(Block b, String property, int time, String start_value, String end_value) {
+    public Transition(Block b, TransitionInfo info, String start_value, String end_value) {
+        this(b, info.property, info.duration, start_value, end_value, info.timingFunction, info.delay);
+    }
+
+    public Transition(Block b, String property, int duration, String start_value, String end_value) {
         this.block = b;
         this.property = property;
-        this.time = time;
+        this.duration = duration;
         passiveMode = block.passiveTransitionMode;
 
         if (start_value != null || property.endsWith("color") ||
@@ -123,47 +123,47 @@ public class Transition {
         }
     }
 
-    public Transition(Block b, String property, int time, Color start_value, Color end_value) {
+    public Transition(Block b, String property, int duration, Color start_value, Color end_value) {
         this.block = b;
         this.property = property;
-        this.time = time;
+        this.duration = duration;
         passiveMode = block.passiveTransitionMode;
         value_type = "color";
         startColor = start_value;
         endColor = end_value;
     }
 
-    public Transition(Block b, String property, int time, String start_value, String end_value, int timingFunc) {
-        this(b, property, time, start_value, end_value);
+    public Transition(Block b, String property, int duration, String start_value, String end_value, int timingFunc) {
+        this(b, property, duration, start_value, end_value);
         timingFunction = timingFunc;
     }
 
-    public Transition(Block b, String property, int time, String start_value, String end_value, int timingFunc, int delay) {
-        this(b, property, time, start_value, end_value);
+    public Transition(Block b, String property, int duration, String start_value, String end_value, int timingFunc, int delay) {
+        this(b, property, duration, start_value, end_value);
         timingFunction = timingFunc;
         this.delay = delay;
     }
 
-    public Transition(Block b, String property, int time, Color start_value, Color end_value, int timingFunc) {
-        this(b, property, time, start_value, end_value);
+    public Transition(Block b, String property, int duration, Color start_value, Color end_value, int timingFunc) {
+        this(b, property, duration, start_value, end_value);
         timingFunction = timingFunc;
     }
 
-    public Transition(Block b, String property, int time, Color start_value, Color end_value, int timingFunc, int delay) {
-        this(b, property, time, start_value, end_value);
+    public Transition(Block b, String property, int duration, Color start_value, Color end_value, int timingFunc, int delay) {
+        this(b, property, duration, start_value, end_value);
         timingFunction = timingFunc;
         this.delay = delay;
     }
 
     public void start() {
-        for (Transition t: block.transitions) {
+        for (Transition t: block.activeTransitions) {
             if (t.block == block && t.property.equals(property)) {
-                block.transitions.remove(t);
+                block.activeTransitions.remove(t);
                 t.joinAndStart(this);
                 return;
             }
         }
-        block.transitions.add(this);
+        block.activeTransitions.add(this);
         startedAt = System.currentTimeMillis();
         if (block.animator == null) {
             block.animator = new Timer(resolution, new Animator(block));
@@ -174,7 +174,7 @@ public class Transition {
 
     public void stop() {
         update(1);
-        block.transitions.remove(this);
+        block.activeTransitions.remove(this);
         if (value_type.equals("background")) {
             block.background = block.target_background;
         }
@@ -191,12 +191,12 @@ public class Transition {
         }
         if (value_type.equals("background")) {
             transition.startedAt = System.currentTimeMillis() - startedAt + 100;
-            block.backgroundState = Math.max(0, (System.currentTimeMillis() - startedAt - 100) / time);
+            block.backgroundState = Math.max(0, (System.currentTimeMillis() - startedAt - 100) / duration);
         }
     }
 
     public void update() {
-        double q = Math.max(0, Math.min(1, (double)(System.currentTimeMillis() - startedAt) / time));
+        double q = Math.max(0, Math.min(1, (double)(System.currentTimeMillis() - startedAt) / duration));
         update(q);
     }
 
@@ -242,7 +242,7 @@ public class Transition {
                 b.forceRepaint();
                 b.document.repaint();
             }
-            block.transitions.remove(this);
+            block.activeTransitions.remove(this);
         }
     }
 
@@ -341,7 +341,7 @@ public class Transition {
     public int delay = 0;
 
     public long startedAt = 0;
-    public int time = 0;
+    public int duration = 0;
 
     public double start_value;
     public double end_value;

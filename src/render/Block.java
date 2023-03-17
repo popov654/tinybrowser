@@ -5029,7 +5029,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
-        if (prop.endsWith("z-index")) {
+        if (prop.equals("z-index")) {
             setZIndex(value);
             return;
         }
@@ -5039,8 +5039,87 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
-        if (prop.endsWith("cursor")) {
+        if (prop.equals("cursor")) {
             setCursor(value);
+            return;
+        }
+
+        if (prop.endsWith("transition")) {
+            Vector<String> parts = new Vector<String>();
+            int pos = 0;
+            int level = 0;
+            String part = "";
+            while (pos < value.length()) {
+                if (value.charAt(pos) == '(') level++;
+                else if (value.charAt(pos) == ')') level--;
+                if (level == 0 && value.charAt(pos) == ',') {
+                    parts.add(part);
+                    part = "";
+                    pos++;
+                    continue;
+                }
+                part += value.charAt(pos);
+                pos++;
+            }
+            if (!part.isEmpty() && !part.matches("\\s+")) {
+                parts.add(part);
+            }
+
+            for (int i = 0; i < parts.size(); i++) {
+                int n = 0;
+                String property = "";
+                int timingFunction = Transition.TimingFunction.LINEAR;
+                int duration = 0;
+                int delay = 0;
+                Vector<String> timingFuncs = new Vector<String>(Arrays.asList(new String[] {"linear", "ease-in", "ease-out", "ease", "bounce"}));
+
+                String[] p = parts.get(i).split("(?<=[^,])\\s+");
+                for (String str: p) {
+                    if (str.isEmpty()) continue;
+                    if (str.endsWith("s")) {
+                        String ch = str.substring(0, 1);
+                        String val = "";
+                        int index = 0;
+                        while (ch.matches("[0-9.]")) {
+                            val += ch;
+                            index++;
+                            ch = str.substring(index, index+1);
+                        }
+                        int time = 0;
+                        String u = str.substring(index);
+                        if (u.equals("s")) {
+                            time = (int) Math.round(Float.parseFloat(val) * 1000);
+                        } else {
+                            time = (int) Math.round(Float.parseFloat(val));
+                        }
+                        if (n == 0) {
+                            duration = time;
+                        } else {
+                            delay = time;
+                        }
+                        n++;
+                    } else if (timingFuncs.contains(str.trim())) {
+                        if (str.trim().equals("linear")) {
+                            timingFunction = Transition.TimingFunction.LINEAR;
+                        } else if (str.trim().equals("ease-in")) {
+                            timingFunction = Transition.TimingFunction.EASE_IN;
+                        } else if (str.trim().equals("ease-out")) {
+                            timingFunction = Transition.TimingFunction.EASE_OUT;
+                        } else if (str.trim().equals("ease")) {
+                            timingFunction = Transition.TimingFunction.EASE;
+                        } else if (str.trim().equals("bounce")) {
+                            timingFunction = Transition.TimingFunction.BOUNCE;
+                        }
+                    } else if (str.matches("[a-z-]+[a-z]")) {
+                        property = str;
+                    }
+                }
+
+                if (duration > 0 && !property.isEmpty()) {
+                    TransitionInfo trans = new TransitionInfo(this, property, duration, timingFunction, delay);
+                    transitions.put(property, trans);
+                }
+            }
             return;
         }
 
@@ -7613,7 +7692,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         scale_borders = value;
     }
 
-    public Vector<Transition> transitions = new Vector<Transition>();
+    public HashMap<String, TransitionInfo> transitions = new HashMap<String, TransitionInfo>();
+    public Vector<Transition> activeTransitions = new Vector<Transition>();
+
     public Timer animator;
     public boolean passiveTransitionMode = true;
 
