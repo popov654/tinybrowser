@@ -746,6 +746,8 @@ public class Builder {
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
 
+        LinkedHashMap<String, String> old_styles = (LinkedHashMap<String, String>) b.cssStyles.clone();
+
         b.document.ready = false;
         if (!document.no_immediate_apply) {
             b.transitions.clear();
@@ -760,12 +762,8 @@ public class Builder {
             b.setMargins(0);
             b.setPaddings(0);
             b.setBorderRadius(0);
-        } else if (targetStyles.get(b) != null) {
-            targetStyles.get(b).put("background-color", "transparent");
-            targetStyles.get(b).put("border-color", "black");
-            targetStyles.get(b).put("border-width", "0");
-            targetStyles.get(b).put("margin", "0");
-            targetStyles.get(b).put("padding", "0");
+        } else {
+            b.cssStyles.clear();
         }
         applyDefaultStyles(b);
 
@@ -784,6 +782,10 @@ public class Builder {
             }
         } else if (b.node != null) {
             applyStyles(b);
+            if (document.no_immediate_apply) {
+                targetStyles.put(b, b.cssStyles);
+                b.cssStyles = old_styles;
+            }
         }
         b.document.ready = true;
 
@@ -794,6 +796,9 @@ public class Builder {
 
     public void applyStateStyles(Block b) {
         if (b.node == null) return;
+        if (b.original != null) {
+            b = b.original;
+        }
         Styles st = StyleMap.getNodeStyles(b.node);
 
         LinkedHashMap<String, String> newStyles = (LinkedHashMap<String, String>) b.cssStyles.clone();

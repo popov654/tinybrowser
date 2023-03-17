@@ -156,6 +156,7 @@ public class Transition {
     }
 
     public void start() {
+        if (start_value == end_value && startColor.equals(endColor)) return;
         for (Transition t: block.activeTransitions) {
             if (t.block == block && t.property.equals(property)) {
                 block.activeTransitions.remove(t);

@@ -7508,6 +7508,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (this == document.root) {
+            applyStylesBatchRecursive(true, false);
             document.eventsFired.clear();
             document.repaint();
         }
@@ -7676,7 +7677,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (node != null && !node.states.contains("hover")) {
                 node.states.add("hover");
                 applyStateStyles();
-                applyStylesBatchRecursive(false, false);
                 if (cursor != null) {
                     document.panel.setCursor(cursor);
                     if (text_layer != null) text_layer.setCursor(cursor);
@@ -7697,7 +7697,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                  resetStyles();
                  applyStateStyles();
                  document.no_immediate_apply = false;
-                 applyStylesBatchRecursive(true, false);
                  if (cursor != null) {
                      document.panel.setCursor(Cursor.getDefaultCursor());
                      if (text_layer != null) text_layer.setCursor(Cursor.getDefaultCursor());
@@ -7710,8 +7709,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void applyStylesBatchRecursive(boolean force, boolean no_rec) {
         applyStylesBatch(force, no_rec);
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).applyStylesBatch(force, true);
+
+        Vector<Block> blocks = copyChildren();
+        if (beforePseudoElement != null) {
+            blocks.add(0, beforePseudoElement);
+        }
+        if (afterPseudoElement != null) {
+            blocks.add(afterPseudoElement);
+        }
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks.get(i).applyStylesBatchRecursive(force, true);
         }
     }
 
@@ -7728,6 +7735,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (isAnimated) {
                     TransitionInfo info = transitions.get(key) != null ? transitions.get(key) : transitions.get("all");
                     Transition t = new Transition(this, info, key, null, newStyles.get(key));
+                    //System.out.println("CSS Transition started ( " + key + ": " + newStyles.get(key) + " )");
                     t.start();
                 } else {
                     boolean ready = document.ready;
@@ -7753,13 +7761,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         parent.removeFromLayout(this);
                         changed_display = true;
                     }
-                    count++;
+                    if (!key.matches("(-[a-z]+-)?transition|cursor")) {
+                        count++;
+                    }
                     document.ready = ready;
                 }
             }
             builder.targetStyles.remove(this);
         }
-        if (count > 0 && !no_rec) {
+        if (count > 0) {
             Block b = doIncrementLayout();
             if (b == this && changed_display && b.parent != null) {
                 b = b.parent;
