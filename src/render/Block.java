@@ -7613,6 +7613,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         scale_borders = value;
     }
 
+    public Vector<Transition> transitions = new Vector<Transition>();
+    public Timer animator;
+
     public final Color DEFAULT_INPUT_BORDER_COLOR = new Color(118, 118, 123);
     public final Color DEFAULT_INPUT_BACKGROUND_COLOR = new Color(255, 255, 255);
     public final Color DEFAULT_INPUT_TEXT_COLOR = new Color(34, 34, 36);

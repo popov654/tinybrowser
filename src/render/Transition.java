@@ -154,24 +154,25 @@ public class Transition {
     }
 
     public void start() {
-        timer = new Timer(resolution, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                double q = Math.max(0, Math.min(1, (double)(System.currentTimeMillis() - startedAt) / time));
-                update(q);
+        for (Transition t: block.transitions) {
+            if (t.block == block && t.property.equals(property)) {
+                t.joinAndStart(this);
+                return;
             }
-        });
-        timer.setInitialDelay(delay + 50);
-        timer.start();
+        }
+        block.transitions.add(this);
         startedAt = System.currentTimeMillis();
+        if (block.animator == null) {
+            block.animator = new Timer(resolution, new Animator(block));
+            block.animator.setInitialDelay(delay + 50);
+            block.animator.start();
+        }
     }
 
     public void stop() {
-        timer.stop();
         update(1);
         if (value_type.equals("background")) {
             block.background = block.target_background;
-            block.forceRepaint();
         }
     }
 
@@ -181,7 +182,6 @@ public class Transition {
             Thread.sleep(50);
         } catch (Exception ex) {}
         transition.start();
-        transition.timer.stop();
         if (!property.equals(transition.property) || !value_type.equals(transition.value_type)) {
             return;
         }
@@ -189,7 +189,11 @@ public class Transition {
             transition.startedAt = System.currentTimeMillis() - startedAt + 100;
             block.backgroundState = Math.max(0, (System.currentTimeMillis() - startedAt - 100) / time);
         }
-        transition.timer.start();
+    }
+
+    public void update() {
+        double q = Math.max(0, Math.min(1, (double)(System.currentTimeMillis() - startedAt) / time));
+        update(q);
     }
 
     public void update(double q) {
@@ -230,7 +234,6 @@ public class Transition {
                 b.document.repaint();
             }
             block.backgroundState = 0;
-            timer.stop();
         }
     }
 
