@@ -6637,8 +6637,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     Vector<Block> children = new Vector<Block>();
     Vector<Line> lines = new Vector<Line>();
 
-    Block beforePseudoElement;
-    Block afterPseudoElement;
+    public Block beforePseudoElement;
+    public Block afterPseudoElement;
 
     public void setBeforePseudoElement(Block block) {
         if (beforePseudoElement != null && block == null) {
@@ -7676,7 +7676,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (node != null && !node.states.contains("hover")) {
                 node.states.add("hover");
                 applyStateStyles();
-                applyStylesBatch(false, false);
+                applyStylesBatchRecursive(false, false);
                 if (cursor != null) {
                     document.panel.setCursor(cursor);
                     if (text_layer != null) text_layer.setCursor(cursor);
@@ -7697,7 +7697,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                  resetStyles();
                  applyStateStyles();
                  document.no_immediate_apply = false;
-                 applyStylesBatch(true, false);
+                 applyStylesBatchRecursive(true, false);
                  if (cursor != null) {
                      document.panel.setCursor(Cursor.getDefaultCursor());
                      if (text_layer != null) text_layer.setCursor(Cursor.getDefaultCursor());
@@ -7705,6 +7705,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                  }
                  //System.err.println(node.tagName + " Out!");
              }
+        }
+    }
+
+    public void applyStylesBatchRecursive(boolean force, boolean no_rec) {
+        applyStylesBatch(force, no_rec);
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).applyStylesBatch(force, true);
         }
     }
 
@@ -7749,14 +7756,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     count++;
                     document.ready = ready;
                 }
-                //cssStyles.put(key, newStyles.get(key));
             }
             builder.targetStyles.remove(this);
         }
-//        for (int i = 0; i < children.size(); i++) {
-//            children.get(i).applyStylesBatch(force, true);
-//        }
-        if (count > 0) {
+        if (count > 0 && !no_rec) {
             Block b = doIncrementLayout();
             if (b == this && changed_display && b.parent != null) {
                 b = b.parent;

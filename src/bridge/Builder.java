@@ -357,8 +357,15 @@ public class Builder {
             block.applyStylesBatch(false, false);
             targetStyles.remove(block);
         }
-        for (int i = 0; i < block.getChildren().size(); i++) {
-            applyElementStylesRecursive(block.getChildren().get(i));
+        Vector<Block> blocks = block.copyChildren();
+        if (block.beforePseudoElement != null) {
+            blocks.add(0, block.beforePseudoElement);
+        }
+        if (block.afterPseudoElement != null) {
+            blocks.add(block.afterPseudoElement);
+        }
+        for (int i = 0; i < blocks.size(); i++) {
+            applyElementStylesRecursive(blocks.get(i));
         }
     }
 
