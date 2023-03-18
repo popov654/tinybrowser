@@ -3761,8 +3761,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (!found) value = "Tahoma";
 
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).setFontFamily(value, true);
+        Vector<Block> blocks = new Vector<Block>();
+        if (beforePseudoElement != null) blocks.add(beforePseudoElement);
+        blocks.addAll(children);
+        if (afterPseudoElement != null) blocks.add(afterPseudoElement);
+
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks.get(i).setFontFamily(value, true);
         }
         
         Block b = doIncrementLayout();
@@ -3785,9 +3790,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setFontSizePx(int value) {
+        if (type != NodeTypes.ELEMENT) return;
         fontSize = value;
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).setFontSizePx(value);
+
+        Vector<Block> blocks = new Vector<Block>();
+        if (beforePseudoElement != null) blocks.add(beforePseudoElement);
+        blocks.addAll(children);
+        if (afterPseudoElement != null) blocks.add(afterPseudoElement);
+
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks.get(i).setFontSizePx(value);
         }
         Block b = doIncrementLayout();
         if (b != null && !no_draw) b.forceRepaint();
@@ -7699,24 +7711,58 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void applyStylesBatch(boolean force, boolean no_rec) {
         if (builder == null || type != NodeTypes.ELEMENT) return;
         LinkedHashMap<String, String> newStyles = builder.targetStyles.get(this);
+        int count = 0;
+        boolean changed_display = false;
         if (newStyles != null) {
             Set<String> keys = newStyles.keySet();
             for (String key: keys) {
+                if (!force && cssStyles.containsKey(key) && cssStyles.get(key).equals(newStyles.get(key))) continue;
                 boolean isAnimated = isPropertyAnimated(key);
-                if (isAnimated && (force || !cssStyles.containsKey(key) || !cssStyles.get(key).equals(newStyles.get(key)))) {
+                if (isAnimated) {
                     TransitionInfo info = transitions.get(key) != null ? transitions.get(key) : transitions.get("all");
                     Transition t = new Transition(this, info, key, null, newStyles.get(key));
                     t.start();
-                } else if (!isAnimated) {
-                    document.ready = true;
+                } else {
+                    boolean ready = document.ready;
+                    document.ready = false;
+                    int old_display_type = display_type;
                     setProp(key, newStyles.get(key));
+                    if (key.equals("display") && old_display_type == Display.NONE && display_type != Display.NONE) {
+                        Block root = this;
+                        while (root.parent != null) {
+                            root = root.parent;
+                        }
+                        document.ready = true;
+                        parent.addToLayout(this, parent.children.indexOf(this), root);
+                        changed_display = true;
+                    }
+                    else if (key.equals("display") && old_display_type != Display.NONE && display_type == Display.NONE) {
+                        removeTextLayers();
+                        clearBuffer();
+                        for (Block part: parts) {
+                            part.clearBuffer();
+                        }
+                        document.ready = true;
+                        parent.removeFromLayout(this);
+                        changed_display = true;
+                    }
+                    count++;
+                    document.ready = ready;
                 }
                 //cssStyles.put(key, newStyles.get(key));
             }
             builder.targetStyles.remove(this);
         }
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).applyStylesBatch(force, true);
+//        for (int i = 0; i < children.size(); i++) {
+//            children.get(i).applyStylesBatch(force, true);
+//        }
+        if (count > 0) {
+            Block b = doIncrementLayout();
+            if (b == this && changed_display && b.parent != null) {
+                b = b.parent;
+            }
+            if (b != null) b.forceRepaint();
+            document.repaint();
         }
     }
 

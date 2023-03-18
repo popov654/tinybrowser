@@ -146,6 +146,9 @@ public class Layouter {
                 w -= float_right_offset;
             }
         }
+        if (w < 0) {
+            w = b.viewport_width - b.borderWidth[1] - b.paddings[1] - b.borderWidth[3] - b.paddings[3];
+        }
         new_line.setWidth(w);
         return new_line;
     }
@@ -606,7 +609,13 @@ public class Layouter {
                     selection[i][1] = sel != null ? sel[1] : -1;
                     d.document.root.remove(part);
                 }
-                if (d.parts.size() > 0) d.document.root.add(d, index);
+                if (d.parts.size() > 0) {
+                    if (index >= 0 && index < d.document.root.getComponents().length) {
+                        d.document.root.add(d, index);
+                    } else {
+                        d.document.root.add(d);
+                    }
+                }
             }
             d.parts.clear();
 
