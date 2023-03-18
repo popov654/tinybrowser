@@ -6968,7 +6968,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 document.active_block.node.states.remove("active");
                 document.active_block.resetStyles();
                 document.active_block.applyStateStyles();
-                document.active_block.applyStylesBatch(false, false);
+                document.active_block.applyStylesBatch();
             }
             
             node.states.add("active");
@@ -7508,7 +7508,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (this == document.root) {
-            applyStylesBatchRecursive(true, false);
+            applyStylesBatchRecursive();
             document.eventsFired.clear();
             document.repaint();
         }
@@ -7707,8 +7707,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    public void applyStylesBatchRecursive(boolean force, boolean no_rec) {
-        applyStylesBatch(force, no_rec);
+    public void applyStylesBatchRecursive() {
+        applyStylesBatch();
 
         Vector<Block> blocks = copyChildren();
         if (beforePseudoElement != null) {
@@ -7718,11 +7718,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             blocks.add(afterPseudoElement);
         }
         for (int i = 0; i < blocks.size(); i++) {
-            blocks.get(i).applyStylesBatchRecursive(force, true);
+            blocks.get(i).applyStylesBatchRecursive();
         }
     }
 
-    public void applyStylesBatch(boolean force, boolean no_rec) {
+    public void applyStylesBatch() {
         if (builder == null || type != NodeTypes.ELEMENT) return;
         LinkedHashMap<String, String> newStyles = builder.targetStyles.get(this);
         int count = 0;
@@ -7730,7 +7730,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (newStyles != null) {
             Set<String> keys = newStyles.keySet();
             for (String key: keys) {
-                if (!force && cssStyles.containsKey(key) && cssStyles.get(key).equals(newStyles.get(key))) continue;
+                if (cssStyles.containsKey(key) && cssStyles.get(key).equals(newStyles.get(key))) continue;
                 boolean isAnimated = isPropertyAnimated(key);
                 if (isAnimated) {
                     TransitionInfo info = transitions.get(key) != null ? transitions.get(key) : transitions.get("all");

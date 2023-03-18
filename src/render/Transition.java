@@ -17,6 +17,8 @@ public class Transition {
         this.block = b;
         this.property = property;
         this.duration = duration;
+        this.start_rule = start_value;
+        this.end_rule = end_value;
         passiveMode = block.passiveTransitionMode;
 
         if (start_value != null || property.endsWith("color") ||
@@ -164,6 +166,7 @@ public class Transition {
                 return;
             }
         }
+        block.cssStyles.put(property, end_rule);
         block.activeTransitions.add(this);
         startedAt = System.currentTimeMillis();
         if (block.animator == null) {
@@ -350,6 +353,9 @@ public class Transition {
     public boolean end_height_auto = false;
     public String value_type = "length";
     public int value_units = Block.Units.px;
+
+    public String start_rule;
+    public String end_rule;
 
     public Color startColor;
     public Color endColor;

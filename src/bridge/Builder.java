@@ -354,7 +354,7 @@ public class Builder {
 
     private void applyElementStylesRecursive(Block block) {
         if (targetStyles.get(block) != null) {
-            block.applyStylesBatch(false, false);
+            block.applyStylesBatch();
             targetStyles.remove(block);
         }
         Vector<Block> blocks = block.copyChildren();
@@ -740,6 +740,7 @@ public class Builder {
     public void resetStyles(Block b, boolean no_update, boolean force) {
         if (b instanceof render.ReplacedBlock) return;
         if (b.node == null) return;
+        if (b.original != null) b = b.original;
         Styles st = StyleMap.getNodeStyles(b.node);
         if (st != null && st.stateStyles.size() == 0 && !force) return;
 
@@ -747,7 +748,6 @@ public class Builder {
         int old_height = b.viewport_height;
 
         LinkedHashMap<String, String> old_styles = (LinkedHashMap<String, String>) b.cssStyles.clone();
-
         b.document.ready = false;
         if (!document.no_immediate_apply) {
             b.transitions.clear();
@@ -801,8 +801,11 @@ public class Builder {
         }
         Styles st = StyleMap.getNodeStyles(b.node);
 
-        LinkedHashMap<String, String> newStyles = (LinkedHashMap<String, String>) b.cssStyles.clone();
-        targetStyles.put(b, newStyles);
+        LinkedHashMap<String, String> newStyles;
+        if (targetStyles.get(b) == null) {
+            targetStyles.put(b, (LinkedHashMap<String, String>) b.cssStyles.clone());
+        }
+        newStyles = targetStyles.get(b);
 
         Vector<QuerySelector> stateStyles = st.stateStyles;
         for (int i = 0; i < stateStyles.size(); i++) {
