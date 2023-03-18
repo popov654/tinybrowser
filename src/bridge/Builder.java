@@ -325,8 +325,10 @@ public class Builder {
                     b.cssStyles.putAll(StyleMap.getNodeStyles(e.target).runtimeStyles);
                 } else {
                     b.cssStyles.clear();
+                    document.no_immediate_apply = true;
                     setDefaultDisplayType(b, true);
                     resetStyles(b, false, true);
+                    document.no_immediate_apply = false;
                 }
 
                 targetStyles.put(b, b.cssStyles);
@@ -352,31 +354,23 @@ public class Builder {
 
     private void applyElementStylesRecursive(Block block) {
         if (targetStyles.get(block) != null) {
-            LinkedHashMap<String, String> oldStyles = (LinkedHashMap<String, String>) block.cssStyles.clone();
-            block.cssStyles = targetStyles.get(block);
+            block.applyStylesBatch(false, false);
             targetStyles.remove(block);
-            Set<String> keys = block.cssStyles.keySet();
-            for (String prop: keys) {
-                if (oldStyles.get(prop) != null && oldStyles.get(prop).equals(block.cssStyles.get(prop))) continue;
-                if (isPropertyAnimated(block, prop)) {
-                    TransitionInfo info = block.transitions.get(prop) != null ? block.transitions.get(prop) : block.transitions.get("all");
-                    Transition t = new Transition(block, info, null, block.cssStyles.get(prop));
-                    t.start();
-                } else {
-                    block.setProp(prop, block.cssStyles.get(prop));
-                }
-            }
         }
-        for (int i = 0; i < block.getChildren().size(); i++) {
-            applyElementStylesRecursive(block.getChildren().get(i));
+        Vector<Block> blocks = block.copyChildren();
+        if (block.beforePseudoElement != null) {
+            blocks.add(0, block.beforePseudoElement);
+        }
+        if (block.afterPseudoElement != null) {
+            blocks.add(block.afterPseudoElement);
+        }
+        for (int i = 0; i < blocks.size(); i++) {
+            applyElementStylesRecursive(blocks.get(i));
         }
     }
 
     private boolean isPropertyAnimated(Block block, String property) {
-        if (property.matches("cursor|(-[a-z]+-)?transition|display|visibility|font-family")) {
-            return false;
-        }
-        return block.transitions.containsKey("all") || block.transitions.containsKey(property);
+        return block.isPropertyAnimated(property);
     }
 
     private void applyParentFontStyles(Block block) {
@@ -752,19 +746,25 @@ public class Builder {
         int old_width = b.viewport_width;
         int old_height = b.viewport_height;
 
+        LinkedHashMap<String, String> old_styles = (LinkedHashMap<String, String>) b.cssStyles.clone();
+
         b.document.ready = false;
-        b.transitions.clear();
-        b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
-        if (!b.special) {
-            b.setBackground(new render.Background());
-            b.setBorderWidth(0);
-            b.setBorderType(RoundedBorder.SOLID);
-            b.setBorderColor(Color.BLACK);
-            b.setFontSizePx(b.parent != null ? b.parent.fontSize : (int) Math.round(b.document.fontSize * b.ratio));
+        if (!document.no_immediate_apply) {
+            b.transitions.clear();
+            b.setTextColor(b.parent != null ? b.parent.color : b.default_color);
+            if (!b.special) {
+                b.setBackground(new render.Background());
+                b.setBorderWidth(0);
+                b.setBorderType(RoundedBorder.SOLID);
+                b.setBorderColor(Color.BLACK);
+                b.setFontSizePx(b.parent != null ? b.parent.fontSize : (int) Math.round(b.document.fontSize * b.ratio));
+            }
+            b.setMargins(0);
+            b.setPaddings(0);
+            b.setBorderRadius(0);
+        } else {
+            b.cssStyles.clear();
         }
-        b.setMargins(0);
-        b.setPaddings(0);
-        b.setBorderRadius(0);
         applyDefaultStyles(b);
 
         if (b.document.lastSetProperties == null) {
@@ -782,6 +782,10 @@ public class Builder {
             }
         } else if (b.node != null) {
             applyStyles(b);
+            if (document.no_immediate_apply) {
+                targetStyles.put(b, b.cssStyles);
+                b.cssStyles = old_styles;
+            }
         }
         b.document.ready = true;
 
@@ -792,7 +796,14 @@ public class Builder {
 
     public void applyStateStyles(Block b) {
         if (b.node == null) return;
+        if (b.original != null) {
+            b = b.original;
+        }
         Styles st = StyleMap.getNodeStyles(b.node);
+
+        LinkedHashMap<String, String> newStyles = (LinkedHashMap<String, String>) b.cssStyles.clone();
+        targetStyles.put(b, newStyles);
+
         Vector<QuerySelector> stateStyles = st.stateStyles;
         for (int i = 0; i < stateStyles.size(); i++) {
             if (!stateStyles.get(i).getElements().contains(b.node)) continue;
@@ -807,11 +818,12 @@ public class Builder {
                     }
                 }
             }
+            
             if (flag) {
                 HashMap<String, String> styles = stateStyles.get(i).getRules();
                 Set<String> keys = styles.keySet();
                 for (String key: keys) {
-                    b.setProp(key, styles.get(key));
+                    newStyles.put(key, styles.get(key));
                     if (b.document.lastSetProperties != null) {
                         b.document.lastSetProperties.add(key);
                     }

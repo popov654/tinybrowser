@@ -146,6 +146,9 @@ public class Layouter {
                 w -= float_right_offset;
             }
         }
+        if (w < 0) {
+            w = b.viewport_width - b.borderWidth[1] - b.paddings[1] - b.borderWidth[3] - b.paddings[3];
+        }
         new_line.setWidth(w);
         return new_line;
     }
@@ -606,7 +609,13 @@ public class Layouter {
                     selection[i][1] = sel != null ? sel[1] : -1;
                     d.document.root.remove(part);
                 }
-                if (d.parts.size() > 0) d.document.root.add(d, index);
+                if (d.parts.size() > 0) {
+                    if (index >= 0 && index < d.document.root.getComponents().length) {
+                        d.document.root.add(d, index);
+                    } else {
+                        d.document.root.add(d);
+                    }
+                }
             }
             d.parts.clear();
 
@@ -643,7 +652,7 @@ public class Layouter {
                 b.width = b.viewport_width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
                 b.orig_width = (int)Math.floor(b.width / b.ratio);
             } else {
-                b.performLayout();
+                b.performLayout(true);
             }
 
             if (b.width <= 0 && b.isImage && last_line.getWidth() - last_line.cur_pos - b.margins[3] < b.width) {
@@ -664,7 +673,7 @@ public class Layouter {
 
             last_line.cur_pos -= b.margins[1];
 
-            if (!b.isImage) b.performLayout();
+            if (!b.isImage) b.performLayout(true);
 
             if (b.lines.size() > 0 && b.lines.get(0).cur_pos < b.lines.get(0).getWidth()) {
                 int line_width = b.lines.get(0).cur_pos;

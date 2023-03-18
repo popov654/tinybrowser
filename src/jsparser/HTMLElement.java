@@ -91,7 +91,7 @@ public class HTMLElement extends HTMLNode {
                 }
             }
             if (!type.equals("mousemove")) {
-                System.out.println("JS event: " + source.split(":")[1] + " " + e.target.tagName);
+                //System.out.println("JS event: " + source.split(":")[1] + " " + e.target.tagName);
                 /* if (relatedTarget != null) {
                     System.out.println("Related target: " + relatedTarget.tagName);
                 } */

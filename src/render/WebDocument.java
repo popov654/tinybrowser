@@ -619,6 +619,8 @@ public class WebDocument extends JPanel {
     public volatile boolean resizing = false;
     public boolean scroll_intercepted = false;
     public boolean is_video_fullscreen = false;
+    public boolean ignore_transitions = false;
+    public boolean no_immediate_apply = false;
 
     public boolean debug = false;
 

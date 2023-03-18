@@ -9,8 +9,8 @@ import javax.swing.Timer;
  */
 public class Transition {
 
-    public Transition(Block b, TransitionInfo info, String start_value, String end_value) {
-        this(b, info.property, info.duration, start_value, end_value, info.timingFunction, info.delay);
+    public Transition(Block b, TransitionInfo info, String property, String start_value, String end_value) {
+        this(b, property, info.duration, start_value, end_value, info.timingFunction, info.delay);
     }
 
     public Transition(Block b, String property, int duration, String start_value, String end_value) {
@@ -39,11 +39,11 @@ public class Transition {
         if (property.startsWith("background")) {
 
             if ((property.equals("background-color") || property.equals("background")) && end_value != null && block.background.gradient == null && block.background.bgImage == null &&
-                  block.target_background.gradient == null && block.target_background.bgImage == null) {
+                  (block.target_background == null || block.target_background.gradient == null && block.target_background.bgImage == null)) {
                 
                 value_type = "color";
 
-                startColor = b.parseColor(start_value);
+                startColor = start_value != null ? b.parseColor(start_value) : (block.background.bgcolor != null ? block.background.bgcolor : new Color(0, 0, 0, 0));
                 if (startColor == null) {
                     startColor = block.background != null && block.background.bgcolor != null ? block.background.bgcolor : new Color(0, 0, 0, 0);
                 }
@@ -156,6 +156,7 @@ public class Transition {
     }
 
     public void start() {
+        if (start_value == end_value && startColor.equals(endColor)) return;
         for (Transition t: block.activeTransitions) {
             if (t.block == block && t.property.equals(property)) {
                 block.activeTransitions.remove(t);
@@ -335,7 +336,7 @@ public class Transition {
     }
 
 
-    public Block block;
+    public final Block block;
     public String property;
     public int timingFunction;
     public int delay = 0;

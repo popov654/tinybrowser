@@ -564,7 +564,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) w += 2;
             buffer = new BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         }
-        if (buffer == null) return;
+        if (buffer == null) {
+            for (int i = 0; i < parts.size(); i++) {
+                parts.get(i).draw();
+            }
+            return;
+        }
         Graphics g = buffer.getGraphics();
         draw(g);
     }
@@ -3756,8 +3761,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (!found) value = "Tahoma";
 
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).setFontFamily(value, true);
+        Vector<Block> blocks = new Vector<Block>();
+        if (beforePseudoElement != null) blocks.add(beforePseudoElement);
+        blocks.addAll(children);
+        if (afterPseudoElement != null) blocks.add(afterPseudoElement);
+
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks.get(i).setFontFamily(value, true);
         }
         
         Block b = doIncrementLayout();
@@ -3780,9 +3790,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setFontSizePx(int value) {
+        if (type != NodeTypes.ELEMENT) return;
         fontSize = value;
-        for (int i = 0; i < children.size(); i++) {
-            children.get(i).setFontSizePx(value);
+
+        Vector<Block> blocks = new Vector<Block>();
+        if (beforePseudoElement != null) blocks.add(beforePseudoElement);
+        blocks.addAll(children);
+        if (afterPseudoElement != null) blocks.add(afterPseudoElement);
+
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks.get(i).setFontSizePx(value);
         }
         Block b = doIncrementLayout();
         if (b != null && !no_draw) b.forceRepaint();
@@ -4585,6 +4602,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setProp(String prop, String value) {
+        if (document != null && document.no_immediate_apply) return;
         prop = toHyphens(prop);
         if (original != null) {
             original.setProp(prop, value);
@@ -6619,8 +6637,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     Vector<Block> children = new Vector<Block>();
     Vector<Line> lines = new Vector<Line>();
 
-    Block beforePseudoElement;
-    Block afterPseudoElement;
+    public Block beforePseudoElement;
+    public Block afterPseudoElement;
 
     public void setBeforePseudoElement(Block block) {
         if (beforePseudoElement != null && block == null) {
@@ -6950,6 +6968,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 document.active_block.node.states.remove("active");
                 document.active_block.resetStyles();
                 document.active_block.applyStateStyles();
+                document.active_block.applyStylesBatch(false, false);
             }
             
             node.states.add("active");
@@ -7489,6 +7508,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (this == document.root) {
+            applyStylesBatchRecursive(true, false);
             document.eventsFired.clear();
             document.repaint();
         }
@@ -7673,8 +7693,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             hovered = false;
             if (node != null && node.states.contains("hover")) {
                  node.states.remove("hover");
+                 document.no_immediate_apply = true;
                  resetStyles();
                  applyStateStyles();
+                 document.no_immediate_apply = false;
                  if (cursor != null) {
                      document.panel.setCursor(Cursor.getDefaultCursor());
                      if (text_layer != null) text_layer.setCursor(Cursor.getDefaultCursor());
@@ -7683,6 +7705,85 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                  //System.err.println(node.tagName + " Out!");
              }
         }
+    }
+
+    public void applyStylesBatchRecursive(boolean force, boolean no_rec) {
+        applyStylesBatch(force, no_rec);
+
+        Vector<Block> blocks = copyChildren();
+        if (beforePseudoElement != null) {
+            blocks.add(0, beforePseudoElement);
+        }
+        if (afterPseudoElement != null) {
+            blocks.add(afterPseudoElement);
+        }
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks.get(i).applyStylesBatchRecursive(force, true);
+        }
+    }
+
+    public void applyStylesBatch(boolean force, boolean no_rec) {
+        if (builder == null || type != NodeTypes.ELEMENT) return;
+        LinkedHashMap<String, String> newStyles = builder.targetStyles.get(this);
+        int count = 0;
+        boolean changed_display = false;
+        if (newStyles != null) {
+            Set<String> keys = newStyles.keySet();
+            for (String key: keys) {
+                if (!force && cssStyles.containsKey(key) && cssStyles.get(key).equals(newStyles.get(key))) continue;
+                boolean isAnimated = isPropertyAnimated(key);
+                if (isAnimated) {
+                    TransitionInfo info = transitions.get(key) != null ? transitions.get(key) : transitions.get("all");
+                    Transition t = new Transition(this, info, key, null, newStyles.get(key));
+                    //System.out.println("CSS Transition started ( " + key + ": " + newStyles.get(key) + " )");
+                    t.start();
+                } else {
+                    boolean ready = document.ready;
+                    document.ready = false;
+                    int old_display_type = display_type;
+                    setProp(key, newStyles.get(key));
+                    if (key.equals("display") && old_display_type == Display.NONE && display_type != Display.NONE) {
+                        Block root = this;
+                        while (root.parent != null) {
+                            root = root.parent;
+                        }
+                        document.ready = true;
+                        parent.addToLayout(this, parent.children.indexOf(this), root);
+                        changed_display = true;
+                    }
+                    else if (key.equals("display") && old_display_type != Display.NONE && display_type == Display.NONE) {
+                        removeTextLayers();
+                        clearBuffer();
+                        for (Block part: parts) {
+                            part.clearBuffer();
+                        }
+                        document.ready = true;
+                        parent.removeFromLayout(this);
+                        changed_display = true;
+                    }
+                    if (!key.matches("(-[a-z]+-)?transition|cursor")) {
+                        count++;
+                    }
+                    document.ready = ready;
+                }
+            }
+            builder.targetStyles.remove(this);
+        }
+        if (count > 0) {
+            Block b = doIncrementLayout();
+            if (b == this && changed_display && b.parent != null) {
+                b = b.parent;
+            }
+            if (b != null) b.forceRepaint();
+            document.repaint();
+        }
+    }
+
+    public boolean isPropertyAnimated(String property) {
+        if (property.matches("cursor|(-[a-z]+-)?transition|display|visibility|font-family")) {
+            return false;
+        }
+        return transitions.containsKey("all") || transitions.containsKey(property);
     }
 
     public void setMediaPlayer(MediaPlayer player) {
@@ -7694,7 +7795,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public HashMap<String, TransitionInfo> transitions = new HashMap<String, TransitionInfo>();
-    public Vector<Transition> activeTransitions = new Vector<Transition>();
+    public volatile Vector<Transition> activeTransitions = new Vector<Transition>();
 
     public Timer animator;
     public boolean passiveTransitionMode = true;
