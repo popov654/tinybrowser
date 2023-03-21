@@ -782,11 +782,15 @@ public class Layouter {
 
     private boolean checkAbsolutePositioning(Block d) {
         Block p = block;
-        while (p != null && p.positioning != Block.Position.RELATIVE && p.positioning != Block.Position.ABSOLUTE) {
-            p = p.parent;
-        }
-        if (p == null) p = block.document.root;
         if (d.positioning == Block.Position.ABSOLUTE) {
+            while (p != null && p.positioning != Block.Position.RELATIVE && p.positioning != Block.Position.ABSOLUTE) {
+                p = p.parent;
+            }
+            if (p == null) p = block.document.root;
+        } else if (d.positioning == Block.Position.FIXED) {
+            p = block.document.root;
+        }
+        if (d.positioning == Block.Position.ABSOLUTE || d.positioning == Block.Position.FIXED) {
             if (d.auto_left) {
                 d.setX(last_line.getX());
             } else {

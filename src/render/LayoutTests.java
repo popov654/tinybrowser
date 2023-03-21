@@ -778,6 +778,43 @@ public class LayoutTests extends JFrame {
         }
     }
 
+    public void testFixedPositioning() {
+        prepareBlock();
+
+        Block b = document.root.children.get(0);
+
+        b.setPositioning(Block.Position.RELATIVE);
+        b.removeAllElements();
+
+        b.setHeight(380);
+
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        block.setPositioning(Block.Position.STATIC);
+        block.setDisplayType(Block.Display.INLINE_BLOCK);
+        block.addText("Text1");
+        b.addElement(block);
+
+        Block block2 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        block2.setPositioning(Block.Position.STATIC);
+        block2.setDisplayType(Block.Display.INLINE_BLOCK);
+        block2.addText("Text2");
+        b.addElement(block2);
+
+        block2.performLayout();
+        block2.id = "block2";
+
+        block2.setPositioning(Block.Position.FIXED);
+        block2.setTop(50, Block.Units.percent);
+        block2.setLeft(50, Block.Units.percent);
+        block2.setProp("margin-left", -block2.width / 2, Block.Units.px);
+        block2.setProp("margin-top", -block2.height / 2, Block.Units.px);
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
     public void testChildDocuments() {
         prepareBlock();
 
@@ -1183,14 +1220,15 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("inline-block")) test = 10;
             else if (args[0].equals("relative")) test = 11;
             else if (args[0].equals("absolute")) test = 12;
-            else if (args[0].equals("auto-marings")) test = 13;
-            else if (args[0].equals("z-index")) test = 14;
-            else if (args[0].equals("lists")) test = 15;
-            else if (args[0].equals("borders")) test = 16;
-            else if (args[0].equals("gradients")) test = 17;
-            else if (args[0].equals("iframes")) test = 18;
-            else if (args[0].equals("font-size")) test = 19;
-            else if (args[0].equals("transitions")) test = 20;
+            else if (args[0].equals("fixed")) test = 13;
+            else if (args[0].equals("auto-marings")) test = 14;
+            else if (args[0].equals("z-index")) test = 16;
+            else if (args[0].equals("lists")) test = 16;
+            else if (args[0].equals("borders")) test = 17;
+            else if (args[0].equals("gradients")) test = 18;
+            else if (args[0].equals("iframes")) test = 19;
+            else if (args[0].equals("font-size")) test = 20;
+            else if (args[0].equals("transitions")) test = 21;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -1228,21 +1266,23 @@ public class LayoutTests extends JFrame {
                      break;
             case 12: lt.testAbsolutePositioning();
                      break;
-            case 13: lt.testAutoMargins(60, 15);
+            case 13: lt.testFixedPositioning();
                      break;
-            case 14: lt.testZIndex();
+            case 14: lt.testAutoMargins(60, 15);
                      break;
-            case 15: lt.testLists(list_type);
+            case 15: lt.testZIndex();
                      break;
-            case 16: lt.testBorders();
+            case 16: lt.testLists(list_type);
                      break;
-            case 17: lt.testGradients();
+            case 17: lt.testBorders();
                      break;
-            case 18: lt.testChildDocuments();
+            case 18: lt.testGradients();
                      break;
-            case 19: lt.testFontSize();
+            case 19: lt.testChildDocuments();
                      break;
-            case 20: lt.testTransitions();
+            case 20: lt.testFontSize();
+                     break;
+            case 21: lt.testTransitions();
                      break;
         }
 

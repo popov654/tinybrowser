@@ -335,14 +335,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     
 
     public int getOffsetLeft() {
-        if (positioning == Position.ABSOLUTE) {
+        if (positioning == Position.ABSOLUTE || positioning == Position.FIXED) {
             return margins[3] + left;
         }
         return (parent == null) ? _x_ : _x_ - parent._x_;
     }
 
     public int getOffsetTop() {
-        if (positioning == Position.ABSOLUTE) {
+        if (positioning == Position.ABSOLUTE || positioning == Position.FIXED) {
             return margins[0] + top;
         }
         return (parent == null) ? _y_ : _y_ - parent._y_;
@@ -406,6 +406,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (positioning == Position.FIXED) {
+            scroll_x = scroll_y = 0;
+        }
+
         if (childDocument != null) {
             scroll_x = (parent != null ? parent.scroll_x : 0) + scroll_left;
             scroll_y = (parent != null ? parent.scroll_y : 0) + scroll_top;
@@ -417,7 +421,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int dx = 0;
         int dy = 0;
 
-        if (parent != null) {
+        if (parent != null && positioning != Position.FIXED) {
             dx += parent.scroll_x;
             dy += parent.scroll_y;
         }
@@ -612,8 +616,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             //y0 -= parent.scroll_y;
         }
 
-        scroll_x = (parent != null ? parent.scroll_x : 0) + scroll_left;
-        scroll_y = (parent != null ? parent.scroll_y : 0) + scroll_top;
+        scroll_x = positioning != Position.FIXED ? (parent != null ? parent.scroll_x : 0) + scroll_left : 0;
+        scroll_y = positioning != Position.FIXED ? (parent != null ? parent.scroll_y : 0) + scroll_top : 0;
 
         if (getComponents().length > 0 && getComponents()[0] instanceof MediaPlayer.VideoRenderer) {
             int sx = 0;
@@ -2398,7 +2402,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void updateMaxContentSize(Block el) {
         int new_value = el.content_x_max;
-        if (el.positioning != Position.ABSOLUTE) {
+        if (el.positioning != Position.ABSOLUTE && positioning != Position.FIXED) {
             new_value += el.margins[1] + paddings[1];
         }
         int w = Math.max(el.viewport_width - el.borderWidth[1] - el.borderWidth[3], new_value);
@@ -2410,7 +2414,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             content_x_max = el.getOffsetLeft() - borderWidth[3] + w;
         }
         int h = el.viewport_height - borderWidth[0] - borderWidth[2];
-        if (el.positioning != Position.ABSOLUTE && el.parent != null && el.height > 0) {
+        if (el.positioning != Position.ABSOLUTE && positioning != Position.FIXED && el.parent != null && el.height > 0) {
             h += el.margins[2] + paddings[2];
         }
         if (el.getOffsetTop() - borderWidth[0] + h > content_y_max) {
@@ -2643,7 +2647,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Drawable d = lines.get(i).elements.get(j);
                 for (int k = 0; k < children.size(); k++) {
                     Block b = children.get(k);
-                    if ((b.positioning == Position.ABSOLUTE ||
+                    if ((b.positioning == Position.ABSOLUTE || positioning == Position.FIXED ||
                         b.float_type != FloatType.NONE || b.display_type == Display.TABLE_CELL) &&
                         b._getX() <= d._getX() &&
                         b._getY() >= lines.get(i).getY() &&
@@ -2729,8 +2733,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Drawable d = children.get(i);
             if (d instanceof Block) {
                 Block b = (Block)d;
-                if (b.positioning == Block.Position.ABSOLUTE || b.float_type != Block.FloatType.NONE ||
-                      b.display_type == Display.TABLE_ROW || b.display_type == Display.TABLE_CELL) {
+                if (b.positioning == Block.Position.ABSOLUTE || b.positioning == Position.FIXED ||
+                      b.float_type != Block.FloatType.NONE || b.display_type == Display.TABLE_ROW || b.display_type == Display.TABLE_CELL) {
                     b.forceRepaint();
                 }
             }
@@ -3446,6 +3450,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         int dx = getOffsetLeft();
         int dy = getOffsetTop();
+        if (positioning == Position.FIXED) {
+            return dx < 0 || dy < 0 || dx + width > document.root.viewport_width && dy + height > document.root.viewport_height;
+        }
         Block b = parent;
         while (b != null) {
             if ((dx - b.scroll_left < b.borderWidth[3] || dy - b.scroll_top < b.borderWidth[0] ||
@@ -4036,7 +4043,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void updateAbsolutePositionedChildren() {
         for (int i = 0; i < children.size(); i++) {
-            if (children.get(i).positioning == Position.ABSOLUTE) {
+            if (children.get(i).positioning == Position.ABSOLUTE || children.get(i).positioning == Position.FIXED) {
                 Block b = children.get(i);
                 if (b.rules_for_recalc.containsKey("left")) {
                     b.setProp("left", b.rules_for_recalc.get("left"));
@@ -5727,7 +5734,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = (int)Math.round(value * size);
         }
         else if (units == Units.percent) {
-            val = (int)Math.round(value / 100 * (parent != null ? parent.viewport_width :
+            val = (int)Math.round(value / 100 * (parent != null && positioning != Position.FIXED ? parent.viewport_width :
                 document.width - document.borderSize * 2));
         }
 
@@ -5767,7 +5774,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = (int)Math.round(value * size);
         }
         else if (units == Units.percent) {
-            val = value / 100 * (parent != null ? (double) (parent.viewport_width - parent.paddings[3] - parent.paddings[1] - parent.borderWidth[3] - parent.borderWidth[1]) / ratio :
+            val = value / 100 * (parent != null && positioning != Position.FIXED ? (double) (parent.viewport_width - parent.paddings[3] - parent.paddings[1] - parent.borderWidth[3] - parent.borderWidth[1]) / ratio :
                 (double) (document.width - document.borderSize * 2) / ratio);
         }
 
@@ -5814,14 +5821,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setLeft(double val, int units) {
         auto_left = false;
-        left = getValueInPixels(val, units);
+        if (positioning == Position.FIXED && units == Units.percent) {
+            left = (int)Math.round(val / 100 * (document.root.viewport_width - document.borderSize * 2));
+        } else {
+            left = getValueInPixels(val, units);
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
                 parent.performLayout(true);
                 forceRepaint();
             }
-            else if (positioning == Block.Position.ABSOLUTE) {
+            else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
                     setX(parent.borderWidth[3] + margins[3] + left);
                 } else {
@@ -5835,13 +5846,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setRight(double val, int units) {
         auto_right = false;
-        right = getValueInPixels(val, units);
+        if (positioning == Position.FIXED && units == Units.percent) {
+            right = (int)Math.round(val / 100 * (document.root.viewport_width - document.borderSize * 2));
+        } else {
+            right = getValueInPixels(val, units);
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
                 parent.performLayout(true);
             }
-            else if (positioning == Block.Position.ABSOLUTE) {
+            else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
                     setX(parent.borderWidth[3] + margins[3] + left);
                 } else {
@@ -5856,13 +5871,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setTop(double val, int units) {
         auto_top = false;
-        top = getValueInPixels(val, units);
+        if (positioning == Position.FIXED && units == Units.percent) {
+            top = (int)Math.round(val / 100 * (document.root.viewport_height - document.borderSize * 2));
+        } else {
+            top = getValueInPixels(val, units);
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
                 parent.performLayout(true);
             }
-            else if (positioning == Block.Position.ABSOLUTE) {
+            else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
                     setY(parent.borderWidth[0] + margins[0] + top);
                 } else {
@@ -5877,13 +5896,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setBottom(double val, int units) {
         auto_bottom = false;
-        bottom = getValueInPixels(val, units);
+        if (positioning == Position.FIXED && units == Units.percent) {
+            bottom = (int)Math.round(val / 100 * (document.root.viewport_height - document.borderSize * 2));
+        } else {
+            bottom = getValueInPixels(val, units);
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
                 parent.performLayout(true);
             }
-            else if (positioning == Block.Position.ABSOLUTE) {
+            else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
                     setY(parent.borderWidth[0] + margins[0] + top);
                 } else {
@@ -6487,6 +6510,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int STATIC = 0;
         public static final int RELATIVE = 1;
         public static final int ABSOLUTE = 2;
+        public static final int FIXED = 3;
     }
 
     public static class Display {
