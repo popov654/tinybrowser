@@ -4713,6 +4713,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             return;
         }
+        if (prop.equals("vertical-align")) {
+            String[] align_types = new String[] { "top", "middle", "baseline", "bottom" };
+            for (int i = 0; i < align_types.length; i++) {
+                if (align_types[i].equals(value)) {
+                    setVerticalAlign(i);
+                    break;
+                }
+            }
+            return;
+        }
         if (prop.equals("margin")) {
             String[] s = value.split("\\s");
             if (s.length > 0) {
