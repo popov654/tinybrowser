@@ -617,6 +617,7 @@ public class Layouter {
                     }
                 }
             }
+            d.saveSelectionRange();
             d.parts.clear();
 
             Block b = d.clone();
@@ -708,11 +709,13 @@ public class Layouter {
                 block.min_size = last_line.cur_pos;
             }
 
-            for (int i = 0; i < d.parts.size(); i++) {
-                if (i < selection.length && selection[i][0] > -1 && selection[i][1] > -1) {
-                    d.parts.get(i).setSelection(selection[i]);
-                }
-            }
+//            for (int i = 0; i < d.parts.size(); i++) {
+//                if (i < selection.length && selection[i][0] > -1 && selection[i][1] > -1) {
+//                    d.parts.get(i).setSelection(selection[i]);
+//                }
+//            }
+
+            d.restoreSelectionRange();
 
             if (d.getParent() != null) {
                 //index = d.getParent().getComponentCount() - d.pos - 1;

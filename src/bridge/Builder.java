@@ -895,6 +895,7 @@ public class Builder {
             resetStylesRecursive(b.getChildren().get(i), true, force);
         }
 
+        b.setNeedRestoreSelection(true);
         if ((b == b.document.root || !no_rec) && !force) {
             boolean use_fast_update = document.fast_update;
             document.fast_update = false;
@@ -906,6 +907,7 @@ public class Builder {
             b.forceRepaintAll();
             document.repaint();
         }
+        b.setNeedRestoreSelection(false);
     }
 
     public void resetStylesRecursive(Block b) {

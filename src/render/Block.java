@@ -2087,12 +2087,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                     continue;
                 }
-                if (parts.get(i).sel[0] > 0 && from < 0) {
+                if (parts.get(i).sel[0] >= 0 && from < 0) {
                     from = len;
                     len = 0;
-                    if (parts.get(i).children.size() > 0) {
-                        len += parts.get(i).children.get(0).textContent.length() - parts.get(i).sel[0];
-                    }
                 }
                 if (parts.get(i).sel[1] > 0 && from >= 0) {
                     if (parts.get(i).children.size() > 0) {
@@ -2100,9 +2097,34 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                     to = len;
                     break;
+                } else if (parts.get(i).children.size() > 0) {
+                    len += parts.get(i).children.get(0).textContent.length() - parts.get(i).sel[0];
                 }
             }
             sel = new int[] {from, to};
+        }
+    }
+
+    public void restoreSelectionRange() {
+        if (sel == null || sel[0] < 0 && sel[1] < 0) return;
+        int pos = 0;
+        for (int i = 0; i < parts.size(); i++) {
+            if (parts.get(i).children.size() == 0) continue;
+            if (parts.get(i).sel == null) {
+                parts.get(i).sel = new int[] {-1, -1};
+            }
+            int len = parts.get(i).children.get(0).textContent.length();
+            if (sel[0] >= pos && sel[0] < pos + len) {
+                parts.get(0).sel[0] = sel[0] - pos;
+                parts.get(0).sel[1] = Math.min(sel[1] - pos, len-1);
+            } else if (sel[1] >= pos && sel[1] < pos + len) {
+                parts.get(0).sel[0] = 0;
+                parts.get(0).sel[1] = Math.min(sel[1] - pos, len-1);
+            } else if (sel[0] < pos && sel[1] >= pos + len) {
+                parts.get(0).sel[0] = 0;
+                parts.get(0).sel[1] = len-1;
+            }
+            pos += len;
         }
     }
 
@@ -3396,6 +3418,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int k = 0; k < v.size(); k++) {
                 if (!(v.get(k) instanceof Character)) continue;
                 Character c = (Character)v.get(k);
+                if (k >= from_element && k <= to_element) {
+                    c.selected = true;
+                }
                 if (!c.selected) continue;
                 JLabel label = c.glyph;
 
