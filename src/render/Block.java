@@ -4648,6 +4648,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         }
+        if (prop.equals("position")) {
+            String[] position_types = new String[] { "static", "relative", "absolute", "fixed" };
+            for (int i = 0; i < position_types.length; i++) {
+                if (position_types[i].equals(value)) {
+                    setPositioning(i);
+                    return;
+                }
+            }
+        }
         if (prop.equals("visibility")) {
             setVisibility(value.equals("hidden") ? Visibility.HIDDEN : Visibility.VISIBLE);
             return;
