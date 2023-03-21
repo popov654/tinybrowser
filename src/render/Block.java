@@ -4670,6 +4670,37 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setFontSizePx(val);
             return;
         }
+        if (prop.equals("font-weight")) {
+            if (value.matches("[0-9]+")) {
+                text_bold = Integer.parseInt(value) > 400;
+            }
+            text_bold = value.equals("bold");
+            Block b = doIncrementLayout();
+            if (b != null && !no_draw) b.forceRepaint();
+            if (document != null && document.ready) {
+                document.repaint();
+            }
+            return;
+        }
+        if (prop.equals("font-style")) {
+            text_italic = value.equals("italic");
+            Block b = doIncrementLayout();
+            if (b != null && !no_draw) b.forceRepaint();
+            if (document != null && document.ready) {
+                document.repaint();
+            }
+            return;
+        }
+        if (prop.equals("text-decoration")) {
+            text_underline = value.equals("underline");
+            text_strikethrough = value.equals("strikethrough");
+            Block b = doIncrementLayout();
+            if (b != null && !no_draw) b.forceRepaint();
+            if (document != null && document.ready) {
+                document.repaint();
+            }
+            return;
+        }
         if (prop.equals("margin")) {
             String[] s = value.split("\\s");
             if (s.length > 0) {
