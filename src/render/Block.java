@@ -7237,6 +7237,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void mouseDragged(MouseEvent e) {
+        mouseMoved(e);
         if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
             return;
         }
@@ -7810,9 +7811,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         changed_display = true;
                     }
                     else if (key.equals("display") && old_display_type != Display.NONE && display_type == Display.NONE) {
+                        cancelTransitions();
                         removeTextLayers();
                         clearBuffer();
                         for (Block part: parts) {
+                            part.cancelTransitions();
                             part.clearBuffer();
                         }
                         document.ready = true;
@@ -7842,6 +7845,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return false;
         }
         return transitions.containsKey("all") || transitions.containsKey(property);
+    }
+
+    public void cancelTransitions() {
+        for (Transition t: (Vector<Transition>) activeTransitions.clone()) {
+            t.stop();
+        }
+        activeTransitions.clear();
     }
 
     public void setMediaPlayer(MediaPlayer player) {
