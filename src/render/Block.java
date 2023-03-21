@@ -4644,18 +4644,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int i = 0; i < display_types.length; i++) {
                 if (display_types[i].equals(value)) {
                     setDisplayType(i);
-                    return;
+                    break;
                 }
             }
+            return;
         }
         if (prop.equals("position")) {
             String[] position_types = new String[] { "static", "relative", "absolute", "fixed" };
             for (int i = 0; i < position_types.length; i++) {
                 if (position_types[i].equals(value)) {
                     setPositioning(i);
-                    return;
+                    break;
                 }
             }
+            return;
         }
         if (prop.equals("visibility")) {
             setVisibility(value.equals("hidden") ? Visibility.HIDDEN : Visibility.VISIBLE);
@@ -4698,6 +4700,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (b != null && !no_draw) b.forceRepaint();
             if (document != null && document.ready) {
                 document.repaint();
+            }
+            return;
+        }
+        if (prop.equals("text-align")) {
+            String[] align_types = new String[] { "left", "center", "right", "justify" };
+            for (int i = 0; i < align_types.length; i++) {
+                if (align_types[i].equals(value)) {
+                    setTextAlign(i);
+                    break;
+                }
             }
             return;
         }
