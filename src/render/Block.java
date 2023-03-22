@@ -4175,7 +4175,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (isImage) {
             width = viewport_width = w >= 0 ? (int)Math.round(w*ratio) : -1;
             orig_width = w;
-            if (max_width > 0 && width > max_width) {
+            if (max_width > -1 && width > max_width) {
                 width = max_width;
             }
             auto_width = width < 0;
@@ -4200,14 +4200,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 width = document.width-document.borderSize*2-margins[1]-_x_;
                 orig_width = (int)Math.round(width / ratio);
             }
-            if (max_width > 0 && width > max_width) width = max_width;
+            if (max_width > -1 && width > max_width) width = max_width;
             //content_x_max = width;
             auto_width = true;
             rules_for_recalc.put("width", "auto");
         } else {
             width = (int)Math.round(w*ratio);
             orig_width = w;
-            if (max_width > 0 && width > max_width) width = max_width;
+            if (max_width > -1 && width > max_width) {
+                width = max_width;
+            }
             rules_for_recalc.remove("width");
             auto_width = false;
             viewport_width = width;
@@ -4251,7 +4253,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (max_width_percent >= 0 && !(parent.auto_width && parent.display_type == Display.INLINE_BLOCK)) {
             max_width = (int) Math.round((parent.viewport_width - parent.borderWidth[3] - parent.borderWidth[1] - parent.paddings[3] - parent.paddings[1]) * (double) max_width_percent / 100);
         }
-        if (max_width > 0 && width > max_width) width = max_width;
+        if (max_width > -1 && width > max_width) {
+            width = max_width;
+        }
         rules_for_recalc.remove("width");
         auto_width = false;
 
@@ -4283,9 +4287,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (isImage) {
             height = viewport_height = (int)Math.round(h*ratio);
+            if (max_height > -1 && height > max_height) {
+                height = max_height;
+            }
             viewport_height = height;
             orig_height = h;
-            max_height = height;
             auto_height = false;
             Block b = doIncrementLayout(old_width, old_height, no_recalc);
             if (b != null && !no_draw) {
@@ -4312,9 +4318,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         } else {
             height = (int)Math.round(h*ratio);
+            if (max_height > -1 && height > max_height) {
+                height = max_height;
+            }
             viewport_height = height;
             orig_height = h;
-            max_height = height;
             auto_height = false;
             viewport_height = height;
             if (scrollbar_x != null) {
@@ -6598,8 +6606,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int rem = 3;
     }
 
-    public int max_width;
-    public int max_height;
+    public int max_width = -1;
+    public int max_height = -1;
 
     public double max_width_percent = -1;
     public double max_height_percent = -1;
