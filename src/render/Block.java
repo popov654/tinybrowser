@@ -6453,7 +6453,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 for (int j = line.elements.size()-1; j >= 0; j--) {
                     Drawable el = line.elements.get(j);
                     if (!(el instanceof Block) || !d.parts.contains((Block)el)) {
-                        el.setX(el._getX() - d.parts.get(0).width);
+                        el.setX(!rtl ? el._getX() - d.parts.get(0).width : el._getX() + d.parts.get(0).width);
                     } else {
                         line.elements.remove(el);
                         if (el instanceof Block) {
@@ -7166,6 +7166,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.node = node;
         b.builder = builder;
         b.special = special;
+        b.rtl = rtl;
 
         b.dimensions = dimensions;
 
@@ -8115,6 +8116,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public HashMap<String, TransitionInfo> transitions = new HashMap<String, TransitionInfo>();
     public volatile Vector<Transition> activeTransitions = new Vector<Transition>();
+
+    public boolean rtl = false;
 
     public Timer animator;
     public boolean passiveTransitionMode = true;

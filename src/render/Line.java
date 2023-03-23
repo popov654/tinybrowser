@@ -52,7 +52,7 @@ public class Line {
 
         if (d instanceof Block) {
             Block b = (Block)d;
-            cur_pos += b.margins[3];
+            cur_pos += b.margins[!parent.rtl ? 3 : 1];
         }
         if (d instanceof Character) {
             Character c = (Character)d;
@@ -61,7 +61,7 @@ public class Line {
                 //implement vertical align
             }
         }
-        d.setX(left + cur_pos);
+        d.setX(!parent.rtl ? left + cur_pos : width - cur_pos - d._getWidth());
         d.setY(top);
         if (d instanceof Block && ((Block)d).display_type != Block.Display.BLOCK) {
             Block b = (Block)d;
@@ -98,7 +98,7 @@ public class Line {
         
         if (d instanceof Block) {
             Block b = (Block)d;
-            cur_pos += b.width + b.margins[1];
+            cur_pos += b.width + b.margins[!parent.rtl ? 1 : 3];
         } else if (d instanceof Character) {
             if (elements.size() > 1) {
                 cur_pos += parent.letter_spacing;
@@ -124,7 +124,11 @@ public class Line {
     }
 
     public void setX(int value) {
+        int old_value = left;
         left = value;
+        for (Drawable d: elements) {
+            d.setX(d._getX() + old_value - left);
+        }
     }
 
     public void setY(int value) {

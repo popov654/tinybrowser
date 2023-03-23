@@ -661,18 +661,18 @@ public class Layouter {
             cur_y = last_line.getY();
 
             if (!b.isImage) {
-                b.width = b.viewport_width = last_line.getWidth() - last_line.cur_pos - b.margins[3];
+                b.width = b.viewport_width = last_line.getWidth() - last_line.cur_pos - b.margins[!block.rtl ? 3 : 1];
                 b.orig_width = (int)Math.floor(b.width / b.ratio);
             } else {
                 b.performLayout(true);
             }
 
-            if (b.width <= 0 && b.isImage && last_line.getWidth() - last_line.cur_pos - b.margins[3] < b.width) {
+            if (b.width <= 0 && b.isImage && last_line.getWidth() - last_line.cur_pos - b.margins[!block.rtl ? 3 : 1] < b.width) {
                 Line new_line = startNewLine(0, 0, b);
                 cur_x = new_line.getX();
                 cur_y = new_line.getY();
                 last_line = new_line;
-                b.width = last_line.getWidth() - b.margins[3];
+                b.width = last_line.getWidth() - b.margins[!block.rtl ? 3 : 1];
                 b.viewport_width = b.width;
                 b.orig_width = (int)Math.floor(b.width / b.ratio);
             }
@@ -683,18 +683,25 @@ public class Layouter {
 
             last_line.addElement(b);
 
-            last_line.cur_pos -= b.margins[1];
+            last_line.cur_pos -= b.margins[!block.rtl ? 1 : 3];
 
             if (!b.isImage) b.performLayout(true);
 
             if (b.lines.size() > 0 && b.lines.get(0).cur_pos < b.lines.get(0).getWidth()) {
+                int old_width = b.lines.get(0).width;
                 int line_width = b.lines.get(0).cur_pos;
                 b.lines.get(0).setWidth(line_width);
+                if (block.rtl) {
+                    b.lines.get(0).setX(b.lines.get(0).getX() + (old_width - line_width));
+                }
                 b.width = b.borderWidth[3] + b.paddings[3] + line_width + b.paddings[1] + b.borderWidth[1];
                 b.viewport_width = b.width;
                 b.orig_width = (int)Math.round(b.width / b.ratio);
                 b.content_x_max = b.width;
-                last_line.cur_pos = b._getX() + b.width - last_line.getX() + b.margins[1];
+                last_line.cur_pos -= (old_width - line_width);
+                if (block.rtl) {
+                    b.setX(last_line.width - last_line.cur_pos);
+                }
             }
 
             if (b.parent.content_x_max < last_line.cur_pos) {
@@ -702,9 +709,13 @@ public class Layouter {
             }
 
             if (b.lines.size() == 0 && !b.isImage) {
+                int old_width = b.width;
                 b.width = b.borderWidth[3] + b.paddings[3] + b.paddings[1] + b.borderWidth[1];
                 b.viewport_width = b.width;
                 b.orig_width = (int)Math.floor(b.width / b.ratio);
+                if (block.rtl) {
+                    b.setX(b._getX() + old_width - b.width);
+                }
                 int st = (b.text_bold || b.text_italic) ? ((b.text_bold ? Font.BOLD : 0) | (b.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
                 Font f = new Font(b.fontFamily, st, b.fontSize);
                 int fs = b.getFontMetrics(f).getHeight();
@@ -803,7 +814,7 @@ public class Layouter {
         }
         if (d.positioning == Block.Position.ABSOLUTE || d.positioning == Block.Position.FIXED) {
             if (d.auto_left) {
-                d.setX(last_line.getX());
+                d.setX(!block.rtl ? last_line.getX() : last_line.getX() + last_line.getWidth() - d.width);
             } else {
                 if (!d.auto_left && !d.auto_right && !d.auto_width && d.auto_x_margin &&
                       p.width - p.borderWidth[3] - p.borderWidth[1] - d.left - d.right - d.width > 0) {
