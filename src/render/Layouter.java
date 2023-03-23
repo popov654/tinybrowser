@@ -404,7 +404,8 @@ public class Layouter {
         if (d.display_type == Block.Display.TABLE_ROW || d.parent.display_type == Block.Display.TABLE_CELL) {
             return;
         }
-        if (d.display_type == Block.Display.BLOCK || d.display_type == Block.Display.TABLE) {
+        if (d.display_type == Block.Display.BLOCK || d.display_type == Block.Display.TABLE ||
+              (d.display_type == Block.Display.FLEX && block.display_type != Block.Display.FLEX && block.display_type != Block.Display.INLINE_FLEX)) {
             if (d.auto_y_margin) {
                 d.margins[0] = 0;
                 d.margins[2] = 0;
@@ -475,7 +476,11 @@ public class Layouter {
             last_margin_top = 0;
             stack.remove(stack.lastIndexOf(d));
             return;
-        } else if (d.display_type == Block.Display.INLINE_BLOCK || d.display_type == Block.Display.INLINE_TABLE) {
+        } else if (block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX ||
+                d.display_type == Block.Display.INLINE_BLOCK || d.display_type == Block.Display.INLINE_TABLE || d.display_type == Block.Display.INLINE_FLEX) {
+            if (last_line != null && (block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX)) {
+                offset += block.flex_gap;
+            }
             if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
                     ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK) {
                 if (last_line != null && last_line.elements.size() == 1) {
@@ -491,8 +496,14 @@ public class Layouter {
             int x = getFullLinePos(d);
             int w = getFullLineSize(d);
 
+            boolean is_flex = block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX;
+
             if (d.display_type != Block.Display.INLINE_TABLE) {
                 if (!d.no_layout) {
+                    if (is_flex) {
+                        d.width = d.viewport_width = d.flex_basis;
+                        d.orig_width = (int) Math.floor((double) d.width / d.ratio);
+                    }
                     d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
                     d.performLayout();
                 }
@@ -505,9 +516,13 @@ public class Layouter {
                 }
             }
 
-            if (x + d.margins[1] + d.margins[3] + d.width > w &&
-                    block.white_space != Block.WhiteSpace.NO_WRAP) {
-                last_line = startNewLine(0, 0, d);
+            int gap = is_flex ? block.flex_gap : 0;
+            if (last_line == null || last_line.elements.size() == 0) gap = 0;
+
+            if (x + d.margins[1] + d.margins[3] + d.width + gap > w && (last_line == null || last_line.elements.size() > 0) &&
+                    (!(block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX) && block.white_space != Block.WhiteSpace.NO_WRAP ||
+                    block.flex_wrap != Block.WhiteSpace.NO_WRAP)) {
+                last_line = startNewLine(is_flex ? block.flex_gap : 0, 0, d);
                 cur_x = last_line.getX();
                 cur_y = last_line.getY();
             }
@@ -518,7 +533,7 @@ public class Layouter {
             if (block.min_size < d.width + d.margins[3] + d.margins[1]) {
                 block.min_size = d.width + d.margins[3] + d.margins[1];
             }
-            
+
             last_line.addElement(d);
 
             d.performLayout();

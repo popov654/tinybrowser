@@ -851,6 +851,49 @@ public class LayoutTests extends JFrame {
         }
     }
 
+    public void testFlexPositioning() {
+        prepareBlock();
+
+        Block b = document.root.children.get(0);
+
+        b.setPositioning(Block.Position.RELATIVE);
+        b.removeAllElements();
+        b.background.gradient = null;
+        b.setBorderRadius(0);
+
+        b.setHeight(140);
+        b.setDisplayType(Block.Display.FLEX);
+        b.flex_gap = 12;
+        //b.flex_wrap = Block.WhiteSpace.NORMAL;
+
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        block.setPositioning(Block.Position.STATIC);
+        block.setDisplayType(Block.Display.INLINE_BLOCK);
+        block.setBackgroundColor(new Color(0, 190, 235));
+        block.setWidth(120);
+        block.setHeight(40);
+        block.flex_basis = 320;
+        block.flex_grow = 3;
+        block.flex_shrink = 1;
+        b.addElement(block);
+
+        Block block2 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        block2.setPositioning(Block.Position.STATIC);
+        block2.setDisplayType(Block.Display.INLINE_BLOCK);
+        block2.setBackgroundColor(new Color(0, 190, 235));
+        block2.setWidth(120);
+        block2.setHeight(40);
+        block2.flex_basis = 320;
+        block2.flex_grow = 1;
+        block2.flex_shrink = 2;
+        b.addElement(block2);
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
     public void testChildDocuments() {
         prepareBlock();
 
@@ -1239,7 +1282,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 21;
+        int test = 23;
         int list_type = 2;
 
         if (args.length > 0) {
@@ -1266,6 +1309,7 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("font-size")) test = 20;
             else if (args[0].equals("viewport-units")) test = 21;
             else if (args[0].equals("transitions")) test = 22;
+            else if (args[0].equals("flex")) test = 23;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -1323,6 +1367,8 @@ public class LayoutTests extends JFrame {
                      break;
             case 22: lt.testTransitions();
                      break;
+            case 23: lt.testFlexPositioning();
+                     break;
         }
 
         lt.setVisible(true);
@@ -1332,7 +1378,7 @@ public class LayoutTests extends JFrame {
             @Override
             public void run() {
                 if (lt.document.root != null && lt.document.root.getChildren().size() >= 1){
-                    lt.document.root.getChildren().get(0).takeScreenshot("screenshot");
+                    //lt.document.root.getChildren().get(0).takeScreenshot("screenshot");
                 }
             }
             

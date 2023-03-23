@@ -46,6 +46,10 @@ public class Line {
 
         if (cur_pos == 0) checkIsListItem();
 
+        if (cur_pos > 0 && (parent.display_type == Block.Display.FLEX || parent.display_type == Block.Display.INLINE_FLEX)) {
+            cur_pos += parent.flex_gap;
+        }
+
         if (d instanceof Block) {
             Block b = (Block)d;
             cur_pos += b.margins[3];

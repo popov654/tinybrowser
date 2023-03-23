@@ -2337,6 +2337,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             layouter.getBlock().orig_width = (int)Math.floor(layouter.getBlock().width / layouter.getBlock().ratio);
         }
         if (lines.size() > 0) {
+            if (display_type == Display.FLEX || display_type == Display.INLINE_FLEX) {
+                processFlex();
+            }
             Line last = lines.lastElement();
             while (display_type != Display.INLINE && !last.elements.isEmpty() && last.elements.lastElement() instanceof Character &&
                     ((Character)last.elements.lastElement()).getText().matches("\\s+")) {
@@ -2421,6 +2424,92 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             System.out.println();
             System.out.println("Layout ended for block " + toString());
         }
+    }
+
+    public void processFlex() {
+        content_x_max = 0;
+        content_y_max = 0;
+        int delta_y = viewport_height - paddings[2] - (lines.lastElement().top + lines.lastElement().height);
+        for (int i = 0; i < lines.size(); i++) {
+            int width = lines.get(i).getWidth();
+            int weight_sum_grow = 0;
+            int weight_sum_shrink = 0;
+
+            int cur_width = 0;
+            int index = 0;
+            Block last_block = null;
+            for (Drawable d: lines.get(i).elements) {
+                if (d instanceof Block) {
+                    Block b = (Block) d;
+                    cur_width += b.margins[3] + b.width + b.margins[1] + (index > 0 ? flex_gap : 0);
+                    weight_sum_grow += b.flex_grow;
+                    weight_sum_shrink += b.flex_shrink;
+                    last_block = b;
+                }
+                index++;
+            }
+
+            int delta = width - cur_width;
+            int dx = 0;
+
+            if (delta == 0) continue;
+
+            int last_x = _x_ + lines.get(i).getX();
+            for (Drawable d: lines.get(i).elements) {
+                if (d instanceof Block) {
+                    Block b = (Block) d;
+
+                    dx = (int) Math.floor((double) delta / index);
+                    int block_dx = dx;
+                    if (delta > 0) {
+                        block_dx = (int) Math.floor(delta * (double) b.flex_grow / weight_sum_grow);
+                    } else {
+                        block_dx = (int) Math.floor(delta * (double) b.flex_shrink / weight_sum_shrink);
+                    }
+
+                    if (b.max_width > 0 && b.width + block_dx > b.max_width) {
+                        block_dx = b.max_width - b.width;
+                    } else if (b.width + block_dx < b.min_size) {
+                        block_dx = b.min_size - b.width;
+                    }
+
+                    b._x_ = last_x + b.margins[3];
+                    b.width += block_dx;
+                    b.viewport_width += block_dx;
+
+                    delta -= block_dx;
+                    weight_sum_grow -= b.flex_grow;
+                    weight_sum_shrink -= b.flex_shrink;
+                    
+                    if (b == last_block && block_dx != 0 && b._x_ + b.width > _x_ + lines.get(i).getX() + lines.get(i).getWidth()) {
+                        int sub = Math.max(b.width - b.min_size, b._x_ + b.width - (_x_ + viewport_width - paddings[1] - paddings[3]));
+                        b.width -= sub;
+                        b.viewport_width -= sub;
+                    }
+                    b.orig_width = (int) Math.floor((double) b.width / b.ratio);
+                    b.performLayout();
+
+                    updateMaxContentSize(b);
+                    if (b._x_ - _x_ + b.width > content_x_max) {
+                        content_x_max = b._x_ - _x_ + b.width;
+                    }
+
+                    last_x = b._x_ + b.width + b.margins[1] + flex_gap;
+                } else {
+                    d.setX(last_x);
+                }
+            }
+        }
+        if (delta_y > 0) {
+            int dy = (int) Math.floor((double) delta_y / (lines.size()-1));
+            for (int i = 1; i < lines.size(); i++) {
+                lines.get(i).top += dy;
+                for (Drawable d: lines.get(i).elements) {
+                    d.setY(d._getY() + dy);
+                }
+            }
+        }
+        content_y_max = lines.lastElement().top + lines.lastElement().height;
     }
 
     public void updateMaxContentSize(Block el) {
@@ -4397,7 +4486,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block last = this;
 
         if (layouter != null || parts.size() > 0 && parts.get(0).layouter != null) {
-            boolean use_fast_update = document.fast_update;
+            boolean use_fast_update = display_type != Display.FLEX && display_type != Display.INLINE_FLEX && document.fast_update;
             document.no_layout = use_fast_update;
             performLayout(use_fast_update);
             if (viewport_height != old_height && background != null && background.bgImage != null) {
@@ -6485,7 +6574,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     @Override
     public String toString() {
-        String[] types = new String[] {"block", "inline-block", "inline", "none", "table", "inline-table", "table-row", "table-cell"};
+        String[] types = new String[] {"block", "inline-block", "inline", "none", "table", "inline-table", "table-row", "table-cell", "flex", "inline-flex"};
         String s = "";
         s += type == NodeTypes.ELEMENT ? ("Element (Display: " + types[display_type] + ") ") : "TextNode ";
         s += "ID " + (id != null && id.length() > 0 ? id : "<none>") + " ";
@@ -6585,6 +6674,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean auto_x_margin = false;
     public boolean auto_y_margin = false;
 
+    public int flex_grow = 1;
+    public int flex_shrink = 1;
+    public int flex_basis = 0;
+    public int flex_wrap = WhiteSpace.NO_WRAP;
+    public int flex_align = TextAlign.ALIGN_LEFT;
+    public int flex_gap = 0;
+
     public int display_type = 0;
     public int visibility = 0;
     public int float_type = 0;
@@ -6669,6 +6765,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int INLINE_TABLE = 5;
         public static final int TABLE_ROW = 6;
         public static final int TABLE_CELL = 7;
+        public static final int FLEX = 8;
+        public static final int INLINE_FLEX = 9;
     }
 
     public static class Visibility {
@@ -7047,6 +7145,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.auto_height = this.auto_height;
         b.auto_x_margin = this.auto_x_margin;
         b.auto_y_margin = this.auto_y_margin;
+
+        b.flex_grow = flex_grow;
+        b.flex_shrink = flex_shrink;
+        b.flex_basis = flex_basis;
+        b.flex_wrap = flex_wrap;
+        b.flex_align = flex_align;
+        b.flex_gap = flex_gap;
 
         b.transform = transform;
 
