@@ -815,6 +815,42 @@ public class LayoutTests extends JFrame {
         }
     }
 
+    public void testViewportUnits() {
+        prepareBlock();
+
+        Block b = document.root.children.get(0);
+
+        b.setPositioning(Block.Position.RELATIVE);
+        b.removeAllElements();
+        b.background.gradient = null;
+        b.setBorderRadius(0);
+
+        b.setHeight(140);
+        
+
+        Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        block.setPositioning(Block.Position.STATIC);
+        block.setDisplayType(Block.Display.INLINE_BLOCK);
+        block.setBackgroundColor(new Color(0, 190, 235));
+        block.setWidth(20, Block.Units.vw);
+        block.setHeight(20, Block.Units.vh);
+        block.margins[1] = 18;
+        b.addElement(block);
+
+        Block block2 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        block2.setPositioning(Block.Position.STATIC);
+        block2.setDisplayType(Block.Display.INLINE_BLOCK);
+        block2.setBackgroundColor(new Color(0, 190, 235));
+        block2.setWidth(20, Block.Units.vmax);
+        block2.setHeight(20, Block.Units.vmin);
+        b.addElement(block2);
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
     public void testChildDocuments() {
         prepareBlock();
 
@@ -1203,7 +1239,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 0;
+        int test = 21;
         int list_type = 2;
 
         if (args.length > 0) {
@@ -1228,7 +1264,8 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("gradients")) test = 18;
             else if (args[0].equals("iframes")) test = 19;
             else if (args[0].equals("font-size")) test = 20;
-            else if (args[0].equals("transitions")) test = 21;
+            else if (args[0].equals("viewport-units")) test = 21;
+            else if (args[0].equals("transitions")) test = 22;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -1282,7 +1319,9 @@ public class LayoutTests extends JFrame {
                      break;
             case 20: lt.testFontSize();
                      break;
-            case 21: lt.testTransitions();
+            case 21: lt.testViewportUnits();
+                     break;
+            case 22: lt.testTransitions();
                      break;
         }
 

@@ -2229,6 +2229,29 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (viewport_width == 0) viewport_width = width;
         if (viewport_height == 0 || !no_viewport_reset) viewport_height = height;
 
+        if (dimensions != null) {
+            boolean ready = document.ready;
+            document.ready = false;
+            Set<String> keys = dimensions.keySet();
+            for (String key: keys) {
+                CssLength value = dimensions.get(key);
+                if (key.equals("left")) {
+                    setLeft(value.value, value.unit);
+                } else if (key.equals("right")) {
+                    setRight(value.value, value.unit);
+                } else if (key.equals("top")) {
+                    setTop(value.value, value.unit);
+                } else if (key.equals("bottom")) {
+                    setBottom(value.value, value.unit);
+                } else if (key.equals("width")) {
+                    setWidth((int) Math.round(value.value), value.unit);
+                } else if (key.equals("height")) {
+                    setHeight((int) Math.round(value.value), value.unit);
+                }
+            }
+            document.ready = ready;
+        }
+
         Vector<Block> floats = new Vector<Block>();
         processFloatBlocks(floats, no_rec);
         Vector<Block> blocks = ((Vector<Block>)children.clone());
@@ -4237,6 +4260,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setWidth(int w, int units) {
         int value = (int) Math.round(getValueInCssPixels(w, units));
+        if (units != Units.px) {
+            dimensions.put("width", new CssLength(w, units));
+        }
         setWidth(value, false);
     }
 
@@ -4346,6 +4372,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setHeight(int h, int units) {
         int value = (int) Math.round(getValueInCssPixels(h, units));
+        if (units != Units.px) {
+            dimensions.put("height", new CssLength(h, units));
+        }
         setHeight(value, false);
     }
 
@@ -4985,28 +5014,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (prop.equals("background-position-x")) {
-            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|rem|%|v(w|h|min|max))$")) {
                 int[] val = parseValueStringToArray(value);
                 setBackgroundPositionX(val[0], val[1]);
             }
         }
 
         if (prop.equals("background-position-y")) {
-            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|rem|%|v(w|h|min|max)$")) {
                 int[] val = parseValueStringToArray(value);
                 setBackgroundPositionY(val[0], val[1]);
             }
         }
 
         if (prop.equals("background-size-x")) {
-            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|rem|%|v(w|h|min|max))$")) {
                 int[] val = parseValueStringToArray(value);
                 setBackgroundSizeX(val[0], val[1]);
             }
         }
 
         if (prop.equals("background-size-y")) {
-            if (value.matches("^[0-9.]+[0-9](px|em|%)$")) {
+            if (value.matches("^[0-9.]+[0-9](px|em|rem|%|v(w|h|min|max))$")) {
                 int[] val = parseValueStringToArray(value);
                 setBackgroundSizeY(val[0], val[1]);
             }
@@ -5122,7 +5151,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             types.put("dashed", 1);
             types.put("dotted", 2);
             for (int i = 0; i < s.length; i++) {
-                if (s[i].matches("^[0-9]+.*(px|em|rem)$")) {
+                if (s[i].matches("^[0-9]+.*(px|em|rem|v(w|h|min|max))$")) {
                     int val = getValueInPixels(s[i]);
                     if (prop.contains("-left") || prop.equals("border")) borderWidth[3] = val;
                     if (prop.contains("-right") || prop.equals("border")) borderWidth[1] = val;
@@ -5605,7 +5634,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (value.matches("calc\\(.*\\)")) {
             return new int[] { (int) Math.round(calculateCssExpression(value.substring(5, value.length()-1))), Units.px };
         }
-        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|%)$")) {
+        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|rem|%|v(w|h|min|max))$")) {
             String ch = value.substring(0, 1);
             String n = "";
             int index = 0;
@@ -5617,6 +5646,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             String u = value.substring(index);
             int val = (int)Math.round(Float.parseFloat(n));
             int units = u.equals("px") ? Units.px : (u.matches("em|rem") ? (u.equals("em") ? Units.em : Units.rem) : Units.percent);
+            if (u.equals("vw")) units = Units.vw;
+            else if (u.equals("vh")) units = Units.vh;
+            else if (u.equals("vmin")) units = Units.vmin;
+            else if (u.equals("vmax")) units = Units.vmax;
             return new int[] {val, units};
         }
         return null;
@@ -5774,7 +5807,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public CssLength parseValueString(String value) {
-        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|rem|%)$")) {
+        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|rem|%|v(w|h|min|max))$")) {
             String ch = value.substring(0, 1);
             String n = "";
             int index = 0;
@@ -5785,7 +5818,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             String u = value.substring(index);
             double val = Float.parseFloat(n);
-            int units = u.equals("px") ? Units.px : (u.matches("em|rem") ? (u.equals("em") ? Units.em : Units.rem) : Units.percent);
+            int units = u.equals("px") || u.isEmpty() ? Units.px : (u.matches("em|rem") ? (u.equals("em") ? Units.em : Units.rem) : Units.percent);
+            if (u.equals("vw")) units = Units.vw;
+            else if (u.equals("vh")) units = Units.vh;
+            else if (u.equals("vmin")) units = Units.vmin;
+            else if (u.equals("vmax")) units = Units.vmax;
             return new CssLength(val, units);
         }
         return null;
@@ -5807,6 +5844,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = (int)Math.round(value / 100 * (parent != null && positioning != Position.FIXED ? parent.viewport_width :
                 document.width - document.borderSize * 2));
         }
+        else if (units == Units.vw) {
+            val = (int)Math.round(value / 100 * (document.width - document.borderSize * 2));
+        }
+        else if (units == Units.vh) {
+            val = (int)Math.round(value / 100 * (document.height - document.borderSize * 2));
+        }
+        else if (units == Units.vmin) {
+            val = (int)Math.round(value / 100 * (Math.min(document.width, document.height) - document.borderSize * 2));
+        }
+        else if (units == Units.vmax) {
+            val = (int)Math.round(value / 100 * (Math.max(document.width, document.height) - document.borderSize * 2));
+        }
 
         return val;
     }
@@ -5826,7 +5875,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         String u = value.substring(index);
         if (!u.matches(units_list)) return 0;
 
-        List<String> units = Arrays.asList(new String[] { "px", "%", "em", "rem" });
+        List<String> units = Arrays.asList(new String[] { "px", "%", "em", "rem", "vw", "vh", "vmin", "vmax" });
 
         return getValueInPixels(Double.parseDouble(n), units.indexOf(u));
     }
@@ -5847,6 +5896,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = value / 100 * (parent != null && positioning != Position.FIXED ? (double) (parent.viewport_width - parent.paddings[3] - parent.paddings[1] - parent.borderWidth[3] - parent.borderWidth[1]) / ratio :
                 (double) (document.width - document.borderSize * 2) / ratio);
         }
+        else if (units == Units.vw) {
+            val = value / 100 * (document.width - document.borderSize * 2) / ratio;
+        }
+        else if (units == Units.vh) {
+            val = value / 100 * (document.height - document.borderSize * 2) / ratio;
+        }
+        else if (units == Units.vmin) {
+            val = value / 100 * (Math.min(document.width, document.height) - document.borderSize * 2) / ratio;
+        }
+        else if (units == Units.vmax) {
+            val = value / 100 * (Math.max(document.width, document.height) - document.borderSize * 2) / ratio;
+        }
 
         return val;
     }
@@ -5862,17 +5923,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         String u = value.substring(index);
 
-        List<String> units = Arrays.asList(new String[] { "px", "%", "em", "rem" });
+        List<String> units = Arrays.asList(new String[] { "px", "%", "em", "rem", "vw", "vh", "vmin", "vmax" });
 
         return getValueInCssPixels(Double.parseDouble(n), units.indexOf(u));
     }
 
     public int getValueInPixels(String value) {
-        return getValueInPixels(value, "px|em|rem|%");
+        return getValueInPixels(value, "px|em|rem|%|v(w|h|min|max)");
     }
 
     public static int[] parseValueStringToArrayStatic(String value) {
-        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|rem|%)$")) {
+        if (value.matches("^([0-9.]+[0-9]|[0-9]+)(px|em|rem|%|v(w|h|min|max))$")) {
             String ch = value.substring(0, 1);
             String n = "";
             int index = 0;
@@ -5884,6 +5945,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             String u = value.substring(index);
             int val = (int)Math.round(Float.parseFloat(n));
             int units = u.equals("px") ? Units.px : (u.matches("em|rem") ? (u.equals("em") ? Units.em : Units.rem) : Units.percent);
+            if (u.equals("vw")) units = Units.vw;
+            else if (u.equals("vh")) units = Units.vh;
+            else if (u.equals("vmin")) units = Units.vmin;
+            else if (u.equals("vmax")) units = Units.vmax;
             return new int[] {val, units};
         }
         return null;
@@ -5895,6 +5960,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             left = (int)Math.round(val / 100 * (document.root.viewport_width - document.borderSize * 2));
         } else {
             left = getValueInPixels(val, units);
+        }
+        if (units != Units.px) {
+            dimensions.put("left", new CssLength(val, units));
         }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
@@ -5921,6 +5989,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             right = getValueInPixels(val, units);
         }
+        if (units != Units.px) {
+            dimensions.put("right", new CssLength(val, units));
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -5946,6 +6017,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             top = getValueInPixels(val, units);
         }
+        if (units != Units.px) {
+            dimensions.put("top", new CssLength(val, units));
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -5970,6 +6044,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             bottom = (int)Math.round(val / 100 * (document.root.viewport_height - document.borderSize * 2));
         } else {
             bottom = getValueInPixels(val, units);
+        }
+        if (units != Units.px) {
+            dimensions.put("bottom", new CssLength(val, units));
         }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
@@ -6604,6 +6681,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int percent = 1;
         public static final int em = 2;
         public static final int rem = 3;
+        public static final int vw = 4;
+        public static final int vh = 5;
+        public static final int vmin = 6;
+        public static final int vmax = 7;
     }
 
     public int max_width = -1;
@@ -6716,6 +6797,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean transform = false;
 
     public boolean has_shadow = false;
+
+    public HashMap<String, CssLength> dimensions = new HashMap<String, CssLength>();
 
     public HashMap<String, String> rules_for_recalc;
     public LinkedHashMap<String, Object> originalStyles;
@@ -6978,6 +7061,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.node = node;
         b.builder = builder;
         b.special = special;
+
+        b.dimensions = dimensions;
 
         b.sel = sel;
         b.needToRestoreSelection = needToRestoreSelection;
