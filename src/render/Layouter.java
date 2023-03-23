@@ -59,21 +59,17 @@ public class Layouter {
 
     public void clearLeft() {
         float_left_offset = 0;
-        float_left_until = 0;
         float_left_last_el = null;
     }
 
     public void clearRight() {
         float_right_offset = 0;
-        float_right_until = 0;
         float_right_last_el = null;
     }
 
     public void clearBoth() {
         float_left_offset = 0;
         float_right_offset = 0;
-        float_left_until = 0;
-        float_right_until = 0;
         float_left_last_el = null;
         float_right_last_el = null;
     }
@@ -1063,14 +1059,8 @@ public class Layouter {
     private int float_left_offset = 0;
     private int float_right_offset = 0;
 
-    private int float_left_last_y = 0;
-    private int float_right_last_y = 0;
-
     private Block float_left_last_el;
     private Block float_right_last_el;
-
-    private int float_left_until = 0;
-    private int float_right_until = 0;
 
     public Line last_line;
 
