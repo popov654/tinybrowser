@@ -117,10 +117,18 @@ public class Layouter {
             last_line.setHeight(block.getFontMetrics(font).getHeight());
         }
 
+        boolean is_flex = block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX;
+        boolean x_axis = block.flex_direction == Block.Direction.ROW || block.flex_direction == Block.Direction.ROW_REVERSED;
+
         Line new_line = new Line(block);
-        cur_x = block.borderWidth[3] + block.paddings[3];
-        cur_y = last_line != null && last_line.parent == new_line.parent ? last_line.getY() + last_line.getHeight() + offset :
+        if (x_axis) {
+            cur_x = block.borderWidth[3] + block.paddings[3];
+            cur_y = last_line != null && last_line.parent == new_line.parent ? last_line.getY() + last_line.getHeight() + offset :
                                     block.borderWidth[0] + block.paddings[0] + offset;
+        } else {
+            cur_x = last_line == null ? block.borderWidth[3] + block.paddings[3] : last_line.getX() + last_line.getHeight() + offset;
+            cur_y = block.borderWidth[0] + block.paddings[0];
+        }
         if (float_left_last_el != null && cur_y < float_left_last_el.getOffsetTop() +
                 float_left_last_el.height + float_left_last_el.margins[2]) {
             if ((clear & Block.ClearType.LEFT) > 0 || float_left_last_el.getOffsetLeft() +
@@ -131,8 +139,10 @@ public class Layouter {
                 cur_x += float_left_offset;
             }
         }
+
         new_line.setX(cur_x);
         new_line.setY(cur_y);
+
         int w = block.viewport_width - block.borderWidth[1] - block.paddings[1] - block.borderWidth[3] - block.paddings[3];
         if (float_right_last_el != null && cur_y < float_right_last_el.getOffsetTop() +
                 float_right_last_el.height + float_right_last_el.margins[2]) {
@@ -144,6 +154,10 @@ public class Layouter {
         }
         if (w < 0) {
             w = b.viewport_width - b.borderWidth[1] - b.paddings[1] - b.borderWidth[3] - b.paddings[3];
+        }
+        if ((block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX) &&
+              (block.flex_direction == Block.Direction.COLUMN || block.flex_direction == Block.Direction.COLUMN_REVERSED)) {
+            w = !block.auto_height ? b.viewport_height - b.borderWidth[2] - b.paddings[2] - b.borderWidth[0] - b.paddings[0] : Integer.MAX_VALUE;
         }
         new_line.setWidth(w);
         return new_line;
@@ -474,8 +488,19 @@ public class Layouter {
             return;
         } else if (block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX ||
                 d.display_type == Block.Display.INLINE_BLOCK || d.display_type == Block.Display.INLINE_TABLE || d.display_type == Block.Display.INLINE_FLEX) {
+
+            boolean is_flex = block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX;
+            boolean x_axis = block.flex_direction == Block.Direction.ROW || block.flex_direction == Block.Direction.ROW_REVERSED;
+
             if (last_line != null && (block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX)) {
                 offset += block.flex_gap;
+            }
+            if (is_flex) {
+                if (d.auto_width) d.setWidth(-1, true);
+                if (d.auto_height) {
+                    d.height = d.viewport_height = 0;
+                    d.orig_height = 0;
+                }
             }
             if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
                     ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK) {
@@ -492,30 +517,52 @@ public class Layouter {
             int x = getFullLinePos(d);
             int w = getFullLineSize(d);
 
-            boolean is_flex = block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX;
-
             if (d.display_type != Block.Display.INLINE_TABLE) {
                 if (!d.no_layout) {
                     if (is_flex) {
-                        d.width = d.viewport_width = d.flex_basis;
-                        d.orig_width = (int) Math.floor((double) d.width / d.ratio);
+                        if (x_axis) {
+                            d.width = d.viewport_width = d.flex_basis;
+                            d.orig_width = (int) Math.floor((double) d.width / d.ratio);
+                            d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
+                        } else {
+                            d.height = d.viewport_height = d.flex_basis;
+                            d.orig_height = (int) Math.floor((double) d.height / d.ratio);
+                            d.setHeight(d.height > 0 && !d.auto_height ? d.orig_height : -1, true);
+                        }
+                    } else {
+                        d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
                     }
-                    d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
                     d.performLayout();
+                    if (x_axis && d.auto_height && d.height < last_line.getHeight()) {
+                        d.height = d.viewport_height = last_line.getHeight();
+                        d.orig_height = (int)Math.round(d.height / d.ratio);
+                    }
+                    if (!x_axis && d.auto_width && d.width < last_line.getHeight()) {
+                        d.width = d.viewport_width = last_line.getHeight();
+                        d.orig_width = (int)Math.round(d.width / d.ratio);
+                    }
                 }
-                if (d.auto_width && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
+                if (x_axis && d.auto_width && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
                     int line_width = d.lines.get(0).cur_pos;
                     d.lines.get(0).setWidth(line_width);
                     d.width = d.borderWidth[3] + d.paddings[3] + line_width + d.paddings[1] + d.borderWidth[1];
                     d.orig_width = (int)Math.round(d.width / d.ratio);
                     d.viewport_width = d.width;
+                } else if (!x_axis && d.auto_height && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
+                    int line_width = d.lines.get(0).cur_pos;
+                    d.lines.get(0).setWidth(line_width);
+                    d.height = d.borderWidth[0] + d.paddings[0] + line_width + d.paddings[2] + d.borderWidth[2];
+                    d.orig_height = (int)Math.round(d.height / d.ratio);
+                    d.viewport_height = d.height;
                 }
             }
 
             int gap = is_flex ? block.flex_gap : 0;
             if (last_line == null || last_line.elements.size() == 0) gap = 0;
 
-            if (x + d.margins[1] + d.margins[3] + d.width + gap > w && (last_line == null || last_line.elements.size() > 0) &&
+            if ((x_axis && x + d.margins[1] + d.margins[3] + d.width + gap > w ||
+                !x_axis && x + d.margins[2] + d.margins[0] + d.height + gap > w) &&
+                    (last_line == null || last_line.elements.size() > 0) &&
                     (!(block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX) && block.white_space != Block.WhiteSpace.NO_WRAP ||
                     block.flex_wrap != Block.WhiteSpace.NO_WRAP)) {
                 last_line = startNewLine(is_flex ? block.flex_gap : 0, 0, d);
@@ -554,8 +601,14 @@ public class Layouter {
                 applyVerticalAlignment(d);
             }
             // set line height to the new maximum height
-            int vh = d.viewport_height + (d.scrollbar_x != null ? d.scrollbar_x.getPreferredSize().height : 0);
-            int h = vh + d.margins[0] + d.margins[2];
+            int h = 0;
+            if (x_axis) {
+                int vh = d.viewport_height + (d.scrollbar_x != null ? d.scrollbar_x.getPreferredSize().height : 0);
+                h = vh + d.margins[0] + d.margins[2];
+            } else {
+                int vh = d.viewport_width + (d.scrollbar_y != null ? d.scrollbar_y.getPreferredSize().width : 0);
+                h = vh + d.margins[3] + d.margins[1];
+            }
             if (h > last_line.getHeight()) {
                 last_line.setHeight(h);
             }
@@ -856,13 +909,16 @@ public class Layouter {
     }
 
     public void applyVerticalAlignment(Block d) {
+        boolean is_flex = d.parent.display_type == Block.Display.FLEX || d.parent.display_type == Block.Display.INLINE_FLEX;
+        boolean x_axis = d.parent.flex_direction == Block.Direction.ROW || d.parent.flex_direction == Block.Direction.ROW_REVERSED;
+
         int offset = 0;
         Line line = d.line;
         if (d.vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
-            offset = Math.round((line.height - d.height) / 2);
+            offset = Math.round((line.height - (x_axis ? d.height : d.width)) / 2);
         }
         else if (d.vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
-            offset = line.height - d.height;
+            offset = line.height - (x_axis ? d.height : d.width);
         }
         else if (d.vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null) {
             int st1 = (last_block.text_bold || last_block.text_italic) ? ((last_block.text_bold ? Font.BOLD : 0) | (last_block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
@@ -871,26 +927,53 @@ public class Layouter {
             Font f2 = new Font(d.fontFamily, st2, d.fontSize);
             FontMetrics m1 = last_block.getFontMetrics(f1);
             FontMetrics m2 = last_block.getFontMetrics(f2);
-            offset = last_block.getOffsetTop() - line.getY() + last_block.height - last_block.borderWidth[2] - last_block.paddings[2] -
+            if (!is_flex || x_axis) {
+                offset = last_block.getOffsetTop() - line.getY() + last_block.height - last_block.borderWidth[2] - last_block.paddings[2] -
                      m1.getDescent() + m2.getDescent() - (d.height - d.borderWidth[2] - d.paddings[2]);
+            } else {
+                offset = last_block.getOffsetLeft() - line.getX() + last_block.width - last_block.borderWidth[1] - last_block.paddings[1] -
+                     (d.width - d.borderWidth[1] - d.paddings[1]);
+            }
         }
 
-        d.setY(line.getY() + offset);
+        if (!is_flex || x_axis) {
+            d.setY(line.getY() + offset);
+        } else {
+            d.setX(line.getX() + offset);
+        }
 
         // update the line height
-        if (offset + d.height > line.getHeight()) {
-            line.setHeight(offset + d.height);
-        }
-        if (offset < d.margins[0] && d.display_type != Block.Display.INLINE) offset -= d.margins[0];
-        if (offset < 0) {
-            line.setHeight(line.getHeight() - offset);
-            for (int i = 0; i < line.elements.size(); i++) {
-                line.elements.get(i).setY(line.elements.get(i)._getY() - offset);
+        if (!is_flex || x_axis) {
+            if (offset + d.height > line.getHeight()) {
+                line.setHeight(offset + d.height);
+            }
+            if (offset < d.margins[0] && d.display_type != Block.Display.INLINE) offset -= d.margins[0];
+            if (offset < 0) {
+                line.setHeight(line.getHeight() - offset);
+                for (int i = 0; i < line.elements.size(); i++) {
+                    line.elements.get(i).setY(line.elements.get(i)._getY() - offset);
+                }
+            }
+        } else {
+            if (offset + d.width > line.getHeight()) {
+                line.setHeight(offset + d.width);
+            }
+            if (offset < d.margins[3] && d.display_type != Block.Display.INLINE) offset -= d.margins[3];
+            if (offset < 0) {
+                line.setHeight(line.getHeight() - offset);
+                for (int i = 0; i < line.elements.size(); i++) {
+                    line.elements.get(i).setX(line.elements.get(i)._getX() - offset);
+                }
             }
         }
     }
 
     public static void applyHorizontalAlignment(Block block) {
+        boolean is_flex = block.parent.display_type == Block.Display.FLEX || block.parent.display_type == Block.Display.INLINE_FLEX;
+        boolean x_axis = block.parent.flex_direction == Block.Direction.ROW || block.parent.flex_direction == Block.Direction.ROW_REVERSED;
+
+        int content_align = is_flex ? block.flex_align : block.text_align;
+
         int style = (block.text_bold || block.text_italic) ? ((block.text_bold ? Font.BOLD : 0) | (block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
         Font f = new Font(block.fontFamily, style, block.fontSize);
         int sp = block.getFontMetrics(f).stringWidth(" ");
@@ -902,7 +985,7 @@ public class Layouter {
 
             int space_count = 0;
 
-            if (block.text_align == Block.TextAlign.ALIGN_JUSTIFY) {
+            if (content_align == Block.TextAlign.ALIGN_JUSTIFY) {
                 for (int j = 0; j < line.elements.size(); j++) {
                     Drawable d = line.elements.get(j);
                     if (d instanceof Character && ((Character)d).getText().equals(" ") ||
@@ -918,33 +1001,48 @@ public class Layouter {
             if (line.getWidth() == line.cur_pos) continue;
             int pos = 0;
             int space_index = 0;
-            if (block.text_align == Block.TextAlign.ALIGN_CENTER) {
+            if (content_align == Block.TextAlign.ALIGN_CENTER) {
                 pos += (int)Math.round(line.width - line.cur_pos) / 2;
-            } else if (block.text_align == Block.TextAlign.ALIGN_RIGHT) {
+            } else if (content_align == Block.TextAlign.ALIGN_RIGHT) {
                 pos += (int)Math.round(line.width - line.cur_pos);
             }
             for (int j = 0; j < line.elements.size(); j++) {
                 Drawable d = line.elements.get(j);
                 int w = j < line.elements.size()-1 ? line.elements.get(j+1)._getX() - d._getX() : line.cur_pos - d._getX();
+                if (is_flex && !x_axis) {
+                    w = j < line.elements.size()-1 ? line.elements.get(j+1)._getY() - d._getY() : line.cur_pos - d._getY();
+                }
                 if (d instanceof Character && ((Character)d).getText().equals(" ")) {
-                    if (block.text_align != Block.TextAlign.ALIGN_JUSTIFY) {
-                        d.setWidth(sp);
+                    if (content_align != Block.TextAlign.ALIGN_JUSTIFY) {
+                        if (!is_flex || x_axis) {
+                            d.setWidth(sp);
+                        } else {
+                            d.setHeight(sp);
+                        }
                     } else {
-                        d.setWidth(space_index < mod ? new_sp + 1 : new_sp);
+                        if (!is_flex || x_axis) {
+                            d.setWidth(space_index < mod ? new_sp + 1 : new_sp);
+                        } else {
+                            d.setHeight(space_index < mod ? new_sp + 1 : new_sp);
+                        }
                         space_index++;
                     }
                 }
                 /* This is commented out since existing engines do not apply justification
                    to inline-block content, behaving as if text-align had been set to "left"
 
-                if (block.text_align == Block.TextAlign.ALIGN_JUSTIFY &&
+                if (content_align == Block.TextAlign.ALIGN_JUSTIFY &&
                        j > 0 && line.elements.get(j-1) instanceof Block &&
                        ((Block)line.elements.get(j-1)).display_type != Block.Display.INLINE) {
                     pos += space_index < mod ? new_sp + 1 : new_sp;
                 }
 
                 */
-                d.setX(line.getX() + pos);
+                if (!is_flex || x_axis) {
+                    d.setX(line.getX() + pos);
+                } else {
+                    d.setY(line.getY() + pos);
+                }
                 pos += w;
             }
         }

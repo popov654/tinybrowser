@@ -864,28 +864,30 @@ public class LayoutTests extends JFrame {
         b.setHeight(140);
         b.setDisplayType(Block.Display.FLEX);
         b.flex_gap = 12;
+        b.flex_direction = Block.Direction.COLUMN;
+        //b.flex_align_content = Block.FlexAlign.FLEX_CENTER;
         //b.flex_wrap = Block.WhiteSpace.NORMAL;
 
         Block block = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         block.setPositioning(Block.Position.STATIC);
         block.setDisplayType(Block.Display.INLINE_BLOCK);
         block.setBackgroundColor(new Color(0, 190, 235));
-        block.setWidth(120);
+        //block.setWidth(120);
         block.setHeight(40);
-        block.flex_basis = 320;
-        block.flex_grow = 3;
-        block.flex_shrink = 1;
+        block.flex_basis = 20;
+        block.flex_grow = 1;
+        block.flex_shrink = 0;
         b.addElement(block);
 
         Block block2 = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
         block2.setPositioning(Block.Position.STATIC);
         block2.setDisplayType(Block.Display.INLINE_BLOCK);
         block2.setBackgroundColor(new Color(0, 190, 235));
-        block2.setWidth(120);
+        //block2.setWidth(120);
         block2.setHeight(40);
-        block2.flex_basis = 320;
+        block2.flex_basis = 20;
         block2.flex_grow = 1;
-        block2.flex_shrink = 2;
+        block2.flex_shrink = 0;
         b.addElement(block2);
 
         if (this.isVisible()) {

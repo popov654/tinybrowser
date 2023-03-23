@@ -50,34 +50,68 @@ public class Line {
             cur_pos += parent.flex_gap;
         }
 
+        boolean is_flex = parent.display_type == Block.Display.FLEX || parent.display_type == Block.Display.INLINE_FLEX;
+
+        boolean x_axis = parent.display_type != Block.Display.FLEX && parent.display_type != Block.Display.INLINE_FLEX ||
+                         parent.flex_direction != Block.Direction.COLUMN && parent.flex_direction != Block.Direction.COLUMN_REVERSED;
+
         if (d instanceof Block) {
             Block b = (Block)d;
-            cur_pos += b.margins[!parent.rtl ? 3 : 1];
+            int margin = x_axis ? b.margins[!parent.rtl ? 3 : 1] : b.margins[parent.flex_direction != Block.Direction.COLUMN_REVERSED ? 2 : 0];
+            cur_pos += margin;
         }
         if (d instanceof Character) {
             Character c = (Character)d;
-            if (c.height > height) {
-                height = c.height;
-                //implement vertical align
+            if (x_axis) {
+                if (c.height > height) {
+                    height = c.height;
+                    //implement vertical align
+                }
+            } else {
+                if (c.width > height) {
+                    height = c.width;
+                    //implement vertical align
+                }
             }
         }
-        d.setX(!parent.rtl ? left + cur_pos : width - cur_pos - d._getWidth());
-        d.setY(top);
-        if (d instanceof Block && ((Block)d).display_type != Block.Display.BLOCK) {
+        
+        int x = !parent.rtl ? left + cur_pos : width - cur_pos - d._getWidth();
+        int y = top;
+
+        if (is_flex) {
+            if (parent.flex_direction == Block.Direction.ROW_REVERSED) {
+                x = width - cur_pos - d._getWidth();
+            } else if (parent.flex_direction == Block.Direction.COLUMN) {
+                x = left;
+                y = top + cur_pos;
+            } else if (parent.flex_direction == Block.Direction.COLUMN_REVERSED) {
+                x = left;
+                y = width - cur_pos - d._getWidth();
+            }
+        }
+
+        d.setX(x);
+        d.setY(y);
+
+        if (d instanceof Block && (is_flex || ((Block)d).display_type != Block.Display.BLOCK)) {
             Block b = (Block)d;
             //b.setY(b.margins[0] + top);
-            int offset = b.margins[0];
-            if (b.margins[0] + b.height + b.margins[2] > height) {
-                height = b.margins[0] + b.height + b.margins[2];
+            int offset = x_axis ? b.margins[0] : b.margins[3];
+            if (x_axis && b.margins[0] + b.height + b.margins[2] > height || !x_axis && b.margins[3] + b.width + b.margins[1] > height) {
+                height = x_axis ? b.margins[0] + b.height + b.margins[2] : b.margins[3] + b.width + b.margins[1];
                 if (b.vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
-                    offset = Math.round((height - b.height) / 2);
+                    offset = Math.round((height - (x_axis ? b.height : b.width)) / 2);
                 }
                 else if (b.vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
-                    offset = height - b.height;
+                    offset = height - (x_axis ? b.height : b.width);
                 }
                 //implement vertical align
             }
-            d.setY(offset + top);
+            if (x_axis) {
+                d.setY(offset + top);
+            } else {
+                d.setX(offset + left);
+            }
         }
         else if (d instanceof Block) {
             Block b = (Block)d;
@@ -88,8 +122,13 @@ public class Line {
         }
 
         if (d instanceof Block && ((Block)d).node != null && ((Block)d).node.tagName.equals("br")) {
-            ((Block)d).margins[0] = height - 1;
-            d.setY(height - ((Block)d).height + top - 1);
+            if (x_axis) {
+                ((Block)d).margins[0] = height - 1;
+                d.setY(height - ((Block)d).height + top - 1);
+            } else {
+                ((Block)d).margins[3] = height - 1;
+                d.setX(height - ((Block)d).height + top - 1);
+            }
         }
         
         if (parent.document.debug) {
@@ -98,12 +137,13 @@ public class Line {
         
         if (d instanceof Block) {
             Block b = (Block)d;
-            cur_pos += b.width + b.margins[!parent.rtl ? 1 : 3];
+            int delta = x_axis ? b.margins[!is_flex && !parent.rtl ? 1 : 3] : b.margins[parent.flex_direction != Block.Direction.COLUMN_REVERSED ? 2 : 0];
+            cur_pos += (x_axis ? b.width : b.height) + delta;
         } else if (d instanceof Character) {
             if (elements.size() > 1) {
                 cur_pos += parent.letter_spacing;
             }
-            cur_pos += ((Character)d).getWidth();
+            cur_pos += x_axis ? ((Character)d).getWidth() : ((Character)d).getHeight();
         }
     }
 
@@ -126,13 +166,21 @@ public class Line {
     public void setX(int value) {
         int old_value = left;
         left = value;
+        boolean x_axis = parent.display_type != Block.Display.FLEX && parent.display_type != Block.Display.INLINE_FLEX ||
+                         parent.flex_direction != Block.Direction.COLUMN && parent.flex_direction != Block.Direction.COLUMN_REVERSED;
         for (Drawable d: elements) {
-            d.setX(d._getX() + old_value - left);
+            d.setX(d._getX() + left - old_value);
         }
     }
 
     public void setY(int value) {
+        int old_value = top;
         top = value;
+        boolean y_axis = parent.display_type != Block.Display.FLEX && parent.display_type != Block.Display.INLINE_FLEX ||
+                         parent.flex_direction != Block.Direction.COLUMN && parent.flex_direction != Block.Direction.COLUMN_REVERSED;
+        for (Drawable d: elements) {
+            d.setY(d._getY() + top - old_value);
+        }
     }
 
     public int getWidth() {

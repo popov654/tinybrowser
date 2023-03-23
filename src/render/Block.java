@@ -2348,8 +2348,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             if (Layouter.stack.isEmpty() && width == 0) {
                 last.setWidth(last.cur_pos);
-                width = borderWidth[3] + paddings[3] + lines.get(0).getWidth() + paddings[1] + borderWidth[1];
-                height = borderWidth[0] + paddings[0] + last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
+                boolean inversed = display_type != Display.FLEX && display_type != Display.INLINE_FLEX || flex_direction != Direction.COLUMN && flex_direction != Direction.COLUMN_REVERSED;
+                width = borderWidth[3] + paddings[3] + (!inversed ? lines.get(0).getWidth() : last.getWidth()) + paddings[1] + borderWidth[1];
+                height = borderWidth[0] + paddings[0] + last.getY() + (!inversed ? last.getHeight() : lines.get(0).getWidth()) + paddings[2] + borderWidth[2];
                 viewport_width = width;
                 viewport_height = height;
                 orig_width = (int)Math.floor(width / ratio);
@@ -2429,7 +2430,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void processFlex() {
         content_x_max = 0;
         content_y_max = 0;
-        int delta_y = viewport_height - paddings[2] - (lines.lastElement().top + lines.lastElement().height);
+        int delta_y = 0;
+        boolean x_axis = flex_direction == Direction.ROW || flex_direction == Direction.ROW_REVERSED;
+        boolean inversed = flex_direction == Direction.ROW_REVERSED || flex_direction == Direction.COLUMN_REVERSED;
+
+        int xmax = width - borderWidth[1] - paddings[1] - borderWidth[3];
+        int ymax = height - borderWidth[2] - paddings[2] - borderWidth[0];
+
+        if (scrollbar_x != null) {
+            ymax -= scrollbar_x.getPreferredSize().height;
+        }
+        if (scrollbar_y != null) {
+            xmax -= scrollbar_y.getPreferredSize().width;
+        }
+
+        if (x_axis) {
+            delta_y = ymax - (lines.lastElement().top + lines.lastElement().height);
+        } else {
+            delta_y = xmax - (lines.lastElement().top + lines.lastElement().height);
+        }
         for (int i = 0; i < lines.size(); i++) {
             int width = lines.get(i).getWidth();
             int weight_sum_grow = 0;
@@ -2441,7 +2460,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (Drawable d: lines.get(i).elements) {
                 if (d instanceof Block) {
                     Block b = (Block) d;
-                    cur_width += b.margins[3] + b.width + b.margins[1] + (index > 0 ? flex_gap : 0);
+                    int w = x_axis ? b.margins[3] + b.width + b.margins[1] : b.margins[0] + b.height + b.margins[2];
+                    cur_width += w + (index > 0 ? flex_gap : 0);
                     weight_sum_grow += b.flex_grow;
                     weight_sum_shrink += b.flex_shrink;
                     last_block = b;
@@ -2454,7 +2474,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             if (delta == 0) continue;
 
-            int last_x = _x_ + lines.get(i).getX();
+            int last_x = x_axis ? _x_ + lines.get(i).getX() : _y_ + lines.get(i).getY();
             for (Drawable d: lines.get(i).elements) {
                 if (d instanceof Block) {
                     Block b = (Block) d;
@@ -2467,49 +2487,148 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         block_dx = (int) Math.floor(delta * (double) b.flex_shrink / weight_sum_shrink);
                     }
 
-                    if (b.max_width > 0 && b.width + block_dx > b.max_width) {
-                        block_dx = b.max_width - b.width;
-                    } else if (b.width + block_dx < b.min_size) {
-                        block_dx = b.min_size - b.width;
-                    }
+                    if (x_axis) {
+                        if (b.max_width > 0 && b.width + block_dx > b.max_width) {
+                            block_dx = b.max_width - b.width;
+                        } else if (b.width + block_dx < b.min_size) {
+                            block_dx = b.min_size - b.width;
+                        }
 
-                    b._x_ = last_x + b.margins[3];
-                    b.width += block_dx;
-                    b.viewport_width += block_dx;
+                        b._x_ = last_x + (!inversed ? b.margins[3] : b.margins[1]);
+                        b.width += block_dx;
+                        b.viewport_width += block_dx;
+                    } else {
+                        if (b.max_height > 0 && b.height + block_dx > b.max_height) {
+                            block_dx = b.max_height - b.height;
+                        }
+
+                        b._y_ = last_x + (!inversed ? b.margins[0] : b.margins[2]);
+                        b.height += block_dx;
+                        b.viewport_height += block_dx;
+                    }
 
                     delta -= block_dx;
                     weight_sum_grow -= b.flex_grow;
                     weight_sum_shrink -= b.flex_shrink;
-                    
-                    if (b == last_block && block_dx != 0 && b._x_ + b.width > _x_ + lines.get(i).getX() + lines.get(i).getWidth()) {
-                        int sub = Math.max(b.width - b.min_size, b._x_ + b.width - (_x_ + viewport_width - paddings[1] - paddings[3]));
-                        b.width -= sub;
-                        b.viewport_width -= sub;
+
+                    if (x_axis) {
+                        if (b == last_block && block_dx != 0 && b._x_ + b.width > _x_ + lines.get(i).getX() + lines.get(i).getWidth()) {
+                            int sub = Math.max(b.width - b.min_size, b._x_ + b.width - (_x_ + xmax - paddings[3]));
+                            b.width -= sub;
+                            b.viewport_width -= sub;
+                        }
+                        b.orig_width = (int) Math.floor((double) b.width / b.ratio);
+                    } else {
+                        if (b == last_block && block_dx != 0 && b._y_ + b.height > _y_ + lines.get(i).getY() + lines.get(i).getWidth()) {
+                            int sub = b._y_ + b.height - (_y_ + ymax - paddings[0]);
+                            b.height -= sub;
+                            b.viewport_height -= sub;
+                        }
+                        b.orig_height = (int) Math.floor((double) b.height / b.ratio);
                     }
-                    b.orig_width = (int) Math.floor((double) b.width / b.ratio);
                     b.performLayout();
 
                     updateMaxContentSize(b);
-                    if (b._x_ - _x_ + b.width > content_x_max) {
-                        content_x_max = b._x_ - _x_ + b.width;
-                    }
 
-                    last_x = b._x_ + b.width + b.margins[1] + flex_gap;
+                    if (x_axis) {
+                        if (b._x_ - _x_ + b.width > content_x_max) {
+                            content_x_max = b._x_ - _x_ + b.width;
+                        }
+                        last_x = b._x_ + b.width + b.margins[1] + flex_gap;
+                    } else {
+                        if (b._y_ - _y_ + b.height > content_y_max) {
+                            content_y_max = b._y_ - _y_ + b.height;
+                        }
+                        last_x = b._y_ + b.height + b.margins[2] + flex_gap;
+                    }
                 } else {
-                    d.setX(last_x);
+                    if (x_axis) {
+                        d.setX(last_x);
+                    } else {
+                        d.setY(last_x);
+                    }
                 }
             }
         }
+
+        processFlexCrossAxis(x_axis, delta_y);
+
+        if (x_axis) {
+            content_y_max = lines.lastElement().top + lines.lastElement().height;
+        } else {
+            content_x_max = lines.lastElement().top + lines.lastElement().height;
+        }
+    }
+
+    public void processFlexCrossAxis(boolean x_axis, int delta_y) {
+
+        int xmax = width - borderWidth[1] - paddings[1] - borderWidth[3];
+        int ymax = height - borderWidth[2] - paddings[2] - borderWidth[0];
+
+        if (scrollbar_x != null) {
+            ymax -= scrollbar_x.getPreferredSize().height;
+        }
+        if (scrollbar_y != null) {
+            xmax -= scrollbar_y.getPreferredSize().width;
+        }
+
+        // Process cross-axis
         if (delta_y > 0) {
-            int dy = (int) Math.floor((double) delta_y / (lines.size()-1));
-            for (int i = 1; i < lines.size(); i++) {
-                lines.get(i).top += dy;
-                for (Drawable d: lines.get(i).elements) {
-                    d.setY(d._getY() + dy);
+            int dy = (int) Math.floor((double) delta_y / lines.size());
+
+            if (flex_align_content == FlexAlign.STRETCH) {
+                for (int i = 0; i < lines.size(); i++) {
+                    int h = lines.get(i).height + dy;
+                    if (x_axis) {
+                        lines.get(i).setY(lines.get(i).getY() + dy * i);
+                    } else {
+                        lines.get(i).setX(lines.get(i).getX() + dy * i);
+                    }
+                    if (x_axis && lines.get(i).top + h > _y_ + ymax) {
+                        h -= lines.get(i).top + h - (_y_ + ymax);
+                    }
+                    if (!x_axis && lines.get(i).left + h > _x_ + xmax) {
+                        h -= lines.get(i).left + h - (_x_ + xmax);
+                    }
+                    lines.get(i).setHeight(h);
+                    for (Drawable d: lines.get(i).elements) {
+                        if (x_axis) {
+                            d.setY(lines.get(i).top);
+                            if (flex_align_content == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_height) {
+                                Block b = (Block) d;
+                                b.height = b.viewport_height = lines.get(i).height;
+                                b.orig_height = (int) Math.floor((double) b.height / b.ratio);
+                            }
+                        } else {
+                            d.setX(lines.get(i).top);
+                            if (flex_align_content == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_width) {
+                                Block b = (Block) d;
+                                b.width = b.viewport_width = lines.get(i).height;
+                                b.orig_width = (int) Math.floor((double) b.width / b.ratio);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (flex_align_content == FlexAlign.FLEX_CENTER) {
+                for (int i = 0; i < lines.size(); i++) {
+                    if (x_axis) {
+                        lines.get(i).setY(lines.get(i).getY() + delta_y / 2);
+                    } else {
+                        lines.get(i).setX(lines.get(i).getX() + delta_y / 2);
+                    }
+                }
+            }
+            else if (flex_align_content == FlexAlign.FLEX_END) {
+                for (int i = 0; i < lines.size(); i++) {
+                    if (x_axis) {
+                        lines.get(i).setY(lines.get(i).getY() + delta_y);
+                    } else {
+                        lines.get(i).setX(lines.get(i).getX() + delta_y);
+                    }
                 }
             }
         }
-        content_y_max = lines.lastElement().top + lines.lastElement().height;
     }
 
     public void updateMaxContentSize(Block el) {
@@ -6679,6 +6798,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int flex_basis = 0;
     public int flex_wrap = WhiteSpace.NO_WRAP;
     public int flex_align = TextAlign.ALIGN_LEFT;
+    public int flex_align_content = FlexAlign.STRETCH;
+    public int flex_direction = Direction.ROW;
     public int flex_gap = 0;
 
     public int display_type = 0;
@@ -6713,6 +6834,29 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int LEFT = 1;
         public static final int RIGHT = 2;
         public static final int BOTH = 3;
+    }
+
+    public static class Direction {
+        public static final int ROW = 0;
+        public static final int ROW_REVERSED = 1;
+        public static final int COLUMN = 2;
+        public static final int COLUMN_REVERSED = 3;
+    }
+
+    public static class FlexAlign {
+        public static final int STRETCH = 0;
+        public static final int FLEX_START = 1;
+        public static final int FLEX_CENTER = 2;
+        public static final int FLEX_END = 3;
+    }
+
+    public static class FlexJustify {
+        public static final int LEFT = 0;
+        public static final int CENTER = 1;
+        public static final int RIGHT = 2;
+        public static final int SPACE_BETWEEN = 3;
+        public static final int SPACE_AROUND = 4;
+        public static final int SPACE_EVENLY = 5;
     }
 
     public static class TextAlign {
@@ -7151,6 +7295,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.flex_basis = flex_basis;
         b.flex_wrap = flex_wrap;
         b.flex_align = flex_align;
+        b.flex_direction = flex_direction;
+        b.flex_align_content = flex_align_content;
         b.flex_gap = flex_gap;
 
         b.transform = transform;
