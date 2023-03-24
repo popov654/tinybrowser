@@ -498,13 +498,17 @@ public class Layouter {
             if (is_flex) {
                 if (d.auto_width && block.flex_align_items == Block.FlexAlign.STRETCH) {
                     d.setWidth(-1, true);
-                } else {
+                } else if (d.auto_width) {
                     d.width = d.viewport_width = Math.max(d.min_size, d.min_width);
                     d.orig_width = (int)Math.round((double) d.width / d.ratio);
+                } else if (d.dimensions.containsKey("width")) {
+                    d.setWidth((int) d.dimensions.get("width").value, d.dimensions.get("width").unit);
                 }
                 if (d.auto_height) {
                     d.height = d.viewport_height = 0;
                     d.orig_height = 0;
+                } else if (d.dimensions.containsKey("height")) {
+                    d.setHeight((int) d.dimensions.get("height").value, d.dimensions.get("height").unit);
                 }
             }
             if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
@@ -969,8 +973,8 @@ public class Layouter {
     }
 
     public static void applyHorizontalAlignment(Block block) {
-        boolean is_flex = block.parent.display_type == Block.Display.FLEX || block.parent.display_type == Block.Display.INLINE_FLEX;
-        boolean x_axis = block.parent.flex_direction == Block.Direction.ROW || block.parent.flex_direction == Block.Direction.ROW_REVERSED;
+        boolean is_flex = block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX;
+        boolean x_axis = block.flex_direction == Block.Direction.ROW || block.flex_direction == Block.Direction.ROW_REVERSED;
 
         int content_align = is_flex ? block.flex_align : block.text_align;
 
@@ -990,11 +994,11 @@ public class Layouter {
                     Drawable d = line.elements.get(j);
                     if (d instanceof Character && ((Character)d).getText().equals(" ") ||
                             j < line.elements.size()-1 && line.elements.get(j+1) instanceof Block &&
-                            ((Block)line.elements.get(j+1)).display_type != Block.Display.INLINE) {
+                            (((Block)line.elements.get(j+1)).display_type != Block.Display.INLINE || is_flex)) {
                         space_count++;
                     }
                 }
-                new_sp = (int)Math.floor((line.width - line.cur_pos) / space_count);
+                new_sp = space_count > 0 ? (int)Math.floor((line.width - line.cur_pos) / space_count) : 0;
                 mod = line.width - line.cur_pos - new_sp * space_count;
             }
 
@@ -1028,16 +1032,15 @@ public class Layouter {
                         space_index++;
                     }
                 }
-                /* This is commented out since existing engines do not apply justification
-                   to inline-block content, behaving as if text-align had been set to "left"
 
-                if (content_align == Block.TextAlign.ALIGN_JUSTIFY &&
+                /* Block justification should only be available for flex containers */
+
+                if (is_flex && content_align == Block.TextAlign.ALIGN_JUSTIFY &&
                        j > 0 && line.elements.get(j-1) instanceof Block &&
                        ((Block)line.elements.get(j-1)).display_type != Block.Display.INLINE) {
                     pos += space_index < mod ? new_sp + 1 : new_sp;
                 }
 
-                */
                 if (!is_flex || x_axis) {
                     d.setX(line.getX() + pos);
                 } else {

@@ -2406,7 +2406,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 root.performLayout();
             }
         }
-        if (text_align != TextAlign.ALIGN_LEFT) {
+
+        boolean is_flex = display_type == Block.Display.FLEX || display_type == Block.Display.INLINE_FLEX;
+
+        if (text_align != TextAlign.ALIGN_LEFT || is_flex && flex_align != FlexJustify.START) {
             Layouter.applyHorizontalAlignment(this);
         }
 
@@ -2508,6 +2511,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
 
                     delta -= block_dx;
+                    lines.get(i).cur_pos += block_dx;
                     weight_sum_grow -= b.flex_grow;
                     weight_sum_shrink -= b.flex_shrink;
 
@@ -4482,6 +4486,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setWidth(int w) {
         setWidth(w, false);
+        dimensions.put("width", new CssLength(w, Units.px));
     }
 
     public void setWidth(int w, int units) {
@@ -4603,6 +4608,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setHeight(int h) {
         setHeight(h, false);
+        dimensions.put("height", new CssLength(h, Units.px));
     }
 
     public void setHeight(int h, int units) {
@@ -6879,9 +6885,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public static class FlexJustify {
-        public static final int LEFT = 0;
+        public static final int START = 0;
         public static final int CENTER = 1;
-        public static final int RIGHT = 2;
+        public static final int END = 2;
         public static final int SPACE_BETWEEN = 3;
         public static final int SPACE_AROUND = 4;
         public static final int SPACE_EVENLY = 5;
