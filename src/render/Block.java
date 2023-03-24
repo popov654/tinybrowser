@@ -4409,6 +4409,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (max_width > -1 && width > max_width) {
                 width = max_width;
             }
+            if (min_width > -1 && width < min_width) {
+                width = min_width;
+            }
             auto_width = width < 0;
             Block b = doIncrementLayout(old_width, old_height, no_recalc);
             if (b != null && !no_draw) {
@@ -4432,6 +4435,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 orig_width = (int)Math.round(width / ratio);
             }
             if (max_width > -1 && width > max_width) width = max_width;
+            if (min_width > -1 && width < min_width) width = min_width;
             //content_x_max = width;
             auto_width = true;
             rules_for_recalc.put("width", "auto");
@@ -4440,6 +4444,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             orig_width = w;
             if (max_width > -1 && width > max_width) {
                 width = max_width;
+            }
+            if (min_width > -1 && width < min_width) {
+                width = min_width;
             }
             rules_for_recalc.remove("width");
             auto_width = false;
@@ -4490,6 +4497,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (max_width > -1 && width > max_width) {
             width = max_width;
         }
+        if (min_width > -1 && width < min_width) {
+            width = min_width;
+        }
         rules_for_recalc.remove("width");
         auto_width = false;
 
@@ -4524,6 +4534,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (max_height > -1 && height > max_height) {
                 height = max_height;
             }
+            if (min_height > -1 && height < min_height) {
+                height = min_height;
+            }
             viewport_height = height;
             orig_height = h;
             auto_height = false;
@@ -4554,6 +4567,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             height = (int)Math.round(h*ratio);
             if (max_height > -1 && height > max_height) {
                 height = max_height;
+            }
+            if (min_height > -1 && height < min_height) {
+                height = min_height;
             }
             viewport_height = height;
             orig_height = h;
@@ -6932,6 +6948,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int max_width = -1;
     public int max_height = -1;
 
+    public int min_width = -1;
+    public int min_height = -1;
+
     public double max_width_percent = -1;
     public double max_height_percent = -1;
 
@@ -7212,6 +7231,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.width = this.width;
         b.height = this.height;
         b.orig_width = orig_width;
+
+        b.min_width = this.min_width;
+        b.min_height = this.min_height;
+        b.max_width = this.max_width;
+        b.max_height = this.max_height;
 
         b.viewport_width = viewport_width;
         b.viewport_height = viewport_height;
