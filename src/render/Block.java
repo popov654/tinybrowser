@@ -2447,7 +2447,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (x_axis) {
             delta_y = ymax - (lines.lastElement().top + lines.lastElement().height);
         } else {
-            delta_y = xmax - (lines.lastElement().top + lines.lastElement().height);
+            delta_y = xmax - (lines.lastElement().left + lines.lastElement().height);
         }
         for (int i = 0; i < lines.size(); i++) {
             int width = lines.get(i).getWidth();
@@ -2573,7 +2573,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         // Process cross-axis
-        if (delta_y > 0) {
+        if (delta_y != 0) {
             int dy = (int) Math.floor((double) delta_y / lines.size());
 
             if (flex_align_content == FlexAlign.STRETCH) {
@@ -2604,15 +2604,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                 d.setY(lines.get(i).top + lines.get(i).height - d._getHeight());
                             }
                         } else {
-                            d.setX(lines.get(i).top);
+                            d.setX(lines.get(i).left);
                             if (flex_align_items == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_width) {
                                 Block b = (Block) d;
                                 b.width = b.viewport_width = lines.get(i).height;
                                 b.orig_width = (int) Math.floor((double) b.width / b.ratio);
                             } else if (flex_align_items == FlexAlign.FLEX_CENTER) {
-                                d.setY(lines.get(i).left + (lines.get(i).height - d._getWidth()) / 2);
+                                d.setX(lines.get(i).left + (lines.get(i).height - d._getWidth()) / 2);
                             } else if (flex_align_items == FlexAlign.FLEX_END) {
-                                d.setY(lines.get(i).left + lines.get(i).height - d._getWidth());
+                                d.setX(lines.get(i).left + lines.get(i).height - d._getWidth());
                             }
                         }
                     }
@@ -6826,7 +6826,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int flex_wrap = WhiteSpace.NO_WRAP;
     public int flex_align = TextAlign.ALIGN_LEFT;
     public int flex_align_content = FlexAlign.STRETCH;
-    public int flex_align_items = FlexAlign.FLEX_START;
+    public int flex_align_items = FlexAlign.STRETCH;
     public int flex_direction = Direction.ROW;
     public int flex_gap = 0;
 

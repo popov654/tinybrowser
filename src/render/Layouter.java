@@ -538,14 +538,6 @@ public class Layouter {
                         d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
                     }
                     d.performLayout();
-                    if (x_axis && d.auto_height && d.height < last_line.getHeight()) {
-                        d.height = d.viewport_height = last_line.getHeight();
-                        d.orig_height = (int)Math.round(d.height / d.ratio);
-                    }
-                    if (!x_axis && d.auto_width && d.width < last_line.getHeight()) {
-                        d.width = d.viewport_width = last_line.getHeight();
-                        d.orig_width = (int)Math.round(d.width / d.ratio);
-                    }
                 }
                 if (x_axis && d.auto_width && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
                     int line_width = d.lines.get(0).cur_pos;

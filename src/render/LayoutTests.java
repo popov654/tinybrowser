@@ -865,6 +865,7 @@ public class LayoutTests extends JFrame {
         b.setDisplayType(Block.Display.FLEX);
         b.flex_gap = 12;
         b.flex_direction = Block.Direction.COLUMN;
+        //b.flex_align_items = Block.FlexAlign.FLEX_CENTER;
         //b.flex_align_content = Block.FlexAlign.FLEX_CENTER;
         //b.flex_wrap = Block.WhiteSpace.NORMAL;
 
@@ -873,7 +874,7 @@ public class LayoutTests extends JFrame {
         block.setDisplayType(Block.Display.INLINE_BLOCK);
         block.setBackgroundColor(new Color(0, 190, 235));
         //block.setWidth(120);
-        block.min_size = 120;
+        block.min_width = 160;
         block.setHeight(40);
         block.flex_basis = 20;
         block.flex_grow = 1;
@@ -885,7 +886,7 @@ public class LayoutTests extends JFrame {
         block2.setDisplayType(Block.Display.INLINE_BLOCK);
         block2.setBackgroundColor(new Color(0, 190, 235));
         //block2.setWidth(120);
-        block.min_size = 120;
+        block2.min_width = 120;
         block2.setHeight(40);
         block2.flex_basis = 20;
         block2.flex_grow = 1;
