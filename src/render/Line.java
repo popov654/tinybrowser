@@ -96,13 +96,14 @@ public class Line {
         if (d instanceof Block && (is_flex || ((Block)d).display_type != Block.Display.BLOCK)) {
             Block b = (Block)d;
             //b.setY(b.margins[0] + top);
+            int vertical_align = is_flex ? parent.flex_align_items : b.vertical_align;
             int offset = x_axis ? b.margins[0] : b.margins[3];
             if (x_axis && b.margins[0] + b.height + b.margins[2] > height || !x_axis && b.margins[3] + b.width + b.margins[1] > height) {
                 height = x_axis ? b.margins[0] + b.height + b.margins[2] : b.margins[3] + b.width + b.margins[1];
-                if (b.vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
+                if (vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
                     offset = Math.round((height - (x_axis ? b.height : b.width)) / 2);
                 }
-                else if (b.vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
+                else if (vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
                     offset = height - (x_axis ? b.height : b.width);
                 }
                 //implement vertical align

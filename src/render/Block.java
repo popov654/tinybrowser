@@ -2304,7 +2304,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     viewport_height = height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
                 }
                 if (is_table_cell && auto_width) {
-                    width = pref_size;
+                    width = Math.max(min_width, pref_size);
                     orig_width = (int)Math.floor(width / ratio);
                 }
             } else {
@@ -2594,17 +2594,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     for (Drawable d: lines.get(i).elements) {
                         if (x_axis) {
                             d.setY(lines.get(i).top);
-                            if (flex_align_content == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_height) {
+                            if (flex_align_items == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_height) {
                                 Block b = (Block) d;
                                 b.height = b.viewport_height = lines.get(i).height;
                                 b.orig_height = (int) Math.floor((double) b.height / b.ratio);
+                            } else if (flex_align_items == FlexAlign.FLEX_CENTER) {
+                                d.setY(lines.get(i).top + (lines.get(i).height - d._getHeight()) / 2);
+                            } else if (flex_align_items == FlexAlign.FLEX_END) {
+                                d.setY(lines.get(i).top + lines.get(i).height - d._getHeight());
                             }
                         } else {
                             d.setX(lines.get(i).top);
-                            if (flex_align_content == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_width) {
+                            if (flex_align_items == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_width) {
                                 Block b = (Block) d;
                                 b.width = b.viewport_width = lines.get(i).height;
                                 b.orig_width = (int) Math.floor((double) b.width / b.ratio);
+                            } else if (flex_align_items == FlexAlign.FLEX_CENTER) {
+                                d.setY(lines.get(i).left + (lines.get(i).height - d._getWidth()) / 2);
+                            } else if (flex_align_items == FlexAlign.FLEX_END) {
+                                d.setY(lines.get(i).left + lines.get(i).height - d._getWidth());
                             }
                         }
                     }
@@ -4422,11 +4430,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (w < 0) {
             if (parent != null) {
+                boolean is_flex = parent.display_type == Block.Display.FLEX || parent.display_type == Block.Display.INLINE_FLEX;
+                boolean x_axis = parent.flex_direction == Block.Direction.ROW || parent.flex_direction == Block.Direction.ROW_REVERSED;
+
                 if (line == null) {
                     _x_ = margins[3];
                     width = parent.width-parent.borderWidth[1]-parent.borderWidth[3]-margins[1]-_x_-parent.paddings[3]-parent.paddings[1];
                 } else {
-                    width = line.getWidth()-margins[1]-margins[3];
+                    width = !is_flex || x_axis ? line.getWidth()-margins[1]-margins[3] : line.getHeight()-margins[1]-margins[3];
                 }
                 orig_width = (int)Math.round(width / ratio);
             } else if (document != null) {
@@ -6815,6 +6826,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int flex_wrap = WhiteSpace.NO_WRAP;
     public int flex_align = TextAlign.ALIGN_LEFT;
     public int flex_align_content = FlexAlign.STRETCH;
+    public int flex_align_items = FlexAlign.FLEX_START;
     public int flex_direction = Direction.ROW;
     public int flex_gap = 0;
 
@@ -7321,6 +7333,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.flex_align = flex_align;
         b.flex_direction = flex_direction;
         b.flex_align_content = flex_align_content;
+        b.flex_align_items = flex_align_items;
         b.flex_gap = flex_gap;
 
         b.transform = transform;

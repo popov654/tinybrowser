@@ -496,7 +496,12 @@ public class Layouter {
                 offset += block.flex_gap;
             }
             if (is_flex) {
-                if (d.auto_width) d.setWidth(-1, true);
+                if (d.auto_width && block.flex_align_items == Block.FlexAlign.STRETCH) {
+                    d.setWidth(-1, true);
+                } else {
+                    d.width = d.viewport_width = Math.max(d.min_size, d.min_width);
+                    d.orig_width = (int)Math.round((double) d.width / d.ratio);
+                }
                 if (d.auto_height) {
                     d.height = d.viewport_height = 0;
                     d.orig_height = 0;
@@ -575,6 +580,9 @@ public class Layouter {
             }
             if (block.min_size < d.width + d.margins[3] + d.margins[1]) {
                 block.min_size = d.width + d.margins[3] + d.margins[1];
+            }
+            if (block.min_size < block.min_width) {
+                block.min_size = block.min_width;
             }
 
             last_line.addElement(d);
@@ -914,13 +922,14 @@ public class Layouter {
 
         int offset = 0;
         Line line = d.line;
-        if (d.vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
+        int vertical_align = is_flex ? block.flex_align_items : d.vertical_align;
+        if (vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
             offset = Math.round((line.height - (x_axis ? d.height : d.width)) / 2);
         }
-        else if (d.vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
+        else if (vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
             offset = line.height - (x_axis ? d.height : d.width);
         }
-        else if (d.vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null) {
+        else if (vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null) {
             int st1 = (last_block.text_bold || last_block.text_italic) ? ((last_block.text_bold ? Font.BOLD : 0) | (last_block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             int st2 = (d.text_bold || d.text_italic) ? ((d.text_bold ? Font.BOLD : 0) | (d.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             Font f1 = new Font(last_block.fontFamily, st1, last_block.fontSize);
@@ -931,8 +940,7 @@ public class Layouter {
                 offset = last_block.getOffsetTop() - line.getY() + last_block.height - last_block.borderWidth[2] - last_block.paddings[2] -
                      m1.getDescent() + m2.getDescent() - (d.height - d.borderWidth[2] - d.paddings[2]);
             } else {
-                offset = last_block.getOffsetLeft() - line.getX() + last_block.width - last_block.borderWidth[1] - last_block.paddings[1] -
-                     (d.width - d.borderWidth[1] - d.paddings[1]);
+                offset = !block.rtl ? last_block.paddings[3] + last_block.borderWidth[3] - (d.paddings[3] + d.borderWidth[3]) : last_block.width - last_block.borderWidth[1] - last_block.paddings[1] - (d.width - d.borderWidth[1] - d.paddings[1]);
             }
         }
 
