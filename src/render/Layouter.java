@@ -989,7 +989,7 @@ public class Layouter {
 
             int space_count = 0;
 
-            if (content_align == Block.TextAlign.ALIGN_JUSTIFY) {
+            if (content_align == Block.TextAlign.ALIGN_JUSTIFY || content_align == Block.FlexJustify.SPACE_AROUND || content_align == Block.FlexJustify.SPACE_EVENLY) {
                 for (int j = 0; j < line.elements.size(); j++) {
                     Drawable d = line.elements.get(j);
                     if (d instanceof Character && ((Character)d).getText().equals(" ") ||
@@ -998,8 +998,19 @@ public class Layouter {
                         space_count++;
                     }
                 }
-                new_sp = space_count > 0 ? (int)Math.floor((line.width - line.cur_pos) / space_count) : 0;
-                mod = line.width - line.cur_pos - new_sp * space_count;
+                if (content_align == Block.FlexJustify.SPACE_AROUND || content_align == Block.FlexJustify.SPACE_EVENLY) {
+                    space_count += 2;
+                }
+                if (!is_flex) {
+                    new_sp = space_count > 0 ? (int)Math.floor((line.width - line.cur_pos) / space_count) : 0;
+                    mod = line.width - line.cur_pos - new_sp * space_count;
+                } else if (content_align != Block.FlexJustify.SPACE_AROUND) {
+                    new_sp = space_count > 0 ? (int)Math.floor((line.width + block.flex_gap * (line.elements.size()-1) - line.cur_pos) / space_count) : 0;
+                    mod = line.width + block.flex_gap * (line.elements.size()-1) - line.cur_pos - new_sp * space_count;
+                } else {
+                    new_sp = space_count > 0 ? (int)Math.floor((line.width + block.flex_gap * (line.elements.size()-1) - line.cur_pos) / (space_count-1)) : 0;
+                    mod = line.width + block.flex_gap * (line.elements.size()-1) - line.cur_pos - new_sp * (space_count-1);
+                }
             }
 
             if (line.getWidth() == line.cur_pos) continue;
@@ -1012,9 +1023,15 @@ public class Layouter {
             }
             for (int j = 0; j < line.elements.size(); j++) {
                 Drawable d = line.elements.get(j);
-                int w = j < line.elements.size()-1 ? line.elements.get(j+1)._getX() - d._getX() : line.cur_pos - d._getX();
-                if (is_flex && !x_axis) {
-                    w = j < line.elements.size()-1 ? line.elements.get(j+1)._getY() - d._getY() : line.cur_pos - d._getY();
+                int w = 0;
+                if (!is_flex) {
+                    w = j < line.elements.size()-1 ? line.elements.get(j+1)._getX() - d._getX() : line.getX() + line.cur_pos - d._getX();
+                } else {
+                    if (x_axis) {
+                        w = j < line.elements.size()-1 ? line.elements.get(j+1)._getX() - d._getX() - block.flex_gap : line.getX() + line.cur_pos - d._getX();
+                    } else {
+                        w = j < line.elements.size()-1 ? line.elements.get(j+1)._getY() - d._getY() - block.flex_gap : line.getY() + line.cur_pos - d._getY();
+                    }
                 }
                 if (d instanceof Character && ((Character)d).getText().equals(" ")) {
                     if (content_align != Block.TextAlign.ALIGN_JUSTIFY) {
@@ -1035,10 +1052,15 @@ public class Layouter {
 
                 /* Block justification should only be available for flex containers */
 
-                if (is_flex && content_align == Block.TextAlign.ALIGN_JUSTIFY &&
-                       j > 0 && line.elements.get(j-1) instanceof Block &&
-                       ((Block)line.elements.get(j-1)).display_type != Block.Display.INLINE) {
-                    pos += space_index < mod ? new_sp + 1 : new_sp;
+                if (is_flex && (content_align == Block.TextAlign.ALIGN_JUSTIFY || content_align == Block.FlexJustify.SPACE_AROUND || content_align == Block.FlexJustify.SPACE_EVENLY) &&
+                      (j > 0 || content_align == Block.FlexJustify.SPACE_AROUND || content_align == Block.FlexJustify.SPACE_EVENLY)) {
+                    if (j == 0 && content_align == Block.FlexJustify.SPACE_AROUND) {
+                        pos += (int) Math.round(new_sp / 2);
+                        space_index--;
+                    } else {
+                        pos += space_index < mod ? new_sp + 1 : new_sp;
+                    }
+                    space_index++;
                 }
 
                 if (!is_flex || x_axis) {
