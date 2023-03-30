@@ -865,7 +865,7 @@ public class LayoutTests extends JFrame {
         b.setDisplayType(Block.Display.FLEX);
         b.flex_gap = 12;
         b.flex_direction = Block.Direction.COLUMN;
-        b.flex_align = Block.FlexJustify.SPACE_AROUND;
+        b.flex_justify = Block.FlexJustify.SPACE_AROUND;
         //b.flex_align_items = Block.FlexAlign.FLEX_CENTER;
         b.flex_align_content = Block.FlexAlign.FLEX_CENTER;
         //b.flex_wrap = Block.WhiteSpace.NORMAL;

@@ -2409,7 +2409,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         boolean is_flex = display_type == Block.Display.FLEX || display_type == Block.Display.INLINE_FLEX;
 
-        if (text_align != TextAlign.ALIGN_LEFT || is_flex && flex_align != FlexJustify.START) {
+        if (text_align != TextAlign.ALIGN_LEFT || is_flex && flex_justify != FlexJustify.START) {
             Layouter.applyHorizontalAlignment(this);
         }
 
@@ -5434,6 +5434,158 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
+        if (prop.equals("flex-basis")) {
+            if (value.matches("([0-9]+(px|em|rem|%|v(w|h|min|max))|auto|(min-|max-)content)$")) {
+                if (value.matches("[0-9]+(px|em|rem|%|v(w|h|min|max))")) {
+                    flex_basis = getValueInPixels(value);
+                    flex_basis_mode = FlexBasis.EXPLICIT;
+                } else if (value.equals("auto")) {
+                    flex_basis_mode = FlexBasis.AUTO;
+                } else if (value.equals("min-content")) {
+                    flex_basis_mode = FlexBasis.MIN_CONTENT;
+                } else if (value.equals("max-content")) {
+                    flex_basis_mode = FlexBasis.MAX_CONTENT;
+                }
+            }
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("flex-grow") && value.matches("[0-9]+")) {
+            flex_grow = Integer.parseInt(value);
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("flex-shrink") && value.matches("[0-9]+")) {
+            flex_shrink = Integer.parseInt(value);
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("flex-wrap")) {
+            flex_wrap = value.equals("wrap") ? WhiteSpace.NORMAL : WhiteSpace.NO_WRAP;
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("justify-content")) {
+            String[] modes = new String[] { "flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly" };
+            for (int i = 0; i < modes.length; i++) {
+                if (value.equals(modes[i])) {
+                    flex_justify = i;
+                    break;
+                }
+            }
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("align-items")) {
+            String[] modes = new String[] { "stretch", "flex-start", "flex-center", "flex-end" };
+            for (int i = 0; i < modes.length; i++) {
+                if (value.equals(modes[i])) {
+                    flex_align_items = i;
+                    break;
+                }
+            }
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("align-content")) {
+            String[] modes = new String[] { "stretch", "flex-start", "flex-center", "flex-end" };
+            for (int i = 0; i < modes.length; i++) {
+                if (value.equals(modes[i])) {
+                    flex_align_content = i;
+                    break;
+                }
+            }
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("flex-direction")) {
+            String[] modes = new String[] { "row", "row-reverse", "column", "column-reverse" };
+            for (int i = 0; i < modes.length; i++) {
+                if (value.equals(modes[i])) {
+                    flex_direction = i;
+                    break;
+                }
+            }
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("flex-gap") && value.matches("[0-9]+(px|%|em|rem|v(w|h|min|max))")) {
+            flex_gap = getValueInPixels(value);
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
+        if (prop.equals("flex")) {
+            boolean ready = document.ready;
+            document.ready = false;
+            String[] parts = value.split("\\s+");
+            int n = 0;
+            for (int i = 0; i < parts.length; i++) {
+                if (parts[i].matches("([0-9]+(px|em|rem|%|v(w|h|min|max))|auto|(min-|max-)content)$")) {
+                    if (parts[i].matches("[0-9]+(px|em|rem|%|v(w|h|min|max))")) {
+                        flex_basis = getValueInPixels(parts[i]);
+                        flex_basis_mode = FlexBasis.EXPLICIT;
+                    } else if (parts[i].equals("auto")) {
+                        flex_basis_mode = FlexBasis.AUTO;
+                    } else if (parts[i].equals("min-content")) {
+                        flex_basis_mode = FlexBasis.MIN_CONTENT;
+                    } else if (parts[i].equals("max-content")) {
+                        flex_basis_mode = FlexBasis.MAX_CONTENT;
+                    }
+                } else if (parts[i].matches("[0-9]+")) {
+                    if (n == 0) {
+                        flex_grow = Integer.parseInt(parts[i]);
+                    } else if (n == 1) {
+                        flex_shrink = Integer.parseInt(parts[i]);
+                    }
+                    n++;
+                } else if (parts[i].matches("(no-)?wrap")) {
+                    flex_wrap = value.equals("wrap") ? WhiteSpace.NORMAL : WhiteSpace.NO_WRAP;
+                }
+            }
+            document.ready = ready;
+            if (parent != null) {
+                parent.performLayout();
+                parent.forceRepaint();
+                return;
+            }
+        }
+
         if (prop.endsWith("transition")) {
             Vector<String> parts = new Vector<String>();
             int pos = 0;
@@ -6829,8 +6981,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int flex_grow = 1;
     public int flex_shrink = 1;
     public int flex_basis = 0;
+    public int flex_basis_mode = FlexBasis.AUTO;
     public int flex_wrap = WhiteSpace.NO_WRAP;
-    public int flex_align = TextAlign.ALIGN_LEFT;
+    public int flex_justify = TextAlign.ALIGN_LEFT;
     public int flex_align_content = FlexAlign.STRETCH;
     public int flex_align_items = FlexAlign.STRETCH;
     public int flex_direction = Direction.ROW;
@@ -6875,6 +7028,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int ROW_REVERSED = 1;
         public static final int COLUMN = 2;
         public static final int COLUMN_REVERSED = 3;
+    }
+
+    public static class FlexBasis {
+        public static final int AUTO = 0;
+        public static final int MIN_CONTENT = 1;
+        public static final int MAX_CONTENT = 2;
+        public static final int EXPLICIT = 3;
     }
 
     public static class FlexAlign {
@@ -7335,8 +7495,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.flex_grow = flex_grow;
         b.flex_shrink = flex_shrink;
         b.flex_basis = flex_basis;
+        b.flex_basis_mode = flex_basis_mode;
         b.flex_wrap = flex_wrap;
-        b.flex_align = flex_align;
+        b.flex_justify = flex_justify;
         b.flex_direction = flex_direction;
         b.flex_align_content = flex_align_content;
         b.flex_align_items = flex_align_items;

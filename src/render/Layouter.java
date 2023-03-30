@@ -526,6 +526,19 @@ public class Layouter {
             int x = getFullLinePos(d);
             int w = getFullLineSize(d);
 
+            if (is_flex && d.flex_basis_mode != Block.FlexBasis.EXPLICIT) {
+                if (d.flex_basis_mode != Block.FlexBasis.AUTO) {
+                    d.performLayout();
+                }
+                if (d.flex_basis_mode == Block.FlexBasis.AUTO) {
+                    d.flex_basis = d.width;
+                } else if (d.flex_basis_mode == Block.FlexBasis.MIN_CONTENT) {
+                    d.flex_basis = (d.flex_direction == Block.Direction.ROW || d.flex_direction == Block.Direction.ROW_REVERSED) ? d.min_size : d.content_y_max;
+                } else if (d.flex_basis_mode == Block.FlexBasis.MAX_CONTENT) {
+                    d.flex_basis = (d.flex_direction == Block.Direction.ROW || d.flex_direction == Block.Direction.ROW_REVERSED) ? d.content_x_max : d.content_y_max;
+                }
+            }
+
             if (d.display_type != Block.Display.INLINE_TABLE) {
                 if (!d.no_layout) {
                     if (is_flex) {
@@ -976,7 +989,7 @@ public class Layouter {
         boolean is_flex = block.display_type == Block.Display.FLEX || block.display_type == Block.Display.INLINE_FLEX;
         boolean x_axis = block.flex_direction == Block.Direction.ROW || block.flex_direction == Block.Direction.ROW_REVERSED;
 
-        int content_align = is_flex ? block.flex_align : block.text_align;
+        int content_align = is_flex ? block.flex_justify : block.text_align;
 
         int style = (block.text_bold || block.text_italic) ? ((block.text_bold ? Font.BOLD : 0) | (block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
         Font f = new Font(block.fontFamily, style, block.fontSize);
