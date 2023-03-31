@@ -26,10 +26,12 @@ public class Gradient {
         float[] result = new float[points.length];
         for (int i = 0; i < points.length; i++) {
             result[i] = points[i].pos;
-            if (points[i].units < 0) continue;
             double dx = end.getX() - start.getX();
             double dy = end.getY() - start.getY();
             double r = Math.sqrt(dx * dx + dy * dy);
+            if (points[i].units == -1) {
+                result[i] = points[i].pos;
+            }
             if (points[i].units == Block.Units.px) {
                 result[i] = r > 0 ? (float)(points[i].pos / r) : 0;
             }
