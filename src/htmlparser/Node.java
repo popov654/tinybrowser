@@ -233,6 +233,22 @@ public class Node {
         return parent != null && (this == parent.beforeNode || this == parent.afterNode);
     }
 
+    public boolean isChildOf(Node node) {
+        Node n = this;
+        while (n != null && n != node) {
+            n = n.parent;
+        }
+        return n == node;
+    }
+
+    public boolean isAncestorOf(Node node) {
+        Node n = node;
+        while (n != null && n != this) {
+            n = n.parent;
+        }
+        return n == this;
+    }
+
     public String getTextContent() {
         String result = "";
         for (int i = 0; i < children.size(); i++) {

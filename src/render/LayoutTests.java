@@ -1288,7 +1288,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 23;
+        int test = 0;
         int list_type = 2;
 
         if (args.length > 0) {

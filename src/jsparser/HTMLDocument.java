@@ -1,5 +1,6 @@
 package jsparser;
 
+import cssparser.CSSParser;
 import htmlparser.HTMLParser;
 import htmlparser.Node;
 import java.util.Vector;
@@ -17,6 +18,9 @@ public class HTMLDocument extends JSObject {
         items.put("getElementsByTagName", new getElementsByTagNameFunction());
         items.put("getElementsByName", new getElementsByNameFunction());
         items.put("getElementsByClassName", new getElementsByClassNameFunction());
+        items.put("querySelector", new querySelectorFunction());
+        items.put("querySelectorAll", new querySelectorAllFunction());
+        
         items.put("createElement", new createElementFunction());
         items.put("createTextNode", new createTextNodeFunction());
 
@@ -93,6 +97,46 @@ public class HTMLDocument extends JSObject {
                 Vector<Node> nodes = document.getElementsByClassName(args.get(i).asString().getValue());
                 for (Node node: nodes) {
                     array.items.add(HTMLElement.create(node));
+                }
+            }
+            return array;
+        }
+    }
+
+    class querySelectorFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            for (int i = 0; i < args.size(); i++) {
+                if (!(args.get(i) instanceof JSString)) {
+                    JSError e = new JSError(null, "TypeError: argument is not a string", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                CSSParser parser = new CSSParser(document);
+                Node node = parser.documentQuerySelector(args.get(i).asString().getValue());
+                return HTMLElement.create(node);
+            }
+            return null;
+        }
+    }
+
+    class querySelectorAllFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            JSArray array = new JSArray();
+            for (int i = 0; i < args.size(); i++) {
+                if (!(args.get(i) instanceof JSString)) {
+                    JSError e = new JSError(null, "TypeError: argument is not a string", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                CSSParser parser = new CSSParser(document);
+                Vector<Node> nodes = parser.documentQuerySelectorAll(args.get(i).asString().getValue());
+                for (Node node: nodes) {
+                    HTMLElement element = HTMLElement.create(node);
+                    if (!array.items.contains(element)) {
+                        array.push(element);
+                    }
                 }
             }
             return array;

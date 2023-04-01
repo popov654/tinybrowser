@@ -223,6 +223,38 @@ public class CSSParser {
         }
     }
 
+    public Node documentQuerySelector(String query) {
+        QuerySelector selector = new QuerySelector(query, hp);
+        return selector.getElements().size() > 0 ? selector.getElements().firstElement() : null;
+    }
+
+    public Node documentQuerySelector(String query, Node parent) {
+        QuerySelector selector = new QuerySelector(query, hp);
+        Vector<Node> nodes = selector.getElements();
+        for (int i = 0; i < nodes.size(); i++) {
+            if (!nodes.get(i).isChildOf(parent)) {
+                nodes.remove(i--);
+            }
+        }
+        return selector.getElements().size() > 0 ? selector.getElements().firstElement() : null;
+    }
+
+    public Vector<Node> documentQuerySelectorAll(String query) {
+        QuerySelector selector = new QuerySelector(query, hp);
+        return selector.getElements();
+    }
+
+    public Vector<Node> documentQuerySelectorAll(String query, Node parent) {
+        QuerySelector selector = new QuerySelector(query, hp);
+        Vector<Node> nodes = selector.getElements();
+        for (int i = 0; i < nodes.size(); i++) {
+            if (!nodes.get(i).isChildOf(parent)) {
+                nodes.remove(i--);
+            }
+        }
+        return nodes;
+    }
+
     HashMap<String, HashMap<String, String>> global_rules;
     Vector<StyleElement> styles = new Vector<StyleElement>();
 
