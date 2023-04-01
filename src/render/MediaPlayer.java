@@ -97,7 +97,7 @@ public class MediaPlayer {
         play_btn.display_type = Block.Display.INLINE_BLOCK;
         Vector<Color> c = new Vector<Color>();
         c.add(new Color(192, 223, 234, 7));
-        c.add(new Color(238, 238, 238, 245));
+        c.add(new Color(238, 238, 238, 145));
         c.add(new Color(193, 213, 232, 180));
         Vector<Float> p = new Vector<Float>();
         p.add(0f);

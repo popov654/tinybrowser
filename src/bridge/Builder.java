@@ -471,6 +471,7 @@ public class Builder {
         int type = detectMediaType(src);
 
         b.setDisplayType(Block.Display.INLINE_BLOCK);
+        b.special = true;
 
         MediaPlayer mp = null;
 
@@ -483,7 +484,7 @@ public class Builder {
             mp = new MediaPlayer(b, player_width, player_height);
         } else {
             int player_width = 230; //b.parent.width > 0 ? b.parent.width - b.parent.borderWidth[1] - b.parent.borderWidth[3] - b.parent.paddings[1] - b.parent.paddings[3] : -1;
-            b.width = (int) Math.round(player_width * b.ratio);
+            b.width = b.viewport_width = (int) Math.round(player_width * b.ratio);
             b.orig_width = player_width;
             b.auto_width = false;
             b.auto_height = true;

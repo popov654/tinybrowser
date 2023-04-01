@@ -2243,9 +2243,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     setTop(value.value, value.unit);
                 } else if (key.equals("bottom")) {
                     setBottom(value.value, value.unit);
-                } else if (key.equals("width")) {
+                } else if (key.equals("width") && (display_type != Display.BLOCK && display_type != Display.FLEX || value.value > 0)) {
                     setWidth((int) Math.round(value.value), value.unit);
-                } else if (key.equals("height")) {
+                } else if (key.equals("height") && value.value >= 0) {
                     setHeight((int) Math.round(value.value), value.unit);
                 }
             }
