@@ -456,9 +456,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             g.drawImage(buffer, _x_ - dx, _y_ - dy, this);
         }
         
-        if (text_layer != null) {
+        /* if (text_layer != null) {
             text_layer.setBounds(-scroll_x, -scroll_y, text_layer.getWidth(), text_layer.getHeight());
-        }
+        } */
         Component[] c = getComponents();
         for (int i = 0; i < c.length; i++) {
             if (c[i] instanceof JSVGCanvas) {
