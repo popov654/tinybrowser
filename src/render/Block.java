@@ -2249,6 +2249,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     setHeight((int) Math.round(value.value), value.unit);
                 }
             }
+            if (aspect_ratio >= 0 && (keys.contains("width") && (!keys.contains("height") || dimensions.get("height").value < 0) || (!keys.contains("width") || dimensions.get("width").value < 0) && keys.contains("height"))) {
+                if (keys.contains("width") && (!keys.contains("height") || dimensions.get("height").value < 0)) {
+                    double w = getValueInCssPixels(dimensions.get("width").value, dimensions.get("width").unit);
+                    double h = aspect_ratio > 0 ? w / aspect_ratio : 0;
+                    setHeight((int) Math.round(h), Units.px);
+                } else {
+                    double h = getValueInCssPixels(dimensions.get("height").value, dimensions.get("height").unit);
+                    double w = aspect_ratio * h;
+                    setWidth((int) Math.round(w), Units.px);
+                }
+            }
             document.ready = ready;
         }
 
@@ -4495,6 +4506,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setWidth(int w, int units) {
         int value = (int) Math.round(getValueInCssPixels(w, units));
+        if (units == Units.percent) {
+            value -= (int) ((double) (margins[3] + margins[1]) / ratio);
+        }
         if (units != Units.px) {
             dimensions.put("width", new CssLength(w, units));
         }
@@ -4651,12 +4665,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 background.background_size_x = (int) Math.max(0, old_size_x * viewport_width);
                 background.background_size_y = (int) Math.max(0, old_size_y * viewport_height);
             }
+            for (int i = 0; i < children.size(); i++) {
+                Block child = children.get(i);
+                if (child.dimensions != null && (child.dimensions.containsKey("width") && child.dimensions.get("width").unit == Units.percent && old_width != viewport_width ||
+                      child.dimensions.containsKey("height") && child.dimensions.get("height").unit == Units.percent && old_height != viewport_height)) {
+                    performLayout(false);
+                }
+            }
             Block b = this;
             while ((old_width != b.viewport_width || old_height != b.viewport_height) && b.parent != null && !no_recalc) {
                 b = b.parent;
                 old_width = b.viewport_width;
                 old_height = b.viewport_height;
                 b.performLayout(use_fast_update);
+                for (int i = 0; i < b.children.size(); i++) {
+                    Block child = b.children.get(i);
+                    if (child.dimensions != null && (child.dimensions.containsKey("width") && child.dimensions.get("width").unit == Units.percent && old_width != b.viewport_width ||
+                          child.dimensions.containsKey("height") && child.dimensions.get("height").unit == Units.percent && old_height != b.viewport_height)) {
+                        b.performLayout(false);
+                    }
+                }
             }
             document.no_layout = false;
             last = b;
@@ -5094,6 +5122,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 setMaxHeightPercentage(Float.parseFloat(value.replaceAll("[a-z%]+$", "")));
             }
             doIncrementLayout(viewport_width, old_height, false);
+            return;
+        }
+        if (prop.equals("aspect-ratio") && value.matches("[0-9]+")) {
+            aspect_ratio = Integer.parseInt(value);
+            doIncrementLayout(viewport_width, viewport_height, false);
             return;
         }
         if (prop.equals("left") && value.equals("auto")) {
@@ -7215,6 +7248,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int viewport_width;
     public int viewport_height;
 
+    public double aspect_ratio = -1;
+
     JScrollBar scrollbar_x;
     JScrollBar scrollbar_y;
 
@@ -7426,6 +7461,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.right = this.right;
         b.top = this.top;
         b.bottom = this.bottom;
+
+        b.aspect_ratio = aspect_ratio;
 
         b.href = href;
         b.hasParentLink = hasParentLink;

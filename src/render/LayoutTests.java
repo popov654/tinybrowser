@@ -450,6 +450,16 @@ public class LayoutTests extends JFrame {
         t1.start();
     }
 
+    public void aspectRatioTest() {
+        basicTest();
+
+        document.root.children.get(1).aspect_ratio = 2;
+
+        document.root.children.get(1).aspect_ratio = 1.5;
+        document.root.children.get(1).setWidth(100, Block.Units.percent);
+        document.root.children.get(1).setHeight(-1);
+    }
+
     public void testTextShadow() {
         basicTest();
         
@@ -1329,6 +1339,7 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("viewport-units")) test = 21;
             else if (args[0].equals("transitions")) test = 22;
             else if (args[0].equals("flex")) test = 23;
+            else if (args[0].equals("aspect-ratio")) test = 24;
 
             if (args.length > 1) list_type = Integer.parseInt(args[1]);
         }
@@ -1387,6 +1398,8 @@ public class LayoutTests extends JFrame {
             case 22: lt.testTransitions();
                      break;
             case 23: lt.testFlexPositioning();
+                     break;
+            case 24: lt.aspectRatioTest();
                      break;
         }
 
