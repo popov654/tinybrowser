@@ -502,13 +502,21 @@ public class Layouter {
                     d.width = d.viewport_width = Math.max(d.min_size, d.min_width);
                     d.orig_width = (int)Math.round((double) d.width / d.ratio);
                 } else if (d.dimensions.containsKey("width")) {
-                    d.setWidth((int) d.dimensions.get("width").value, d.dimensions.get("width").unit);
+                    if (d.dimensions.get("width").expression != null) {
+                        d.setWidth((int) d.getValueInCssPixels(d.dimensions.get("width").expression), Block.Units.px);
+                    } else {
+                        d.setWidth((int) d.dimensions.get("width").length.value, d.dimensions.get("width").length.unit);
+                    }
                 }
                 if (d.auto_height) {
                     d.height = d.viewport_height = 0;
                     d.orig_height = 0;
                 } else if (d.dimensions.containsKey("height")) {
-                    d.setHeight((int) d.dimensions.get("height").value, d.dimensions.get("height").unit);
+                    if (d.dimensions.get("height").expression != null) {
+                        d.setHeight((int) d.getValueInCssPixels(d.dimensions.get("height").expression), Block.Units.px);
+                    } else {
+                        d.setHeight((int) d.dimensions.get("height").length.value, d.dimensions.get("height").length.unit);
+                    }
                 }
             }
             if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
