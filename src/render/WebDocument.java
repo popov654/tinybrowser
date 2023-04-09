@@ -562,6 +562,72 @@ public class WebDocument extends JPanel {
         baseUrl = path;
     }
 
+    public void setZoomPercentage(double value) {
+        setZoom(value / 100);
+    }
+
+    public void setZoom(double value) {
+        zoom = value;
+        updateElementsDpiRecursive(root);
+        root.performLayout();
+        root.forceRepaintAll();
+        //repaint();
+    }
+
+    private void updateElementDpi(Block block) {
+        double old_ratio = block.ratio;
+
+        block.ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96 * zoom;
+        if (forced_dpi > 0) {
+            block.ratio = forced_dpi * zoom;
+        }
+
+        block.fontSize = (int)Math.round(block.fontSize / old_ratio * block.ratio);
+        block.scale_borders = WebDocument.scale_borders;
+
+        block.width = block.orig_width > 0 ? (int)Math.round(block.orig_width * block.ratio) : -1;
+
+        if (block.height >= 0) {
+            block.height = (int)Math.round(height / old_ratio * block.ratio);
+        }
+
+        for (int i = 0; i < block.margins.length; i++) {
+            block.margins[i] = (int) ((double) block.margins[i] / old_ratio * block.ratio);
+        }
+        for (int i = 0; i < block.paddings.length; i++) {
+            block.paddings[i] = (int) ((double) block.paddings[i] / old_ratio * block.ratio);
+        }
+        
+        for (int i = 0; i < block.arc.length; i++) {
+            block.arc[i] = (int) ((double) block.arc[i] / old_ratio * block.ratio);
+        }
+        if (WebDocument.scale_borders) {
+            for (int i = 0; i < block.borderWidth.length; i++) {
+                block.borderWidth[i] = (int) ((double) block.borderWidth[i] / old_ratio * block.ratio);
+            }
+        }
+
+        block.updateBorder();
+
+        block.orig_width = block.width;
+        block.orig_height = block.height;
+
+        if (block.width < 0 && block.parent == null) {
+            block.width = width - borderSize * 2;
+        }
+    }
+
+    private void updateElementsDpiRecursive(Block block) {
+        updateElementDpi(block);
+        for (int i = 0; i < block.children.size(); i++) {
+            Block child = block.children.get(i);
+            updateElementsDpiRecursive(child);
+            for (Block part: child.parts) {
+                updateElementsDpiRecursive(part);
+            }
+        }
+    }
+
     public void smartUpdate(Block b, int old_width, int old_height) {
         Set<String> onlyRepaint = new java.util.HashSet<String>();
         onlyRepaint.add("background");
@@ -646,6 +712,7 @@ public class WebDocument extends JPanel {
     public boolean highlight_text = false;
     public boolean smooth_borders = true;
     public double forced_dpi = 0;
+    public double zoom = 1f;
 
     public String selected_text;
     public static boolean scale_borders = true;

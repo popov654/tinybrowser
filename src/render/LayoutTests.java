@@ -437,6 +437,19 @@ public class LayoutTests extends JFrame {
         t2.start();
     }
 
+    public void documentZoomChangeTest() {
+        basicTest();
+
+        Timer t1 = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                document.setZoom(1.15);
+            }
+        });
+        t1.setRepeats(false);
+        t1.start();
+    }
+
     public void testTextShadow() {
         basicTest();
         

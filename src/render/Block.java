@@ -90,9 +90,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         setLayout(null);
         setOpaque(false);
 
-        ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96;
+        ratio = (double)java.awt.Toolkit.getDefaultToolkit().getScreenResolution() / 96 * (document != null ? document.zoom : 1);
         if (document != null && document.forced_dpi > 0) {
-            ratio = document.forced_dpi;
+            ratio = document.forced_dpi * document.zoom;
         }
 
         if (document != null) fontSize = document.fontSize;
@@ -4282,6 +4282,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void setBorderClipMode(int mode) {
         borderClipMode = mode;
         forceRepaint();
+    }
+
+    public void updateBorder() {
+        border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
     }
 
     public void updateAbsolutePositionedChildren() {
