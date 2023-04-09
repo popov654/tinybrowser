@@ -52,6 +52,9 @@ public class Document {
     public WebDocument document;
     public Cache cache;
 
+    public Document parentDocument;
+    public Node hostElement;
+
     public boolean asyncImageLoad = true;
     public boolean asyncIframeLoad = true;
     public boolean enableExternalStyles = true;

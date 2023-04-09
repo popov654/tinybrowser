@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+import jsparser.HTMLElement;
 import network.Request;
 import render.Block;
 import render.WebDocument;
@@ -133,15 +134,24 @@ public class ResourceManager {
                         loadResourceContent(resource);
                         String content = resource.getContent();
                         Reader reader = new Reader();
-                        Document doc = reader.createDocumentFromString(content);
-                        resource.setDocument(doc);
+                        Document childDocument = reader.createDocumentFromString(content);
+                        resource.setDocument(childDocument);
                         Block block = Mapper.get(resource.getNode());
                         if (block != null) {
-                            WebDocument childView = reader.createDocumentView(doc, "", (JFrame) doc.builder.windowFrame);
+                            WebDocument childView = reader.createDocumentView(childDocument, "", (JFrame) childDocument.builder.windowFrame);
                             block.addChildDocument(childView);
                             Block b = block.doIncrementLayout();
                             b.forceRepaint();
                             document.document.repaint();
+
+                            childDocument.parentDocument = document;
+                            childDocument.hostElement = block.node;
+                            HTMLElement frameElement = HTMLElement.create(block.node);
+                            if (childDocument.builder.jsWindow == null) {
+                                childDocument.builder.jsWindow = new jsparser.Window(new jsparser.Block());
+                            }
+                            frameElement.set("contentWindow", childDocument.builder.jsWindow);
+                            frameElement.set("contentDocument", childDocument.builder.jsWindow.get("document"));
                         }
                         resource.setLoaded(true);
                         checkResourcesStatus();

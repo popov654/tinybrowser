@@ -22,6 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import jsparser.Expression;
+import jsparser.HTMLElement;
+import jsparser.JSObject;
 import jsparser.JSParser;
 import jsparser.JSValue;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
@@ -224,6 +226,15 @@ public class Builder {
             if (childDocument != null) {
                 WebDocument childView = reader.createDocumentView(childDocument, "", (JFrame) windowFrame);
                 b.addChildDocument(childView);
+                childDocument.parentDocument = documentWrap;
+                childDocument.hostElement = b.node;
+                HTMLElement frameElement = HTMLElement.create(b.node);
+                if (childDocument.builder.jsWindow == null) {
+                    childDocument.builder.jsWindow = new jsparser.Window(new jsparser.Block());
+                    childDocument.builder.jsWindow.setDocument(childDocument.rootNode.document);
+                }
+                frameElement.set("contentWindow", childDocument.builder.jsWindow);
+                frameElement.set("contentDocument", childDocument.builder.jsWindow.get("document"));
             }
         }
 
@@ -542,7 +553,19 @@ public class Builder {
             block.setConsole((jsparser.Console)scope.get("console"));
         }
         block.setDocument(parser);
+        if (jsWindow == null) {
+            jsWindow = (jsparser.Window) Expression.getVar("window", block);
+        } else {
+            Expression.setVar("window", jsWindow, block, Expression.var);
+        }
+        setParentDocument(block, documentWrap.parentDocument);
         block.setWindowFrame(windowFrame);
+        
+        if (documentWrap.hostElement != null) {
+            HTMLElement frameElement = HTMLElement.create(documentWrap.hostElement);
+            frameElement.set("contentWindow", jsWindow);
+            frameElement.set("contentDocument", jsWindow.get("document"));
+        }
         script.setBody(block);
         script.compiled = true;
     }
@@ -573,6 +596,15 @@ public class Builder {
             if (window.resizeListener != null) {
                 window.resizeListener.componentResized(new java.awt.event.ComponentEvent(windowFrame, java.awt.event.ComponentEvent.COMPONENT_RESIZED));
             }
+        }
+    }
+
+    public void setParentDocument(jsparser.Block childBlock, bridge.Document parent) {
+        if (parent == null) return;
+        JSObject childWindow = (JSObject) Expression.getVar("window", childBlock);
+        HTMLElement parentWindow = HTMLElement.create(documentWrap.rootNode);
+        if (childWindow != null) {
+            childWindow.set("parent", parentWindow);
         }
     }
 
@@ -1002,6 +1034,7 @@ public class Builder {
     public String baseUrl = "";
     public WebDocument document;
     public CSSParser cssParser;
+    public jsparser.Window jsWindow;
     public java.awt.Frame windowFrame;
     public Vector<ScriptElement> scripts = new Vector<ScriptElement>();
 
