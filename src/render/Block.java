@@ -6563,66 +6563,69 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
-    public void addElement(Block d) {
-        addElement(d, children.size(), false);
+    public void addElement(Block b) {
+        addElement(b, children.size(), false);
     }
 
-    public void addElement(Block d, boolean preserve_style) {
-        addElement(d, children.size(), preserve_style);
+    public void addElement(Block b, boolean preserve_style) {
+        addElement(b, children.size(), preserve_style);
     }
 
-    public void addElement(Block d, int pos) {
-        addElement(d, pos, false);
+    public void addElement(Block b, int pos) {
+        addElement(b, pos, false);
     }
 
-    public void addElement(Block d, int pos, boolean preserve_style) {
+    public void addElement(Block b, int pos, boolean preserve_style) {
         type = NodeTypes.ELEMENT;
-        if (children.contains(d)) {
+        if (children.contains(b)) {
             System.err.println("Duplicate block insert");
             return;
         }
         if (pos < children.size()) {
-            children.add(pos, d);
+            children.add(pos, b);
         } else {
-            children.add(d);
+            children.add(b);
         }
-        d.addToContainer(pos);
+        b.addToContainer(pos);
 
-        d.pos = getComponentCount()-1;
+        b.pos = getComponentCount()-1;
 
         Block root = this;
         while (root.parent != null) {
             if (root.hasParentLink || root.href != null) {
-                d.hasParentLink = true;
+                b.hasParentLink = true;
             }
             root = root.parent;
         }
         if (document != null && (root.width <= 0 || root.height <= 0)) {
             root = document.root;
         }
-        d.setBounds(0, 0, root.width, root.height);
+        b.setBounds(0, 0, root.width, root.height);
 
-        d.document = document;
+        b.document = document;
+        if (b.childDocument != null) {
+            b.document.child_documents.add(b.childDocument);
+        }
 
-        d.parent = this;
-        d.alpha = alpha;
+        b.parent = this;
+        b.alpha = alpha;
         if (!preserve_style) {
-            d.color = color;
-            d.fontSize = fontSize;
-            d.fontFamily = fontFamily;
-            d.text_align = text_align;
-            d.text_bold = text_bold;
-            d.text_italic = text_italic;
-            d.text_underline = text_underline;
-            d.text_strikethrough = text_strikethrough;
-            d.linksUnderlineMode = linksUnderlineMode;
-            d.textShadowColor = textShadowColor;
-            d.textShadowOffset = textShadowOffset;
+            b.color = color;
+            b.fontSize = fontSize;
+            b.fontFamily = fontFamily;
+            b.text_align = text_align;
+            b.text_bold = text_bold;
+            b.text_italic = text_italic;
+            b.text_underline = text_underline;
+            b.text_strikethrough = text_strikethrough;
+            b.linksUnderlineMode = linksUnderlineMode;
+            b.textShadowColor = textShadowColor;
+            b.textShadowOffset = textShadowOffset;
         }
         if (document != null && document.prevent_mixed_content) {
             normalizeContent();
         }
-        addToLayout(d, pos, root);
+        addToLayout(b, pos, root);
     }
 
     private void addToLayout(Block d, int pos, Block root) {
