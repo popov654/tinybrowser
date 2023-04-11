@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -85,20 +86,7 @@ public class Request {
             byte[] out = new byte[0];
 
             if (!method.equals("GET")) {
-                if (params == null) params = new HashMap<String, String>();
-                ArrayList<String> parts = new ArrayList<String>();
-                for (Map.Entry<String, String> entry : params.entrySet()) {
-                    parts.add(URLEncoder.encode(entry.getKey(), charset) + "="
-                         + URLEncoder.encode(entry.getValue(), charset));
-                }
-                String listString = parts.toString();
-                listString = listString.substring(1, listString.length() - 1).replaceAll(",\\s+", "&");
-
-                out = listString.getBytes(Charset.forName(charset));
-                int length = out.length;
-
-                http.setFixedLengthStreamingMode(listString.length());
-                http.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=" + charset.toLowerCase());
+                out = prepareBody(http, params, charset);
             }
 
             http.connect();
@@ -137,6 +125,30 @@ public class Request {
         return null;
     }
 
+    private static byte[] prepareBody(HttpURLConnection http, HashMap<String, String> params, String charset) {
+        byte[] out = new byte[0];
+
+        if (params == null) params = new HashMap<String, String>();
+        ArrayList<String> parts = new ArrayList<String>();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            try {
+                parts.add(URLEncoder.encode(entry.getKey(), charset) + "=" + URLEncoder.encode(entry.getValue(), charset));
+            } catch (UnsupportedEncodingException ex) {
+                Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        String listString = parts.toString();
+        listString = listString.substring(1, listString.length() - 1).replaceAll(",\\s+", "&");
+
+        out = listString.getBytes(Charset.forName(charset));
+        int length = out.length;
+
+        http.setFixedLengthStreamingMode(listString.length());
+        http.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=" + charset.toLowerCase());
+
+        return out;
+    }
+
 
     public static File makeBinaryRequest(String path, String method, HashMap<String, String> params, String charset, boolean noCache) {
         try {
@@ -167,20 +179,7 @@ public class Request {
             byte[] out = new byte[0];
 
             if (!method.equals("GET")) {
-                if (params == null) params = new HashMap<String, String>();
-                ArrayList<String> parts = new ArrayList<String>();
-                for (Map.Entry<String, String> entry : params.entrySet()) {
-                    parts.add(URLEncoder.encode(entry.getKey(), charset) + "="
-                         + URLEncoder.encode(entry.getValue(), charset));
-                }
-                String listString = parts.toString();
-                listString = listString.substring(1, listString.length() - 1).replaceAll(",\\s+", "&");
-
-                out = listString.getBytes(Charset.forName(charset));
-                int length = out.length;
-
-                http.setFixedLengthStreamingMode(listString.length());
-                http.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=" + charset.toLowerCase());
+                out = prepareBody(http, params, charset);
             }
 
             http.connect();
