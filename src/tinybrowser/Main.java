@@ -11,8 +11,13 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.util.LinkedHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -23,6 +28,7 @@ import jsparser.Expression;
 import jsparser.JSParser;
 import mediaplayer.MediaController;
 import mediaplayer.NoMediaPlayerException;
+import network.Request;
 import render.Block;
 import render.WebDocument;
 
@@ -175,6 +181,28 @@ public class Main {
     public static void visualBuilderTest(Reader reader, Document document) {
         reader.displayDocument(document, "Render Test", 460, 240);
         //documentResizeTest(frame, panel, document, 1000, 400);
+    }
+
+    public static void testRequests() {
+
+        try {
+            URL url = new URL("http://popov654.pp.ru");
+            URLConnection con = url.openConnection();
+            HttpURLConnection http = (HttpURLConnection) con;
+            http.setRequestMethod("POST");
+            http.setRequestProperty("User-Agent", "TinyBrowser");
+            http.setDoOutput(true);
+            LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
+            params.put("name", "Alex654");
+            params.put("message", "Hello there!");
+            params.put("attachment", "[filename=\"attachment.txt\"]File content");
+            //byte[] out = Request.prepareBody(http, params, Request.defaultCharset, true);
+            String response = Request.makeRequest("http://popov654.pp.ru/files.php", "POST", params, true, true);
+            System.out.println(response);
+            //prepareBody(HttpURLConnection http, HashMap<String, String> params, String charset, boolean multipart)
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     class CustomPlayer extends CustomElement {
