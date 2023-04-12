@@ -6587,9 +6587,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
-                    setX(parent.borderWidth[3] + margins[3] + parent.width - right);
+                    setX(parent.borderWidth[3] + margins[3] + parent.width - right - width);
                 } else {
-                    setX(document.width - document.borderSize * 2 - right);
+                    setX(document.width - document.borderSize * 2 - right - width);
                 }
             }
             forceRepaint();
@@ -6643,9 +6643,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
-                    setY(parent.borderWidth[0] + margins[0] + parent.height - bottom);
+                    setY(parent.borderWidth[0] + margins[0] + parent.height - bottom - height);
                 } else {
-                    setY(document.height - document.borderSize * 2 - bottom);
+                    setY(document.height - document.borderSize * 2 - bottom - height);
                 }
             }
             forceRepaint();
