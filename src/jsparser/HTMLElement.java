@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
+import javax.swing.JTextField;
 
 /**
  *
@@ -850,12 +851,12 @@ public class HTMLElement extends HTMLNode {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
-        updateNode(str.asString().getValue(), value.asString().getValue());
+        updateNode(str.asString().getValue(), value != null ? value.asString().getValue() : null);
         super.set(str, value);
     }
 
     private void updateNode(String attr, String value) {
-        Vector<String> attrs = new Vector<String>(Arrays.asList(new String[] { "action", "href", "src", "target" }));
+        Vector<String> attrs = new Vector<String>(Arrays.asList(new String[] { "action", "enctype", "method", "href", "src", "target", "checked", "value" }));
         if (attrs.contains(attr)) {
             node.setAttribute(attr, value);
         }
@@ -867,11 +868,25 @@ public class HTMLElement extends HTMLNode {
                 b.setBackgroundImage(b.document.baseUrl + node.getAttribute("src"));
             } else if (attr.equals("href")) {
                 b.setHref(value);
-            } else if (attr.equals("action") && node.tagName.equals("form")) {
+            } else if (node.tagName.equals("form")) {
                 if (b.form == null) {
                     render.Form form = new render.Form(b);
                 }
-                b.form.url = value;
+                b.form.url = node.getAttribute("action");
+                if (node.hasAttribute("method")) {
+                    b.form.method = node.getAttribute("method").toUpperCase();
+                }
+                if ((new String("multipart/formdata")).equals(node.getAttribute("enctype"))) {
+                    b.form.multipart = true;
+                }
+            } else if (attr.equals("value") && b.inputType != render.Block.Input.NONE) {
+                if (b.inputType >= render.Block.Input.TEXT && b.inputType <= render.Block.Input.TEXTAREA) {
+                    ((JTextField) b.getComponent(0)).setText(value);
+                    b.inputValue = value != null ? value : "";
+                } else if (attr.equals("checked") && b.inputType >= render.Block.Input.RADIO && b.inputType <= render.Block.Input.CHECKBOX) {
+                    b.checked = value != null;
+                }
+                b.forceRepaint();
             }
         }
     }
