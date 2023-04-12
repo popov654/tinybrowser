@@ -62,6 +62,7 @@ import javax.imageio.metadata.IIOMetadataNode;
 import javax.swing.ButtonModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -475,13 +476,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 c[i].repaint();
                 continue;
             }
-            if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox))) continue;
+            if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JLabel) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox))) continue;
             if (inputType < Input.BUTTON) {
                 c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
             } else if (inputType == Input.BUTTON) {
                 c[i].setBounds(_x_ + borderWidth[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
             } else if (inputType == Input.RADIO || inputType == Input.CHECKBOX) {
                 c[i].setBounds(_x_ + width / 2 - c[i].getPreferredSize().width / 2 - 1 - scroll_x, _y_ + height / 2 - c[i].getPreferredSize().height / 2 - scroll_y, height, height);
+                c[i].repaint();
+            } else if (c[i] instanceof JLabel && inputType == Input.FILE || c[i] instanceof JButton && parent.inputType == Input.FILE) {
+                if (c[i] instanceof JLabel) {
+                    c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ - scroll_y, c[i].getWidth(), height);
+                } else {
+                    c[i].setBounds(_x_ + width - scroll_x - c[i].getWidth(), _y_ - scroll_y, c[i].getWidth(), height);
+                }
                 c[i].repaint();
             }
         }
@@ -1856,109 +1864,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             } else {
                 add(btn);
                 btn.setFocusPainted(false);
-                btn.setBounds(_x_, _y_, width, height);
-                if (background == null || background.bgcolor == null && background.gradient == null) {
-                    //bgcolor = new Color(207, 210, 218);
-                    Vector<Color> c = new Vector<Color>();
-                    c.add(new Color(117, 113, 138));
-                    c.add(new Color(218, 218, 228));
-                    c.add(new Color(235, 235, 235));
-                    Vector<Float> p = new Vector<Float>();
-                    p.add(0f);
-                    p.add(0.28f);
-                    p.add(0.82f);
-                    setLinearGradient(c, p, 180);
-                    final Block instance = this;
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            btn.getModel().setPressed(true);
-                            btn.getModel().setPressed(false);
-                            instance.clearBuffer();
-                            instance.forceRepaint();
-                            instance.document.repaint();
-                        }
-                        
-                    });
-                }
-                final Color col = background.bgcolor;
-                final Color new_col = col != null ? new Color((int)Math.min(col.getRed() * 1.03, 255), (int)Math.min(col.getGreen() * 1.03, 255), (int)Math.min(col.getBlue() * 1.03, 255)) : null;
-
-                btn.getModel().addChangeListener(new ChangeListener() {
-                    private boolean rollover = false;
-                    private boolean pressed = false;
-
-                    @Override
-                    public void stateChanged(ChangeEvent e) {
-                        ButtonModel model = (ButtonModel) e.getSource();
-                        if (col != null) {
-                            if (model.isRollover() != rollover || model.isPressed() != pressed) {
-                                rollover = model.isRollover();
-                                pressed = model.isPressed();
-                                if (((Block)btn.getParent()).background == null) {
-                                    ((Block)btn.getParent()).background = new Background();
-                                }
-                                if (rollover) {
-                                    ((Block)btn.getParent()).background.bgcolor = new_col;
-                                } else {
-                                    ((Block)btn.getParent()).background.bgcolor = col;
-                                }
-                            }
-                            return;
-                        }
-                        if (model.isRollover() != rollover || model.isPressed() != pressed) {
-                            rollover = model.isRollover();
-                            pressed = model.isPressed();
-                            Vector<Color> c = new Vector<Color>();
-                            Vector<Float> p = new Vector<Float>();
-                            if (rollover && !pressed) {
-                                c = new Vector<Color>();
-                                c.add(new Color(146, 151, 164));
-                                c.add(new Color(207, 208, 214));
-                                c.add(new Color(210, 210, 218));
-                                c.add(new Color(235, 235, 235));
-                                p = new Vector<Float>();
-                                p.add(0f);
-                                p.add(0.29f);
-                                p.add(0.38f);
-                                p.add(0.82f);
-                            } else if (!rollover && pressed) {
-                                c = new Vector<Color>();
-                                c.add(new Color(119, 119, 130));
-                                c.add(new Color(176, 176, 183));
-                                c.add(new Color(237, 237, 237));
-                                p = new Vector<Float>();
-                                p.add(0f);
-                                p.add(0.32f);
-                                p.add(0.78f);
-                            } else if (rollover && pressed) {
-                                c = new Vector<Color>();
-                                c.add(new Color(123, 123, 132));
-                                c.add(new Color(181, 181, 187));
-                                c.add(new Color(238, 238, 238));
-                                p = new Vector<Float>();
-                                p.add(0f);
-                                p.add(0.32f);
-                                p.add(0.78f);
-                            } else {
-                                c = new Vector<Color>();
-                                c.add(new Color(131, 137, 148));
-                                c.add(new Color(196, 196, 201));
-                                c.add(new Color(196, 196, 201));
-                                c.add(new Color(235, 235, 235));
-                                p = new Vector<Float>();
-                                p.add(0f);
-                                p.add(0.23f);
-                                p.add(0.27f);
-                                p.add(0.82f);
-                            }
-                            setLinearGradient(c, p, 180);
-                            if (btn.getParent() != null) ((Block)btn.getParent()).setLinearGradient(c, p, 180);
-                        }
-                    }
-                });
-                btn.getModel().setRollover(false);
+                insertButton(btn);
             }
 
             tf.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
@@ -2107,9 +2013,202 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 rb.getModel().setSelected(true);
             }
         }
+        if (inputType == Input.FILE) {
+            boolean ready = document.ready;
+            document.ready = false;
+            removeAllElements();
+
+            final Block label = new Block(document);
+            final Block btn = createButton("…", null);
+
+            addElement(label, true);
+            label.addText("No file selected");
+
+            label.setPositioning(Position.ABSOLUTE);
+            label.setLeft(0, Units.px);
+            label.setTop(2, Units.px);
+            label.width = label.viewport_width = width - btn.width - 6;
+            label.height = label.viewport_height = height;
+            label.fontSize = (int) Math.round(12 * ratio);
+            label.setWhiteSpace(WhiteSpace.NO_WRAP);
+            label.setOverflow(Overflow.HIDDEN);
+
+            addElement(btn, true);
+
+            btn.setPositioning(Position.ABSOLUTE);
+            btn.setRight(0, Units.px);
+            btn.setTop(0, Units.px);
+
+            ((JButton)btn.getComponent(0)).addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JFileChooser fileChooser = new JFileChooser();
+                    int result = fileChooser.showOpenDialog(document);
+                    if (result == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        label.children.get(0).textContent = selectedFile.getAbsolutePath();
+                        label.performLayout();
+                        label.forceRepaint();
+                    }
+                }
+            });
+
+            document.ready = ready;
+
+            label.performLayout();
+            label.forceRepaint();
+
+            //label.performLayout();
+            //if (!document.isPainting) label.draw();
+            //JLabel label = new JLabel("No file selected");
+            //label.setFont(new Font(fontFamily, Font.PLAIN, (int) Math.round(12 * ratio)));
+            //add(label);
+            //label.setBounds(_x_ + 2, _y_ + 2, width - btn.width - 10, label.getPreferredSize().height);
+            //label.text_layer.setBounds(_x_, _y_, width, height);
+            if (width < btn.width) width = viewport_width = btn.width;
+        }
         if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
 
         return true;
+    }
+
+    private Block createButton(String label, Color color) {
+
+        final Block b = new Block(document);
+
+        final JButton btn = new JButton();
+
+        btn.setText(label);
+        btn.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
+        int width = getFontMetrics(btn.getFont()).stringWidth(label) + 16;
+        btn.setPreferredSize(new Dimension(width, height));
+
+        b.width = b.viewport_width = width;
+        b.height = b.viewport_height = height;
+        b.auto_width = false;
+        b._x_ = _x_ + this.width - width;
+        b._y_ = _y_;
+
+        b.setBorderColor(new Color(118, 118, 123));
+        b.setScaleBorder(false);
+        b.setBorderWidth(1);
+        b.setBorderRadius(2);
+
+        b.add(btn);
+        btn.setFocusPainted(false);
+        if (!document.use_native_inputs) {
+            btn.setOpaque(false);
+            btn.setContentAreaFilled(false);
+        }
+        b.insertButton(btn);
+
+        return b;
+    }
+
+    public void insertButton(final JButton btn) {
+        btn.setBounds(_x_, _y_, width, height);
+        if (background == null || background.bgcolor == null && background.gradient == null) {
+            //bgcolor = new Color(207, 210, 218);
+            Vector<Color> c = new Vector<Color>();
+            c.add(new Color(117, 113, 138));
+            c.add(new Color(218, 218, 228));
+            c.add(new Color(235, 235, 235));
+            Vector<Float> p = new Vector<Float>();
+            p.add(0f);
+            p.add(0.28f);
+            p.add(0.82f);
+            setLinearGradient(c, p, 180);
+            final Block instance = this;
+            SwingUtilities.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    btn.getModel().setPressed(true);
+                    btn.getModel().setPressed(false);
+                    instance.clearBuffer();
+                    instance.forceRepaint();
+                    instance.document.repaint();
+                }
+
+            });
+        }
+        final Color col = background.bgcolor;
+        final Color new_col = col != null ? new Color((int)Math.min(col.getRed() * 1.03, 255), (int)Math.min(col.getGreen() * 1.03, 255), (int)Math.min(col.getBlue() * 1.03, 255)) : null;
+
+        btn.getModel().addChangeListener(new ChangeListener() {
+            private boolean rollover = false;
+            private boolean pressed = false;
+
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                ButtonModel model = (ButtonModel) e.getSource();
+                if (col != null) {
+                    if (model.isRollover() != rollover || model.isPressed() != pressed) {
+                        rollover = model.isRollover();
+                        pressed = model.isPressed();
+                        if (((Block)btn.getParent()).background == null) {
+                            ((Block)btn.getParent()).background = new Background();
+                        }
+                        if (rollover) {
+                            ((Block)btn.getParent()).background.bgcolor = new_col;
+                        } else {
+                            ((Block)btn.getParent()).background.bgcolor = col;
+                        }
+                    }
+                    return;
+                }
+                if (model.isRollover() != rollover || model.isPressed() != pressed) {
+                    rollover = model.isRollover();
+                    pressed = model.isPressed();
+                    Vector<Color> c = new Vector<Color>();
+                    Vector<Float> p = new Vector<Float>();
+                    if (rollover && !pressed) {
+                        c = new Vector<Color>();
+                        c.add(new Color(146, 151, 164));
+                        c.add(new Color(207, 208, 214));
+                        c.add(new Color(210, 210, 218));
+                        c.add(new Color(235, 235, 235));
+                        p = new Vector<Float>();
+                        p.add(0f);
+                        p.add(0.29f);
+                        p.add(0.38f);
+                        p.add(0.82f);
+                    } else if (!rollover && pressed) {
+                        c = new Vector<Color>();
+                        c.add(new Color(119, 119, 130));
+                        c.add(new Color(176, 176, 183));
+                        c.add(new Color(237, 237, 237));
+                        p = new Vector<Float>();
+                        p.add(0f);
+                        p.add(0.32f);
+                        p.add(0.78f);
+                    } else if (rollover && pressed) {
+                        c = new Vector<Color>();
+                        c.add(new Color(123, 123, 132));
+                        c.add(new Color(181, 181, 187));
+                        c.add(new Color(238, 238, 238));
+                        p = new Vector<Float>();
+                        p.add(0f);
+                        p.add(0.32f);
+                        p.add(0.78f);
+                    } else {
+                        c = new Vector<Color>();
+                        c.add(new Color(131, 137, 148));
+                        c.add(new Color(196, 196, 201));
+                        c.add(new Color(196, 196, 201));
+                        c.add(new Color(235, 235, 235));
+                        p = new Vector<Float>();
+                        p.add(0f);
+                        p.add(0.23f);
+                        p.add(0.27f);
+                        p.add(0.82f);
+                    }
+                    setLinearGradient(c, p, 180);
+                    if (btn.getParent() != null) ((Block)btn.getParent()).setLinearGradient(c, p, 180);
+                }
+            }
+        });
+        btn.getModel().setRollover(false);
     }
 
     public void saveSelectionRange() {
@@ -6488,9 +6587,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
-                    setX(parent.borderWidth[3] + margins[3] + left);
+                    setX(parent.borderWidth[3] + margins[3] + parent.width - right);
                 } else {
-                    setX(left);
+                    setX(document.width - document.borderSize * 2 - right);
                 }
             }
             forceRepaint();
@@ -6544,9 +6643,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
-                    setY(parent.borderWidth[0] + margins[0] + top);
+                    setY(parent.borderWidth[0] + margins[0] + parent.height - bottom);
                 } else {
-                    setY(top);
+                    setY(document.height - document.borderSize * 2 - bottom);
                 }
             }
             forceRepaint();
@@ -7144,6 +7243,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int BUTTON = 3;
         public static final int RADIO = 4;
         public static final int CHECKBOX = 5;
+        public static final int SELECT = 6;
+        public static final int FILE = 7;
     }
 
     public static class FloatType {

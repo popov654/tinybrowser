@@ -681,6 +681,16 @@ public class LayoutTests extends JFrame {
 
         b.addElement(l03, true);
 
+        Block d05 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d05.setPositioning(Block.Position.STATIC);
+        d05.setWidth(180);
+        d05.setHeight(18);
+        d05.setMargins(7, 0, 2);
+        d05.setPaddings(3, 1);
+        d05.inputType = Block.Input.FILE;
+
+        b.addElement(d05, true);
+
         Block d04 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
         d04.setPositioning(Block.Position.STATIC);
         //d04.setDisplayType(Block.Display.INLINE_BLOCK);
@@ -1312,7 +1322,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 0;
+        int test = 5;
         int list_type = 2;
 
         if (args.length > 0) {
