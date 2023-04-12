@@ -4,7 +4,9 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -132,6 +134,32 @@ public class Util {
     public static void deleteFile(String path) {
         File f = new File(path);
         if (f.exists()) f.delete();
+    }
+
+    public static byte[] read(File file) throws IOException {
+        ByteArrayOutputStream ous = null;
+        InputStream ios = null;
+        try {
+            byte[] buffer = new byte[4096];
+            ous = new ByteArrayOutputStream();
+            ios = new FileInputStream(file);
+            int read = 0;
+            while ((read = ios.read(buffer)) != -1) {
+                ous.write(buffer, 0, read);
+            }
+        } finally {
+            try {
+                if (ous != null)
+                    ous.close();
+            } catch (IOException e) {}
+
+            try {
+                if (ios != null) {
+                    ios.close();
+                }
+            } catch (IOException e) {}
+        }
+        return ous.toByteArray();
     }
 
     public static String getInstallPath() {

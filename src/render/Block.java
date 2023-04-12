@@ -71,6 +71,7 @@ import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
+import network.FormEntry;
 import org.apache.batik.swing.JSVGCanvas;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -7248,6 +7249,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean isMedia = false;
     public String mediaSource = null;
     public int inputType = 0;
+    public FormEntry formEntry;
 
     public String imgSrc = "";
 
