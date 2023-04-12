@@ -1867,7 +1867,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     p.add(0f);
                     p.add(0.28f);
                     p.add(0.82f);
-                    setLinearGradient(c, p, 90);
+                    setLinearGradient(c, p, 180);
                     final Block instance = this;
                     SwingUtilities.invokeLater(new Runnable() {
 
@@ -1952,9 +1952,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                                 p.add(0.23f);
                                 p.add(0.27f);
                                 p.add(0.82f);
-                                setLinearGradient(c, p, 90);
                             }
-                            if (btn.getParent() != null) ((Block)btn.getParent()).setLinearGradient(c, p, 90);
+                            setLinearGradient(c, p, 180);
+                            if (btn.getParent() != null) ((Block)btn.getParent()).setLinearGradient(c, p, 180);
                         }
                     }
                 });
@@ -1977,7 +1977,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 p.add(0f);
                 p.add(0.28f);
                 p.add(0.82f);
-                setLinearGradient(c, p, 90);
+                setLinearGradient(c, p, 180);
             }
             tf.setForeground(color);
             btn.setForeground(color);
@@ -1997,7 +1997,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
+            boolean ready = document.ready;
+            document.ready = false;
             removeAllElements();
+            document.ready = ready;
             final Block instance = this;
             final JToggleButton rb;
             if (inputType == Input.RADIO) {
