@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import render.Util;
 
 /**
  *
@@ -89,6 +90,12 @@ public class Request {
                 out = prepareBody(http, params, charset, multipart);
             }
 
+            debug = true;
+
+            if (debug) {
+                System.out.println("Connecting...");
+            }
+
             http.connect();
             
             if (!method.equals("GET")) {
@@ -96,6 +103,17 @@ public class Request {
                 OutputStream os = null;
 
                 try {
+                    if (debug) {
+                        String size = "";
+                        if (out.length >= 1024 * 1024 * 1024) {
+                            size = Math.floor((double) out.length / (1024 * 1024 * 1024) * 100) / 100 + " GB";
+                        } else if (out.length >= 1024 * 1024) {
+                            size = Math.floor((double) out.length / (1024 * 1024) * 100) / 100 + " MB";
+                        } else {
+                            size = out.length >= 1024 ? Math.floor((double) out.length / 1024 * 100) / 100 + " KB" : out.length + " bytes";
+                        }
+                        System.out.println("Started sending data (" + size + ")");
+                    }
                     os = http.getOutputStream();
                     os.write(out);
                 } catch (IOException ex) {
@@ -107,6 +125,10 @@ public class Request {
 
             if (http.getContentType() == null || http.getContentType().matches("^(image|audio|video|application)")) {
                 return null;
+            }
+
+            if (debug) {
+                System.out.println("Started receiving data");
             }
 
             InputStream is = http.getInputStream();
@@ -131,44 +153,99 @@ public class Request {
         if (params == null) params = new HashMap<String, String>();
         ArrayList<String> parts = new ArrayList<String>();
         String boundary = multipart ? generateBoundary() : "";
+        ArrayList<byte[]> data = new ArrayList<byte[]>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             try {
+                String content = "";
+                if (!data.isEmpty()) {
+                    content = "\n";
+                }
                 if (!multipart) {
-                    parts.add(URLEncoder.encode(entry.getKey(), charset) + "=" + URLEncoder.encode(entry.getValue(), charset));
+                    content += URLEncoder.encode(entry.getKey(), charset) + "=" + URLEncoder.encode(entry.getValue(), charset);
+                    data.add(((!data.isEmpty() ? "&" : "") + content).getBytes(Charset.forName(charset)));
                 } else {
-                    String content = "--" + boundary + "\n" +
+                    content += "--" + boundary + "\n" +
                           "Content-Disposition: form-data; name=\"" + URLEncoder.encode(entry.getKey(), charset) + "\"";
-                    boolean isFile = entry.getValue().matches("\\[filename=\"[^\"]+\"\\].*");
+                    boolean isFile = entry.getValue().matches("\\[filename=\"[^\"]+\"\\]");
                     int pos = 0;
+                    String contentType = "";
+                    String filename = "";
                     if (isFile) {
                         pos = entry.getValue().indexOf("\"", 11);
-                        String filename = entry.getValue().substring(11, pos);
+                        String[] path = entry.getValue().substring(11, pos).split(File.separator.replace("\\", "\\\\"));
+                        filename = path[path.length-1];
+                        contentType = getMimeType(filename);
                         content += "; filename=\"" + URLEncoder.encode(filename, charset) + "\"\n";
-                        content += "Content-Type: " + getMimeType(filename);
+                        content += "Content-Type: " + contentType;
+                        content += "\n\n";
+
+                        File file = new File(entry.getValue().substring(11, pos));
+
+                        byte[] b1 = content.getBytes(Charset.forName(charset));
+                        byte[] b2 = null;
+                        try {
+                            b2 = Util.readFile(file);
+                            byte[] b = new byte[b1.length + b2.length];
+                            for (int i = 0; i < b1.length + b2.length; i++) {
+                                b[i] = i < b1.length ? b1[i] : b2[i-b1.length];
+                            }
+                            data.add(b);
+                        } catch (IOException ex) {
+                            Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                        String fileData = "";
+                        if (contentType.startsWith("text/") || filename.matches(".*\\.(xml|json)$")) {
+                            for (int i = 0; i < b2.length; i++) {
+                                fileData += (char) b2[i];
+                            }
+                        } else {
+                            for (int i = 0; i < 100; i++) {
+                                fileData += Integer.toHexString(b2[i]) + " ";
+                            }
+                            if (b2.length > 100) {
+                                fileData += "... (" + (b2.length - 100) + " bytes more)";
+                            }
+                        }
+                        content += fileData;
+                    } else {
+                        content += "\n\n";
+                        content += entry.getValue();
+                        data.add(content.getBytes(Charset.forName(charset)));
                     }
-                    content += "\n\n";
-                    content += (isFile ? entry.getValue().substring(pos+2) : entry.getValue());
-                    parts.add(content);
                 }
+
+                parts.add(content);
+
+                if (debug) {
+                    System.out.println(content);
+                }
+
             } catch (UnsupportedEncodingException ex) {
                 Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         if (multipart) {
             parts.add("--" + boundary + "--\n");
-        }
-        String listString = parts.toString();
-        listString = listString.substring(1, listString.length() - 1).replaceAll(",\\s+", !multipart ? "&" : "\n");
-        if (debug) {
-            System.out.println(listString);
+            data.add(("\n--" + boundary + "--\n").getBytes(Charset.forName(charset)));
         }
 
-        out = listString.getBytes(Charset.forName(charset));
-        int length = out.length;
+        int length = 0;
+        for (byte[] b: data) {
+            length += b.length;
+        }
+        System.out.println();
+        out = new byte[length];
+        int pos = 0;
+        for (byte[] b: data) {
+            for (int i = 0; i < b.length; i++) {
+                out[pos++] = b[i];
+            }
+        }
 
         String contentType = multipart ? "multipart/form-data; boundary=" + boundary : "application/x-www-form-urlencoded;charset=" + charset.toLowerCase();
 
-        http.setFixedLengthStreamingMode(listString.length());
+        http.setFixedLengthStreamingMode(length);
         http.setRequestProperty("Content-Type", contentType);
 
         return out;

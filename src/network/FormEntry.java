@@ -13,9 +13,18 @@ import render.Util;
 public class FormEntry {
 
     public FormEntry(String name, File file) {
+        key = name;
+        isFile = true;
+        textValue = "[filename=\"" + file.getAbsolutePath() + "\"]";
+    }
+
+    public FormEntry(String name, File file, boolean read) {
+        key = name;
+        if (!read) {
+            textValue = "[filename=\"" + file.getAbsolutePath() + "\"]";
+        }
         try {
-            key = name;
-            isBinary = true;
+            textValue = "[filename=\"" + file.getAbsolutePath() + "\"]";
             binaryValue = Util.readFile(file);
         } catch (IOException ex) {
             Logger.getLogger(FormEntry.class.getName()).log(Level.SEVERE, null, ex);
@@ -60,8 +69,14 @@ public class FormEntry {
         }
     }
 
+    public void setFileValue(String path) {
+        textValue = "[filename=\"" + path + "\"]";
+        isFile = true;
+    }
+
     public String key;
     public boolean isBinary = false;
     public String textValue;
     public byte[] binaryValue;
+    public boolean isFile = false;
 }

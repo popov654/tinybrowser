@@ -195,7 +195,7 @@ public class Main {
             LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
             params.put("name", "Alex654");
             params.put("message", "Hello there!");
-            params.put("attachment", "[filename=\"attachment.txt\"]File content");
+            params.put("attachment", "[filename=\"C:\\Users\\Alex\\Desktop\\attachment.txt\"]");
             //byte[] out = Request.prepareBody(http, params, Request.defaultCharset, true);
             String response = Request.makeRequest("http://popov654.pp.ru/files.php", "POST", params, true, true);
             System.out.println(response);
