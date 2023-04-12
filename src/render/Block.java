@@ -4158,6 +4158,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.repaint();
     }
 
+    public void setOverflow(int value) {
+        overflow = value;
+        Block b = doIncrementLayout();
+        if (b != null && !no_draw) b.forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
+    }
+
     public void setTextShadow(Color color, int offsetX, int offsetY) {
         setTextShadow(color, offsetX, offsetY, 0, false);
     }
@@ -5134,6 +5143,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (prop.equals("visibility")) {
             setVisibility(value.equals("hidden") ? Visibility.HIDDEN : Visibility.VISIBLE);
+            return;
+        }
+        if (prop.equals("white-space")) {
+            String[] modes = new String[] { "normal", "word-break", "nowrap", "pre-wrap" };
+            for (int i = 0; i < modes.length; i++) {
+                if (modes[i].equals(value)) {
+                    setWhiteSpace(i);
+                    break;
+                }
+            }
+            return;
+        }
+        if (prop.equals("overflow")) {
+            String[] modes = new String[] { "visible", "hidden", "scroll" };
+            for (int i = 0; i < modes.length; i++) {
+                if (modes[i].equals(value)) {
+                    setOverflow(i);
+                    break;
+                }
+            }
             return;
         }
         if (prop.equals("font-family")) {
