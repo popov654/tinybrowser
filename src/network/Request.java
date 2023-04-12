@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import render.Util;
@@ -41,7 +42,9 @@ public class Request {
     public static String baseURL = "";
     public static final String defaultCharset = "UTF-8";
 
-    public static String makeRequest(String path, String method, HashMap<String, String> params, String charset, boolean noCache, boolean multipart) {
+    
+
+    public static String makeRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart) {
         try {
             String fullPath = baseURL + path;
             if (cache != null && !noCache) {
@@ -147,14 +150,14 @@ public class Request {
         return null;
     }
 
-    public static byte[] prepareBody(HttpURLConnection http, HashMap<String, String> params, String charset, boolean multipart) {
+    public static byte[] prepareBody(HttpURLConnection http, Vector<FormEntry> params, String charset, boolean multipart) {
         byte[] out = new byte[0];
 
-        if (params == null) params = new HashMap<String, String>();
+        if (params == null) params = new Vector<FormEntry>();
         ArrayList<String> parts = new ArrayList<String>();
         String boundary = multipart ? generateBoundary() : "";
         ArrayList<byte[]> data = new ArrayList<byte[]>();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
+        for (FormEntry entry: params) {
             try {
                 String content = "";
                 if (!data.isEmpty()) {
@@ -310,7 +313,7 @@ public class Request {
     }
 
 
-    public static File makeBinaryRequest(String path, String method, HashMap<String, String> params, String charset, boolean noCache, boolean multipart) {
+    public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart) {
         try {
             String fullPath = baseURL + path;
             if (cache != null && !noCache) {
@@ -403,36 +406,36 @@ public class Request {
         return bytes;
     }
     
-    public static String makeRequest(String path, String method, HashMap<String, String> params, boolean noCache) {
+    public static String makeRequest(String path, String method, Vector<FormEntry> params, boolean noCache) {
         return makeRequest(path, method, params, defaultCharset, noCache, false);
     }
 
-    public static String makeRequest(String path, String method, HashMap<String, String> params, boolean noCache, boolean multipart) {
+    public static String makeRequest(String path, String method, Vector<FormEntry> params, boolean noCache, boolean multipart) {
         return makeRequest(path, method, params, defaultCharset, noCache, multipart);
     }
 
     public static String makeRequest(String path) {
-        return makeRequest(path, "GET", new HashMap<String, String>(), defaultCharset, false, false);
+        return makeRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, false, false);
     }
 
     public static String makeRequest(String path, boolean noCache) {
-        return makeRequest(path, "GET", new HashMap<String, String>(), defaultCharset, noCache, false);
+        return makeRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, noCache, false);
     }
 
-    public static File makeBinaryRequest(String path, String method, HashMap<String, String> params, boolean noCache) {
+    public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, boolean noCache) {
         return makeBinaryRequest(path, method, params, defaultCharset, noCache, false);
     }
 
-    public static File makeBinaryRequest(String path, String method, HashMap<String, String> params, boolean noCache, boolean multipart) {
+    public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, boolean noCache, boolean multipart) {
         return makeBinaryRequest(path, method, params, defaultCharset, noCache, multipart);
     }
 
     public static File makeBinaryRequest(String path) {
-        return makeBinaryRequest(path, "GET", new HashMap<String, String>(), defaultCharset, false, false);
+        return makeBinaryRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, false, false);
     }
 
     public static File makeBinaryRequest(String path, boolean noCache) {
-        return makeBinaryRequest(path, "GET", new HashMap<String, String>(), defaultCharset, noCache, false);
+        return makeBinaryRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, noCache, false);
     }
 
     public static byte[] getBytes(InputStream is, int size) {

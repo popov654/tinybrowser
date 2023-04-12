@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Event;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -24,6 +25,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -1821,6 +1824,33 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             if (inputType < Input.BUTTON) {
                 add(tf);
+                tf.addKeyListener(new KeyListener() {
+                    @Override
+                    public void keyTyped(KeyEvent e) {
+                        Block parent = ((Block)tf.getParent());
+                        parent.inputValue = tf.getText();
+                        if (parent.node != null) {
+                            parent.fireEventForNode(e, parent.node, null, "keyPress");
+                            parent.fireEventForNode(e, parent.node, null, "input");
+                        }
+                    }
+
+                    @Override
+                    public void keyPressed(KeyEvent e) {
+                        Block parent = ((Block)tf.getParent());
+                        if (parent.node != null) {
+                            parent.fireEventForNode(e, parent.node, null, "keyDown");
+                        }
+                    }
+
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                        Block parent = ((Block)tf.getParent());
+                        if (parent.node != null) {
+                            parent.fireEventForNode(e, parent.node, null, "keyUp");
+                        }
+                    }
+                });
                 tf.setBounds(_x_, _y_, width, height);
                 tf.addMouseListener(this);
             } else {
@@ -7248,7 +7278,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean isImage = false;
     public boolean isMedia = false;
     public String mediaSource = null;
+
+    public Form form;
     public int inputType = 0;
+    public String inputValue = "";
+    public String defaultInputValue = "";
     public FormEntry formEntry;
 
     public String imgSrc = "";
@@ -8343,6 +8377,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } catch (IOException ex) {}
     }
 
+    private HashMap<String, String> getEventData(KeyEvent e, String type) {
+        HashMap<String, String> data = new HashMap<String, String>();
+        type = type.toLowerCase();
+        data.put("type", '"' + type + '"');
+        data.put("ctrlKey", e.isControlDown() ? "true" : "false");
+        data.put("shiftKey", e.isShiftDown() ? "true" : "false");
+        data.put("altKey", e.isAltDown() ? "true" : "false");
+        data.put("metaKey", e.isMetaDown() ? "true" : "false");
+        return data;
+    }
+
     private HashMap<String, String> getEventData(MouseEvent e, String type) {
         HashMap<String, String> data = new HashMap<String, String>();
         type = type.toLowerCase();
@@ -8357,6 +8402,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         data.put("altKey", e.isAltDown() ? "true" : "false");
         data.put("metaKey", e.isMetaDown() ? "true" : "false");
         return data;
+    }
+
+    private void fireEventForNode(KeyEvent e, htmlparser.Node node, htmlparser.Node related_node, String event_type) {
+        if (node == null || node.tagName.startsWith("::") || node.tagName.isEmpty()) return;
+        boolean was_fired = document != null ? document.eventWasFired(node, event_type) : false;
+        if (!was_fired) {
+            HashMap<String, String> data = getEventData(e, event_type);
+            node.fireEvent(event_type, "render", data, related_node);
+        }
+        if (document != null) document.fireEventForNode(node, event_type);
     }
 
     private void fireEventForNode(MouseEvent e, htmlparser.Node node, htmlparser.Node related_node, String event_type) {
@@ -8572,6 +8627,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean selected = false;
     public boolean checked = false;
+    public boolean defaultChecked = false;
     private boolean hovered;
     private Watcher w;
     private MediaPlayer mp;

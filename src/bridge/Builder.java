@@ -32,6 +32,7 @@ import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import render.Block;
+import render.Form;
 import render.MediaPlayer;
 import render.RoundedBorder;
 import render.Transition;
@@ -139,6 +140,20 @@ public class Builder {
             b.text_strikethrough = node.parent.tagName.equals("s");
         } else if (node.nodeType == COMMENT) {
             return;
+        }
+        if (node.tagName.equals("form")) {
+            Form form = new Form(b);
+            if (node != null) {
+                form.url = node.getAttribute("action");
+                if (node.hasAttribute("method")) {
+                    form.method = node.getAttribute("method").toUpperCase();
+                }
+                if ((new String("multipart/formdata")).equals(node.getAttribute("enctype"))) {
+                    form.multipart = true;
+                }
+            } else if (document != null) {
+                form.url = document.baseUrl;
+            }
         }
         if (b.document != null && (node.tagName.equals("audio") || node.tagName.equals("video")) &&
                 node.getAttribute("src") != null) {

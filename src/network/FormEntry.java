@@ -2,6 +2,7 @@ package network;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import render.Util;
@@ -10,7 +11,7 @@ import render.Util;
  *
  * @author Alex
  */
-public class FormEntry {
+public class FormEntry implements Entry {
 
     public FormEntry(String name, File file) {
         key = name;
@@ -41,6 +42,9 @@ public class FormEntry {
         key = name;
         isBinary = false;
         textValue = value;
+        if (value.matches("\\[filename=\"[^\"]+\"\\]")) {
+            isFile = true;
+        }
     }
 
     public void setTextValue(String value) {
@@ -72,6 +76,29 @@ public class FormEntry {
     public void setFileValue(String path) {
         textValue = "[filename=\"" + path + "\"]";
         isFile = true;
+    }
+
+    @Override
+    public String getKey() {
+        return key;
+    }
+
+    @Override
+    public String getValue() {
+        return !isBinary ? textValue : null;
+    }
+
+    @Override
+    public Object setValue(Object value) {
+        if (value instanceof byte[]) {
+            setBlobValue((byte[]) value);
+        } else if (value instanceof File) {
+            setBlobValue((File) value);
+        } else if (value instanceof String) {
+            setTextValue((String) value);
+        }
+
+        return value;
     }
 
     public String key;
