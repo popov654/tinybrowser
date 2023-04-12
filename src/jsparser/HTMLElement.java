@@ -6,6 +6,7 @@ import cssparser.StyleMap;
 import htmlparser.Node;
 import htmlparser.NodeActionCallback;
 import htmlparser.NodeEvent;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -833,6 +834,7 @@ public class HTMLElement extends HTMLNode {
                 }
             }
         }
+        updateNode(str, value.asString().getValue());
         super.set(str, value);
     }
 
@@ -848,7 +850,30 @@ public class HTMLElement extends HTMLNode {
                 if (args.get(1) instanceof Function) func.call(this, args);
             }
         }
+        updateNode(str.asString().getValue(), value.asString().getValue());
         super.set(str, value);
+    }
+
+    private void updateNode(String attr, String value) {
+        Vector<String> attrs = new Vector<String>(Arrays.asList(new String[] { "action", "href", "src", "target" }));
+        if (attrs.contains(attr)) {
+            node.setAttribute(attr, value);
+        }
+        render.Block b = Mapper.get(node);
+        if (b != null) {
+            if (attr.equals("src") && node.tagName.equals("iframe")) {
+                b.builder.loadChildDocument(b);
+            } else if (attr.equals("src") && node.tagName.equals("img")) {
+                b.setBackgroundImage(b.document.baseUrl + node.getAttribute("src"));
+            } else if (attr.equals("href")) {
+                b.setHref(value);
+            } else if (attr.equals("action") && node.tagName.equals("form")) {
+                if (b.form == null) {
+                    render.Form form = new render.Form(b);
+                }
+                b.form.url = value;
+            }
+        }
     }
 
     @Override

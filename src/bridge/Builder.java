@@ -267,6 +267,28 @@ public class Builder {
         }
     }
 
+    public void loadChildDocument(Block b) {
+        Node node = b.node;
+        Reader reader = new Reader();
+        bridge.Document childDocument = null;
+
+        childDocument = reader.readDocument(node.getAttribute("src"));
+
+        if (childDocument != null) {
+            WebDocument childView = reader.createDocumentView(childDocument, "", (JFrame) windowFrame);
+            b.addChildDocument(childView);
+            childDocument.parentDocument = documentWrap;
+            childDocument.hostElement = b.node;
+            HTMLElement frameElement = HTMLElement.create(b.node);
+            if (childDocument.builder.jsWindow == null) {
+                childDocument.builder.jsWindow = new jsparser.Window(new jsparser.Block());
+                childDocument.builder.jsWindow.setDocument(childDocument.rootNode.document);
+            }
+            frameElement.set("contentWindow", childDocument.builder.jsWindow);
+            frameElement.set("contentDocument", childDocument.builder.jsWindow.get("document"));
+        }
+    }
+
     public void setDefaultDisplayType(Block b, boolean force_update) {
         Node node = b.node;
         int old_value = b.display_type;
