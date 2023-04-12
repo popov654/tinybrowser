@@ -472,11 +472,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 continue;
             }
             if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox))) continue;
-            if (formType < 3) {
+            if (inputType < Input.BUTTON) {
                 c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
-            } else if (formType == 3) {
+            } else if (inputType == Input.BUTTON) {
                 c[i].setBounds(_x_ + borderWidth[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
-            } else if (formType == 4 || formType == 5) {
+            } else if (inputType == Input.RADIO || inputType == Input.CHECKBOX) {
                 c[i].setBounds(_x_ + width / 2 - c[i].getPreferredSize().width / 2 - 1 - scroll_x, _y_ + height / 2 - c[i].getPreferredSize().height / 2 - scroll_y, height, height);
                 c[i].repaint();
             }
@@ -813,7 +813,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (background.gradient != null) {
             paintGradient(background.gradient, g2d, x0, y0);
         }
-        else if (background.bgcolor != null && !(formType >= 4 && formType <= 5)) {
+        else if (background.bgcolor != null && !(inputType >= Input.RADIO && inputType <= Input.CHECKBOX)) {
             g2d.setColor(background.bgcolor);
             if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
                 double[] arcs = new double[4];
@@ -1799,13 +1799,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public boolean processInput() {
-        if (formType == 0) return false;
-        if (formType >= 1 && formType <= 3) {
+        if (inputType == Input.NONE) return false;
+        if (inputType >= Input.TEXT && inputType <= Input.BUTTON) {
             if (getComponents().length > 0 && getComponents()[0] instanceof JButton && children.size() > 0) {
                 children.get(0).textContent = ((JButton)this.getComponents()[0]).getText();
             }
             removeAll();
-            final JTextComponent tf = formType == 1 ? new JTextField() : new JTextArea();
+            final JTextComponent tf = inputType == Input.TEXT ? new JTextField() : new JTextArea();
             final JButton btn = new JButton();
             if (children.size() > 0 && children.get(0).textContent != null) {
                 tf.setText(children.get(0).textContent);
@@ -1818,7 +1818,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             tf.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
             btn.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
 
-            if (formType < 3) {
+            if (inputType < Input.BUTTON) {
                 add(tf);
                 tf.setBounds(_x_, _y_, width, height);
                 tf.addMouseListener(this);
@@ -1935,7 +1935,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (background != null && background.bgcolor != null) {
                 tf.setBackground(background.bgcolor);
                 btn.setBackground(background.bgcolor);
-            } else if (formType == 3) {
+            } else if (inputType == Input.BUTTON) {
                 Vector<Color> c = new Vector<Color>();
                 Vector<Float> p = new Vector<Float>();
                 c = new Vector<Color>();
@@ -1953,23 +1953,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             btn.setContentAreaFilled(false);
             if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
                    (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||
-                   background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || formType == 3 && background.bgcolor.getAlpha() > 0)) {
+                   background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || inputType == 3 && background.bgcolor.getAlpha() > 0)) {
                 tf.setOpaque(false);
                 tf.setBorder(null);
                 btn.setOpaque(false);
                 btn.setBorderPainted(false);
-                if (formType < 3) {
+                if (inputType < 3) {
                     tf.setBounds(_x_ + borderWidth[3] + paddings[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
                 } else {
                     btn.setBounds(_x_ + borderWidth[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
                 }
             }
         }
-        if (formType >= 4 && formType <= 5) {
+        if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
             removeAllElements();
             final Block instance = this;
             final JToggleButton rb;
-            if (formType == 4) {
+            if (inputType == Input.RADIO) {
                 rb = new JRadioButton() {
                     @Override
                     public void paintComponent(Graphics g) {
@@ -7075,6 +7075,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public bridge.Builder builder;
 
 
+    public static class Input {
+        public static final int NONE = 0;
+        public static final int TEXT = 1;
+        public static final int TEXTAREA = 2;
+        public static final int BUTTON = 3;
+        public static final int RADIO = 4;
+        public static final int CHECKBOX = 5;
+    }
+
     public static class FloatType {
         public static final int NONE = 0;
         public static final int LEFT = 1;
@@ -7238,7 +7247,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean isImage = false;
     public boolean isMedia = false;
     public String mediaSource = null;
-    public int formType = 0;
+    public int inputType = 0;
 
     public String imgSrc = "";
 
@@ -7712,13 +7721,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             
             node.states.add("active");
 
-            if (formType >= 4 && formType <= 5) {
-                if (node.getAttribute("name") != null && formType == 4) {
+            if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
+                if (node.getAttribute("name") != null && inputType == 4) {
                     Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
                     for (int i = 0; i < group.size(); i++) {
                         group.get(i).node.states.remove("checked");
                         if (group.get(i) == this) continue;
-                        if (group.get(i).formType >= 4 && group.get(i).formType <= 5) {
+                        if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
                             Component[] c = group.get(i).getComponents();
                             if (c.length > 0 && c[0] instanceof JToggleButton) {
                                 ((JToggleButton)c[0]).getModel().setSelected(false);
@@ -7728,11 +7737,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
 
-                checked = formType == 5 ? !checked : true;
+                checked = inputType == Input.CHECKBOX ? !checked : true;
                 if (checked) node.states.add("checked");
                 else node.states.remove("checked");
             }
-            if (formType == 4 && getComponents().length > 0) {
+            if (inputType == Input.RADIO && getComponents().length > 0) {
                 ((JToggleButton)getComponents()[0]).getModel().setSelected(true);
             }
 
