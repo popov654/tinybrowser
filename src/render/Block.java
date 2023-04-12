@@ -6656,6 +6656,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (document != null && document.prevent_mixed_content) {
             normalizeContent();
         }
+        if (b.inputType != Input.NONE) {
+            b.addToClosestForm();
+        }
         addToLayout(b, pos, root);
     }
 
@@ -6753,6 +6756,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void addToClosestForm() {
+        Block b = this;
+        while (b != null && b.form == null) {
+            b = b.parent;
+        }
+        if (b != null) {
+            if (!b.form.inputs.contains(this)) {
+                b.form.inputs.add(this);
+            }
+        }
+    }
+
+    public void removeFromClosestForm() {
+        Block b = this;
+        while (b != null && b.form == null) {
+            b = b.parent;
+        }
+        if (b != null) {
+            b.form.inputs.remove(this);
+        }
+    }
+
     public void addChildDocument(WebDocument d) {
         removeAllElements();
         childDocument = d;
@@ -6776,16 +6801,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         remove(childDocument);
     }
 
-    public void removeElement(Block d) {
-        if (d == null || !(d instanceof Block) || !children.contains(d)) {
+    public void removeElement(Block b) {
+        if (b == null || !(b instanceof Block) || !children.contains(b)) {
             System.err.println("Child not found");
             return;
         }
-        d.hasParentLink = false;
-        d.removeTextLayers();
-        children.remove(d);
-        d.removeFromContainer();
-        removeFromLayout(d);
+        b.hasParentLink = false;
+        b.removeTextLayers();
+        children.remove(b);
+        b.removeFromContainer();
+        if (b.inputType != Input.NONE) {
+            b.removeFromClosestForm();
+        }
+        removeFromLayout(b);
         //d.flushBuffersRecursively();
         document.repaint();
     }
