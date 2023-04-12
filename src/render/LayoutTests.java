@@ -630,7 +630,8 @@ public class LayoutTests extends JFrame {
         d01.setBorderRadius(2);
         d01.setTextColor(new Color(35, 35, 43));
         d01.setFontSize(12);
-        d01.inputType = 1;
+        d01.inputType = Block.Input.TEXT;
+
         b.addElement(l01, true);
         b.addElement(d01, true);
 
@@ -653,7 +654,7 @@ public class LayoutTests extends JFrame {
         d02.setBorderRadius(2);
         d02.setTextColor(new Color(35, 35, 43));
         d02.setFontSize(12);
-        d02.inputType = 2;
+        d02.inputType = Block.Input.TEXTAREA;
 
         b.addElement(l02, true);
         b.addElement(d02, true);
@@ -666,7 +667,7 @@ public class LayoutTests extends JFrame {
         d03.setWidth(13);
         d03.setHeight(13);
         d03.setMargins(10, 0, 6);
-        d03.inputType = 5;
+        d03.inputType = Block.Input.CHECKBOX;
         d03.checked = true;
 
         b.addElement(d03, true);
@@ -697,7 +698,7 @@ public class LayoutTests extends JFrame {
         d04.setBorderColor(new Color(108, 108, 113));
         d04.setFontSize(12);
         d04.addText("Submit");
-        d04.inputType = 3;
+        d04.inputType = Block.Input.BUTTON;
 
         b.addElement(d04, true);
 
