@@ -2419,7 +2419,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block el = blocks.get(i);
 
             if (el.type == NodeTypes.TEXT) {
-                if (el.white_space != WhiteSpace.PRE_WRAP && el.textContent.matches("^\\s*$") && (parent.layouter.last_line == null || parent.layouter.last_line.elements.isEmpty())) {
+                if (el.white_space != WhiteSpace.PRE_WRAP && el.textContent.matches("^\\s*$") && (parent.layouter == null || parent.layouter.last_line == null || parent.layouter.last_line.elements.isEmpty())) {
                     continue;
                 }
                 if (parent == null || !isPseudoElement()) {
@@ -4121,10 +4121,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setVerticalAlign(int value) {
         vertical_align = value;
+        Block b = doIncrementLayout();
+        if (b != null && !no_draw) b.forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setWhiteSpace(int value) {
         white_space = value;
+        Block b = doIncrementLayout();
+        if (b != null && !no_draw) b.forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
     }
 
     public void setVisibility(int type) {
