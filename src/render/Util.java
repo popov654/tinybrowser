@@ -136,7 +136,7 @@ public class Util {
         if (f.exists()) f.delete();
     }
 
-    public static byte[] read(File file) throws IOException {
+    public static byte[] readFile(File file) throws IOException {
         ByteArrayOutputStream ous = null;
         InputStream ios = null;
         try {

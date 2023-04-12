@@ -16,7 +16,7 @@ public class FormEntry {
         try {
             key = name;
             isBinary = true;
-            binaryValue = Util.read(file);
+            binaryValue = Util.readFile(file);
         } catch (IOException ex) {
             Logger.getLogger(FormEntry.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -54,7 +54,7 @@ public class FormEntry {
         try {
             textValue = null;
             isBinary = true;
-            binaryValue = Util.read(file);
+            binaryValue = Util.readFile(file);
         } catch (IOException ex) {
             Logger.getLogger(FormEntry.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -306,7 +306,7 @@ public class Request {
         return null;
     }
 
-    private static void readFileToBytes(String filePath) {
+    public static byte[] readFileToBytes(String filePath) {
         File file = new File(filePath);
         byte[] bytes = new byte[(int) file.length()];
 
@@ -323,6 +323,7 @@ public class Request {
                 }
             } catch (IOException ex) {}
         }
+        return bytes;
     }
     
     public static String makeRequest(String path, String method, HashMap<String, String> params, boolean noCache) {
