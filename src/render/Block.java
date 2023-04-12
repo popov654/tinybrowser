@@ -3592,7 +3592,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (text_layer == null) {
-            text_layer = new JPanel();
+            text_layer = new JPanel() {
+                @Override
+                public void paintComponent(Graphics g) {
+                    if (overflow != Overflow.VISIBLE) {
+                        g.setClip(new RoundedRect(_x_ - scroll_x, _y_ - scroll_y, viewport_width, viewport_height, arc[0], arc[1], arc[2], arc[3]));
+                    }
+                }
+            };
             text_layer.setLayout(null);
             add(text_layer);
             text_layer.setBounds(0, 0, b.getWidth(), b.getHeight());
