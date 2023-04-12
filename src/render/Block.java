@@ -1448,7 +1448,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     c[i].setBounds(rect.x + _x_ - old_value, rect.y, rect.width, rect.height);
                 }
             }
-            if (document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
+            if (document != null && document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
                 for (int i = 0; i < lines.size(); i++) {
                     for (int j = 0; j < lines.get(i).elements.size(); j++) {
                         lines.get(i).elements.get(j).setX(lines.get(i).elements.get(j)._getX());
@@ -1480,7 +1480,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     c[i].setBounds(rect.x, rect.y + _y_ - old_value, rect.width, rect.height);
                 }
             }
-            if (document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
+            if (document != null && document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
                 for (int i = 0; i < lines.size(); i++) {
                     for (int j = 0; j < lines.get(i).elements.size(); j++) {
                         lines.get(i).elements.get(j).setY(lines.get(i).elements.get(j)._getY());
