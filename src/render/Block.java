@@ -2017,7 +2017,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rb.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
-                    Vector<Block> inputs = parent.form.inputs;
+                    Block b0 = instance;
+                    if (b0.form == null) {
+                        while (b0.form == null && b0.parent != null) b0 = b0.parent;
+                        b0.form = new Form(b0);
+                    }
+                    Vector<Block> inputs = b0.form.inputs;
                     JToggleButton btn = (JToggleButton)e.getSource();
                     Block block = (Block)btn.getParent();
                     for (Block b: inputs) {
