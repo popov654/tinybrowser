@@ -2267,6 +2267,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
         });
+        btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Block input = (Block) btn.getParent();
+                if (input.inputType == Input.BUTTON) {
+                    //System.out.println("Button was pressed");
+                    if (input.form != null) {
+                        if (input.buttonType == ButtonType.SUBMIT) {
+                            input.form.submit();
+                        } else if (input.buttonType == ButtonType.RESET) {
+                            input.form.reset();
+                        }
+                    }
+                }
+            }
+        });
         btn.getModel().setRollover(false);
     }
 
@@ -7370,6 +7386,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int FILE = 7;
     }
 
+    public static class ButtonType {
+        public static final int BASIC = 0;
+        public static final int SUBMIT = 1;
+        public static final int RESET = 2;
+    }
+
     public static class FloatType {
         public static final int NONE = 0;
         public static final int LEFT = 1;
@@ -7536,6 +7558,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public Form form;
     public int inputType = 0;
+    public int buttonType = 0;
     public String inputName = "";
     public String inputValue = "";
     public boolean inputDisabled = false;
@@ -7906,6 +7929,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.defaultInputValue = defaultInputValue;
         b.defaultChecked = defaultChecked;
         b.labelFor = labelFor;
+        b.buttonType = buttonType;
 
         b.dimensions = dimensions;
 

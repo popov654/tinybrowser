@@ -23,7 +23,11 @@ public class Form {
             if (input.formEntry == null) continue;
             params.add(input.formEntry);
         }
-        Request.makeRequest(url, method, params, true, multipart);
+        String response = Request.makeRequest(url, method, params, "cp1251", true, multipart);
+
+        if (block.document.debug) {
+            System.out.println("Response:\n\n" + response);
+        }
     }
 
     public void reset() {

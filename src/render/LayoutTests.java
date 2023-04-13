@@ -610,6 +610,9 @@ public class LayoutTests extends JFrame {
         document.ready = false;
 
         b.setHeight(-1);
+        b.form = new Form(b);
+        b.form.method = "POST";
+        b.form.url = "http://popov654.pp.ru/form.php";
 
         Block l01 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
         l01.setPositioning(Block.Position.STATIC);
@@ -671,6 +674,7 @@ public class LayoutTests extends JFrame {
         d03.setMargins(10, 0, 6);
         d03.inputType = Block.Input.RADIO;
         d03.inputName = "checkbox";
+        d03.inputValue = "on";
         d03.checked = true;
 
         b.addElement(d03, true);
@@ -690,6 +694,7 @@ public class LayoutTests extends JFrame {
 
         d031.margins[3] = 12;
         l031.labelFor = d031;
+        d031.inputValue = "on";
         b.addElement(d031, true);
         b.addElement(l031, true);
 
@@ -723,6 +728,7 @@ public class LayoutTests extends JFrame {
         d04.setFontSize(12);
         d04.addText("Submit");
         d04.inputType = Block.Input.BUTTON;
+        d04.buttonType = Block.ButtonType.SUBMIT;
 
         b.addElement(d04, true);
 
