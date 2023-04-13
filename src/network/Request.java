@@ -79,6 +79,20 @@ public class Request {
                     }
                 }
             }
+
+            byte[] out = new byte[0];
+
+            if (method.equals("GET")) {
+                String query = "";
+                for (FormEntry entry: params) {
+                    if (query.length() > 0) {
+                        query += "&";
+                    }
+                    query += URLEncoder.encode(entry.getKey(), charset) + "=" + URLEncoder.encode(entry.getValue(), charset);
+                }
+                fullPath += "?" + query;
+            }
+
             long start = System.currentTimeMillis();
             URL url = new URL(fullPath);
             URLConnection con = url.openConnection();
@@ -87,13 +101,11 @@ public class Request {
             http.setRequestProperty("User-Agent", "TinyBrowser");
             http.setDoOutput(true);
 
-            String response = "";
-
-            byte[] out = new byte[0];
-
             if (!method.equals("GET")) {
                 out = prepareBody(http, params, charset, multipart);
             }
+
+            String response = "";
 
             debug = true;
 
@@ -173,13 +185,13 @@ public class Request {
         for (FormEntry entry: params) {
             try {
                 String content = "";
-                if (!data.isEmpty()) {
-                    content = "\n";
-                }
                 if (!multipart) {
-                    content += URLEncoder.encode(entry.getKey(), charset) + "=" + URLEncoder.encode(entry.getValue(), charset);
+                    content = URLEncoder.encode(entry.getKey(), charset) + "=" + URLEncoder.encode(entry.getValue(), charset);
                     data.add(((!data.isEmpty() ? "&" : "") + content).getBytes(Charset.forName(charset)));
                 } else {
+                    if (!data.isEmpty()) {
+                        content += "\n";
+                    }
                     content += "--" + boundary + "\n" +
                           "Content-Disposition: form-data; name=\"" + URLEncoder.encode(entry.getKey(), charset) + "\"";
                     boolean isFile = entry.getValue().matches("\\[filename=\"[^\"]+\"\\]");
