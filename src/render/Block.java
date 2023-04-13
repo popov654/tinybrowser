@@ -2074,6 +2074,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             label.fontSize = (int) Math.round(12 * ratio);
             label.setWhiteSpace(WhiteSpace.NO_WRAP);
             label.setOverflow(Overflow.HIDDEN);
+            label.setTextOverflow(TextOverflow.ELLIPSIS);
 
             addElement(btn, true);
 
@@ -4258,6 +4259,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setTextOverflow(int value) {
+        text_overflow = value;
+        Block b = doIncrementLayout();
+        if (b != null && !no_draw) b.forceRepaint();
+        if (document != null && document.ready) {
+            document.repaint();
+        }
+    }
+
     public void setTextShadow(Color color, int offsetX, int offsetY) {
         setTextShadow(color, offsetX, offsetY, 0, false);
     }
@@ -5251,9 +5261,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int i = 0; i < modes.length; i++) {
                 if (modes[i].equals(value)) {
                     setOverflow(i);
-                    break;
+                    return;
                 }
             }
+            setOverflow(Overflow.VISIBLE);
+            return;
+        }
+        if (prop.equals("text-overflow")) {
+            String[] modes = new String[] { "clip", "ellipsis" };
+            for (int i = 0; i < modes.length; i++) {
+                if (modes[i].equals(value)) {
+                    setTextOverflow(i);
+                    return;
+                }
+            }
+            setTextOverflow(TextOverflow.CLIP);
             return;
         }
         if (prop.equals("font-family")) {
@@ -7469,6 +7491,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int SCROLL = 2;
     }
 
+    public static class TextOverflow {
+        public static final int CLIP = 0;
+        public static final int ELLIPSIS = 1;
+    }
+
     public static class Position {
         public static final int STATIC = 0;
         public static final int RELATIVE = 1;
@@ -7548,6 +7575,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int text_align = 0;
     public int positioning = 0;
     public int overflow = 0;
+    public int text_overflow = 0;
     public int vertical_align = 2;
     public boolean sharp = false;
     public float alpha = 1.0f;
@@ -7846,6 +7874,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.letter_spacing = this.letter_spacing;
         b.word_spacing = this.word_spacing;
         b.overflow = this.overflow;
+        b.text_overflow = this.text_overflow;
 
         b.vertical_align = this.vertical_align;
 

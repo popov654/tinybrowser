@@ -373,10 +373,38 @@ public class Layouter {
                 last_line = new_line;
             }
         }
+
+        int offset = 0;
+        if (block.text_overflow == Block.TextOverflow.ELLIPSIS) {
+            offset = !block.rtl ? (int) Math.max(block.arc[2]  / 2.5, block.borderWidth[1] + block.paddings[1]) : (int) Math.max(block.arc[3]  / 2.5, block.borderWidth[3] + block.paddings[3]);
+        }
+
         int last_pos = last_line.cur_pos;
         ch = str.toCharArray();
         for (int i = 0; i < ch.length; i++) {
             Character c = new Character(last_line, ch[i]);
+            int cw = label.getFontMetrics(font).stringWidth(".");
+            if (last_line.cur_pos > block.viewport_width - offset && last_line.top + label.getFontMetrics(font).getHeight() * 2 > block.viewport_height - block.borderWidth[2] - block.paddings[2] &&
+                  block.text_overflow == Block.TextOverflow.ELLIPSIS) {
+                while (last_line.cur_pos > block.viewport_width - offset - cw * 3) {
+                    Character last_char = (Character) last_line.elements.lastElement();
+                    last_line.elements.remove(last_line.elements.size()-1);
+                    last_line.cur_pos -= last_char.getWidth() + block.letter_spacing;
+                }
+                for (int j = 0; j < 3; j++) {
+                    c = new Character(last_line, ".");
+                    c.setColor(block.color);
+                    c.setFont(block.getFont());
+                    c.setWidth(cw);
+                    last_line.addElement(c);
+                }
+                block.pref_size += last_line.cur_pos - last_pos;
+                if (block.min_size < last_line.cur_pos - last_pos) {
+                    block.min_size = last_line.cur_pos - last_pos;
+                }
+                last_word = -1;
+                return;
+            }
             c.setColor(block.color);
             c.setFont(block.getFont());
             if (str.matches("\\s+") && block.word_spacing > 0) {
