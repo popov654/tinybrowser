@@ -1837,6 +1837,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     public void keyTyped(KeyEvent e) {
                         Block parent = ((Block)tf.getParent());
                         parent.inputValue = tf.getText();
+                        parent.updateFormEntry();
                         if (parent.node != null) {
                             parent.fireEventForNode(e, parent.node, null, "keyPress");
                             parent.fireEventForNode(e, parent.node, null, "input");
@@ -2006,12 +2007,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rb.setBounds(_x_ + width / 2 - rb.getPreferredSize().width / 2 - 1, _y_ + height / 2 - rb.getPreferredSize().height / 2, height, height);
             if (checked || node != null && node.states.contains("checked")) {
                 checked = true;
+                parent.updateFormEntry();
                 if (node != null && !node.states.contains("checked")) {
                     node.states.add("checked");
                     node.attributes.put("selected", "");
                 }
                 rb.getModel().setSelected(true);
             }
+            rb.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(ChangeEvent e) {
+                    Vector<Block> inputs = parent.form.inputs;
+                    JToggleButton btn = (JToggleButton)e.getSource();
+                    Block block = (Block)btn.getParent();
+                    for (Block b: inputs) {
+                        if (btn.isSelected() && b != block && b.inputName.equals(block.inputName)) {
+                            b.checked = false;
+                            b.updateFormEntry();
+                            ((JToggleButton)b.getComponent(0)).setSelected(false);
+                        }
+                    }
+                    checked = btn.isSelected();
+                    block.updateFormEntry();
+                }
+            });
         }
         if (inputType == Input.FILE) {
             boolean ready = document.ready;
@@ -2049,6 +2068,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         label.children.get(0).textContent = selectedFile.getAbsolutePath();
                         label.performLayout();
                         label.forceRepaint();
+
+                        btn.parent.inputValue = "[filename=\"" + selectedFile.getAbsolutePath() + "\"]";
+                        btn.parent.updateFormEntry();
                     }
                 }
             });
@@ -2070,6 +2092,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
 
         return true;
+    }
+
+    public void updateFormEntry() {
+        if (inputDisabled || inputName.isEmpty() || ((inputType == Input.RADIO || inputType == Input.CHECKBOX) && !checked) ||
+              (inputType == Input.FILE && inputValue.matches("\\s*"))) {
+            formEntry = null;
+            return;
+        }
+        if (inputType == Input.FILE) {
+            String value = children.get(0).children.get(0).textContent;
+            formEntry = new FormEntry(inputName, value);
+            return;
+        }
+        formEntry = new FormEntry(inputName, inputValue);
     }
 
     private Block createButton(String label, Color color) {
@@ -6912,6 +6948,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (b != null) {
             if (!b.form.inputs.contains(this)) {
                 b.form.inputs.add(this);
+                this.form = b.form;
             }
         }
     }
@@ -7459,7 +7496,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public Form form;
     public int inputType = 0;
+    public String inputName = "";
     public String inputValue = "";
+    public boolean inputDisabled = false;
     public String defaultInputValue = "";
     public FormEntry formEntry;
 
