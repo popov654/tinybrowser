@@ -1836,11 +1836,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     @Override
                     public void keyTyped(KeyEvent e) {
                         Block parent = ((Block)tf.getParent());
-                        parent.inputValue = tf.getText();
-                        parent.updateFormEntry();
                         if (parent.node != null) {
                             parent.fireEventForNode(e, parent.node, null, "keyPress");
-                            parent.fireEventForNode(e, parent.node, null, "input");
+                            
                         }
                     }
 
@@ -1855,8 +1853,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     @Override
                     public void keyReleased(KeyEvent e) {
                         Block parent = ((Block)tf.getParent());
+                        parent.inputValue = tf.getText();
+                        parent.updateFormEntry();
                         if (parent.node != null) {
                             parent.fireEventForNode(e, parent.node, null, "keyUp");
+                            parent.fireEventForNode(e, parent.node, null, "input");
                         }
                     }
                 });
@@ -2007,7 +2008,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rb.setBounds(_x_ + width / 2 - rb.getPreferredSize().width / 2 - 1, _y_ + height / 2 - rb.getPreferredSize().height / 2, height, height);
             if (checked || node != null && node.states.contains("checked")) {
                 checked = true;
-                parent.updateFormEntry();
+                updateFormEntry();
                 if (node != null && !node.states.contains("checked")) {
                     node.states.add("checked");
                     node.attributes.put("selected", "");
@@ -8074,6 +8075,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int i = 0; i < c.length; i++) {
                 if (c[i] instanceof JTextComponent) {
                     c[i].requestFocus();
+                    if (labelFor.node != null) {
+                        labelFor.node.fireEvent("focus", "render");
+                    }
                 }
                 else if (c[i] instanceof JToggleButton && !(labelFor.checked && labelFor.inputType == Input.RADIO)) {
                     //labelFor.checked = !labelFor.checked;
@@ -8082,6 +8086,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     for (int j = listeners.length-2; j >= 0; j -= 2) {
                         ChangeEvent changeEvent = new ChangeEvent((JToggleButton)c[i]);
                         ((ChangeListener)listeners[j]).stateChanged(changeEvent);
+                    }
+                    if (labelFor.node != null) {
+                        fireEventForNode(e, labelFor.node, null, "click");
+                        labelFor.node.fireEvent("change", "render");
                     }
                 }
             }
