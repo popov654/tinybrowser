@@ -18,6 +18,13 @@ public class Form {
     }
 
     public void submit() {
+        if (block.node != null) {
+            block.node.fireEvent("submit", "render");
+            if (block.node.defaultPrevented) {
+                block.node.defaultPrevented = false;
+                return;
+            }
+        }
         Vector<FormEntry> params = new Vector<FormEntry>();
         for (Block input: inputs) {
             if (input.formEntry == null) continue;
@@ -31,6 +38,13 @@ public class Form {
     }
 
     public void reset() {
+        if (block.node != null) {
+            block.node.fireEvent("reset", "render");
+            if (block.node.defaultPrevented) {
+                block.node.defaultPrevented = false;
+                return;
+            }
+        }
         for (Block input: inputs) {
             input.inputValue = input.defaultInputValue;
             input.checked = input.defaultChecked;
