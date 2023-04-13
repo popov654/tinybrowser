@@ -669,7 +669,7 @@ public class LayoutTests extends JFrame {
         d03.setWidth(13);
         d03.setHeight(13);
         d03.setMargins(10, 0, 6);
-        d03.inputType = Block.Input.CHECKBOX;
+        d03.inputType = Block.Input.RADIO;
         d03.inputName = "checkbox";
         d03.checked = true;
 
@@ -683,6 +683,14 @@ public class LayoutTests extends JFrame {
         l03.addText("Label");
 
         b.addElement(l03, true);
+
+        Block d031 = d03.clone();
+        Block l031 = l03.clone();
+
+        d031.margins[3] = 12;
+        b.addElement(d031, true);
+        b.addElement(l031, true);
+
 
         Block d05 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
         d05.setPositioning(Block.Position.STATIC);

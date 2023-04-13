@@ -2017,23 +2017,38 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             rb.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(ChangeEvent e) {
-                    Block b0 = instance;
-                    if (b0.form == null) {
-                        while (b0.form == null && b0.parent != null) b0 = b0.parent;
-                        b0.form = new Form(b0);
-                    }
-                    Vector<Block> inputs = b0.form.inputs;
-                    JToggleButton btn = (JToggleButton)e.getSource();
-                    Block block = (Block)btn.getParent();
-                    for (Block b: inputs) {
-                        if (btn.isSelected() && b != block && b.inputName.equals(block.inputName)) {
-                            b.checked = false;
-                            b.updateFormEntry();
-                            ((JToggleButton)b.getComponent(0)).setSelected(false);
+
+                    JToggleButton btn = (JToggleButton) e.getSource();
+                    
+                    if (btn.isSelected() && inputName != null && !inputName.isEmpty() && inputType == Input.RADIO) {
+                        Vector<Block> group = findBlocksByName(document.root, inputName);
+                        for (int i = 0; i < group.size(); i++) {
+                            if (group.get(i).node != null) group.get(i).node.states.remove("checked");
+                            if (group.get(i) == instance) continue;
+                            if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
+                                Component[] c = group.get(i).getComponents();
+                                for (int j = 0; j < c.length; j++) {
+                                    if (c[j] instanceof JToggleButton) {
+                                        ((JToggleButton)c[j]).getModel().setSelected(false);
+                                    }
+                                }
+                                ((Block)group.get(i)).checked = false;
+                            }
                         }
                     }
+
+                    checked = inputType == Input.CHECKBOX ? !checked : true;
+                    if (node != null) {
+                        if (checked) node.states.add("checked");
+                        else node.states.remove("checked");
+                    }
+
+                    if (inputType == Input.RADIO && getComponents().length > 0) {
+                        //btn.getModel().setSelected(true);
+                    }
+
                     checked = btn.isSelected();
-                    block.updateFormEntry();
+                    instance.updateFormEntry();
                 }
             });
         }
@@ -3125,6 +3140,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Vector<Block> findBlocksByName(Block b, String name) {
         Vector<Block> result = new Vector<Block>();
 
+        if (b.node == null) {
+            result = b.findChildrenByNameRecursive(name);
+            return result;
+        }
+
         if (b.node.getAttribute("name").equals(name)) {
             result.add(b);
         }
@@ -3134,6 +3154,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+        return result;
+    }
+
+    private Vector<Block> findChildrenByNameRecursive(String name) {
+        Vector<Block> result = new Vector<Block>();
+        for (Block b: children) {
+            if (b.inputName != null && b.inputName.equals(name)) {
+                result.add(b);
+            }
+            result.addAll(b.findChildrenByNameRecursive(name));
+        }
         return result;
     }
 
@@ -7057,6 +7088,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             children.get(i).removeAll();
         }
         children.clear();
+        removeAll();
         if (document != null && document.ready) {
             performLayout();
             forceRepaint();
@@ -7974,6 +8006,31 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 document.eventsFired.get(node).remove("doubleClick");
             }
         }
+
+        if (isMouseInside(e.getX(), e.getY()) && inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
+            if (inputName != null && !inputName.isEmpty() && inputType == Input.RADIO) {
+                Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
+                for (int i = 0; i < group.size(); i++) {
+                    group.get(i).node.states.remove("checked");
+                    if (group.get(i) == this) continue;
+                    if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
+                        Component[] c = group.get(i).getComponents();
+                        if (c.length > 0 && c[0] instanceof JToggleButton) {
+                            ((JToggleButton)c[0]).getModel().setSelected(false);
+                        }
+                        ((Block)c[i]).checked = false;
+                    }
+                }
+            }
+
+            checked = inputType == Input.CHECKBOX ? !checked : true;
+            if (checked) node.states.add("checked");
+            else node.states.remove("checked");
+
+            if (inputType == Input.RADIO && getComponents().length > 0) {
+                ((JToggleButton)getComponents()[0]).getModel().setSelected(true);
+            }
+        }
         
         if (isMouseInside(e.getX(), e.getY()) && href != null || hasParentLink) {
             if (document.active_block != null && document.active_block.node != null) {
@@ -7984,30 +8041,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             
             node.states.add("active");
-
-            if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
-                if (node.getAttribute("name") != null && inputType == 4) {
-                    Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
-                    for (int i = 0; i < group.size(); i++) {
-                        group.get(i).node.states.remove("checked");
-                        if (group.get(i) == this) continue;
-                        if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
-                            Component[] c = group.get(i).getComponents();
-                            if (c.length > 0 && c[0] instanceof JToggleButton) {
-                                ((JToggleButton)c[0]).getModel().setSelected(false);
-                            }
-                            ((Block)c[i]).checked = false;
-                        }
-                    }
-                }
-
-                checked = inputType == Input.CHECKBOX ? !checked : true;
-                if (checked) node.states.add("checked");
-                else node.states.remove("checked");
-            }
-            if (inputType == Input.RADIO && getComponents().length > 0) {
-                ((JToggleButton)getComponents()[0]).getModel().setSelected(true);
-            }
 
             document.active_block = this;
 
