@@ -8075,8 +8075,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (c[i] instanceof JTextComponent) {
                     c[i].requestFocus();
                 }
-                else if (c[i] instanceof JToggleButton) {
-                    ((JToggleButton)c[i]).doClick();
+                else if (c[i] instanceof JToggleButton && !(labelFor.checked && labelFor.inputType == Input.RADIO)) {
+                    //labelFor.checked = !labelFor.checked;
+                    ((JToggleButton)c[i]).setSelected(!labelFor.checked);
+                    ChangeListener[] listeners = ((JToggleButton)c[i]).getChangeListeners();
+                    for (int j = listeners.length-2; j >= 0; j -= 2) {
+                        ChangeEvent changeEvent = new ChangeEvent((JToggleButton)c[i]);
+                        ((ChangeListener)listeners[j]).stateChanged(changeEvent);
+                    }
                 }
             }
 
