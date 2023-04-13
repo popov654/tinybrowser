@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import render.Util;
 
 /**
@@ -135,7 +137,18 @@ public class Request {
             }
 
             InputStream is = http.getInputStream();
-            response = new String(getBytes(is, 10000000), charset);
+            byte[] bytes = getBytes(is, 10000000);
+            response = new String(bytes, charset);
+
+            Pattern p = Pattern.compile("<meta\\s+http-equiv=\"Content-Type\"\\s+content=\"text/html;\\s*charset=([a-zA-Z0-9-]+)\"");
+            Matcher m = p.matcher(response);
+            if (m.find()) {
+                String explicitCharset = m.group(1);
+                if (debug) {
+                    System.out.println("Charset declaration found: " + explicitCharset.toLowerCase());
+                }
+                response = new String(bytes, charset);
+            }
             
             long end = System.currentTimeMillis();
             System.out.println("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
