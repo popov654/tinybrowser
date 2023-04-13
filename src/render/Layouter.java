@@ -934,6 +934,10 @@ public class Layouter {
     }
 
     public void applyVerticalAlignment(Block d) {
+        applyVerticalAlignment(d, false);
+    }
+
+    public void applyVerticalAlignment(Block d, boolean no_height_update) {
         boolean is_flex = d.parent.display_type == Block.Display.FLEX || d.parent.display_type == Block.Display.INLINE_FLEX;
         boolean x_axis = d.parent.flex_direction == Block.Direction.ROW || d.parent.flex_direction == Block.Direction.ROW_REVERSED;
 
@@ -968,6 +972,7 @@ public class Layouter {
         }
 
         // update the line height
+        if (no_height_update) return;
         if (!is_flex || x_axis) {
             if (offset + d.height > line.getHeight()) {
                 line.setHeight(offset + d.height);
@@ -977,6 +982,9 @@ public class Layouter {
                 line.setHeight(line.getHeight() - offset);
                 for (int i = 0; i < line.elements.size(); i++) {
                     line.elements.get(i).setY(line.elements.get(i)._getY() - offset);
+                    if (line.elements.get(i) instanceof Block) {
+                        applyVerticalAlignment((Block)line.elements.get(i), true);
+                    }
                 }
             }
         } else {
