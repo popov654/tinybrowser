@@ -681,6 +681,7 @@ public class LayoutTests extends JFrame {
         l03.setFontSize(12);
         l03.setMargins(0, 2, 0, 5);
         l03.addText("Label");
+        l03.labelFor = d03;
 
         b.addElement(l03, true);
 
@@ -688,6 +689,7 @@ public class LayoutTests extends JFrame {
         Block l031 = l03.clone();
 
         d031.margins[3] = 12;
+        l031.labelFor = d031;
         b.addElement(d031, true);
         b.addElement(l031, true);
 
