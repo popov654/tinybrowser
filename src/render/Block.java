@@ -7864,6 +7864,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.special = special;
         b.rtl = rtl;
 
+        b.inputType = inputType;
+        b.inputName = inputName;
+        b.inputDisabled = inputDisabled;
+        b.defaultInputValue = defaultInputValue;
+        b.defaultChecked = defaultChecked;
+
         b.dimensions = dimensions;
 
         b.sel = sel;
