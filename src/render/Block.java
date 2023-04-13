@@ -7845,6 +7845,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.letter_spacing = this.letter_spacing;
         b.word_spacing = this.word_spacing;
+        b.overflow = this.overflow;
 
         b.vertical_align = this.vertical_align;
 
