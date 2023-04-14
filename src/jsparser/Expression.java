@@ -2086,7 +2086,7 @@ public class Expression {
     }
 
     public String getContent() {
-        return start.prev != null && start.prev.getType() == Token.KEYWORD ? start.prev.getContent() : start.getContent();
+        return start.prev != null && start.getType() != Token.KEYWORD && start.prev.getType() == Token.KEYWORD ? start.prev.getContent() : start.getContent();
     }
 
     private static Hashtable<String, Integer> priorities = new Hashtable<String, Integer>();
