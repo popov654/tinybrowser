@@ -903,7 +903,11 @@ public class Expression {
             }
             ts.prev.prev = ts.prev.prev.prev;
         }
-        JSValue result = ts.prev.val.call((JSObject)ts.prev.ctx, params, as_constr);
+        JSValue target = ts.prev.val;
+        if (target instanceof Function && ((Function)target).isClass()) {
+            target = ((Function)target).getBody().scope.get("constructor");
+        }
+        JSValue result = target.call((JSObject)ts.prev.ctx, params, as_constr);
         if (ts.prev.getContent().equals("setTimeout") && ((JSObject)ts.prev.ctx).equals(getVar("window", this))) {
             silent = true;
             if (display_timers) {
@@ -2197,8 +2201,8 @@ public class Expression {
     private int n = 0;
     public int ref_count = 0;
 
-    private Token start;
-    private Token end;
+    public Token start;
+    public Token end;
 
     public boolean reusable = false;
     private Expression exec;

@@ -16,9 +16,7 @@ import java.util.logging.Logger;
  */
 public class JSParser {
 
-    public JSParser() {
-
-    }
+    public JSParser() {}
 
     public JSParser(String data) {
         this.data = data;
@@ -243,7 +241,7 @@ public class JSParser {
                     state = READY;
                     if (substate == READ_OBJECT_FIELD) {
                         last_token = "<" + last_token + ">";
-                    } else if (ch == '(' && (last_token.equals("function") || cur.prev != null && cur.prev.getContent().equals("function") ||
+                    } else if (ch == '(' && (last_token.matches("function|class") || cur.prev != null && cur.prev.getContent().matches("function|class") ||
                           cur.prev != null && cur.prev.getContent().equals("*") && cur.prev.prev != null && cur.prev.prev.getContent().equals("function"))) {
                         stack.add(READ_FUNC_ARGS);
                     } else if (last_token.equals("throw") && ch == '(') {
@@ -278,7 +276,7 @@ public class JSParser {
                 continue;
             }
 
-            if (state == READY && ch == '(' && last_token.equals("function")) {
+            if (state == READY && ch == '(' && last_token.matches("function|class")) {
                 stack.add(READ_FUNC_ARGS);
             } else if (state == READY && ch == ')' && substate == READ_FUNC_ARGS) {
                 stack.removeElementAt(stack.size()-1);

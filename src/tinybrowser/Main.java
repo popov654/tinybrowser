@@ -15,7 +15,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
-import java.util.LinkedHashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -938,6 +937,14 @@ public class Main {
         jp.printTokenChain();
         System.out.println("a = 3; b = { a, c() {} }");
         Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+    }
+
+    public static void testClasses() {
+        JSParser jp = new JSParser("class Test { a = 1; b() { return this.a } }; var t = new Test(); t.b()");
+        System.out.println("class Test { a = 1; b() { return this.a } }; var t = new Test(); t.b()");
+        Expression exp = Expression.create(jp.getHead());
+        System.out.println(((jsparser.Function)Expression.getVar("Test", exp)).getBody().scope);
         exp.eval();
     }
 

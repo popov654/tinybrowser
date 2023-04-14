@@ -75,6 +75,7 @@ public class Token {
         keywords.add("new");
         keywords.add("yield");
         keywords.add("function");
+        keywords.add("class");
         keywords.add("return");
         keywords.add("if");
         keywords.add("else");

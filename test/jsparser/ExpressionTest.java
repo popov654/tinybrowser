@@ -458,6 +458,18 @@ public class ExpressionTest {
      * Test of eval method, of class Expression.
      */
     @Test
+    public void testClasses() {
+        JSParser jp = new JSParser("class Test { a = 1; b() { return this.a } }; var t = new Test(); t.b()");
+        System.out.println("class Test { a = 1; b() { return this.a } }; var t = new Test(); t.b()");
+        Expression exp = Expression.create(jp.getHead());
+        System.out.println(((jsparser.Function)Expression.getVar("Test", exp)).getBody().scope);
+        exp.eval();
+    }
+
+    /**
+     * Test of eval method, of class Expression.
+     */
+    @Test
     public void testJSON() {
         JSParser jp = new JSParser("JSON.stringify({ x: 1, y: \"my string\", z: [1, 2, 3] })");
         System.out.println("JSON.stringify({ x: 1, y: \"my string\", z: [1, 2, 3] })");

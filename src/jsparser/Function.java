@@ -138,6 +138,22 @@ public class Function extends JSObject {
         body = block;
     }
 
+    public boolean isClass() {
+        return is_class;
+    }
+
+    public void setIsClass(boolean value) {
+        is_class = value;
+        if (is_class && !body.scope.containsKey("constructor")) {
+            Function constr = new Function(new Vector<String>(), new Block(), "constructor");
+            JSObject proto = new JSObject();
+            body.scope.put("constructor", constr);
+            constr.set("prototype", proto);
+            proto.set("constructor", constr);
+            proto.items.putAll(body.scope);
+        }
+    }
+
     public Function bind(JSObject context, Vector<JSValue> args) {
         if (bound_ctx == null) {
             bound_ctx = context;
@@ -220,7 +236,7 @@ public class Function extends JSObject {
                 func_body = "{}";
             }
         }
-        String signature = is_lambda ? "(" + getArguments() + ") => " : "function" + (is_generator ? "*" : "") + " (" + getArguments() + ")";
+        String signature = is_lambda ? "(" + getArguments() + ") => " : (is_class ? "class" + (display_name != null ? " " + display_name : "") : "function" + (is_generator ? "*" : "") + " (" + getArguments() + ")");
         return signature + (body != null ? " " + func_body : "");
     }
 
@@ -245,5 +261,6 @@ public class Function extends JSObject {
     private Block caller = null;
     private boolean is_lambda;
     private boolean is_generator;
+    private boolean is_class;
     protected String type = "Function";
 }

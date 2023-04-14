@@ -45,7 +45,7 @@ public class Block extends Expression {
                 start = end;
             }
             if (start != null && (end.next == null || type == Token.SEMICOLON ||
-                    (type != Token.BLOCK_START && type != Token.BLOCK_END && end.next.getType() == Token.KEYWORD && !end.next.getContent().matches("let|var|break|continue|return|throw|delete|function|new|yield")) ||
+                    (type != Token.BLOCK_START && type != Token.BLOCK_END && end.next.getType() == Token.KEYWORD && !end.next.getContent().matches("let|var|break|continue|return|throw|delete|function|class|new|yield")) ||
                     (type == Token.BLOCK_START || type == Token.BLOCK_END) && level == 0 && func_start == null)) {
                 
                 if (cycle_exp != null) {
@@ -73,6 +73,13 @@ public class Block extends Expression {
                 Expression e = new Expression(start, this);
                 e.silent = silent;
                 children.add(e);
+                if (parent != null && parent.func_class && e.start.next != null && e.start.next.getContent().equals("=")) {
+                    String name = e.start.getContent();
+                    e.start = e.start.next.next;
+                    e.silent = true;
+                    e.eval();
+                    Expression.setVar(name, e.getValue(), e, Block.let);
+                }
 
                 if (end.next == null) return;
 
@@ -386,11 +393,13 @@ public class Block extends Expression {
                 continue;
             }
             boolean is_func_start = false;
-            if (type == Token.KEYWORD && end.getContent().equals("function")) {
+            if (type == Token.KEYWORD && end.getContent().matches("function|class")) {
                 is_func_start = true;
                 func_named = false;
+                func_class = end.getContent().equals("class");
             }
-            else if (type == Token.FIELD_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN) {
+            else if (type == Token.FIELD_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN ||
+                     type == Token.VAR_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN && parent != null && parent.func_class) {
                 int lvl = 0;
                 Token t = end.next;
                 while (t.next != null) {
@@ -415,14 +424,14 @@ public class Block extends Expression {
                     end = end.next;
                 }
                 if (end != null && (end.getType() == Token.VAR_NAME || end.getType() == Token.FIELD_NAME)) {
-                    if (end.next == null || end.next.getType() != Token.BRACE_OPEN) {
+                    if (end.next == null || (!func_class && end.next.getType() != Token.BRACE_OPEN || func_class && end.next.getType() != Token.BLOCK_START)) {
                         System.err.println("Syntax error in function declaration");
                         return;
                     }
                     if (end.getType() == Token.VAR_NAME) {
                         func_name = end.getContent();
                     }
-                    end = end.next.next;
+                    if (!func_class) end = end.next.next;
                 } else {
                     if (end == null || end.getType() != Token.BRACE_OPEN) {
                         System.err.println("Syntax error in function declaration");
@@ -431,7 +440,7 @@ public class Block extends Expression {
                     end = end.next;
                 }
                 func_args = new Vector<String>();
-                while (end != null && end.getType() != Token.BRACE_CLOSE) {
+                while (end != null && (!func_class && end.getType() != Token.BRACE_CLOSE || func_class && end.next.getType() != Token.BLOCK_START)) {
                     if (end.getType() == Token.VAR_NAME) {
                         if (!(end.prev.getType() == Token.OP && end.prev.getContent().equals(",") || end.prev.getType() == Token.BRACE_OPEN)
                                 || !(end.next.getType() == Token.OP && end.next.getContent().equals(",") || end.next.getType() == Token.BRACE_CLOSE)) {
@@ -615,17 +624,19 @@ public class Block extends Expression {
                     finally_flag = false;
                 }
                 if (func_start != null) {
-                    if (func_name != null && !func_named) {
+                    if (func_name != null && !func_named || parent != null && parent.func_class) {
                         scope.put(func_name, new Function(func_args, b, func_name));
                         if (func_gen) {
                             ((Function)scope.get(func_name)).setAsGenerator();
                         }
+                        ((Function)scope.get(func_name)).setIsClass(func_class);
                     } else {
                         Token tc = func_start;
                         if (tc != null) {
                             Token tf = new Token("{}");
                             tf.val = new Function(func_args, b, "");
                             if (func_named) ((Function)tf.val).setName(func_name);
+                            ((Function)tf.val).setIsClass(func_class);
                             if (func_lmb) {
                                 ((Function)tf.val).setAsLambda();
                             }
@@ -671,6 +682,8 @@ public class Block extends Expression {
                     func_args = null;
                     func_lmb = false;
                     func_gen = false;
+                    func_named = false;
+                    func_class = false;
                 }
                 end = end.next;
                 continue;
@@ -901,7 +914,10 @@ public class Block extends Expression {
             }
         }
         if (parent_block == null) {
-            ((Window)Block.getVar("window", this)).runPromises();
+            JSValue w = Block.getVar("window", this);
+            if (w != Undefined.getInstance()) {
+                ((Window)w).runPromises();
+            }
         }
         return this;
     }
@@ -1180,6 +1196,7 @@ public class Block extends Expression {
     private boolean func_lmb = false;
     private boolean func_gen = false;
     private boolean func_named = false;
+    private boolean func_class = false;
     private JSObject with_obj = null;
     public JSError error = null;
     public JSError last_error = null;
