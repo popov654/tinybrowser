@@ -149,7 +149,7 @@ public class Expression {
         boolean is_condition = false;
 
         if (ret && !token.getContent().equals("return")) {
-            source += "return" + (token.next != null ? " " : "");
+            source += "return ";
         }
         if (getContent().matches("var|let")) {
             source += getContent() + " ";

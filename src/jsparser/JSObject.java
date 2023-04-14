@@ -55,6 +55,15 @@ public class JSObject extends JSValue {
             }
             if (t.getType() == Token.FIELD_NAME && state == 0) {
                 key = t.getContent();
+                if (t.next.getType() == Token.OP && t.next.getContent().equals(",") || t.next.getType() == Token.OBJECT_END) {
+                    JSValue val = Expression.getVar(key, exp);
+                    if (val != Undefined.getInstance()) {
+                        items.put(key, val);
+                    }
+                }
+            }
+            if (t.getType() == Token.OBJECT_ENTITY && t.val instanceof Function && state == 0) {
+                items.put(((Function)t.val).getName(), t.val);
             }
             if ((t.getType() == Token.VAR_NAME || t.getType() == Token.OBJECT_ENTITY ||
                     (t.getType() == Token.OP && !t.getContent().equals(":") && !t.getContent().equals(","))

@@ -933,6 +933,14 @@ public class Main {
                       (jsparser.Function)Expression.getVar("err", exp));*/
     }
 
+    public static void testShorthandAssignment() {
+        JSParser jp = new JSParser("a = 3; b = { a, c() {} }");
+        jp.printTokenChain();
+        System.out.println("a = 3; b = { a, c() {} }");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+    }
+
     public static void detectInstallPath() {
         URL location = Main.class.getProtectionDomain().getCodeSource().getLocation();
         String programPath = location.getPath().substring(1).replace('/', File.separatorChar);

@@ -446,6 +446,18 @@ public class ExpressionTest {
      * Test of eval method, of class Expression.
      */
     @Test
+    public void testShorthandAssignment() {
+        JSParser jp = new JSParser("a = 3; b = { a, c() {} }");
+        System.out.println("a = 3; b = { a, c() {} }");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("{a: 3, c: function () {}}", exp.getValue().toString());
+    }
+
+    /**
+     * Test of eval method, of class Expression.
+     */
+    @Test
     public void testJSON() {
         JSParser jp = new JSParser("JSON.stringify({ x: 1, y: \"my string\", z: [1, 2, 3] })");
         System.out.println("JSON.stringify({ x: 1, y: \"my string\", z: [1, 2, 3] })");

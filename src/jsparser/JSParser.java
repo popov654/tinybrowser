@@ -237,13 +237,14 @@ public class JSParser {
             //Reading a variable name (cont.)
             if (last_token.length() > 0 && state == READ_VAR_NAME) {
                 if (Character.isWhitespace(ch) || String.valueOf(ch).matches("[(){}\\[\\].,<>^|&*/%?;:+=-]") ||
-                        substate == READ_OBJECT_FIELD && ch == ':' ||
+                        substate == READ_OBJECT_FIELD && (ch == ':' || ch == ',') ||
                         substate == READ_OBJECT_VALUE && ch == ',' ||
                         substate == READ_ARRAY && ch == ',') {
                     state = READY;
                     if (substate == READ_OBJECT_FIELD) {
                         last_token = "<" + last_token + ">";
-                    } else if (last_token.equals("function")) {
+                    } else if (ch == '(' && (last_token.equals("function") || cur.prev != null && cur.prev.getContent().equals("function") ||
+                          cur.prev != null && cur.prev.getContent().equals("*") && cur.prev.prev != null && cur.prev.prev.getContent().equals("function"))) {
                         stack.add(READ_FUNC_ARGS);
                     } else if (last_token.equals("throw") && ch == '(') {
                         last_token = last_token + "$";
@@ -312,7 +313,7 @@ public class JSParser {
                 stack.set(stack.size()-1, READ_OBJECT_VALUE);
             }
 
-            if (substate == READ_OBJECT_VALUE && ch == ',') {
+            if ((substate == READ_OBJECT_FIELD || substate == READ_OBJECT_VALUE) && ch == ',') {
                 stack.set(stack.size()-1, READ_OBJECT_FIELD);
             }
 
@@ -383,22 +384,23 @@ public class JSParser {
 
             //Found an object declaration
             if ((ch == '{' || ch == '}') && state != READ_STRING) {
-                if (state != READY && state != READ_STRING || substate == READ_OBJECT_FIELD) {
+                if (state != READY && state != READ_STRING) {
                     System.err.println("Unexpected object value on line " + line);
                     correct = false;
                     return;
                 }
                 Token t;
                 String s = data.substring(pos+1).trim();
-                boolean testObj = s.replaceAll("\n", " ").matches("[a-zA-Z0-9_-]+\\s*:.*") ||
-                                  s.replaceAll("\n", " ").matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*");
+                boolean testObj = (s.replaceAll("\n", " ").matches("[a-zA-Z0-9_-]+\\s*(:\\s*[^}:,]+.*|,\\s*\\S+.*|\\s*\\}$)") ||
+                                  s.replaceAll("\n", " ").matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*")) &&
+                                  !(cur.getType() == Token.KEYWORD && !cur.getContent().equals("return"));
                 if (ch == '{' && cur.getContent().equals(")") ||
                         ch == '}' && substate == READ_FUNC_BLOCK) {
                     if (ch == '{') stack.add(READ_FUNC_BLOCK);
                     else stack.removeElementAt(stack.size()-1);
                     t = new Token(String.valueOf(ch));
                     if (!checkLevel(ch)) return;
-                } else if (testObj && ch == '{' || substate == READ_OBJECT_VALUE) {
+                } else if (testObj && ch == '{' || substate > 0) {
                     if (ch == '{') stack.add(READ_OBJECT_FIELD);
                     else stack.removeElementAt(stack.size()-1);
                     t = new Token(String.valueOf(ch)+String.valueOf(ch));

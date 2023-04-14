@@ -385,7 +385,27 @@ public class Block extends Expression {
                 end = end.next;
                 continue;
             }
-            else if (type == Token.KEYWORD && end.getContent().equals("function")) {
+            boolean is_func_start = false;
+            if (type == Token.KEYWORD && end.getContent().equals("function")) {
+                is_func_start = true;
+                func_named = false;
+            }
+            else if (type == Token.FIELD_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN) {
+                int lvl = 0;
+                Token t = end.next;
+                while (t.next != null) {
+                    if (t.getType() == Token.BRACE_OPEN) lvl++;
+                    if (t.getType() == Token.BRACE_CLOSE) lvl--;
+                    if (lvl == 0 && t.next.getType() == Token.BLOCK_START) {
+                        is_func_start = true;
+                        func_name = end.getContent();
+                        func_named = true;
+                        break;
+                    }
+                    t = t.next;
+                }
+            }
+            if (is_func_start) {
                 func_start = end;
                 end = end.next;
                 if (end.getType() == Token.OP && end.getContent().equals("*")) {
@@ -394,12 +414,14 @@ public class Block extends Expression {
                     end.next.prev = end.prev;
                     end = end.next;
                 }
-                if (end != null && end.getType() == Token.VAR_NAME) {
+                if (end != null && (end.getType() == Token.VAR_NAME || end.getType() == Token.FIELD_NAME)) {
                     if (end.next == null || end.next.getType() != Token.BRACE_OPEN) {
                         System.err.println("Syntax error in function declaration");
                         return;
                     }
-                    func_name = end.getContent();
+                    if (end.getType() == Token.VAR_NAME) {
+                        func_name = end.getContent();
+                    }
                     end = end.next.next;
                 } else {
                     if (end == null || end.getType() != Token.BRACE_OPEN) {
@@ -593,7 +615,7 @@ public class Block extends Expression {
                     finally_flag = false;
                 }
                 if (func_start != null) {
-                    if (func_name != null) {
+                    if (func_name != null && !func_named) {
                         scope.put(func_name, new Function(func_args, b, func_name));
                         if (func_gen) {
                             ((Function)scope.get(func_name)).setAsGenerator();
@@ -603,6 +625,7 @@ public class Block extends Expression {
                         if (tc != null) {
                             Token tf = new Token("{}");
                             tf.val = new Function(func_args, b, "");
+                            if (func_named) ((Function)tf.val).setName(func_name);
                             if (func_lmb) {
                                 ((Function)tf.val).setAsLambda();
                             }
@@ -1156,6 +1179,7 @@ public class Block extends Expression {
     private Token func_start = null;
     private boolean func_lmb = false;
     private boolean func_gen = false;
+    private boolean func_named = false;
     private JSObject with_obj = null;
     public JSError error = null;
     public JSError last_error = null;

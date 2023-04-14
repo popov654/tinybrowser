@@ -110,6 +110,10 @@ public class Function extends JSObject {
         return display_name;
     }
 
+    public void setName(String value) {
+        display_name = value;
+    }
+
     public void injectVar(String name, JSValue value) {
         body.scope.put(name, value);
     }
