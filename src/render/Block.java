@@ -1733,7 +1733,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 y -= parent.scroll_y;
             }
             scrollbar_y.setBounds(x, y, scrollbar_y.getPreferredSize().width, sh);
-            int h = Math.max(content_y_max, lines.size() > 0 ? lines.lastElement().getOffsetTop() + lines.lastElement().getHeight() + paddings[2] : 0);
+            int h = Math.max(content_y_max, lines.size() > 0 ? lines.lastElement().top + lines.lastElement().getHeight() + paddings[2] : 0);
             //h += borderWidth[0] + borderWidth[2];
             scrollbar_y.getModel().setRangeProperties(0, viewport_height, 0, h, false);
             scrollbar_y.setVisibleAmount(viewport_height);
