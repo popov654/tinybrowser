@@ -493,6 +493,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 c[i].repaint();
             }
         }
+        if (scrollbar_x != null && parent != null) {
+            int x = _x_ + width - scrollbar_y.getPreferredSize().width - dx;
+            int y = _y_ + borderWidth[0] - dy;
+            scrollbar_x.setBounds(x, y, width - borderWidth[1] - borderWidth[3], scrollbar_x.getPreferredSize().height);
+        }
+        if (scrollbar_y != null && parent != null) {
+            int x = _x_ + width - scrollbar_y.getPreferredSize().width - dx;
+            int y = _y_ + borderWidth[0] - dy;
+            int sh = height - borderWidth[0] - borderWidth[2];
+            if (scrollbar_x != null) {
+                sh -= scrollbar_x.getPreferredSize().height;
+            }
+            scrollbar_y.setBounds(x, y, scrollbar_y.getPreferredSize().width, sh);
+        }
 
         super.paintComponent(g);
     }
@@ -1650,7 +1664,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 scrollbar_y.setBounds(width - borderWidth[1] - scrollbar_y.getPreferredSize().width, borderWidth[0], scrollbar_y.getPreferredSize().width, height - borderWidth[0] - borderWidth[2] - scrollbar_x.getPreferredSize().height);
                 //sw -= scrollbar_y.getPreferredSize().width;
             }
-            scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + height - borderWidth[2] - scrollbar_x.getPreferredSize().height, sw, scrollbar_x.getPreferredSize().height);
+            int x = _x_ + borderWidth[3];
+            int y = _y_ + height - borderWidth[2] - scrollbar_x.getPreferredSize().height;
+            if (parent != null) {
+                x -= parent.scroll_x;
+                y -= parent.scroll_y;
+            }
+            scrollbar_x.setBounds(x, y, sw, scrollbar_x.getPreferredSize().height);
             int w = content_x_max + borderWidth[1] + borderWidth[3];
             scrollbar_x.getModel().setRangeProperties(0, viewport_width, 0, w+1, false);
             scrollbar_x.setVisibleAmount(viewport_width - borderWidth[3]);
@@ -1698,9 +1718,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             int sh = height - borderWidth[0] - borderWidth[2];
             if (scrollbar_x != null) {
                 sh -= scrollbar_x.getPreferredSize().height;
-                scrollbar_x.setBounds(_x_ + borderWidth[3], _y_ + height - borderWidth[2] - scrollbar_x.getPreferredSize().height, width - borderWidth[1] - borderWidth[3], scrollbar_x.getPreferredSize().height);
+                int x = _x_ + borderWidth[3];
+                int y = _y_ + height - borderWidth[2];
+                if (parent != null) {
+                    x -= parent.scroll_x;
+                    y -= parent.scroll_y;
+                }
+                scrollbar_x.setBounds(x, y, width - borderWidth[1] - borderWidth[3], scrollbar_x.getPreferredSize().height);
             }
-            scrollbar_y.setBounds(_x_ + width - scrollbar_y.getPreferredSize().width, _y_ + borderWidth[0], scrollbar_y.getPreferredSize().width, sh);
+            int x = _x_ + width - scrollbar_y.getPreferredSize().width;
+            int y = _y_ + borderWidth[0];
+            if (parent != null) {
+                x -= parent.scroll_x;
+                y -= parent.scroll_y;
+            }
+            scrollbar_y.setBounds(x, y, scrollbar_y.getPreferredSize().width, sh);
             int h = Math.max(content_y_max, lines.size() > 0 ? lines.lastElement().getOffsetTop() + lines.lastElement().getHeight() + paddings[2] : 0);
             //h += borderWidth[0] + borderWidth[2];
             scrollbar_y.getModel().setRangeProperties(0, viewport_height, 0, h, false);
@@ -3029,29 +3061,61 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Block b = layer_list.get(i);
             if (b.type == NodeTypes.ELEMENT && b.overflow == Overflow.SCROLL) {
                 if (b.scrollbar_x == null && b.scrollbar_y == null) continue;
-                Shape rect_sbx = new RoundedRect(b._x_, b._y_ + b.height - size, b.width, size, 0, 0, b.arc[2], b.arc[3]);
+                int sx = b.scrollbar_x != null ? b.scrollbar_x.getPreferredSize().height : 0;
+                int sy = b.scrollbar_y != null ? b.scrollbar_y.getPreferredSize().width : 0;
+
+                int scroll_x = 0;
+                int scroll_y = 0;
+
+                Block b0 = b.parent;
+                while (b0 != null) {
+                    scroll_x += b0.scroll_x;
+                    scroll_y += b0.scroll_y;
+                    b0 = b0.parent;
+                }
+
+                Shape rect_sbx = new RoundedRect(b._x_ - scroll_x, b._y_ + b.height - sx - scroll_y, b.width, sx, 0, 0, b.arc[2], b.arc[3]);
                 Area ax = new Area(rect_sbx);
-                Shape rect_sby = new RoundedRect(b._x_ + b.width - size, b._y_, size, b.height, 0, b.arc[1], b.arc[2], 0);
+                Shape rect_sby = new RoundedRect(b._x_ + b.width - sy - scroll_x, b._y_ - scroll_y, sy, b.height, 0, b.arc[1], b.arc[2], 0);
                 Area ay = new Area(rect_sby);
                 for (int j = i+1; j < layer_list.size(); j++) {
                     Block b1 = layer_list.get(j);
-                    if (b1.type == NodeTypes.ELEMENT) {
-                        Shape rect1 = new RoundedRect(b1._x_, b1._y_, b1.width, b1.height, b1.arc[0], b1.arc[1], b1.arc[2], b1.arc[3]);
+                    if (b1.type == NodeTypes.ELEMENT && !b1.isChildOf(b)) {
+                        int scroll_x1 = 0;
+                        int scroll_y1 = 0;
+
+                        b0 = b.parent;
+                        while (b0 != null) {
+                            scroll_x1 += b0.scroll_x;
+                            scroll_y1 += b0.scroll_y;
+                            b0 = b0.parent;
+                        }
+                        Shape rect1 = new RoundedRect(b1._x_-scroll_x1, b1._y_-scroll_y1, b1.width, b1.height, b1.arc[0], b1.arc[1], b1.arc[2], b1.arc[3]);
                         ax.subtract(new Area(rect1));
                         ay.subtract(new Area(rect1));
                     }
                 }
 
+                
+
                 AffineTransform at;
-                at = AffineTransform.getTranslateInstance(0, -(b._y_ + (b.height-size)));
+                at = AffineTransform.getTranslateInstance(-scroll_x, -(b._y_ + (b.height-size) - scroll_y));
                 ax.transform(at);
-                at = AffineTransform.getTranslateInstance(-(b._x_ + (b.width-size)), 0);
+                at = AffineTransform.getTranslateInstance(-(b._x_ + (b.width-size) - scroll_x), -scroll_y);
                 ay.transform(at);
 
                 if (b.scrollbar_x != null) ((ClippedScrollBar)b.scrollbar_x).setClip(ax);
                 if (b.scrollbar_y != null) ((ClippedScrollBar)b.scrollbar_y).setClip(ay);
             }
         }
+    }
+
+    public boolean isChildOf(Block b) {
+        Block b0 = parent;
+        while (b0 != null && b0 != b) {
+            b0 = b0.parent;
+        }
+        return b0 == b;
     }
 
     public void findPreferredSizes() {
