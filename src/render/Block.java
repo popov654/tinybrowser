@@ -1898,6 +1898,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         }
                     }
                 });
+                tf.setText(inputValue);
                 tf.setBounds(_x_, _y_, width, height);
                 tf.addMouseListener(this);
             } else {
