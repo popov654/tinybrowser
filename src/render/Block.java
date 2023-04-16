@@ -1733,7 +1733,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 y -= parent.scroll_y;
             }
             scrollbar_y.setBounds(x, y, scrollbar_y.getPreferredSize().width, sh);
-            int h = Math.max(content_y_max, lines.size() > 0 ? lines.lastElement().top + lines.lastElement().getHeight() + paddings[2] : 0);
+            int h = Math.max(content_y_max, lines.size() > 0 ? lines.lastElement().getY() + lines.lastElement().getHeight() + paddings[2] : 0);
             //h += borderWidth[0] + borderWidth[2];
             scrollbar_y.getModel().setRangeProperties(0, viewport_height, 0, h, false);
             scrollbar_y.setVisibleAmount(viewport_height);
@@ -2819,9 +2819,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         processFlexCrossAxis(x_axis, delta_y);
 
         if (x_axis) {
-            content_y_max = lines.lastElement().top + lines.lastElement().height;
+            content_y_max = lines.lastElement().getY() + lines.lastElement().height;
         } else {
-            content_x_max = lines.lastElement().top + lines.lastElement().height;
+            content_x_max = lines.lastElement().getY() + lines.lastElement().height;
         }
     }
 
@@ -2849,35 +2849,35 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     } else {
                         lines.get(i).setX(lines.get(i).getX() + dy * i);
                     }
-                    if (x_axis && lines.get(i).top + h > _y_ + ymax) {
-                        h -= lines.get(i).top + h - (_y_ + ymax);
+                    if (x_axis && lines.get(i).getY() + h > _y_ + ymax) {
+                        h -= lines.get(i).getY() + h - (_y_ + ymax);
                     }
-                    if (!x_axis && lines.get(i).left + h > _x_ + xmax) {
-                        h -= lines.get(i).left + h - (_x_ + xmax);
+                    if (!x_axis && lines.get(i).getX() + h > _x_ + xmax) {
+                        h -= lines.get(i).getX() + h - (_x_ + xmax);
                     }
                     lines.get(i).setHeight(h);
                     for (Drawable d: lines.get(i).elements) {
                         if (x_axis) {
-                            d.setY(lines.get(i).top);
+                            d.setY(lines.get(i).getY());
                             if (flex_align_items == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_height) {
                                 Block b = (Block) d;
                                 b.height = b.viewport_height = lines.get(i).height;
                                 b.orig_height = (int) Math.floor((double) b.height / b.ratio);
                             } else if (flex_align_items == FlexAlign.FLEX_CENTER) {
-                                d.setY(lines.get(i).top + (lines.get(i).height - d._getHeight()) / 2);
+                                d.setY(lines.get(i).getY() + (lines.get(i).height - d._getHeight()) / 2);
                             } else if (flex_align_items == FlexAlign.FLEX_END) {
-                                d.setY(lines.get(i).top + lines.get(i).height - d._getHeight());
+                                d.setY(lines.get(i).getY() + lines.get(i).height - d._getHeight());
                             }
                         } else {
-                            d.setX(lines.get(i).left);
+                            d.setX(lines.get(i).getX());
                             if (flex_align_items == FlexAlign.STRETCH && d instanceof Block && ((Block)d).auto_width) {
                                 Block b = (Block) d;
                                 b.width = b.viewport_width = lines.get(i).height;
                                 b.orig_width = (int) Math.floor((double) b.width / b.ratio);
                             } else if (flex_align_items == FlexAlign.FLEX_CENTER) {
-                                d.setX(lines.get(i).left + (lines.get(i).height - d._getWidth()) / 2);
+                                d.setX(lines.get(i).getX() + (lines.get(i).height - d._getWidth()) / 2);
                             } else if (flex_align_items == FlexAlign.FLEX_END) {
-                                d.setX(lines.get(i).left + lines.get(i).height - d._getWidth());
+                                d.setX(lines.get(i).getX() + lines.get(i).height - d._getWidth());
                             }
                         }
                     }
