@@ -1912,18 +1912,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (background != null && background.bgcolor != null) {
                 tf.setBackground(background.bgcolor);
                 btn.setBackground(background.bgcolor);
-            } else if (inputType == Input.BUTTON) {
-                Vector<Color> c = new Vector<Color>();
-                Vector<Float> p = new Vector<Float>();
-                c = new Vector<Color>();
-                c.add(new Color(110, 110, 132));
-                c.add(new Color(165, 165, 178));
-                c.add(new Color(235, 235, 235));
-                p = new Vector<Float>();
-                p.add(0f);
-                p.add(0.28f);
-                p.add(0.82f);
-                setLinearGradient(c, p, 180);
             }
             tf.setForeground(color);
             btn.setForeground(color);
