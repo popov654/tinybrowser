@@ -3056,7 +3056,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void clipScrollbars() {
-        int size = 40;
         for (int i = 0; i < layer_list.size(); i++) {
             Block b = layer_list.get(i);
             if (b.type == NodeTypes.ELEMENT && b.overflow == Overflow.SCROLL) {
@@ -3064,19 +3063,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 int sx = b.scrollbar_x != null ? b.scrollbar_x.getPreferredSize().height : 0;
                 int sy = b.scrollbar_y != null ? b.scrollbar_y.getPreferredSize().width : 0;
 
-                int scroll_x = 0;
-                int scroll_y = 0;
-
-                Block b0 = b.parent;
-                while (b0 != null) {
-                    scroll_x += b0.scroll_x;
-                    scroll_y += b0.scroll_y;
-                    b0 = b0.parent;
-                }
-
-                Shape rect_sbx = new RoundedRect(b._x_ - scroll_x, b._y_ + b.height - sx - scroll_y, b.width, sx, 0, 0, b.arc[2], b.arc[3]);
+                Shape rect_sbx = new RoundedRect(0, 0, b.width, sx, 0, 0, b.arc[2], b.arc[3]);
                 Area ax = new Area(rect_sbx);
-                Shape rect_sby = new RoundedRect(b._x_ + b.width - sy - scroll_x, b._y_ - scroll_y, sy, b.height, 0, b.arc[1], b.arc[2], 0);
+                Shape rect_sby = new RoundedRect(0, 0, sy, b.height, 0, b.arc[1], b.arc[2], 0);
                 Area ay = new Area(rect_sby);
                 for (int j = i+1; j < layer_list.size(); j++) {
                     Block b1 = layer_list.get(j);
@@ -3084,7 +3073,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         int scroll_x1 = 0;
                         int scroll_y1 = 0;
 
-                        b0 = b.parent;
+                        Block b0 = b.parent;
                         while (b0 != null) {
                             scroll_x1 += b0.scroll_x;
                             scroll_y1 += b0.scroll_y;
@@ -3095,14 +3084,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         ay.subtract(new Area(rect1));
                     }
                 }
-
-                
-
-                AffineTransform at;
-                at = AffineTransform.getTranslateInstance(-scroll_x, -(b._y_ + (b.height-size) - scroll_y));
-                ax.transform(at);
-                at = AffineTransform.getTranslateInstance(-(b._x_ + (b.width-size) - scroll_x), -scroll_y);
-                ay.transform(at);
 
                 if (b.scrollbar_x != null) ((ClippedScrollBar)b.scrollbar_x).setClip(ax);
                 if (b.scrollbar_y != null) ((ClippedScrollBar)b.scrollbar_y).setClip(ay);
