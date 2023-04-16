@@ -248,8 +248,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (scroll_left < 0) {
                 scroll_left = 0;
             }
-            if (scroll_left >= content_x_max - viewport_width) {
-                scroll_left = content_x_max - viewport_width;
+            if (scroll_left >= content_x_max + paddings[1] - viewport_width + 1) {
+                scroll_left = content_x_max + paddings[1] - viewport_width + 1;
             }
             scroll_x = scroll_left;
             scrollbar_x.getModel().setValue(scroll_x);
@@ -261,8 +261,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (scroll_top < 0) {
                 scroll_top = 0;
             }
-            if (scroll_top >= content_y_max - viewport_height) {
-                scroll_top = content_y_max - viewport_height;
+            if (scroll_top >= content_y_max + paddings[2] - viewport_height + 1) {
+                scroll_top = content_y_max + paddings[2] - viewport_height + 1;
             }
             scroll_y = scroll_top;
             scrollbar_y.getModel().setValue(scroll_y);
