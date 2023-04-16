@@ -217,8 +217,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int mouse_x = e.getX();
         int mouse_y = e.getY();
 
-        if (mouse_x < _x_ || mouse_x > _x_ + viewport_width ||
-            mouse_y < _y_ || mouse_y > _y_ + viewport_height) {
+        int dx = parent != null ? parent.scroll_x : 0;
+        int dy = parent != null ? parent.scroll_y : 0;
+
+        if (mouse_x < _x_ - dx || mouse_x > _x_ - dx + viewport_width ||
+            mouse_y < _y_ - dy || mouse_y > _y_ - dy + viewport_height) {
               return;
         }
 
@@ -288,10 +291,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean isMouseInside(int x, int y) {
         boolean result = false;
+        int dx = parent.scroll_x;
+        int dy = parent.scroll_y;
         if (display_type != Display.INLINE) {
-            result = (x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height);
+            result = (x >= _x_ - dx && x < _x_ - dx + viewport_width && y >= _y_ - dy && y < _y_ - dy + viewport_height);
         } else {
-            if (x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height) {
+            if (x >= _x_ - dx && x < _x_ - dx + viewport_width && y >= _y_ - dy && y < _y_ - dy + viewport_height) {
                 result = true;
             }
             for (int i = 0; i < parts.size(); i++) {
