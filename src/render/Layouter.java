@@ -384,9 +384,9 @@ public class Layouter {
         for (int i = 0; i < ch.length; i++) {
             Character c = new Character(last_line, ch[i]);
             int cw = label.getFontMetrics(font).stringWidth(".");
-            if (last_line.cur_pos > block.viewport_width - offset && last_line.top + label.getFontMetrics(font).getHeight() * 2 > block.viewport_height - block.borderWidth[2] - block.paddings[2] &&
+            if (!last_line.elements.isEmpty() && last_line.cur_pos > block.viewport_width - offset && last_line.top + label.getFontMetrics(font).getHeight() * 2 > block.viewport_height - block.borderWidth[2] - block.paddings[2] &&
                   block.text_overflow == Block.TextOverflow.ELLIPSIS) {
-                while (last_line.cur_pos > block.viewport_width - offset - cw * 3) {
+                while (!last_line.elements.isEmpty() && last_line.cur_pos > block.viewport_width - offset - cw * 3) {
                     Character last_char = (Character) last_line.elements.lastElement();
                     last_line.elements.remove(last_line.elements.size()-1);
                     last_line.cur_pos -= last_char.getWidth() + block.letter_spacing;
