@@ -25,6 +25,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -1849,6 +1851,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean processInput() {
         if (inputType == Input.NONE) return false;
+
+        FocusListener fl = new FocusListener() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (document != null) {
+                    document.focused_block = (Block) ((Component)e.getSource()).getParent();
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (document != null) {
+                    document.focused_block = null;
+                }
+            }
+        };
+
         if (inputType >= Input.TEXT && inputType <= Input.BUTTON) {
             if (getComponents().length > 0 && getComponents()[0] instanceof JButton && children.size() > 0) {
                 children.get(0).textContent = ((JButton)this.getComponents()[0]).getText();
@@ -1899,6 +1919,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 });
                 tf.setText(inputValue);
+                if (this == document.focused_block) {
+                    tf.requestFocus();
+                }
                 tf.setBounds(_x_, _y_, width, height);
                 tf.addMouseListener(this);
             } else {
@@ -1906,6 +1929,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 btn.setFocusPainted(false);
                 insertButton(btn);
             }
+
+            tf.addFocusListener(fl);
+            btn.addFocusListener(fl);
 
             tf.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
             btn.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
@@ -2027,6 +2053,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             if (!document.use_native_inputs) rb.setOpaque(false);
             add(rb);
+            rb.addFocusListener(fl);
             int size = (int) Math.round(12 * ratio);
             rb.setPreferredSize(new Dimension(size, size));
             if (width < rb.getPreferredSize().width) width = viewport_width = rb.getPreferredSize().width;
@@ -2121,6 +2148,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                         btn.parent.inputValue = "[filename=\"" + selectedFile.getAbsolutePath() + "\"]";
                         btn.parent.updateFormEntry();
+                        
+                        document.focused_block = btn.parent;
                     }
                 }
             });

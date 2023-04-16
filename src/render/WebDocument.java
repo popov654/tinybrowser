@@ -693,6 +693,7 @@ public class WebDocument extends JPanel {
     protected WebDocument parent_document;
     protected Block parent_document_block;
     public Block hovered_block;
+    public Block focused_block;
     public Block highlighted_block;
 
     public HashMap<Node, HashSet<String>> eventsFired = new HashMap<Node, HashSet<String>>();
