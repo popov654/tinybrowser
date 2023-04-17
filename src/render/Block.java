@@ -1850,7 +1850,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public boolean processInput() {
-        if (inputType == Input.NONE) return false;
+        if (inputType == Input.NONE || inputType == Input.SELECT) return false;
 
         FocusListener fl = new FocusListener() {
 
@@ -2173,10 +2173,125 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return true;
     }
 
+    public void createInputList(String name, String[] labels, String[] values, int size) {
+        removeAllElements();
+
+        inputType = Input.SELECT;
+        inputName = name;
+        setOverflow(Overflow.SCROLL);
+
+        inputListSize = size;
+
+        Block header = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
+        header.setDisplayType(Display.NONE);
+        addElement(header);
+
+        MouseListener listener = new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!isMouseInside(e.getX(), e.getY())) {
+                    document.root.mouseClicked(e);
+                    return;
+                }
+                if (!inputMultipleSelection) {
+                    for (int i = 1; i < children.size(); i++) {
+                        Block item = children.get(i);
+                        item.checked = item.isMouseInside(e.getX(), e.getY());
+                        item.setBackgroundColor(item.checked ? selection_color : null);
+                        item.setTextColor(item.checked ? Color.WHITE : color);
+                        if (!item.checked) {
+                            item.forceRepaint();
+                        }
+                    }
+                } else {
+                    for (int i = 1; i < children.size(); i++) {
+                        Block item = children.get(i);
+                        if (item.isMouseInside(e.getX(), e.getY())) {
+                            item.checked = !item.checked;
+                            item.setBackgroundColor(item.checked ? selection_color : null);
+                            item.setTextColor(item.checked ? Color.WHITE : color);
+                            if (!item.checked) {
+                                item.forceRepaint();
+                            }
+                            break;
+                        }
+                    }
+                }
+                updateFormEntry();
+                document.repaint();
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+
+        };
+
+        for (int i = 0; i < labels.length; i++) {
+            Block item = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
+            item.addText(labels[i]);
+            item.setWhiteSpace(Block.WhiteSpace.NO_WRAP);
+            item.setOverflow(Block.Overflow.HIDDEN);
+            item.setTextOverflow(Block.TextOverflow.ELLIPSIS);
+            if (i < values.length) {
+                item.inputValue = values[i];
+            }
+            addElement(item);
+            item.performLayout();
+            item.removeAll();
+        }
+        addMouseListener(listener);
+        if (children.size() > 0) {
+            int max_width = 0;
+            for (int i = 0; i < children.size(); i++) {
+                if (children.get(i).content_x_max > max_width) {
+                    max_width = children.get(i).content_x_max + children.get(i).paddings[1];
+                }
+            }
+            int height = (children.get(0).fontSize + 4) * size + paddings[0] + paddings[2] + borderWidth[0] + borderWidth[2];
+            if (max_width > 0) {
+                setWidth(max_width + paddings[1] + borderWidth[1]);
+            }
+            if (size > 0) {
+                height = viewport_height = height;
+                orig_height = (int) ((double) height / ratio);
+                auto_height = false;
+            }
+        }
+    }
+
+    public void setInputSelectedIndex(int index) {
+        if (inputType != Input.SELECT || index < 0 || index + 1 >= children.size()) return;
+        for (int i = 1; i < children.size(); i++) {
+            children.get(i).checked = (i != index + 1);
+            children.get(i).setBackgroundColor(children.get(i).checked ? selection_color : null);
+        }
+    }
+
     public void updateFormEntry() {
         if (inputDisabled || inputName.isEmpty() || ((inputType == Input.RADIO || inputType == Input.CHECKBOX) && !checked) ||
               (inputType == Input.FILE && inputValue.matches("\\s*"))) {
             formEntry = null;
+            return;
+        }
+        if (inputType == Input.SELECT) {
+            String value = "";
+            for (int i = 1; i < children.size(); i++) {
+                if (children.get(i).checked) {
+                    if (value.length() > 0)  value += ",";
+                    value += children.get(i).inputValue;
+                }
+            }
+            formEntry = new FormEntry(inputName, value);
             return;
         }
         if (inputType == Input.FILE) {
@@ -7224,7 +7339,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
             boolean val = document.fast_update;
-            if (parent == null || line != line.parent.lines.lastElement()) document.fast_update = false;
+            if (parent == null || line != null && line != line.parent.lines.lastElement()) document.fast_update = false;
             Block block = doIncrementLayout();
             if (block == null) return;
             document.fast_update = val;
@@ -7658,6 +7773,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public String inputName = "";
     public String inputValue = "";
     public boolean inputDisabled = false;
+    public int inputListSize = 5;
+    public boolean inputMultipleSelection = false;
     public String defaultInputValue = "";
     public FormEntry formEntry;
     public Block labelFor;
@@ -8024,6 +8141,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.inputType = inputType;
         b.inputName = inputName;
         b.inputDisabled = inputDisabled;
+        b.inputListSize = inputListSize;
+        b.inputMultipleSelection = inputMultipleSelection;
         b.defaultInputValue = defaultInputValue;
         b.defaultChecked = defaultChecked;
         b.labelFor = labelFor;

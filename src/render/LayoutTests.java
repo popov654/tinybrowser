@@ -730,6 +730,20 @@ public class LayoutTests extends JFrame {
         d04.inputType = Block.Input.BUTTON;
         d04.buttonType = Block.ButtonType.SUBMIT;
 
+        Block d06 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d06.setBackgroundColor(new Color(209, 217, 213, 160));
+        d06.setBorderColor(new Color(118, 118, 123));
+        d06.setScaleBorder(false);
+        d06.setBorderWidth(1);
+        d06.setBorderRadius(2);
+        d06.setTextColor(new Color(35, 35, 43));
+        d06.setMargins(6, 0, 10);
+        d06.setPaddings(1, 2);
+        d06.setFontSize(12);
+        d06.createInputList("list", new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }, new String[] { "1", "2", "3", "4" }, 3);
+        d06.inputMultipleSelection = true;
+        b.addElement(d06, true);
+
         b.addElement(d04, true);
 
         document.ready = true;
