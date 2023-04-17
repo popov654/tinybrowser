@@ -293,8 +293,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean isMouseInside(int x, int y) {
         boolean result = false;
-        int dx = parent.scroll_x;
-        int dy = parent.scroll_y;
+        int dx = parent != null ? parent.scroll_x : 0;
+        int dy = parent != null ? parent.scroll_y : 0;
         if (display_type != Display.INLINE) {
             result = (x >= _x_ - dx && x < _x_ - dx + viewport_width && y >= _y_ - dy && y < _y_ - dy + viewport_height);
         } else {
