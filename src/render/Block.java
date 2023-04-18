@@ -2267,6 +2267,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             btn.setRight(0, Units.px);
             btn.setTop(-1, Units.px);
             ((JButton)btn.getComponents()[0]).setText("");
+            inputMultipleSelection = false;
         }
         header.setPositioning(Position.ABSOLUTE);
         header.setDisplayType(Display.NONE);
@@ -2359,13 +2360,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (inputType == Input.SELECT) {
             String value = "";
+            String label = "";
             Block list = children.lastElement();
             for (int i = 0; i < list.children.size(); i++) {
                 if (list.children.get(i).checked) {
                     if (value.length() > 0)  value += ",";
                     value += list.children.get(i).inputValue;
+                    label = list.children.get(i).children.get(0).textContent;
                 }
             }
+            if (inputListSize == 0) {
+                Block label_block = children.firstElement().children.firstElement();
+                label_block.children.get(0).textContent = label;
+                list.display_type = Display.NONE;
+                document.root.flushBuffersRecursively();
+                document.root.performLayout();
+                document.root.forceRepaint();
+                document.repaint();
+            }
+
             formEntry = new FormEntry(inputName, value);
             return;
         }
@@ -3587,6 +3600,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 try {
                     c.setComponentZOrder(b, offset-i);
                 } catch (Exception ex) {}
+            }
+        }
+        int n = 0;
+        for (int i = 0; i < list.size() - n; i++) {
+            if (list.get(i).parent != null && list.get(i).parent.inputType == Input.SELECT && list.get(i) == list.get(i).parent.children.get(1)) {
+                Block b = list.get(i);
+                list.remove(i);
+                list.add(b);
+                for (int j = 0; j < b.children.size(); j++) {
+                    Block item = list.remove(i);
+                    list.add(item);
+                }
+                n += b.children.size() + 1;
+                i--;
             }
         }
         layer_list = list;
@@ -8301,7 +8328,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void mouseClicked(MouseEvent e) {
 
-        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN || e.isConsumed()) {
             return;
         }
 
@@ -8320,12 +8347,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (!(children.size() > 0 && children.get(0).type == NodeTypes.TEXT)) {
-            for (int i = 0; i < blocks.length; i++) {
+            for (int i = blocks.length-1; i >= 0; i--) {
                 Block b = blocks[i].original != null ? blocks[i].original : blocks[i];
                 if (children.contains(b)) {
                     //MouseEvent evt = new MouseEvent((Block)d, 0, 0, 0, e.getX() - b._x_, e.getY() - b._y_, 1, false);
                     blocks[i].mouseClicked(e);
                 }
+                if (e.isConsumed()) break;
             }
         }
 
@@ -8353,16 +8381,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         if (isMouseInside(e.getX(), e.getY()) && parent != null && parent.inputType == Input.SELECT && this == parent.children.get(0)) {
+            parent.inputMultipleSelection = false;
             if (parent.children.get(1).display_type == Display.NONE) {
                 parent.children.get(1).display_type = Display.BLOCK;
             } else {
                 parent.children.get(1).display_type = Display.NONE;
             }
-            //parent.children.get(1).removeTextLayers();
             document.root.flushBuffersRecursively();
             document.root.performLayout();
             document.root.forceRepaint();
             document.repaint();
+            e.consume();
         }
 
         if (isMouseInside(e.getX(), e.getY()) && parent != null && parent.inputType == Input.SELECT && this == parent.children.get(1)) {
@@ -8392,6 +8421,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             parent.updateFormEntry();
             document.repaint();
+            e.consume();
         }
 
         if (isMouseInside(e.getX(), e.getY()) && inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
@@ -8417,6 +8447,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (inputType == Input.RADIO && getComponents().length > 0) {
                 ((JToggleButton)getComponents()[0]).getModel().setSelected(true);
             }
+            e.consume();
         }
         
         if (isMouseInside(e.getX(), e.getY()) && href != null || hasParentLink) {
@@ -8449,6 +8480,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             document.active_block.resetStyles();
             document.active_block.applyStateStyles();
+
+            e.consume();
 
             return;
         }
