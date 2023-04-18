@@ -501,7 +501,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         if (scrollbar_x != null && parent != null) {
-            int x = _x_ + width - scrollbar_y.getPreferredSize().width - dx;
+            int x = _x_ + width - (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0) - dx;
             int y = _y_ + borderWidth[0] - dy;
             scrollbar_x.setBounds(x, y, width - borderWidth[1] - borderWidth[3], scrollbar_x.getPreferredSize().height);
         }
@@ -644,23 +644,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int x0 = has_shadow ? -shadow_x + shadow_blur + shadow_size : 0;
         int y0 = has_shadow ? -shadow_y + shadow_blur + shadow_size : 0;
 
-        if (parent != null) {
-            //x0 -= parent.scroll_x;
-            //y0 -= parent.scroll_y;
-        }
-
         scroll_x = positioning != Position.FIXED ? (parent != null ? parent.scroll_x : 0) + scroll_left : 0;
         scroll_y = positioning != Position.FIXED ? (parent != null ? parent.scroll_y : 0) + scroll_top : 0;
 
         if (getComponents().length > 0 && getComponents()[0] instanceof MediaPlayer.VideoRenderer) {
-            int sx = 0;
-            int sy = 0;
-            Block b = this;
-            while (b.parent != null) {
-                sx += b.scroll_left;
-                sy += b.scroll_top;
-                b = b.parent;
-            }
             getComponents()[0].setBounds(_x_ - scroll_x, _y_ - scroll_y, width, height);
         }
 
@@ -2114,7 +2101,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             removeAllElements();
 
             final Block label = new Block(document);
-            final Block btn = createButton("…", null);
+            final Block btn = createButton("…");
 
             addElement(label, true);
             label.addText("No file selected");
@@ -2302,7 +2289,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         formEntry = new FormEntry(inputName, inputValue);
     }
 
-    private Block createButton(String label, Color color) {
+    private Block createButton(String label) {
 
         final Block b = new Block(document);
 
