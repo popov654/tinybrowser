@@ -674,7 +674,7 @@ public class LayoutTests extends JFrame {
         d03.setMargins(10, 0, 6);
         d03.inputType = Block.Input.RADIO;
         d03.inputName = "checkbox";
-        d03.inputValue = "on";
+        d03.inputValue = "male";
         d03.checked = true;
 
         b.addElement(d03, true);
@@ -684,7 +684,7 @@ public class LayoutTests extends JFrame {
         l03.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
         l03.setFontSize(12);
         l03.setMargins(0, 2, 0, 5);
-        l03.addText("Label");
+        l03.addText("Male");
         l03.labelFor = d03;
 
         b.addElement(l03, true);
@@ -694,7 +694,8 @@ public class LayoutTests extends JFrame {
 
         d031.margins[3] = 12;
         l031.labelFor = d031;
-        d031.inputValue = "on";
+        l031.children.get(0).textContent = "Female";
+        d031.inputValue = "female";
         b.addElement(d031, true);
         b.addElement(l031, true);
 
