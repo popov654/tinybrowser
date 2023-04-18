@@ -715,72 +715,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         //RoundRectangle2D rect = null;
         //rect = new RoundRectangle2D.Double(-borderWidth[3], -borderWidth[0], width+borderWidth[1]+2, height+borderWidth[2]+1, arc > 6 ? arc-5 : 0, arc > 6 ? arc-5 : 0);
 
-        RoundedRect clip_rect = null;
+        setClippingArea(g2d, x0, y0);
 
-        if (isPartlyHidden()) {
+        //int width = viewport_width > 0 ? viewport_width : this.width;
+        //int height = viewport_height > 0 ? viewport_height : this.height;
 
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            int sx = clipping_block.parent != null ? clipping_block.parent.scroll_x : 0;
-            int sy = clipping_block.parent != null ? clipping_block.parent.scroll_y : 0;
-
-            int xc = clipping_block._x_ - _x_ + clipping_block.borderWidth[3] + parent.scroll_x;
-            int yc = clipping_block._y_ - _y_ + clipping_block.borderWidth[0] + parent.scroll_y;
-            int wc = clipping_block.viewport_width - clipping_block.borderWidth[3] - clipping_block.borderWidth[1];
-            int hc = clipping_block.viewport_height - clipping_block.borderWidth[0] - clipping_block.borderWidth[2];
-
-
-            double[] arcs = new double[4];
-            arcs[0] = clipping_block.arc[0] / 2 - 1;
-            arcs[1] = clipping_block.arc[1] / 2 - 1;
-            arcs[2] = clipping_block.arc[2] / 2 - 1;
-            arcs[3] = clipping_block.arc[3] / 2 - 1;
-
-            adjustCorners(arcs, clipping_block);
-
-            clip_rect = new RoundedRect(xc, yc, wc, hc, arcs[0], arcs[1], arcs[2], arcs[3]);
-            if (clipping_block.overflow != Overflow.VISIBLE) {
-                g2d.setClip(clip_rect);
-            } else {
-                g2d.setClip(null);
-            }
-
-        }
-
-        if (clipping_block == null && overflow != Overflow.VISIBLE) {
-            int vw = viewport_width;
-            if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) vw += 2;
-            clip_rect = new RoundedRect(0, 0, vw, viewport_height, arc[0] / 3.24, arc[1] / 3.24, arc[2] / 3.24, arc[3] / 3.24);
-            g2d.setClip(clip_rect);
-        }
-
-        if (bg_clip_x > -1 || bg_clip_y > 0) {
-            int sx = 0;
-            int sy = 0;
-            int clip_x = bg_clip_x > -1 ? bg_clip_x : viewport_width;
-            int clip_y = bg_clip_y > -1 ? bg_clip_y : viewport_height;
-            if (clipping_block != null) {
-                if (clipping_block.scroll_left > _x_ - clipping_block._x_ - clipping_block.borderWidth[3]) {
-                    sx = -(_x_ - clipping_block._x_ - clipping_block.borderWidth[3] - clipping_block.scroll_left);
-                }
-                if (clipping_block.scroll_top > _y_ - clipping_block._y_ - parent.borderWidth[0]) {
-                    sy = -(_y_ - clipping_block._y_ - clipping_block.borderWidth[0] - clipping_block.scroll_top);
-                }
-                if (_x_ + sx + clip_x > clipping_block.viewport_width - clipping_block.borderWidth[1]) {
-                    clip_x = clipping_block.viewport_width - clipping_block.borderWidth[1] - (_x_ + sx);
-                }
-                if (_y_ + sy + clip_y > clipping_block.viewport_height - clipping_block.borderWidth[2]) {
-                    clip_y = clipping_block.viewport_height - clipping_block.borderWidth[2] - (_y_ + sy);
-                }
-            }
-            clip_rect = new RoundedRect(sx, sy, clip_x, clip_y, 0, 0, 0, 0);
-            g2d.setClip(clip_rect);
-        }
-
-        int width = viewport_width > 0 ? viewport_width : this.width;
-        int height = viewport_height > 0 ? viewport_height : this.height;
-
-        if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
+        //if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
 
         if (background != null) {
 
@@ -804,13 +744,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        if (clipping_block == this) g.setClip(null);
         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
         if (border != null) {
-            if (clipping_block == null && overflow != Overflow.VISIBLE) {
-                g.setClip(null);
-            }
+            g.setClip(null);
             border.paintBorder(this, g, x0, y0, bw, bh);
         }
         g.setClip(null);
@@ -827,6 +764,79 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+    }
+
+    public void setClippingArea(Graphics2D g2d, int x0, int y0) {
+
+        clip_area = new Area(new Rectangle.Double(-(_x_ - scroll_x), -(_y_ - scroll_y), document.width, document.height));
+
+        if (isPartlyHidden()) {
+
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            Block b = clipping_block;
+            Block last_block = b;
+            
+            while (b != null) {
+
+                int xc = last_block._x_ - _x_ + last_block.borderWidth[3] + last_block.scroll_left;
+                int yc = last_block._y_ - _y_ + last_block.borderWidth[0] + last_block.scroll_top;
+                int wc = last_block.viewport_width - last_block.borderWidth[3] - last_block.borderWidth[1];
+                int hc = last_block.viewport_height - last_block.borderWidth[0] - last_block.borderWidth[2];
+
+                double[] arcs = new double[4];
+                arcs[0] = last_block.arc[0] / 2 - 1;
+                arcs[1] = last_block.arc[1] / 2 - 1;
+                arcs[2] = last_block.arc[2] / 2 - 1;
+                arcs[3] = last_block.arc[3] / 2 - 1;
+
+                adjustCorners(arcs, last_block);
+
+                clip_area.intersect(new Area(new RoundedRect(xc, yc, wc, hc, arcs[0], arcs[1], arcs[2], arcs[3])));
+
+                b = b.parent;
+
+                while (b != null && b.overflow == Overflow.VISIBLE) {
+                    b = b.parent;
+                }
+                if (b != null) {
+                    last_block = b;
+                }
+            }
+
+            g2d.setClip(clip_area);
+
+        }
+
+        if (clipping_block == null && overflow != Overflow.VISIBLE) {
+            int vw = viewport_width;
+            if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) vw += 2;
+            clip_area.intersect(new Area(new RoundedRect(0, 0, vw, viewport_height, arc[0] / 3.24, arc[1] / 3.24, arc[2] / 3.24, arc[3] / 3.24)));
+            g2d.setClip(clip_area);
+        }
+
+        if (bg_clip_x > -1 || bg_clip_y > 0) {
+            int sx = 0;
+            int sy = 0;
+            int clip_x = bg_clip_x > -1 ? bg_clip_x : viewport_width;
+            int clip_y = bg_clip_y > -1 ? bg_clip_y : viewport_height;
+            if (clipping_block != null) {
+                if (clipping_block.scroll_left > _x_ - clipping_block._x_ - clipping_block.borderWidth[3]) {
+                    sx = -(_x_ - clipping_block._x_ - clipping_block.borderWidth[3] - clipping_block.scroll_left);
+                }
+                if (clipping_block.scroll_top > _y_ - clipping_block._y_ - parent.borderWidth[0]) {
+                    sy = -(_y_ - clipping_block._y_ - clipping_block.borderWidth[0] - clipping_block.scroll_top);
+                }
+                if (_x_ + sx + clip_x > clipping_block.viewport_width - clipping_block.borderWidth[1]) {
+                    clip_x = clipping_block.viewport_width - clipping_block.borderWidth[1] - (_x_ + sx);
+                }
+                if (_y_ + sy + clip_y > clipping_block.viewport_height - clipping_block.borderWidth[2]) {
+                    clip_y = clipping_block.viewport_height - clipping_block.borderWidth[2] - (_y_ + sy);
+                }
+            }
+            clip_area.intersect(new Area(new RoundedRect(sx, sy, clip_x, clip_y, 0, 0, 0, 0)));
+            g2d.setClip(clip_area);
+        }
     }
 
     public void paintBackground(Background background, Graphics2D g2d, int x0, int y0) {
@@ -3982,7 +3992,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         final Block instance = this;
         final Block origin_block = b;
 
-        JLabel label = new JLabel(c.getText());
+        JLabel label = new JLabel(c.getText()) {
+            @Override
+            public void paintComponent(Graphics g) {
+                if (clip_area != null) {
+                    //Area area = (Area) clip_area.clone();
+                    //area.transform(AffineTransform.getTranslateInstance(-getX(), -getY()));
+                    //g.setClip(area);
+                }
+                g.setClip(new Rectangle.Double(-getX(), -getY(), document.root.width, document.root.height));
+                super.paintComponent(g);
+            }
+        };
 
         Color col = hasParentLink || href != null ? linkColor : color;
         label.setForeground(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * alpha)));
@@ -4136,6 +4157,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public Block clipping_block = null;
+    public Area clip_area = null;
 
     public String replaceEntities(String str) {
         str = str.replaceAll("&lt;", "<");
