@@ -4078,15 +4078,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         JLabel label = new JLabel(c.getText()) {
             @Override
             public void paintComponent(Graphics g) {
-                if (clip_area != null) {
-                    //Area area = (Area) clip_area.clone();
-                    //area.transform(AffineTransform.getTranslateInstance(-getX(), -getY()));
-                    //g.setClip(area);
-                }
-//                if (instance.parent.parent.inputType == 6 && instance.parent == instance.parent.parent.children.get(1)) {
-//                    System.out.println(this.getText());
-//                }
-                g.setClip(new Rectangle.Double(-getX(), -getY(), document.root.width, document.root.height));
+                g.setClip(clip_area);
                 super.paintComponent(g);
             }
         };
@@ -4139,7 +4131,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         label.setBounds(_x_ + c.getX() - scroll_x, _y_ + c.getY() - scroll_y, text_italic ? c.getWidth() + 2 : c.getWidth(), c.getHeight());
 
-        if (isTransformed || (hidden && flag)) {
+        if (isTransformed) {
             if (clipping_block != null) {
 
                 int sx = clipping_block.parent != null ? clipping_block.parent.scroll_x : 0;
@@ -8367,8 +8359,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 parent.children.get(1).display_type = Display.NONE;
             }
             //parent.children.get(1).removeTextLayers();
-            parent.performLayout();
             document.root.flushBuffersRecursively();
+            document.root.performLayout();
             document.root.forceRepaint();
             document.repaint();
         }
