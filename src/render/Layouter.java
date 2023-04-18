@@ -921,7 +921,7 @@ public class Layouter {
         if (d.positioning == Block.Position.ABSOLUTE || d.positioning == Block.Position.FIXED) {
             if (d.auto_left) {
                 d.setX(!block.rtl ? last_line.getX() : last_line.getX() + last_line.getWidth() - d.width);
-            } else {
+            } else if (d.auto_right) {
                 if (!d.auto_left && !d.auto_right && !d.auto_width && d.auto_x_margin &&
                       p.width - p.borderWidth[3] - p.borderWidth[1] - d.left - d.right - d.width > 0) {
                     int w = p.width - p.borderWidth[3] - p.borderWidth[1] - d.left - d.right - d.width;
@@ -930,9 +930,12 @@ public class Layouter {
                 }
                 d.setX(p.borderWidth[3] + d.margins[3] + d.left);
             }
+            if (!d.auto_right) {
+                d.setX(block.viewport_width - d.width - d.right);
+            }
             if (d.auto_top) {
                 d.setY(last_line.getY());
-            } else {
+            } else if (d.auto_bottom) {
                 if (!d.auto_top && !d.auto_bottom && !d.auto_height && d.auto_y_margin &&
                       p.height - p.borderWidth[0] - p.borderWidth[2] - d.top - d.bottom - d.height > 0) {
                     int h = p.height - p.borderWidth[0] - p.borderWidth[2] - d.top - d.bottom - d.height;
@@ -940,6 +943,9 @@ public class Layouter {
                     d.margins[2] = h - d.margins[0];
                 }
                 d.setY(p.borderWidth[0] + d.margins[0] + d.top);
+            }
+            if (!d.auto_bottom) {
+                d.setY(block.viewport_height - d.height - d.bottom);
             }
             if (last_line.elements.size() == 1 && last_line.elements.lastElement() instanceof Block &&
                     (Block)last_line.elements.lastElement() == d) {
