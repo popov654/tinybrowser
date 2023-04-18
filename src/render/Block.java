@@ -8262,6 +8262,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+        if (isMouseInside(e.getX(), e.getY()) && inputType >= Input.TEXT && inputType <= Input.TEXTAREA) {
+            Component[] c = getComponents();
+            for (int i = 0; i < c.length; i++) {
+                if (c[i] instanceof JTextComponent) {
+                    ((JTextComponent)c[i]).requestFocus();
+                }
+            }
+        }
+
         if (isMouseInside(e.getX(), e.getY()) && inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
             if (inputName != null && !inputName.isEmpty() && inputType == Input.RADIO) {
                 Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
