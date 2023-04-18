@@ -710,7 +710,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (desktopHints != null) {
             g2d.addRenderingHints(desktopHints);
         }
-        ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         setClippingArea(g2d, x0, y0);
 
@@ -2172,6 +2172,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         inputListSize = size;
 
         Block header = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
+        header.paddings = Arrays.copyOf(paddings, 4);
+        addElement(header);
+        final Block list = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
+        list.setOverflow(Overflow.SCROLL);
+        list.paddings = Arrays.copyOf(paddings, 4);
+        paddings = new int[] { 0, 0, 0, 0 };
+        addElement(list);
+        if (size == 0) {
+            Block b = new Block(document);
+            b.addText("Select value");
+            header.addElement(b);
+
+            Block btn = createButton(" ");
+            btn.id = "btn";
+            header.addElement(btn);
+            btn.setPositioning(Position.ABSOLUTE);
+            btn.setRight(0, Units.px);
+            btn.setTop(0, Units.px);
+        }
+        header.setPositioning(Position.ABSOLUTE);
         header.setDisplayType(Display.NONE);
         addElement(header);
 
@@ -2184,7 +2204,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (i < values.length) {
                 item.inputValue = values[i];
             }
-            addElement(item);
+            list.addElement(item);
             item.performLayout();
             item.removeAll();
         }
@@ -2209,9 +2229,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setInputSelectedIndex(int index) {
         if (inputType != Input.SELECT || index < 0 || index + 1 >= children.size()) return;
-        for (int i = 1; i < children.size(); i++) {
-            children.get(i).checked = (i != index + 1);
-            children.get(i).setBackgroundColor(children.get(i).checked ? selection_color : null);
+        Block list = children.lastElement();
+        for (int i = 0; i < list.children.size(); i++) {
+            list.children.get(i).checked = (i != index + 1);
+            list.children.get(i).setBackgroundColor(list.children.get(i).checked ? selection_color : null);
         }
     }
 
@@ -2223,10 +2244,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (inputType == Input.SELECT) {
             String value = "";
-            for (int i = 1; i < children.size(); i++) {
-                if (children.get(i).checked) {
+            Block list = children.lastElement();
+            for (int i = 0; i < list.children.size(); i++) {
+                if (list.children.get(i).checked) {
                     if (value.length() > 0)  value += ",";
-                    value += children.get(i).inputValue;
+                    value += list.children.get(i).inputValue;
                 }
             }
             formEntry = new FormEntry(inputName, value);
@@ -3936,12 +3958,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         JLabel label = new JLabel(c.getText()) {
             @Override
             public void paintComponent(Graphics g) {
-                if (clip_area != null) {
-                    //Area area = (Area) clip_area.clone();
-                    //area.transform(AffineTransform.getTranslateInstance(-getX(), -getY()));
-                    //g.setClip(area);
-                }
-                g.setClip(new Rectangle.Double(-getX(), -getY(), document.root.width, document.root.height));
+                g.setClip(clip_area);
                 super.paintComponent(g);
             }
         };
@@ -8203,9 +8220,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        if (isMouseInside(e.getX(), e.getY()) && inputType == Input.SELECT) {
-            if (!inputMultipleSelection) {
-                for (int i = 1; i < children.size(); i++) {
+        if (isMouseInside(e.getX(), e.getY()) && parent != null && parent.inputType == Input.SELECT) {
+            if (!parent.inputMultipleSelection) {
+                for (int i = 0; i < children.size(); i++) {
                     Block item = children.get(i);
                     item.checked = item.isMouseInside(e.getX(), e.getY());
                     item.setBackgroundColor(item.checked ? selection_color : null);
@@ -8215,7 +8232,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
             } else {
-                for (int i = 1; i < children.size(); i++) {
+                for (int i = 0; i < children.size(); i++) {
                     Block item = children.get(i);
                     if (item.isMouseInside(e.getX(), e.getY())) {
                         item.checked = !item.checked;
@@ -8228,7 +8245,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
             }
-            updateFormEntry();
+            parent.updateFormEntry();
             document.repaint();
         }
 
