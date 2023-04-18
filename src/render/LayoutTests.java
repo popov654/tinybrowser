@@ -740,7 +740,7 @@ public class LayoutTests extends JFrame {
         d06.setMargins(6, 0, 10);
         d06.setPaddings(1, 2);
         d06.setFontSize(12);
-        d06.createInputList("list", new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }, new String[] { "1", "2", "3", "4" }, 3);
+        d06.createInputList("list", new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }, new String[] { "1", "2", "3", "4" }, 0);
         d06.inputMultipleSelection = true;
         b.addElement(d06, true);
 
