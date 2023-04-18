@@ -2658,8 +2658,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
                 layouter.last_element = -1;
-                Line last = lines.lastElement();
-                if (auto_height) {
+                Line last = lines.size() > 0 ? lines.lastElement() : null;
+                if (auto_height && last != null) {
                     viewport_height = height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
                 }
                 if (is_table_cell && auto_width) {
