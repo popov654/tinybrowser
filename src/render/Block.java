@@ -2183,56 +2183,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         header.setDisplayType(Display.NONE);
         addElement(header);
 
-        MouseListener listener = new MouseListener() {
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (!isMouseInside(e.getX(), e.getY())) {
-                    document.root.mouseClicked(e);
-                    return;
-                }
-                if (!inputMultipleSelection) {
-                    for (int i = 1; i < children.size(); i++) {
-                        Block item = children.get(i);
-                        item.checked = item.isMouseInside(e.getX(), e.getY());
-                        item.setBackgroundColor(item.checked ? selection_color : null);
-                        item.setTextColor(item.checked ? Color.WHITE : color);
-                        if (!item.checked) {
-                            item.forceRepaint();
-                        }
-                    }
-                } else {
-                    for (int i = 1; i < children.size(); i++) {
-                        Block item = children.get(i);
-                        if (item.isMouseInside(e.getX(), e.getY())) {
-                            item.checked = !item.checked;
-                            item.setBackgroundColor(item.checked ? selection_color : null);
-                            item.setTextColor(item.checked ? Color.WHITE : color);
-                            if (!item.checked) {
-                                item.forceRepaint();
-                            }
-                            break;
-                        }
-                    }
-                }
-                updateFormEntry();
-                document.repaint();
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {}
-
-            @Override
-            public void mouseReleased(MouseEvent e) {}
-
-            @Override
-            public void mouseEntered(MouseEvent e) {}
-
-            @Override
-            public void mouseExited(MouseEvent e) {}
-
-        };
-
         for (int i = 0; i < labels.length; i++) {
             Block item = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
             item.addText(labels[i]);
@@ -2246,7 +2196,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             item.performLayout();
             item.removeAll();
         }
-        addMouseListener(listener);
         if (children.size() > 0) {
             int max_width = 0;
             for (int i = 0; i < children.size(); i++) {
@@ -8262,13 +8211,33 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        if (isMouseInside(e.getX(), e.getY()) && inputType >= Input.TEXT && inputType <= Input.TEXTAREA) {
-            Component[] c = getComponents();
-            for (int i = 0; i < c.length; i++) {
-                if (c[i] instanceof JTextComponent) {
-                    ((JTextComponent)c[i]).requestFocus();
+        if (isMouseInside(e.getX(), e.getY()) && inputType == Input.SELECT) {
+            if (!inputMultipleSelection) {
+                for (int i = 1; i < children.size(); i++) {
+                    Block item = children.get(i);
+                    item.checked = item.isMouseInside(e.getX(), e.getY());
+                    item.setBackgroundColor(item.checked ? selection_color : null);
+                    item.setTextColor(item.checked ? Color.WHITE : color);
+                    if (!item.checked) {
+                        item.forceRepaint();
+                    }
+                }
+            } else {
+                for (int i = 1; i < children.size(); i++) {
+                    Block item = children.get(i);
+                    if (item.isMouseInside(e.getX(), e.getY())) {
+                        item.checked = !item.checked;
+                        item.setBackgroundColor(item.checked ? selection_color : null);
+                        item.setTextColor(item.checked ? Color.WHITE : color);
+                        if (!item.checked) {
+                            item.forceRepaint();
+                        }
+                        break;
+                    }
                 }
             }
+            updateFormEntry();
+            document.repaint();
         }
 
         if (isMouseInside(e.getX(), e.getY()) && inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
