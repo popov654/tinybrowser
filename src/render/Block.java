@@ -712,15 +712,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        //RoundRectangle2D rect = null;
-        //rect = new RoundRectangle2D.Double(-borderWidth[3], -borderWidth[0], width+borderWidth[1]+2, height+borderWidth[2]+1, arc > 6 ? arc-5 : 0, arc > 6 ? arc-5 : 0);
-
         setClippingArea(g2d, x0, y0);
-
-        //int width = viewport_width > 0 ? viewport_width : this.width;
-        //int height = viewport_height > 0 ? viewport_height : this.height;
-
-        //if (children.size() > 0 && children.lastElement().type == NodeTypes.TEXT && text_italic) width += 2;
 
         if (background != null) {
 
