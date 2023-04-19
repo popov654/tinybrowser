@@ -2216,7 +2216,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         inputType = Input.SELECT;
         inputName = name;
-        //setOverflow(Overflow.HIDDEN);
 
         inputListSize = size;
 
@@ -2226,6 +2225,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block list = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
         list.setOverflow(Overflow.SCROLL);
         addElement(list);
+
+        for (int i = 0; i < labels.length; i++) {
+            Block item = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
+            item.addText(labels[i]);
+            item.setWhiteSpace(Block.WhiteSpace.NO_WRAP);
+            item.setOverflow(Block.Overflow.HIDDEN);
+            item.setTextOverflow(Block.TextOverflow.ELLIPSIS);
+            if (i < values.length) {
+                item.inputValue = values[i];
+            }
+            list.addElement(item);
+        }
+
+        styleInputList();
+
+        document.ready = ready;
+    }
+
+    private void styleInputList() {
+
+        Block header = children.get(0);
+        Block list = children.get(1);
 
         header.background = list.background = background;
         background = null;
@@ -2260,6 +2281,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             list.background = new Background();
             list.background.bgcolor = new Color(col.getRed(), col.getGreen(), col.getBlue(), 255);
         }
+
+        int size = inputListSize;
 
         if (size == 0) {
 
@@ -2305,25 +2328,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             isDropdown = true;
         }
 
-        for (int i = 0; i < labels.length; i++) {
-            Block item = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
-            item.addText(labels[i]);
-            item.setWhiteSpace(Block.WhiteSpace.NO_WRAP);
-            item.setOverflow(Block.Overflow.HIDDEN);
-            item.setTextOverflow(Block.TextOverflow.ELLIPSIS);
-            if (i < values.length) {
-                item.inputValue = values[i];
-            }
-            list.addElement(item);
-        }
         if (list.children.size() > 0) {
             int max_width = 0;
             int sc = (new JScrollBar()).getPreferredSize().width;
             for (int i = 0; i < list.children.size(); i++) {
                 Block item = list.children.get(i);
-                int w = getFontMetrics(new Font(fontFamily, Font.PLAIN, fontSize)).stringWidth(labels[i]) + item.paddings[3] + item.paddings[1] + 10 + sc;
-                if (w > max_width + list.children.get(i).paddings[1]) {
-                    max_width = w + list.children.get(i).paddings[1];
+                String text = item.children.get(0).textContent;
+                if (text != null) {
+                    int w = getFontMetrics(new Font(fontFamily, Font.PLAIN, fontSize)).stringWidth(text) + item.paddings[3] + item.paddings[1] + 10 + sc;
+                    if (w > max_width) {
+                        max_width = w;
+                    }
+                } else {
+                    document.ready = true;
+                    item.performLayout();
+                    document.ready = false;
+                    int w = item.width + 10 + sc;
+                    if (w > max_width) {
+                        max_width = w;
+                    }
                 }
             }
             int height = (list.children.get(0).fontSize + 4) * (!isDropdown ? size : 1) + paddings[0] + paddings[2] + borderWidth[0] + borderWidth[2];
@@ -2333,6 +2356,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 setWidth(max_width + paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1]);
                 header.setWidth(100, Units.percent);
                 list.setWidth(100, Units.percent);
+
+                document.ready = true;
+                list.performLayout();
+                document.ready = false;
+
+                int h = 0;
+                int line_height = (list.children.get(0).fontSize + 4) + paddings[0] + paddings[2];
+                for (int i = 0; i < size; i++) {
+                    h += i < list.children.size() ? list.children.get(i).height : line_height;
+                }
+                h += list.paddings[0] + list.paddings[2] + list.borderWidth[0] + list.borderWidth[2];
+                list_height = h;
+
                 if (isDropdown) {
                     int header_width = (int) Math.round((getFontMetrics(new Font(fontFamily, Font.PLAIN, header.fontSize)).stringWidth(header.children.get(0).children.get(0).textContent) / ratio) + header.paddings[1]);
                     int header_height = (int) Math.round((double) (list.children.get(0).fontSize + header.paddings[0] + header.paddings[2] + header.borderWidth[0] + header.borderWidth[2]) / ratio);
@@ -2367,7 +2403,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             auto_height = false;
             list.auto_height = false;
         }
-        document.ready = ready;
     }
 
     public void setInputSelectedIndex(int index) {
@@ -2481,7 +2516,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         btn.addMouseListener(new MouseListener() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {}
+            public void mouseClicked(MouseEvent e) {
+                Block b = (Block) ((Component)e.getSource()).getParent();
+                document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
+            }
 
             @Override
             public void mousePressed(MouseEvent e) {}
