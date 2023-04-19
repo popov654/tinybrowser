@@ -3205,17 +3205,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void updateMaxContentSize(Block el) {
-        int new_value = el.content_x_max;
-        if (el.positioning != Position.ABSOLUTE && positioning != Position.FIXED) {
-            new_value += el.margins[1] + paddings[1];
-        }
-        int w = Math.max(el.viewport_width - el.borderWidth[1] - el.borderWidth[3], new_value);
-        if (el.getOffsetLeft() - borderWidth[3] + w > content_x_max) {
-            if (el.float_type == FloatType.NONE && el.margins[1] < 0) {
-                el.margins[1] = 0;
-                el.margins[3] = 0;
+        if (el.display_type == Display.INLINE_BLOCK || el.display_type == Display.INLINE ||
+                el.display_type == Display.INLINE_TABLE || el.display_type == Display.INLINE_FLEX) {
+            int w = 0;
+            for (int i = 0; i < lines.size(); i++) {
+                if (lines.get(i).cur_pos > w) {
+                    w = lines.get(i).getWidth();
+                }
             }
-            content_x_max = el.getOffsetLeft() - borderWidth[3] + w;
+            if (w > content_x_max) {
+                content_x_max = w;
+            }
+        } else {
+            int new_value = el.content_x_max;
+            if (el.positioning != Position.ABSOLUTE && positioning != Position.FIXED) {
+                new_value += el.margins[1] + paddings[1];
+            }
+            int w = Math.max(el.viewport_width - el.borderWidth[1] - el.borderWidth[3], new_value);
+            if (el.getOffsetLeft() - borderWidth[3] + w > content_x_max) {
+                if (el.float_type == FloatType.NONE && el.margins[1] < 0) {
+                    el.margins[1] = 0;
+                    el.margins[3] = 0;
+                }
+                content_x_max = el.getOffsetLeft() - borderWidth[3] + w;
+            }
         }
         int h = el.viewport_height - borderWidth[0] - borderWidth[2];
         if (el.positioning != Position.ABSOLUTE && positioning != Position.FIXED && el.parent != null && el.height > 0) {

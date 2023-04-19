@@ -787,6 +787,10 @@ public class Layouter {
             b.viewport_width = b.width;
             b.viewport_height = b.height;
 
+            if (last_line.elements.size() > 0 && last_line.elements.lastElement() instanceof Block) {
+                last_line.cur_pos += ((Block)last_line.elements.lastElement()).margins[!block.rtl ? 1 : 3];
+            }
+
             last_line.addElement(b);
 
             last_line.cur_pos -= b.margins[!block.rtl ? 1 : 3];
