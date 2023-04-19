@@ -2478,6 +2478,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         final Color col = background.bgcolor;
         final Color new_col = col != null ? new Color((int)Math.min(col.getRed() * 1.03, 255), (int)Math.min(col.getGreen() * 1.03, 255), (int)Math.min(col.getBlue() * 1.03, 255)) : null;
 
+        btn.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {}
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                Block b = (Block) ((Component)e.getSource()).getParent();
+                if (!b.isMouseInside(e.getX(), e.getY())) {
+                    document.root.mouseMoved(new MouseEvent(b, MouseEvent.MOUSE_MOVED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+
+        });
+
         btn.getModel().addChangeListener(new ChangeListener() {
             private boolean rollover = false;
             private boolean pressed = false;
@@ -4141,6 +4165,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             @Override
             public void mouseExited(MouseEvent e) {}
 
+        });
+
+        label.addMouseMotionListener(new MouseMotionListener() {
+
+            @Override
+            public void mouseDragged(MouseEvent e) {}
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                Block b = (Block) ((Component)e.getSource()).getParent().getParent();
+                document.root.mouseMoved(new MouseEvent(b, MouseEvent.MOUSE_MOVED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
+            }
+            
         });
 
         Color col = hasParentLink || href != null ? linkColor : color;
@@ -7901,6 +7938,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int borderRadius;
     public int[] arc = {0, 0, 0, 0};
     public Color color = Color.BLACK;
+    public Color initialColor = Color.BLACK;
     public int[] borderType = {0, 0, 0, 0};
     public int borderClipMode = 0;
     public Color[] borderColor = {Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK};
@@ -8453,7 +8491,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         Block item = children.get(i);
                         item.checked = item.isMouseInside(e.getX(), e.getY());
                         item.setBackgroundColor(item.checked ? selection_color : null);
-                        item.setTextColor(item.checked ? Color.WHITE : color);
+                        item.setTextColorRecursive(item.checked ? Color.WHITE : color);
                         if (!item.checked) {
                             item.forceRepaint();
                         }
@@ -8464,7 +8502,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         if (item.isMouseInside(e.getX(), e.getY())) {
                             item.checked = !item.checked;
                             item.setBackgroundColor(item.checked ? selection_color : null);
-                            item.setTextColor(item.checked ? Color.WHITE : color);
+                            item.setTextColorRecursive(item.checked ? Color.WHITE : color);
                             if (!item.checked) {
                                 item.forceRepaint();
                             }
@@ -9237,8 +9275,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block last_hovered_block = document != null ? document.hovered_block : null;
         htmlparser.Node last_hovered_node = (document != null && document.hovered_block != null) ? document.hovered_block.node : null;
         
-        if (x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height) {
+        int dx = parent != null ? parent.scroll_x : 0;
+        int dy = parent != null ? parent.scroll_y : 0;
+        
+        if (x >= _x_ - dx && x < _x_ - dx + viewport_width && y >= _y_ - dy && y < _y_ - dy + viewport_height) {
             processMouseOverEvent(e, node, x, y);
+            checkForHoveredListItem();
             if (!hovered) {
                 if (last_hovered_node != null && last_hovered_node != node && !last_hovered_block.isMouseInside(x, y)) {
                     fireEventForNode(e, last_hovered_node, node, "mouseLeave");
@@ -9278,6 +9320,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                  }
                  //System.err.println(node.tagName + " Out!");
              }
+        }
+    }
+
+    private void checkForHoveredListItem() {
+        if (parent != null && parent.parent != null && parent.parent.inputType == Input.SELECT &&
+                parent.display_type != Display.NONE && parent.parent.display_type != Display.NONE &&
+                parent == parent.parent.children.get(1) && parent.parent.inputListSize == 0) {
+            for (int i = 0; i < parent.children.size(); i++) {
+                if (parent.children.get(i) == this) {
+                    if (color != Color.WHITE) parent.children.get(i).initialColor = color;
+                    parent.children.get(i).setBackgroundColor(selection_color);
+                    parent.children.get(i).setTextColorRecursive(Color.WHITE);
+                } else {
+                    parent.children.get(i).setBackgroundColor(new Color(0, 0, 0, 0));
+                    parent.children.get(i).setTextColorRecursive(initialColor);
+                }
+            }
         }
     }
 
