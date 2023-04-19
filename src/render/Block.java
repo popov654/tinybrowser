@@ -196,7 +196,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                             y += c.getY();
                             c = c.getParent();
                         }
-                        MouseEvent evt = new MouseEvent((Block)instance, 0, 0, 0, e.getX() - x, e.getY() - y, 1, false, MouseEvent.BUTTON1);
+                        MouseEvent evt = new MouseEvent((Block)instance, 0, 0, 0, e.getX() - x, e.getY() - y, 1, false);
                         instance.mouseDragged(evt);
                     }
                 }
@@ -297,6 +297,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int dy = parent != null ? parent.scroll_y : 0;
         if (display_type != Display.INLINE) {
             result = (x >= _x_ - dx && x < _x_ - dx + viewport_width && y >= _y_ - dy && y < _y_ - dy + viewport_height);
+            if (result) {
+                if (!layer_list.contains(this)) {
+                    return result;
+                }
+                Area area = new Area(new Rectangle.Double(_x_ - scroll_x, _y_ - scroll_y, width, height));
+                for (int i = layer_list.indexOf(this) + 1; i < layer_list.size(); i++) {
+                    Block b = layer_list.get(i);
+                    if (b.visibility == Visibility.HIDDEN) continue;
+                    area.subtract(new Area(new Rectangle.Double(b._x_ - b.scroll_x, b._y_ - b.scroll_y, b.width, b.height)));
+                }
+                return area.contains(x, y);
+            }
         } else {
             if (x >= _x_ - dx && x < _x_ - dx + viewport_width && y >= _y_ - dy && y < _y_ - dy + viewport_height) {
                 result = true;
@@ -2144,6 +2156,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             ((JButton)btn.getComponent(0)).addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    if (btn.isObscured()) return;
                     JFileChooser fileChooser = new JFileChooser();
                     int result = fileChooser.showOpenDialog(document);
                     if (result == JFileChooser.APPROVE_OPTION) {
@@ -2177,6 +2190,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
 
         return true;
+    }
+
+    public boolean isObscured() {
+        if (!document.root.layer_list.contains(this)) {
+            return false;
+        }
+        Area area = new Area(new Rectangle.Double(_x_ - parent.scroll_x, _y_ - parent.scroll_y, width, height));
+        for (int i = document.root.layer_list.indexOf(this) + 1; i < document.root.layer_list.size(); i++) {
+            Block b = document.root.layer_list.get(i);
+            if (b.visibility == Visibility.HIDDEN) continue;
+            area.subtract(new Area(new Rectangle.Double(b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, b.width, b.height)));
+        }
+
+        return area.isEmpty();
     }
 
     public void createInputList(String name, String[] labels, String[] values, int size) {
@@ -2326,7 +2353,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             Block b = ((Block)((Component)e.getSource()).getParent()).parent.parent.children.get(0);
-                            b.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false, MouseEvent.BUTTON1));
+                            b.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
                         }
                     });
                     list.setDisplayType(Display.NONE);
@@ -2521,22 +2548,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                     setLinearGradient(c, p, 180);
                     if (btn.getParent() != null) ((Block)btn.getParent()).setLinearGradient(c, p, 180);
-                }
-            }
-        });
-        btn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Block input = (Block) btn.getParent();
-                if (input.inputType == Input.BUTTON) {
-                    //System.out.println("Button was pressed");
-                    if (input.form != null) {
-                        if (input.buttonType == ButtonType.SUBMIT) {
-                            input.form.submit();
-                        } else if (input.buttonType == ButtonType.RESET) {
-                            input.form.reset();
-                        }
-                    }
                 }
             }
         });
@@ -4109,6 +4120,28 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 super.paintComponent(g);
             }
         };
+
+        label.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Block b = (Block) ((Component)e.getSource()).getParent().getParent();
+                document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+
+        });
 
         Color col = hasParentLink || href != null ? linkColor : color;
         label.setForeground(new Color(col.getRed(), col.getGreen(), col.getBlue(), (int)Math.round(col.getAlpha() * alpha)));
@@ -8380,137 +8413,163 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        if (isMouseInside(e.getX(), e.getY()) && parent != null && parent.inputType == Input.SELECT && this == parent.children.get(0)) {
-            parent.inputMultipleSelection = false;
-            if (parent.children.get(1).display_type == Display.NONE) {
-                parent.children.get(1).display_type = Display.BLOCK;
-            } else {
-                parent.children.get(1).display_type = Display.NONE;
-            }
-            document.root.flushBuffersRecursively();
-            document.root.performLayout();
-            document.root.forceRepaint();
-            document.repaint();
-            e.consume();
-        }
+        if (isMouseInside(e.getX(), e.getY())) {
 
-        if (isMouseInside(e.getX(), e.getY()) && parent != null && parent.inputType == Input.SELECT && this == parent.children.get(1)) {
-            if (!parent.inputMultipleSelection) {
-                for (int i = 0; i < children.size(); i++) {
-                    Block item = children.get(i);
-                    item.checked = item.isMouseInside(e.getX(), e.getY());
-                    item.setBackgroundColor(item.checked ? selection_color : null);
-                    item.setTextColor(item.checked ? Color.WHITE : color);
-                    if (!item.checked) {
-                        item.forceRepaint();
+            if (inputType == Input.BUTTON) {
+                //System.out.println("Button was pressed");
+                if (form != null) {
+                    if (buttonType == ButtonType.SUBMIT) {
+                        form.submit();
+                    } else if (buttonType == ButtonType.RESET) {
+                        form.reset();
                     }
+                    e.consume();
+
+                    return;
                 }
-            } else {
-                for (int i = 0; i < children.size(); i++) {
-                    Block item = children.get(i);
-                    if (item.isMouseInside(e.getX(), e.getY())) {
-                        item.checked = !item.checked;
+            }
+
+            if (parent != null && parent.inputType == Input.SELECT && this == parent.children.get(0)) {
+                parent.inputMultipleSelection = false;
+                if (parent.children.get(1).display_type == Display.NONE) {
+                    parent.children.get(1).display_type = Display.BLOCK;
+                } else {
+                    parent.children.get(1).display_type = Display.NONE;
+                }
+                document.root.flushBuffersRecursively();
+                document.root.performLayout();
+                document.root.forceRepaint();
+                document.repaint();
+                e.consume();
+
+                return;
+            }
+
+            if (parent != null && parent.inputType == Input.SELECT && this == parent.children.get(1)) {
+                if (!parent.inputMultipleSelection) {
+                    for (int i = 0; i < children.size(); i++) {
+                        Block item = children.get(i);
+                        item.checked = item.isMouseInside(e.getX(), e.getY());
                         item.setBackgroundColor(item.checked ? selection_color : null);
                         item.setTextColor(item.checked ? Color.WHITE : color);
                         if (!item.checked) {
                             item.forceRepaint();
                         }
-                        break;
                     }
-                }
-            }
-            parent.updateFormEntry();
-            document.repaint();
-            e.consume();
-        }
-
-        if (isMouseInside(e.getX(), e.getY()) && inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
-            if (inputName != null && !inputName.isEmpty() && inputType == Input.RADIO) {
-                Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
-                for (int i = 0; i < group.size(); i++) {
-                    group.get(i).node.states.remove("checked");
-                    if (group.get(i) == this) continue;
-                    if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
-                        Component[] c = group.get(i).getComponents();
-                        if (c.length > 0 && c[0] instanceof JToggleButton) {
-                            ((JToggleButton)c[0]).getModel().setSelected(false);
+                } else {
+                    for (int i = 0; i < children.size(); i++) {
+                        Block item = children.get(i);
+                        if (item.isMouseInside(e.getX(), e.getY())) {
+                            item.checked = !item.checked;
+                            item.setBackgroundColor(item.checked ? selection_color : null);
+                            item.setTextColor(item.checked ? Color.WHITE : color);
+                            if (!item.checked) {
+                                item.forceRepaint();
+                            }
+                            break;
                         }
-                        ((Block)c[i]).checked = false;
                     }
                 }
+                parent.updateFormEntry();
+                document.repaint();
+                e.consume();
+
+                return;
             }
 
-            checked = inputType == Input.CHECKBOX ? !checked : true;
-            if (checked) node.states.add("checked");
-            else node.states.remove("checked");
+            if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
+                if (inputName != null && !inputName.isEmpty() && inputType == Input.RADIO) {
+                    Vector<Block> group = findBlocksByName(document.root, node.getAttribute("name"));
+                    for (int i = 0; i < group.size(); i++) {
+                        group.get(i).node.states.remove("checked");
+                        if (group.get(i) == this) continue;
+                        if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
+                            Component[] c = group.get(i).getComponents();
+                            if (c.length > 0 && c[0] instanceof JToggleButton) {
+                                ((JToggleButton)c[0]).getModel().setSelected(false);
+                            }
+                            ((Block)c[i]).checked = false;
+                        }
+                    }
+                }
 
-            if (inputType == Input.RADIO && getComponents().length > 0) {
-                ((JToggleButton)getComponents()[0]).getModel().setSelected(true);
+                checked = inputType == Input.CHECKBOX ? !checked : true;
+                if (checked) node.states.add("checked");
+                else node.states.remove("checked");
+
+                if (inputType == Input.RADIO && getComponents().length > 0) {
+                    ((JToggleButton)getComponents()[0]).getModel().setSelected(true);
+                }
+                e.consume();
+
+                return;
             }
-            e.consume();
-        }
-        
-        if (isMouseInside(e.getX(), e.getY()) && href != null || hasParentLink) {
-            if (document.active_block != null && document.active_block.node != null) {
-                document.active_block.node.states.remove("active");
+
+            if (href != null || hasParentLink) {
+                if (document.active_block != null && document.active_block.node != null) {
+                    document.active_block.node.states.remove("active");
+                    document.active_block.resetStyles();
+                    document.active_block.applyStateStyles();
+                    document.active_block.applyStylesBatch();
+                }
+
+                node.states.add("active");
+
+                document.active_block = this;
+
+                if (node != null && node.defaultPrevented) {
+                    node.defaultPrevented = false;
+                } else if (href != null) {
+                    openBrowser(href);
+                    node.states.add("visited");
+                } else {
+                    Block b = this.parent;
+                    while (b != null && b.href == null) {
+                        b = b.parent;
+                    }
+                    if (b != null && b.href != null) {
+                        openBrowser(b.href);
+                        node.states.add("visited");
+                    }
+                }
+
                 document.active_block.resetStyles();
                 document.active_block.applyStateStyles();
-                document.active_block.applyStylesBatch();
+
+                e.consume();
+
+                return;
             }
             
-            node.states.add("active");
-
-            document.active_block = this;
-
-            if (node != null && node.defaultPrevented) {
-                node.defaultPrevented = false;
-            } else if (href != null) {
-                openBrowser(href);
-                node.states.add("visited");
-            } else {
-                Block b = this.parent;
-                while (b != null && b.href == null) {
-                    b = b.parent;
+            if (labelFor != null) {
+                Component[] c = labelFor.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    if (c[i] instanceof JTextComponent) {
+                        c[i].requestFocus();
+                        if (labelFor.node != null) {
+                            labelFor.node.fireEvent("focus", "render");
+                        }
+                    }
+                    else if (c[i] instanceof JToggleButton && !(labelFor.checked && labelFor.inputType == Input.RADIO)) {
+                        //labelFor.checked = !labelFor.checked;
+                        ((JToggleButton)c[i]).setSelected(!labelFor.checked);
+                        ChangeListener[] listeners = ((JToggleButton)c[i]).getChangeListeners();
+                        for (int j = listeners.length-2; j >= 0; j -= 2) {
+                            ChangeEvent changeEvent = new ChangeEvent((JToggleButton)c[i]);
+                            ((ChangeListener)listeners[j]).stateChanged(changeEvent);
+                        }
+                        if (labelFor.node != null) {
+                            fireEventForNode(e, labelFor.node, null, "click");
+                            labelFor.node.fireEvent("change", "render");
+                        }
+                    }
                 }
-                if (b != null && b.href != null) {
-                    openBrowser(b.href);
-                    node.states.add("visited");
-                }
+
+                return;
             }
-
-            document.active_block.resetStyles();
-            document.active_block.applyStateStyles();
-
-            e.consume();
-
-            return;
         }
-        if (isMouseInside(e.getX(), e.getY()) && labelFor != null) {
-            Component[] c = labelFor.getComponents();
-            for (int i = 0; i < c.length; i++) {
-                if (c[i] instanceof JTextComponent) {
-                    c[i].requestFocus();
-                    if (labelFor.node != null) {
-                        labelFor.node.fireEvent("focus", "render");
-                    }
-                }
-                else if (c[i] instanceof JToggleButton && !(labelFor.checked && labelFor.inputType == Input.RADIO)) {
-                    //labelFor.checked = !labelFor.checked;
-                    ((JToggleButton)c[i]).setSelected(!labelFor.checked);
-                    ChangeListener[] listeners = ((JToggleButton)c[i]).getChangeListeners();
-                    for (int j = listeners.length-2; j >= 0; j -= 2) {
-                        ChangeEvent changeEvent = new ChangeEvent((JToggleButton)c[i]);
-                        ((ChangeListener)listeners[j]).stateChanged(changeEvent);
-                    }
-                    if (labelFor.node != null) {
-                        fireEventForNode(e, labelFor.node, null, "click");
-                        labelFor.node.fireEvent("change", "render");
-                    }
-                }
-            }
 
-            return;
-        }
+        
         if (textRenderingMode == 0 && (text_layer == null || text_layer.getComponents().length == 0)) {
             return;
         }
