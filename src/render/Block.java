@@ -2394,6 +2394,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     });
                     list.setDisplayType(Display.NONE);
                     height = list.children.get(0).fontSize + header.paddings[0] + header.paddings[2] + header.borderWidth[0] + header.borderWidth[2];
+                } else {
+                    height = list_height;
                 }
             }
             height = viewport_height = height;
