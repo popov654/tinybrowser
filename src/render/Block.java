@@ -5106,7 +5106,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setWidth(int w, int units) {
-        int value = (int) Math.round(getValueInCssPixels(w, units));
+        int value = (int) Math.round(getValueInCssPixels(w, units, 0));
         if (units == Units.percent) {
             value -= (int) ((double) (margins[3] + margins[1]) / ratio);
         }
@@ -5235,7 +5235,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setHeight(int h, int units) {
-        int value = (int) Math.round(getValueInCssPixels(h, units));
+        int value = (int) Math.round(getValueInCssPixels(h, units, 1));
         if (units != Units.px) {
             dimensions.put("height", new DynamicValue(h, units, null));
         } else {
@@ -6907,6 +6907,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public int getValueInPixels(double value, int units) {
+        return getValueInPixels(value, units, 0);
+    }
+
+    public int getValueInPixels(double value, int units, int axis) {
         int val = (int)Math.round(value * ratio);
         if (units == Units.em) {
             Block b = parent != null ? parent : (document != null ? document.root : null);
@@ -6919,8 +6923,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = (int)Math.round(value * size);
         }
         else if (units == Units.percent) {
-            val = (int)Math.round(value / 100 * (parent != null && positioning != Position.FIXED ? parent.viewport_width :
-                document.width - document.borderSize * 2));
+            if (axis == 0) {
+                val = (int)Math.round(value / 100 * (parent != null && positioning != Position.FIXED ? parent.viewport_width :
+                    document.width - document.borderSize * 2));
+            } else {
+                val = (int)Math.round(value / 100 * (parent != null && positioning != Position.FIXED ? parent.viewport_height :
+                    document.height - document.borderSize * 2));
+            }
         }
         else if (units == Units.vw) {
             val = (int)Math.round(value / 100 * (document.width - document.borderSize * 2));
@@ -6959,6 +6968,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public double getValueInCssPixels(double value, int units) {
+        return getValueInCssPixels(value, units, 0);
+    }
+
+    public double getValueInCssPixels(double value, int units, int axis) {
         double val = value;
         if (units == Units.em) {
             Block b = parent != null ? parent : (document != null ? document.root : null);
@@ -6971,8 +6984,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             val = (int)Math.round(value * size);
         }
         else if (units == Units.percent) {
-            val = value / 100 * (parent != null && positioning != Position.FIXED ? (double) (parent.viewport_width - parent.paddings[3] - parent.paddings[1] - parent.borderWidth[3] - parent.borderWidth[1]) / ratio :
-                (double) (document.width - document.borderSize * 2) / ratio);
+            if (axis == 0) {
+                val = value / 100 * (parent != null && positioning != Position.FIXED ? (double) (parent.viewport_width - parent.paddings[3] - parent.paddings[1] - parent.borderWidth[3] - parent.borderWidth[1]) / ratio :
+                    (double) (document.width - document.borderSize * 2) / ratio);
+            } else {
+                val = value / 100 * (parent != null && positioning != Position.FIXED ? (double) (parent.viewport_height - parent.paddings[0] - parent.paddings[2] - parent.borderWidth[0] - parent.borderWidth[2]) / ratio :
+                    (double) (document.height - document.borderSize * 2) / ratio);
+            }
         }
         else if (units == Units.vw) {
             val = value / 100 * (document.width - document.borderSize * 2) / ratio;
@@ -7037,11 +7055,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setLeft(double val, int units) {
         auto_left = false;
-        if (positioning == Position.FIXED && units == Units.percent) {
-            left = (int)Math.round(val / 100 * (document.root.viewport_width - document.borderSize * 2));
-        } else {
-            left = getValueInPixels(val, units);
-        }
+        left = getValueInPixels(val, units, 0);
         if (units != Units.px) {
             dimensions.put("left", new DynamicValue(val, units, null));
         } else {
@@ -7067,11 +7081,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setRight(double val, int units) {
         auto_right = false;
-        if (positioning == Position.FIXED && units == Units.percent) {
-            right = (int)Math.round(val / 100 * (document.root.viewport_width - document.borderSize * 2));
-        } else {
-            right = getValueInPixels(val, units);
-        }
+        right = getValueInPixels(val, units, 0);
         if (units != Units.px) {
             dimensions.put("right", new DynamicValue(val, units, null));
         } else {
@@ -7097,11 +7107,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setTop(double val, int units) {
         auto_top = false;
-        if (positioning == Position.FIXED && units == Units.percent) {
-            top = (int)Math.round(val / 100 * (document.root.viewport_height - document.borderSize * 2));
-        } else {
-            top = getValueInPixels(val, units);
-        }
+        top = getValueInPixels(val, units, 1);
         if (units != Units.px) {
             dimensions.put("top", new DynamicValue(val, units, null));
         } else {
@@ -7127,11 +7133,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setBottom(double val, int units) {
         auto_bottom = false;
-        if (positioning == Position.FIXED && units == Units.percent) {
-            bottom = (int)Math.round(val / 100 * (document.root.viewport_height - document.borderSize * 2));
-        } else {
-            bottom = getValueInPixels(val, units);
-        }
+        bottom = getValueInPixels(val, units, 1);
         if (units != Units.px) {
             dimensions.put("bottom", new DynamicValue(val, units, null));
         } else {
