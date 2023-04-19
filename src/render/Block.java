@@ -2206,6 +2206,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return area.isEmpty();
     }
 
+    public void createInputList(String name, Block list, int size) {
+        boolean ready = document.ready;
+        document.ready = false;
+
+        removeAllElements();
+
+        paddings = size > 0 ? new int[] {2, 3, 2, 3} : new int[] {3, 3, 3, 3};
+
+        inputType = Input.SELECT;
+        inputName = name;
+
+        inputListSize = size;
+
+        Block header = new Block(document, this, -1, -1, 0, 0, Color.BLACK);
+        addElement(header);
+
+        list.setOverflow(Overflow.SCROLL);
+        addElement(list);
+
+        styleInputList();
+
+        document.ready = ready;
+    }
+
     public void createInputList(String name, String[] labels, String[] values, int size) {
         boolean ready = document.ready;
         document.ready = false;
@@ -2343,7 +2367,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     document.ready = true;
                     item.performLayout();
                     document.ready = false;
-                    int w = item.width + 10 + sc;
+                    int w = item.content_x_max + item.paddings[1] + 10 + sc;
                     if (w > max_width) {
                         max_width = w;
                     }

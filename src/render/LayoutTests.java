@@ -741,7 +741,32 @@ public class LayoutTests extends JFrame {
         d06.setMargins(6, 0, 10);
         d06.setPaddings(1, 2);
         d06.setFontSize(12);
-        d06.createInputList("list", new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }, new String[] { "1", "2", "3", "4" }, 0);
+
+        Block list = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        String[] labels = new String[] { "Museums", "Restoraunts", "Theatres", "Shops", "Night Clubs", "Sports" };
+        for (int i = 1; i <= 6; i++) {
+            Block item = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+            item.setPaddings(2, 1);
+            Block pic = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+            pic.isImage = true;
+            pic.display_type = Block.Display.INLINE;
+            pic.setWidthHeight(21, 21);
+            pic.margins[1] = 8;
+            pic.setBackgroundImage(Util.getInstallPath() + "html/icons/0" + i + ".png");
+            item.addElement(pic);
+
+            Block label = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+            label.display_type = Block.Display.INLINE;
+            label.fontSize = 16;
+            label.addText(labels[i-1]);
+            item.addElement(label, true);
+
+            list.addElement(item);
+        }
+
+        d06.createInputList("list", list, 4);
+
+        //d06.createInputList("list", new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }, new String[] { "1", "2", "3", "4" }, 0);
         d06.inputMultipleSelection = true;
         b.addElement(d06, true);
 
