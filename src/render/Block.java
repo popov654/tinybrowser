@@ -2312,8 +2312,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             Block b = new Block(document);
             b.addText(!inputValue.isEmpty() ? inputValue : "Select value");
-            b.setPositioning(Position.RELATIVE);
-            b.top = (int) -Math.round(1 * ratio);
             header.paddings[1] = (int) (23 * ratio);
             b.white_space = WhiteSpace.NO_WRAP;
             header.addElement(b);
@@ -2373,8 +2371,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
             }
-            int height = (list.children.get(0).fontSize + 4) * (!isDropdown ? size : 1) + paddings[0] + paddings[2] + borderWidth[0] + borderWidth[2];
-            int list_height = (list.children.get(0).fontSize + 4) * size + paddings[0] + paddings[2] + borderWidth[0] + borderWidth[2];
+            int height = list.children.get(0).fontSize * (!isDropdown ? size : 1) + list.paddings[0] + list.paddings[2] + list.borderWidth[0] + list.borderWidth[2];
+            int list_height = list.children.get(0).fontSize * size + list.paddings[0] + list.paddings[2] + list.borderWidth[0] + list.borderWidth[2];
             if (max_width > 0) {
                 setPositioning(Position.RELATIVE);
                 setWidth(max_width + paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1]);
@@ -2409,13 +2407,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                     JButton button = ((JButton)header.children.get(1).getComponents()[0]);
                     button.setSize((int) (23 * ratio), header.height);
-                    button.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            Block b = ((Block)((Component)e.getSource()).getParent()).parent.parent.children.get(0);
-                            b.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
-                        }
-                    });
                     list.setDisplayType(Display.NONE);
                     height = list.children.get(0).fontSize + header.paddings[0] + header.paddings[2] + header.borderWidth[0] + header.borderWidth[2];
                 } else {
