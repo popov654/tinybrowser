@@ -747,6 +747,7 @@ public class LayoutTests extends JFrame {
         for (int i = 1; i <= 6; i++) {
             Block item = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
             item.setPaddings(2, 1);
+            item.altText = labels[i-1];
             Block pic = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
             pic.isImage = true;
             pic.display_type = Block.Display.INLINE;
@@ -764,7 +765,8 @@ public class LayoutTests extends JFrame {
             list.addElement(item);
         }
 
-        d06.createInputList("list", list, 4);
+        d06.inputUseOnlyTextInHeader = true;
+        d06.createInputList("list", list, 0);
 
         //d06.createInputList("list", new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }, new String[] { "1", "2", "3", "4" }, 0);
         d06.inputMultipleSelection = true;

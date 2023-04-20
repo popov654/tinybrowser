@@ -2227,6 +2227,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         styleInputList();
 
+        // Find minimal list item height and apply to the list header
+        if (!inputUseOnlyTextInHeader) {
+            if (list.children.size() > 0) {
+                int min_height = list.children.get(0).height;
+                for (int i = 1; i < list.children.size(); i++) {
+                    if (list.children.get(i).height < min_height) {
+                        min_height = list.children.get(i).height;
+                    }
+                }
+            }
+            if (min_height + header.paddings[0] + header.paddings[2] + header.borderWidth[0] + header.borderWidth[2] > header.height) {
+                header.height = header.viewport_height = min_height + header.paddings[0] + header.paddings[2] + header.borderWidth[0] + header.borderWidth[2];
+                orig_height = header.orig_height = (int) Math.round((double) min_height / ratio);
+                height = viewport_height = header.height;
+            }
+        }
+
         document.ready = ready;
     }
 
@@ -2440,17 +2457,33 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (inputType == Input.SELECT) {
             String value = "";
             String label = "";
+            Block selectedItem = null;
             Block list = children.lastElement();
             for (int i = 0; i < list.children.size(); i++) {
                 if (list.children.get(i).checked) {
                     if (value.length() > 0)  value += ",";
                     value += list.children.get(i).inputValue;
-                    label = list.children.get(i).children.get(0).textContent;
+                    if (selectedItem == null) {
+                        label = list.children.get(i).children.get(0).textContent;
+                        selectedItem = list.children.get(i);
+                    }
                 }
             }
-            if (inputListSize == 0) {
+            if (inputListSize == 0 && selectedItem != null) {
                 Block label_block = children.firstElement().children.firstElement();
-                label_block.children.get(0).textContent = label;
+                if (inputUseOnlyTextInHeader && selectedItem.altText != null) {
+                    label_block.children.get(0).textContent = selectedItem.altText;
+                } else if (children.firstElement().children.size() == 1 && !label.isEmpty()) {
+                    label_block.children.get(0).textContent = label;
+                } else {
+                    Block copy = selectedItem.clone();
+                    copy.paddings = new int[] {0, 0, 0, 0};
+                    copy.setBackgroundColor(new Color(0, 0, 0, 0));
+                    copy.setTextColorRecursive(initialColor);
+                    label_block.removeTextLayers();
+                    label_block.removeAllElements();
+                    label_block.addElement(copy);
+                }
                 list.display_type = Display.NONE;
                 document.root.flushBuffersRecursively();
                 document.root.performLayout();
@@ -8042,9 +8075,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean inputDisabled = false;
     public int inputListSize = 5;
     public boolean inputMultipleSelection = false;
+    public boolean inputUseOnlyTextInHeader = false;
     public String defaultInputValue = "";
     public FormEntry formEntry;
     public Block labelFor;
+
+    public String altText;
 
     public String imgSrc = "";
 
