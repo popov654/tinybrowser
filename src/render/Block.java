@@ -415,7 +415,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     protected void paintComponent(Graphics g) {
         //g.clearRect(0, 0, width, height);
         if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
+            if (scrollbar_x != null) {
+                scrollbar_x.setVisible(false);
+            }
+            if (scrollbar_y != null) {
+                scrollbar_y.setVisible(false);
+            }
             return;
+        }
+
+        if (scrollbar_x != null) {
+            scrollbar_x.setVisible(true);
+        }
+        if (scrollbar_y != null) {
+            scrollbar_y.setVisible(true);
         }
 
         if (positioning == Position.FIXED) {
