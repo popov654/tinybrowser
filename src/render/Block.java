@@ -8589,10 +8589,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     parent.children.get(1).display_type = Display.BLOCK;
                 } else {
                     parent.children.get(1).display_type = Display.NONE;
+                    parent.children.get(1).flushBuffersRecursively();
                 }
-                document.root.flushBuffersRecursively();
-                document.root.performLayout();
-                document.root.forceRepaint();
+                parent.performLayout();
+                document.root.sortBlocks();
+                document.root.setZIndices();
+                parent.forceRepaint();
                 document.repaint();
                 e.consume();
 
