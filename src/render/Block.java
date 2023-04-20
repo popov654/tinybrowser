@@ -433,6 +433,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (scrollbar_y != null) {
                 scrollbar_y.setVisible(false);
             }
+            flushBuffersRecursively();
+
             return;
         }
 
@@ -2495,9 +2497,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     label_block.addElement(copy);
                 }
                 list.display_type = Display.NONE;
-                document.root.flushBuffersRecursively();
-                document.root.performLayout();
-                document.root.forceRepaint();
+                list.parent.performLayout();
+                document.root.sortBlocks();
+                document.root.setZIndices();
+                list.parent.forceRepaint();
                 document.repaint();
             }
 
@@ -8589,7 +8592,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     parent.children.get(1).display_type = Display.BLOCK;
                 } else {
                     parent.children.get(1).display_type = Display.NONE;
-                    parent.children.get(1).flushBuffersRecursively();
                 }
                 parent.performLayout();
                 document.root.sortBlocks();
