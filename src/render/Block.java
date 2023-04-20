@@ -1505,6 +1505,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     children.get(i).no_draw = false;
                 }
             }
+            for (int i = 0; i < parts.size(); i++) {
+                parts.get(i).no_draw = true;
+                parts.get(i).setX(parts.get(i)._getX() + _x_ - old_value);
+                parts.get(i).no_draw = false;
+            }
         }
         forceRepaint();
     }
@@ -1536,6 +1541,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     children.get(i).setY(children.get(i)._getY() + _y_ - old_value);
                     children.get(i).no_draw = false;
                 }
+            }
+            for (int i = 0; i < parts.size(); i++) {
+                parts.get(i).no_draw = true;
+                parts.get(i).setY(parts.get(i)._getY() + _y_ - old_value);
+                parts.get(i).no_draw = false;
             }
         }
         forceRepaint();
