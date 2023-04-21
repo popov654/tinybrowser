@@ -789,6 +789,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         clip_area = new Area(new Rectangle.Double(-(_x_ - scroll_x), -(_y_ - scroll_y), document.width, document.height));
 
+        Block block = this;
+        boolean is_list = false;
+
+        while (block != null) {
+            if (block.parent != null && block.parent.inputType == Input.SELECT && block == block.parent.children.get(1) && block.parent.inputListSize == 0) {
+                Rectangle rect = ((javax.swing.JFrame)SwingUtilities.getWindowAncestor(document)).getContentPane().getBounds();
+                clip_area = new Area(new Rectangle.Double(-(_x_ - scroll_x) - document.getBounds().x, -(_y_ - scroll_y) - document.getBounds().y, rect.width, rect.height));
+                is_list = true;
+                break;
+            }
+            block = block.parent;
+        }
+
         if (isPartlyHidden()) {
 
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -811,7 +824,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                 adjustCorners(arcs, last_block);
 
-                clip_area.intersect(new Area(new RoundedRect(xc, yc, wc, hc, arcs[0], arcs[1], arcs[2], arcs[3])));
+                if (b.parent != null || !is_list) {
+                    clip_area.intersect(new Area(new RoundedRect(xc, yc, wc, hc, arcs[0], arcs[1], arcs[2], arcs[3])));
+                }
 
                 b = b.parent;
 
