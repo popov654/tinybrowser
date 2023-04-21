@@ -8637,10 +8637,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int i = blocks.length-1; i >= 0; i--) {
                 Block b = blocks[i].original != null ? blocks[i].original : blocks[i];
                 if (children.contains(b)) {
-                    //MouseEvent evt = new MouseEvent((Block)d, 0, 0, 0, e.getX() - b._x_, e.getY() - b._y_, 1, false);
                     blocks[i].mouseClicked(e);
                 }
-                if (e.isConsumed()) break;
+                if (e.isConsumed()) return;
             }
         }
 
@@ -8648,6 +8647,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int i = 0; i < afterPseudoElement.parts.size(); i++) {
                 afterPseudoElement.parts.get(i).mouseClicked(e);
             }
+        }
+
+        if (this == document.root && Block.openPopup != null) {
+            if (Block.openPopup.parent != null && Block.openPopup.parent.inputType == Input.SELECT) {
+                Block b = Block.openPopup.parent.children.get(0);
+                MouseEvent evt = new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false);
+                Block.openPopup.parent.children.get(0).mouseClicked(evt);
+            } else {
+                Block.openPopup.setDisplayType(Display.NONE);
+            }
+            Block.openPopup = null;
         }
 
         boolean isSVG = getComponents().length == 1 && getComponents()[0] instanceof JSVGCanvas;
@@ -8687,8 +8697,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 parent.inputMultipleSelection = false;
                 if (parent.children.get(1).display_type == Display.NONE) {
                     parent.children.get(1).display_type = Display.BLOCK;
+                    Block.openPopup = parent.children.get(1);
                 } else {
                     parent.children.get(1).display_type = Display.NONE;
+                    Block.openPopup = null;
                 }
                 
                 parent.performLayout();
@@ -9667,6 +9679,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public HashMap<String, TransitionInfo> transitions = new HashMap<String, TransitionInfo>();
     public volatile Vector<Transition> activeTransitions = new Vector<Transition>();
+
+    public static Block openPopup;
 
     public boolean rtl = false;
 
