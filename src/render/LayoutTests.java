@@ -707,6 +707,7 @@ public class LayoutTests extends JFrame {
         d05.setHeight(18);
         d05.setMargins(7, 0, 2);
         d05.setPaddings(3, 1);
+        d05.setFontSize(12);
         d05.inputType = Block.Input.FILE;
         d05.inputName = "attachment";
 
@@ -759,7 +760,7 @@ public class LayoutTests extends JFrame {
 
             Block label = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
             label.display_type = Block.Display.INLINE;
-            label.fontSize = 16;
+            label.setFontSize(11);
             label.addText(labels[i-1]);
             item.addElement(label, true);
 
