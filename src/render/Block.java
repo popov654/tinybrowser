@@ -5180,6 +5180,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setMinWidth(int w) {
+        w = (int) (w * ratio);
+        min_width = w;
+        if (width < w) {
+            setWidth(w);
+        }
+    }
+
+    public void setMinHeight(int h) {
+        min_height = h;
+        if (height < h) {
+            setHeight(h);
+        }
+    }
+
     public void setMaxWidthPercentage(double value) {
         max_width_percent = value;
         if (!(parent.auto_width && parent.display_type == Display.INLINE_BLOCK)) {
@@ -5191,6 +5206,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         max_height_percent = value;
         if (!parent.auto_height) {
             max_height = (int) Math.round((parent.viewport_height - parent.borderWidth[0] - parent.borderWidth[2] - parent.paddings[0] - parent.paddings[2]) * (double) max_width_percent / 100);
+        }
+    }
+
+    public void setMinWidthPercentage(double value) {
+        min_width_percent = value;
+        if (!(parent.auto_width && parent.display_type == Display.INLINE_BLOCK)) {
+            min_width = (int) Math.round((parent.viewport_width - parent.borderWidth[3] - parent.borderWidth[1] - parent.paddings[3] - parent.paddings[1]) * (double) min_width_percent / 100);
+        }
+    }
+
+    public void setMinHeightPercentage(double value) {
+        min_height_percent = value;
+        if (!parent.auto_height) {
+            min_height = (int) Math.round((parent.viewport_height - parent.borderWidth[0] - parent.borderWidth[2] - parent.paddings[0] - parent.paddings[2]) * (double) min_width_percent / 100);
         }
     }
 
@@ -8063,6 +8092,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public double max_width_percent = -1;
     public double max_height_percent = -1;
+
+    public double min_width_percent = -1;
+    public double min_height_percent = -1;
 
     public int width;
     public int height;
