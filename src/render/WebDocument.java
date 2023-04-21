@@ -715,6 +715,9 @@ public class WebDocument extends JPanel {
     public double forced_dpi = 0;
     public double zoom = 1f;
 
+    public Color inputBackgroundColor = Color.WHITE;
+    public Color buttonBackgroundColor = new Color(219, 223, 227);
+
     public String selected_text;
     public static boolean scale_borders = true;
     public int borderSize = 0;

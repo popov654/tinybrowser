@@ -1913,6 +1913,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         };
 
         if (inputType >= Input.TEXT && inputType <= Input.BUTTON) {
+            if (inputType != Input.BUTTON && (background == null || background.bgcolor == null && background.gradient == null && background.bgImage == null)) {
+                if (background == null) background = new Background();
+                background.bgcolor = inputType != Input.BUTTON ? document.inputBackgroundColor : document.buttonBackgroundColor;
+            }
             if (getComponents().length > 0 && getComponents()[0] instanceof JButton && children.size() > 0) {
                 children.get(0).textContent = ((JButton)this.getComponents()[0]).getText();
             }
