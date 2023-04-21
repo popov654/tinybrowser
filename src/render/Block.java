@@ -2460,6 +2460,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             list.children.get(i).checked = (i != index + 1);
             list.children.get(i).setBackgroundColor(list.children.get(i).checked ? selection_color : null);
         }
+        updateFormEntry();
     }
 
     public void updateFormEntry() {
