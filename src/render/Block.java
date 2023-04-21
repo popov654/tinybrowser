@@ -1984,7 +1984,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             tf.setForeground(color);
             btn.setForeground(color);
-            btn.setContentAreaFilled(false);
+            if (!document.use_native_inputs) {
+                btn.setContentAreaFilled(false);
+            }
             if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
                    (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||
                    background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || inputType == 3 && background.bgcolor.getAlpha() > 0)) {
@@ -2387,6 +2389,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             createButton(btn, " ");
             btn.id = "btn";
             header.addElement(btn);
+            if (document.use_native_inputs) {
+                ((JButton)btn.getComponent(0)).setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/triangle.png")));
+            }
             btn.setPositioning(Position.ABSOLUTE);
             btn.setRight(0, Units.px);
             btn.setTop(-1, Units.px);
@@ -2537,6 +2542,37 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
         formEntry = new FormEntry(inputName, inputValue);
+    }
+
+    private static Block createButton(final Block b, String label, JButton btn) {
+        if (label == null) {
+            label = btn.getText();
+        }
+        btn.setText(label);
+        btn.setFont(new Font(b.fontFamily, Font.PLAIN, b.fontSize));
+        int width = b.getFontMetrics(btn.getFont()).stringWidth(label) + 16;
+        btn.setPreferredSize(new Dimension(b.width, b.height));
+
+        b.width = b.viewport_width = width;
+        //b.height = b.viewport_height = height;
+        b.auto_width = false;
+        b._x_ = b._x_ + b.width - width;
+        //b._y_ = _y_;
+
+        b.setBorderColor(new Color(118, 118, 123));
+        b.setScaleBorder(false);
+        b.setBorderWidth(1);
+        b.setBorderRadius(2);
+
+        b.add(btn);
+        btn.setFocusPainted(false);
+        if (!b.document.use_native_inputs) {
+            btn.setOpaque(false);
+            btn.setContentAreaFilled(false);
+        }
+        b.insertButton(btn);
+
+        return b;
     }
 
     private static Block createButton(final Block b, String label) {
