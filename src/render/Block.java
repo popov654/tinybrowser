@@ -2355,7 +2355,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         if (list.background == null || list.background.bgcolor == null) {
             list.background = new Background();
-            list.background.bgcolor = Color.WHITE;
+            list.background.bgcolor = document.inputBackgroundColor;
         }
 
         if (list.background.bgcolor.getAlpha() < 245) {
@@ -4468,7 +4468,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 JLabel label = c.glyph;
 
                 if (label != null) {
-                    label.setForeground(Color.WHITE);
+                    label.setForeground(selection_text_color);
                     if (!text_italic) {
                         label.setBackground(sel_color);
                         label.setOpaque(true);
@@ -7971,8 +7971,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public int letter_spacing = 0;
     public int word_spacing = 0;
-    private Color selection_color = new Color(0, 0, 196, 186);
-    private Color selection_inactive_color = new Color(120, 120, 120, 186);
+    public Color selection_color = new Color(0, 0, 196, 186);
+    public Color selection_inactive_color = new Color(120, 120, 120, 186);
+    public Color selection_text_color = Color.WHITE;
     private int[] sel = null;
     private volatile int from_x = -1;
     private volatile int from_y = -1;
@@ -8719,7 +8720,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         Block item = children.get(i);
                         item.checked = item.isMouseInside(e.getX(), e.getY());
                         item.setBackgroundColor(item.checked ? selection_color : null);
-                        item.setTextColorRecursive(item.checked ? Color.WHITE : color);
+                        item.setTextColorRecursive(item.checked ? selection_text_color : color);
                         if (!item.checked) {
                             item.forceRepaint();
                         }
@@ -8730,7 +8731,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         if (item.isMouseInside(e.getX(), e.getY())) {
                             item.checked = !item.checked;
                             item.setBackgroundColor(item.checked ? selection_color : null);
-                            item.setTextColorRecursive(item.checked ? Color.WHITE : color);
+                            item.setTextColorRecursive(item.checked ? selection_text_color : color);
                             if (!item.checked) {
                                 item.forceRepaint();
                             }
@@ -8891,7 +8892,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     int i1 = i;
                     while (i1 >= 0 && ((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) {
                         ((JLabel)text_layer.getComponents()[i1]).setBackground(sel_color);
-                        ((JLabel)text_layer.getComponents()[i1]).setForeground(Color.WHITE);
+                        ((JLabel)text_layer.getComponents()[i1]).setForeground(selection_text_color);
                         ((JLabel)text_layer.getComponents()[i1]).setOpaque(true);
                         i1--;
                     }
@@ -8901,7 +8902,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     int i2 = i;
                     while (i2 <= text_layer.getComponents().length-1 && ((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) {
                         ((JLabel)text_layer.getComponents()[i2]).setBackground(sel_color);
-                        ((JLabel)text_layer.getComponents()[i2]).setForeground(Color.WHITE);
+                        ((JLabel)text_layer.getComponents()[i2]).setForeground(selection_text_color);
                         ((JLabel)text_layer.getComponents()[i2]).setOpaque(true);
                         i2++;
                     }
@@ -9146,13 +9147,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Color sel_color = WebDocument.active_document == document ? this.selection_color : this.selection_inactive_color;
         if (c.glyph == null) {
             c.setBackground(sel_color);
-            c.setColor(Color.WHITE);
+            c.setColor(selection_text_color);
             return;
         }
         if (!c.glyph.isOpaque()) {
             //System.out.println("Selected line element '" + c.getText() + "'");
             c.glyph.setOpaque(true);
-            c.glyph.setForeground(Color.WHITE);
+            c.glyph.setForeground(selection_text_color);
             c.glyph.setBackground(sel_color);
         }
     }
@@ -9557,9 +9558,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 parent == parent.parent.children.get(1) && parent.parent.inputListSize == 0) {
             for (int i = 0; i < parent.children.size(); i++) {
                 if (parent.children.get(i) == this) {
-                    if (color != Color.WHITE) parent.children.get(i).initialColor = color;
+                    if (color != selection_text_color) parent.children.get(i).initialColor = color;
                     parent.children.get(i).setBackgroundColor(selection_color);
-                    parent.children.get(i).setTextColorRecursive(Color.WHITE);
+                    parent.children.get(i).setTextColorRecursive(selection_text_color);
                 } else {
                     parent.children.get(i).setBackgroundColor(new Color(0, 0, 0, 0));
                     parent.children.get(i).setTextColorRecursive(initialColor);
