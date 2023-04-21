@@ -2011,6 +2011,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     @Override
                     public void paintComponent(Graphics g) {
                         if (instance.document.use_native_inputs) {
+                            Graphics2D g2d = (Graphics2D) g;
+                            g2d.setTransform(AffineTransform.getTranslateInstance(-3 * ratio, 0));
+                            
                             super.paintComponent(g);
                             return;
                         }
@@ -2051,6 +2054,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     @Override
                     public void paintComponent(Graphics g) {
                         if (instance.document.use_native_inputs) {
+                            Graphics2D g2d = (Graphics2D) g;
+                            g2d.setTransform(AffineTransform.getTranslateInstance(-3 * ratio, 0));
+
                             super.paintComponent(g);
                             return;
                         }
