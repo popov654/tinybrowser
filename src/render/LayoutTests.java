@@ -750,6 +750,7 @@ public class LayoutTests extends JFrame {
             Block item = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
             item.setPaddings(2, 1);
             item.altText = labels[i-1];
+            item.inputValue = labels[i-1].toLowerCase();
             Block pic = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
             pic.isImage = true;
             pic.display_type = Block.Display.INLINE;
@@ -769,6 +770,22 @@ public class LayoutTests extends JFrame {
 
         d06.inputUseOnlyTextInHeader = true;
         d06.createInputList("list", list, 0);
+
+        Block d07 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d07.setBorderColor(new Color(108, 108, 113));
+        d07.setBackgroundColor(new Color(209, 217, 213, 160));
+        d07.setScaleBorder(false);
+        d07.setBorderWidth(1);
+        d07.setBorderRadius(2);
+        d07.setMargins(8, 0, 10);
+        d07.inputType = Block.Input.NUMBER;
+        d07.setWidthHeight(30, 20);
+        d07.setFontSize(12);
+        d07.inputValue = "1";
+        d07.inputName = "quantity";
+
+        //d07.text_italic = true;
+        b.addElement(d07, true);
 
         //d06.createInputList("list", new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }, new String[] { "1", "2", "3", "4" }, 0);
         d06.inputMultipleSelection = true;

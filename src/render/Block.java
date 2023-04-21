@@ -69,9 +69,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
+import javax.swing.JSpinner;
+import javax.swing.JSpinner.NumberEditor;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
@@ -510,7 +513,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 c[i].repaint();
                 continue;
             }
-            if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JLabel) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox))) continue;
+            if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JLabel) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox) && !(c[i] instanceof JSpinner))) continue;
             if (inputType < Input.BUTTON) {
                 c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
             } else if (inputType == Input.BUTTON) {
@@ -525,6 +528,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     c[i].setBounds(_x_ + width - scroll_x - c[i].getWidth(), _y_ - scroll_y, c[i].getWidth(), height);
                 }
                 c[i].repaint();
+            } else if (c[i] instanceof JSpinner && inputType == Input.NUMBER) {
+                c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ - scroll_y, c[i].getWidth(), height);
             }
         }
         if (scrollbar_x != null && parent != null) {
@@ -1929,10 +1934,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 children.get(0).setTextColor(new Color(0, 0, 0, 0));
                 children.get(0).textContent = "";
             }
+            
+            int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+            Font font = new Font(fontFamily, style, fontSize);
+
             tf.setPreferredSize(new Dimension(width, height));
             btn.setPreferredSize(new Dimension(width, height));
-            tf.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
-            btn.setFont(new Font(fontFamily, Font.PLAIN, fontSize));
+            tf.setFont(font);
+            btn.setFont(font);
 
             if (inputType < Input.BUTTON) {
                 add(tf);
@@ -2183,7 +2192,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             label.setTop(2, Units.px);
             label.width = label.viewport_width = width - btn.width - 6;
             label.height = label.viewport_height = height;
-            label.fontSize = (int) Math.round(12 * ratio);
+            label.fontSize = fontSize;
             label.setWhiteSpace(WhiteSpace.NO_WRAP);
             label.setOverflow(Overflow.HIDDEN);
             label.setTextOverflow(TextOverflow.ELLIPSIS);
@@ -2227,6 +2236,133 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             //label.setBounds(_x_ + 2, _y_ + 2, width - btn.width - 10, label.getPreferredSize().height);
             //label.text_layer.setBounds(_x_, _y_, width, height);
             if (width < btn.width) width = viewport_width = btn.width;
+        }
+        if (inputType == Input.NUMBER) {
+            boolean ready = document.ready;
+            document.ready = false;
+            removeAllElements();
+
+            if (document.use_native_inputs) {
+                JSpinner spinner = new JSpinner();
+                add(spinner);
+                spinner.setBounds(_x_ - parent.scroll_x, _y_ - parent.scroll_y, width, height);
+                int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+                Font font = new Font(fontFamily, style, fontSize);
+                spinner.setFont(font);
+                if (background != null && background.bgcolor != null) {
+                    ((NumberEditor)spinner.getEditor()).getTextField().setBackground(background.bgcolor);
+                }
+                ((NumberEditor)spinner.getEditor()).getTextField().setHorizontalAlignment(JTextField.CENTER);
+                ((NumberEditor)spinner.getEditor()).getTextField().setFont(font);
+                ((NumberEditor)spinner.getEditor()).getTextField().setForeground(color);
+                if (!inputValue.isEmpty()) {
+                    try {
+                        spinner.getModel().setValue(Integer.parseInt(inputValue));
+                    } catch (NumberFormatException e) {
+                        inputValue = "0";
+                    }
+                }
+
+                updateFormEntry();
+
+                return true;
+            }
+
+            int value = 0;
+
+            final Block label = new Block(document);
+
+            final Block btn_inc = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
+                @Override
+                public void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+                    BasicStroke pen = new BasicStroke(2.18f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+                    g2d.setStroke(pen);
+                    g2d.setColor(new Color(103, 113, 126));
+                    g2d.drawLine(_x_ - scroll_x + width / 2 - 4, _y_- scroll_y + height / 2 + 2, _x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 - 2);
+                    g2d.setColor(new Color(104, 111, 126));
+                    g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 - 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 + 2);
+                }
+            };
+            btn_inc.width = btn_inc.viewport_width = 20;
+            btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
+
+            final Block btn_dec = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
+                @Override
+                public void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+                    BasicStroke pen = new BasicStroke(2f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+                    g2d.setStroke(pen);
+                    g2d.setColor(new Color(103, 113, 126));
+                    g2d.drawLine(_x_ - scroll_x + width / 2 - 4, _y_- scroll_y + height / 2 - 2, _x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 + 2);
+                    g2d.setColor(new Color(104, 111, 126));
+                    g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 + 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 - 2);
+                }
+            };
+            btn_dec.width = btn_dec.viewport_width = 20;
+            btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
+
+            createButton(btn_inc, "");
+            createButton(btn_dec, "");
+            btn_inc.width = btn_inc.viewport_width = 20;
+            btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
+            btn_dec.width = btn_dec.viewport_width = 20;
+            btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
+
+            JButton button_inc = (JButton) btn_inc.getComponent(0);
+            JButton button_dec = (JButton) btn_dec.getComponent(0);
+
+            button_inc.setText("");
+            button_inc.setPreferredSize(new Dimension(btn_inc.width, btn_inc.height));
+
+            button_dec.setText("");
+            button_dec.setPreferredSize(new Dimension(btn_dec.width, btn_dec.height));
+
+            addElement(label, true);
+
+            if (!inputValue.isEmpty()) {
+                try {
+                    value = Integer.parseInt(inputValue);
+                } catch (NumberFormatException e) {}
+            }
+
+            updateFormEntry();
+
+            label.addText(value + "");
+
+            label.setPositioning(Position.ABSOLUTE);
+            label.setLeft(2, Units.px);
+            label.setTop(2, Units.px);
+            label.width = label.viewport_width = width - btn_inc.width - 6;
+            label.height = label.viewport_height = height;
+            label.fontSize = fontSize;
+            label.setTextAlign(Block.TextAlign.ALIGN_CENTER);
+            label.setWhiteSpace(WhiteSpace.NO_WRAP);
+            label.setOverflow(Overflow.HIDDEN);
+            label.setTextOverflow(TextOverflow.ELLIPSIS);
+
+            addElement(btn_inc, true);
+            addElement(btn_dec, true);
+
+            btn_inc.setPositioning(Position.ABSOLUTE);
+            btn_inc.setRight((double) borderWidth[1] / ratio, Units.px);
+            btn_inc.setTop(0, Units.px);
+
+            btn_dec.setPositioning(Position.ABSOLUTE);
+            btn_dec.setRight((double) borderWidth[1] / ratio, Units.px);
+            btn_dec.setBottom(1, Units.px);
+
+            document.ready = ready;
+
+            label.performLayout();
+            label.forceRepaint();
+
         }
         if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
 
@@ -2391,7 +2527,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             };
             btn.height = btn.viewport_height = height;
             createButton(btn, " ");
-            btn.id = "btn";
             header.addElement(btn);
             if (document.use_native_inputs) {
                 ((JButton)btn.getComponent(0)).setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/triangle.png")));
@@ -2646,6 +2781,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             public void mouseClicked(MouseEvent e) {
                 Block b = (Block) ((Component)e.getSource()).getParent();
                 document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
+                if (b.parent != null && b.parent.inputType == Input.NUMBER) {
+                    if (b == b.parent.children.get(1)) {
+                        b.parent.increaseNumberInputValue();
+                    } else {
+                        b.parent.decreaseNumberInputValue();
+                    }
+                }
             }
 
             @Override
@@ -2741,6 +2883,33 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         });
         btn.getModel().setRollover(false);
+    }
+
+    public void adjustNumberInputValue(boolean up) {
+        if (inputType != Input.NUMBER || inputNumberStep <= 0) return;
+        try {
+            double value = Double.parseDouble(inputValue);
+            value += inputNumberStep * (up ? 1 : -1);
+            if (value < inputNumberMin) value = inputNumberMin;
+            if (value > inputNumberMax) value = inputNumberMax;
+            String str = Double.toString(value);
+            if (inputNumberStep == (int) Math.floor(inputNumberStep) && value == (int) Math.floor(value)) {
+                str = Integer.toString((int)Math.round(value));
+            }
+            inputValue = str;
+            children.get(0).children.get(0).textContent = str;
+            children.get(0).performLayout();
+            children.get(0).forceRepaint();
+            updateFormEntry();
+        } catch (NumberFormatException e) {}
+    }
+
+    public void increaseNumberInputValue() {
+        adjustNumberInputValue(true);
+    }
+
+    public void decreaseNumberInputValue() {
+        adjustNumberInputValue(false);
     }
 
     public void saveSelectionRange() {
@@ -7995,6 +8164,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int CHECKBOX = 5;
         public static final int SELECT = 6;
         public static final int FILE = 7;
+        public static final int NUMBER = 8;
     }
 
     public static class ButtonType {
@@ -8189,6 +8359,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public String defaultInputValue = "";
     public FormEntry formEntry;
     public Block labelFor;
+
+    public double inputNumberStep = 1;
+    public double inputNumberMin = 0;
+    public double inputNumberMax = Double.MAX_VALUE;
 
     public String altText;
 
