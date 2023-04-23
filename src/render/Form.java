@@ -18,23 +18,37 @@ public class Form {
     }
 
     public void submit() {
-        if (block.node != null) {
-            block.node.fireEvent("submit", "render");
-            if (block.node.defaultPrevented) {
-                block.node.defaultPrevented = false;
-                return;
-            }
-        }
-        Vector<FormEntry> params = new Vector<FormEntry>();
-        for (Block input: inputs) {
-            if (input.formEntry == null) continue;
-            params.add(input.formEntry);
-        }
-        String response = Request.makeRequest(url, method, params, "cp1251", true, multipart);
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                if (block.node != null) {
+                    block.node.fireEvent("beforesubmit", "render");
+                    if (block.node.defaultPrevented) {
+                        block.node.defaultPrevented = false;
+                        return;
+                    }
+                }
+                Vector<FormEntry> params = new Vector<FormEntry>();
+                for (Block input: inputs) {
+                    if (input.formEntry == null) continue;
+                    params.add(input.formEntry);
+                }
+                String response = Request.makeRequest(url, method, params, "cp1251", true, multipart);
 
-        if (block.document.debug) {
-            System.out.println("Response:\n\n" + response);
-        }
+                if (block.document.debug) {
+                    System.out.println("Response:\n\n" + response);
+                }
+
+                if (block.node != null) {
+                    block.node.fireEvent("submit", "render");
+                    if (block.node.defaultPrevented) {
+                        block.node.defaultPrevented = false;
+                        return;
+                    }
+                }
+            }
+        };
+        t.start();
     }
 
     public void reset() {
