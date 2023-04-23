@@ -781,6 +781,8 @@ public class LayoutTests extends JFrame {
         d07.inputType = Block.Input.NUMBER;
         d07.setWidthHeight(30, 20);
         d07.setFontSize(12);
+        d07.setDisplayType(Block.Display.INLINE_BLOCK);
+        d07.auto_width = true;
         d07.inputValue = "1";
         d07.inputName = "quantity";
 

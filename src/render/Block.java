@@ -5507,7 +5507,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
-        if (w < 0) {
+        if (w < 0 && inputType == Input.NONE) {
             if (parent != null) {
                 boolean is_flex = parent.display_type == Block.Display.FLEX || parent.display_type == Block.Display.INLINE_FLEX;
                 boolean x_axis = parent.flex_direction == Block.Direction.ROW || parent.flex_direction == Block.Direction.ROW_REVERSED;
@@ -5529,7 +5529,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             //content_x_max = width;
             auto_width = true;
             rules_for_recalc.put("width", "auto");
-        } else {
+        } else if (w >= 0) {
             width = (int)Math.round(w*ratio);
             orig_width = w;
             if (max_width > -1 && width > max_width) {
@@ -5721,7 +5721,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block last = this;
 
         if (layouter != null || parts.size() > 0 && parts.get(0).layouter != null) {
-            boolean use_fast_update = display_type != Display.FLEX && display_type != Display.INLINE_FLEX && document.fast_update;
+            boolean use_fast_update = display_type != Display.FLEX && display_type != Display.INLINE_FLEX && inputType == Input.NONE && document.fast_update;
             document.no_layout = use_fast_update;
             performLayout(use_fast_update);
             if (viewport_height != old_height && background != null && background.bgImage != null) {

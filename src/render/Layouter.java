@@ -592,7 +592,7 @@ public class Layouter {
                     }
                     d.performLayout();
                 }
-                if (x_axis && d.auto_width && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
+                if (x_axis && d.auto_width && d.inputType == Block.Input.NONE && d.lines.size() == 1 && d.lines.get(0).cur_pos < d.lines.get(0).getWidth()) {
                     int line_width = d.lines.get(0).cur_pos;
                     d.lines.get(0).setWidth(line_width);
                     d.width = d.borderWidth[3] + d.paddings[3] + line_width + d.paddings[1] + d.borderWidth[1];
