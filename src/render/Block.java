@@ -2340,7 +2340,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 - 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 + 2);
             }
         };
-        btn_inc.width = btn_inc.viewport_width = 20;
+        btn_inc.width = btn_inc.viewport_width = button_size;
         btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
 
         final Block btn_dec = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
@@ -2358,12 +2358,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 + 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 - 2);
             }
         };
-        btn_dec.width = btn_dec.viewport_width = 20;
+        btn_dec.width = btn_dec.viewport_width = button_size;
         btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
 
         createButton(btn_inc, "");
         createButton(btn_dec, "");
-        btn_inc.width = btn_inc.viewport_width = 20;
+        btn_inc.width = btn_inc.viewport_width = button_size;
         btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
         btn_dec.width = btn_dec.viewport_width = 20;
         btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
