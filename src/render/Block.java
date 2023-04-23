@@ -528,8 +528,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     c[i].setBounds(_x_ + width - scroll_x - c[i].getWidth(), _y_ - scroll_y, c[i].getWidth(), height);
                 }
                 c[i].repaint();
-            } else if (c[i] instanceof JSpinner && inputType == Input.NUMBER) {
-                c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ - scroll_y, c[i].getWidth(), height);
+            } else if (inputType == Input.NUMBER) {
+                if (c[i] instanceof JSpinner) {
+                    c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ - scroll_y, c[i].getWidth(), height);
+                } else {
+                    c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x + 2, _y_ - scroll_y, c[i].getWidth(), height);
+                }
             }
         }
         if (scrollbar_x != null && parent != null) {
@@ -1899,7 +1903,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean processInput() {
         if (inputType == Input.NONE || inputType == Input.SELECT) return false;
-        if (!inputReady) createInput();
+        if (!inputReady) {
+            createInput();
+        } else {
+            return false;
+        }
         
         return true;
     }
@@ -1936,7 +1944,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             createFileInput();
         }
         if (inputType == Input.NUMBER) {
-            createNumberInput();
+            createNumberInput(fl);
         }
         if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
 
@@ -1956,7 +1964,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         removeAll();
         
-        final JTextComponent tf = inputType == Input.TEXT ? new JTextField() : new JTextArea();
+        final JTextComponent tf = inputType != Input.TEXTAREA ? new JTextField() : new JTextArea();
         if (children.size() > 0 && children.get(0).textContent != null) {
             tf.setText(children.get(0).textContent);
             children.get(0).setTextColor(new Color(0, 0, 0, 0));
@@ -1976,7 +1984,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Block parent = ((Block)tf.getParent());
                 if (parent.node != null) {
                     parent.fireEventForNode(e, parent.node, null, "keyPress");
-
                 }
             }
 
@@ -1991,7 +1998,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             @Override
             public void keyReleased(KeyEvent e) {
                 Block parent = ((Block)tf.getParent());
-                parent.inputValue = tf.getText();
+                String text = ((JTextComponent)e.getSource()).getText();
+                ((JTextComponent)e.getSource()).setText(text.replaceAll("[^0-9.-]", "").replaceAll("(?<=.+)-", "").replaceAll("^\\.", ""));
+                if (parent.inputType == Input.NUMBER && parent.inputNumberMin >= 0) {
+                    if (e.getKeyChar() == '-') {
+                        ((JTextComponent)e.getSource()).setText(text.replace("-", ""));
+                        return;
+                    }
+                }
+
+                double value = parent.inputNumberMin;
+                try {
+                    value = Double.parseDouble(((JTextComponent)e.getSource()).getText());
+                } catch (NumberFormatException ex) {}
+
+                if (inputNumberStep == (int) Math.floor(inputNumberStep) && value == (int) Math.floor(value)) {
+                    text = Integer.toString((int)Math.round(value));
+                }
+
+                parent.inputValue = text;
+
                 parent.updateFormEntry();
                 if (parent.node != null) {
                     parent.fireEventForNode(e, parent.node, null, "keyUp");
@@ -2229,10 +2255,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.ready = false;
         removeAllElements();
 
+        paddings = new int[] {1, 1, 1, 1};
+
         final Block label = new Block(document);
 
         final Block btn = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
-        btn.height = btn.viewport_height = height;
+        btn.setHeight(100, Units.percent);
 
         createButton(btn, "…");
 
@@ -2291,7 +2319,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         inputReady = true;
     }
 
-    public void createNumberInput() {
+    public void createNumberInput(FocusListener fl) {
         boolean ready = document.ready;
         document.ready = false;
         removeAllElements();
@@ -2321,9 +2349,29 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             inputReady = true;
         }
 
-        int value = 0;
+        final int button_size = 20;
 
-        final Block label = new Block(document);
+        createTextInput(fl);
+
+        getComponent(0).setBounds(_x_ - parent.scroll_x + 2, _y_ - parent.scroll_y, width - button_size - 3, height);
+        ((JTextField)getComponent(0)).setHorizontalAlignment(JTextField.CENTER);
+
+        double value = 0;
+        String text = "0";
+
+        try {
+            value = Double.parseDouble(inputValue);
+            text = Double.toString(value);
+        } catch (NumberFormatException e) {
+            value = inputNumberMin;
+            text = Double.toString(value);
+        }
+
+        if (inputNumberStep == (int) Math.floor(inputNumberStep) && value == (int) Math.floor(value)) {
+            text = Integer.toString((int)Math.round(value));
+        }
+
+        ((JTextComponent)getComponent(0)).setText(text);
 
         final Block btn_inc = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
             @Override
@@ -2368,6 +2416,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         btn_dec.width = btn_dec.viewport_width = 20;
         btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
 
+        btn_inc.setProp("height", "calc(50% + 1px)");
+        btn_dec.setProp("height", "calc(50% + 1px)");
+
         JButton button_inc = (JButton) btn_inc.getComponent(0);
         JButton button_dec = (JButton) btn_dec.getComponent(0);
 
@@ -2377,28 +2428,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         button_dec.setText("");
         button_dec.setPreferredSize(new Dimension(btn_dec.width, btn_dec.height));
 
-        addElement(label, true);
-
-        if (!inputValue.isEmpty()) {
-            try {
-                value = Integer.parseInt(inputValue);
-            } catch (NumberFormatException e) {}
-        }
-
         updateFormEntry();
-
-        label.addText(value + "");
-
-        label.setPositioning(Position.ABSOLUTE);
-        label.setLeft(2, Units.px);
-        label.setTop(2, Units.px);
-        label.width = label.viewport_width = width - btn_inc.width - 6;
-        label.height = label.viewport_height = height;
-        label.fontSize = fontSize;
-        label.setTextAlign(Block.TextAlign.ALIGN_CENTER);
-        label.setWhiteSpace(WhiteSpace.NO_WRAP);
-        label.setOverflow(Overflow.HIDDEN);
-        label.setTextOverflow(TextOverflow.ELLIPSIS);
 
         addElement(btn_inc, true);
         addElement(btn_dec, true);
@@ -2409,12 +2439,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         btn_dec.setPositioning(Position.ABSOLUTE);
         btn_dec.setRight((double) borderWidth[1] / ratio, Units.px);
-        btn_dec.setBottom(1, Units.px);
+        btn_dec.setBottom(0, Units.px);
 
         document.ready = ready;
-
-        label.performLayout();
-        label.forceRepaint();
     }
 
     public boolean isObscured() {
@@ -2830,7 +2857,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Block b = (Block) ((Component)e.getSource()).getParent();
                 document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
                 if (b.parent != null && b.parent.inputType == Input.NUMBER) {
-                    if (b == b.parent.children.get(1)) {
+                    if (b == b.parent.children.get(0)) {
                         b.parent.increaseNumberInputValue();
                     } else {
                         b.parent.decreaseNumberInputValue();
@@ -2944,10 +2971,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (inputNumberStep == (int) Math.floor(inputNumberStep) && value == (int) Math.floor(value)) {
                 str = Integer.toString((int)Math.round(value));
             }
+            Component[] c = getComponents();
+            for (int i = 0; i < c.length; i++) {
+                if (c[i] instanceof JTextField) {
+                    ((JTextField)c[i]).setText(str);
+                }
+            }
             inputValue = str;
-            children.get(0).children.get(0).textContent = str;
-            children.get(0).performLayout();
-            children.get(0).forceRepaint();
             updateFormEntry();
         } catch (NumberFormatException e) {}
     }
