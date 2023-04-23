@@ -2007,7 +2007,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 tf.setBorder(null);
                 btn.setOpaque(false);
                 btn.setBorderPainted(false);
-                if (inputType < 3) {
+                if (inputType != Input.BUTTON) {
                     tf.setBounds(_x_ + borderWidth[3] + paddings[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
                 } else {
                     btn.setBounds(_x_ + borderWidth[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
