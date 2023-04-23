@@ -1899,7 +1899,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean processInput() {
         if (inputType == Input.NONE || inputType == Input.SELECT) return false;
+        if (!inputReady) createInput();
+        
+        return true;
+    }
 
+    public boolean createInput() {
+        
         FocusListener fl = new FocusListener() {
 
             @Override
@@ -1917,456 +1923,498 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         };
 
-        if (inputType >= Input.TEXT && inputType <= Input.BUTTON) {
-            if (inputType != Input.BUTTON && (background == null || background.bgcolor == null && background.gradient == null && background.bgImage == null)) {
-                if (background == null) background = new Background();
-                background.bgcolor = inputType != Input.BUTTON ? document.inputBackgroundColor : document.buttonBackgroundColor;
-            }
-            if (getComponents().length > 0 && getComponents()[0] instanceof JButton && children.size() > 0) {
-                children.get(0).textContent = ((JButton)this.getComponents()[0]).getText();
-            }
-            removeAll();
-            final JTextComponent tf = inputType == Input.TEXT ? new JTextField() : new JTextArea();
-            final JButton btn = new JButton();
-            if (children.size() > 0 && children.get(0).textContent != null) {
-                tf.setText(children.get(0).textContent);
-                btn.setText(children.get(0).textContent);
-                children.get(0).setTextColor(new Color(0, 0, 0, 0));
-                children.get(0).textContent = "";
-            }
-            
-            int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
-            Font font = new Font(fontFamily, style, fontSize);
-
-            tf.setPreferredSize(new Dimension(width, height));
-            btn.setPreferredSize(new Dimension(width, height));
-            tf.setFont(font);
-            btn.setFont(font);
-
-            if (inputType < Input.BUTTON) {
-                add(tf);
-                tf.addKeyListener(new KeyListener() {
-                    @Override
-                    public void keyTyped(KeyEvent e) {
-                        Block parent = ((Block)tf.getParent());
-                        if (parent.node != null) {
-                            parent.fireEventForNode(e, parent.node, null, "keyPress");
-                            
-                        }
-                    }
-
-                    @Override
-                    public void keyPressed(KeyEvent e) {
-                        Block parent = ((Block)tf.getParent());
-                        if (parent.node != null) {
-                            parent.fireEventForNode(e, parent.node, null, "keyDown");
-                        }
-                    }
-
-                    @Override
-                    public void keyReleased(KeyEvent e) {
-                        Block parent = ((Block)tf.getParent());
-                        parent.inputValue = tf.getText();
-                        parent.updateFormEntry();
-                        if (parent.node != null) {
-                            parent.fireEventForNode(e, parent.node, null, "keyUp");
-                            parent.fireEventForNode(e, parent.node, null, "input");
-                        }
-                    }
-                });
-                tf.setText(inputValue);
-                if (this == document.focused_block) {
-                    tf.requestFocus();
-                }
-                tf.setBounds(_x_, _y_, width, height);
-                tf.addMouseListener(this);
-            } else {
-                add(btn);
-                btn.setFocusPainted(false);
-                insertButton(btn);
-            }
-
-            tf.addFocusListener(fl);
-            btn.addFocusListener(fl);
-
-            tf.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
-            btn.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
-            if (background != null && background.bgcolor != null) {
-                tf.setBackground(background.bgcolor);
-                btn.setBackground(background.bgcolor);
-            }
-            tf.setForeground(color);
-            btn.setForeground(color);
-            if (!document.use_native_inputs) {
-                btn.setContentAreaFilled(false);
-            }
-            if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
-                   (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||
-                   background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || inputType == 3 && background.bgcolor.getAlpha() > 0)) {
-                tf.setOpaque(false);
-                tf.setBorder(null);
-                btn.setOpaque(false);
-                btn.setBorderPainted(false);
-                if (inputType != Input.BUTTON) {
-                    tf.setBounds(_x_ + borderWidth[3] + paddings[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
-                } else {
-                    btn.setBounds(_x_ + borderWidth[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
-                }
-            }
+        if (inputType == Input.TEXT || inputType == Input.TEXTAREA) {
+            createTextInput(fl);
         }
-        if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
-            boolean ready = document.ready;
-            document.ready = false;
-            removeAllElements();
-            document.ready = ready;
-            final Block instance = this;
-            final JToggleButton rb;
-            if (inputType == Input.RADIO) {
-                rb = new JRadioButton() {
-                    @Override
-                    public void paintComponent(Graphics g) {
-                        if (instance.document.use_native_inputs) {
-                            Graphics2D g2d = (Graphics2D) g;
-                            g2d.setTransform(AffineTransform.getTranslateInstance(-3 * ratio, 0));
-                            
-                            super.paintComponent(g);
-                            return;
-                        }
+        else if (inputType == Input.BUTTON) {
+            createButtonInput(fl);
+        }
+        else if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
+            createRadioOrCheckboxInput(fl);
+        }
+        else if (inputType == Input.FILE) {
+            createFileInput();
+        }
+        if (inputType == Input.NUMBER) {
+            createNumberInput();
+        }
+        if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
 
-                        int size = (int) Math.round(12 * ratio);
-                        //Graphics2D g2d = (Graphics2D) g;
-                        instance.clearBuffer();
-                        Graphics2D g2d = (Graphics2D) instance.buffer.getGraphics();
+        inputReady = true;
 
-                        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                        g2d.setColor(new Color(13, 13, 13, 18));
-                        int x0 = Math.max(0, (int)((getWidth() - size) / 2) - 2);
-                        int y0 = Math.max(0, (int)((getHeight() - size) / 2) - 2);
-                        g2d.drawOval(x0, y0, size, size);
-                        g2d.setColor(new Color(13, 13, 13, 48));
-                        g2d.drawOval(x0 + 1, y0 + 1, size - 2, size - 2);
-                        g2d.setColor(new Color(45, 47, 58, 153));
-                        g2d.setStroke(new BasicStroke(1));
-                        g2d.drawOval(x0 + 2, y0 + 2, size - 4, size - 4);
-                        Color col = instance.background != null && instance.background.bgcolor != null ? instance.background.bgcolor : new Color(245, 245, 245);
-                        g2d.setColor(col);
-                        g2d.fillOval(x0 + 3, y0 + 3, size - 6, size - 6);
+        return true;
+    }
 
-                        if (this.getModel().isSelected()) {
-                            g2d.setColor(new Color(45, 47, 58, 153));
-                            g2d.fillOval(x0 + 5, y0 + 5, size - 9, size - 9);
-                            g2d.setColor(new Color(83, 97, 115, 203));
-                            g2d.fillOval(x0 + 6, y0 + 6, size - 11, size - 11);
-                            g2d.setColor(new Color(183, 187, 195, 47));
-                            g2d.fillOval(x0 + 7, y0 + 7, 2, 2);
-                            g2d.setColor(new Color(183, 187, 195, 38));
-                            g2d.fillOval(x0 + 9, y0 + 7, 1, 1);
-                        }
-                    }
-                };
-            } else {
-                rb = new JCheckBox() {
-                    @Override
-                    public void paintComponent(Graphics g) {
-                        if (instance.document.use_native_inputs) {
-                            Graphics2D g2d = (Graphics2D) g;
-                            g2d.setTransform(AffineTransform.getTranslateInstance(-3 * ratio, 0));
+    public void createTextInput(FocusListener fl) {
+        if (background == null || background.bgcolor == null && background.gradient == null && background.bgImage == null) {
+            if (background == null) background = new Background();
+            background.bgcolor = document.inputBackgroundColor;
+        }
 
-                            super.paintComponent(g);
-                            return;
-                        }
+        if (getComponents().length > 0 && getComponents()[0] instanceof JButton && children.size() > 0) {
+            children.get(0).textContent = ((JButton)this.getComponents()[0]).getText();
+        }
+        removeAll();
+        
+        final JTextComponent tf = inputType == Input.TEXT ? new JTextField() : new JTextArea();
+        if (children.size() > 0 && children.get(0).textContent != null) {
+            tf.setText(children.get(0).textContent);
+            children.get(0).setTextColor(new Color(0, 0, 0, 0));
+            children.get(0).textContent = "";
+        }
 
-                        int size = (int) Math.round(12 * ratio);
-                        //Graphics2D g2d = (Graphics2D) g;
-                        instance.clearBuffer();
-                        Graphics2D g2d = (Graphics2D) instance.buffer.getGraphics();
+        int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+        Font font = new Font(fontFamily, style, fontSize);
 
-                        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                        //g2d.setColor(new Color(13, 13, 13, 18));
-                        int x0 = Math.max(0, (int)((getWidth() - size) / 2) - 2);
-                        int y0 = Math.max(0, (int)((getHeight() - size) / 2) - 2);
-                        //g2d.drawRoundRect(x0, y0, size, size, 2, 2);
-                        g2d.setColor(new Color(13, 13, 13, 26));
-                        g2d.drawRoundRect(x0 + 1, y0 + 1, size - 2, size - 2, 2, 2);
-                        g2d.setColor(new Color(75, 78, 85, 153));
-                        g2d.setStroke(new BasicStroke(1));
-                        g2d.drawRoundRect(x0 + 2, y0 + 2, size - 4, size - 4, 2, 2);
-                        Color col = instance.background != null && instance.background.bgcolor != null ? instance.background.bgcolor : new Color(245, 245, 245);
-                        g2d.setColor(col);
-                        g2d.fillRoundRect(x0 + 3, y0 + 3, size - 6, size - 6, 2, 2);
+        tf.setPreferredSize(new Dimension(width, height));
+        tf.setFont(font);
 
-                        if (this.getModel().isSelected()) {
-                            g2d.setColor(new Color(65, 67, 78, 23));
-                            g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
-                            g2d.drawLine(x0 + 3, y0 + 8, x0 + 7, y0 + 14);
-                            g2d.drawLine(x0 + 7, y0 + 14, x0 + 14, y0 + 2);
-                            
-                            g2d.setColor(new Color(96, 103, 125));
+        add(tf);
+        tf.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                Block parent = ((Block)tf.getParent());
+                if (parent.node != null) {
+                    parent.fireEventForNode(e, parent.node, null, "keyPress");
 
-                            g2d.setStroke(new BasicStroke(3, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
-                            g2d.drawLine(x0 + 2, y0 + 10, x0 + 6, y0 + 14);
-                            g2d.drawLine(x0 + 6, y0 + 14, x0 + 14, y0 + 3);
-
-                            g2d.setColor(new Color(83, 97, 115, 35));
-                            g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
-                            g2d.drawLine(x0 + 2, y0 + 12, x0 + 6, y0 + 15);
-                            g2d.drawLine(x0 + 6, y0 + 15, x0 + 14, y0 + 4);
-                        }
-                    }
-                };
-            }
-            if (!document.use_native_inputs) rb.setOpaque(false);
-            add(rb);
-            rb.addFocusListener(fl);
-            int size = (int) Math.round(12 * ratio);
-            rb.setPreferredSize(new Dimension(size, size));
-            if (width < rb.getPreferredSize().width) width = viewport_width = rb.getPreferredSize().width;
-            height = viewport_height = rb.getPreferredSize().height;
-            rb.setBounds(_x_ + width / 2 - rb.getPreferredSize().width / 2 - 1, _y_ + height / 2 - rb.getPreferredSize().height / 2, height, height);
-            if (checked || node != null && node.states.contains("checked")) {
-                checked = true;
-                updateFormEntry();
-                if (node != null && !node.states.contains("checked")) {
-                    node.states.add("checked");
-                    node.attributes.put("selected", "");
                 }
-                rb.getModel().setSelected(true);
             }
-            rb.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                Block parent = ((Block)tf.getParent());
+                if (parent.node != null) {
+                    parent.fireEventForNode(e, parent.node, null, "keyDown");
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                Block parent = ((Block)tf.getParent());
+                parent.inputValue = tf.getText();
+                parent.updateFormEntry();
+                if (parent.node != null) {
+                    parent.fireEventForNode(e, parent.node, null, "keyUp");
+                    parent.fireEventForNode(e, parent.node, null, "input");
+                }
+            }
+        });
+        tf.setText(inputValue);
+        if (this == document.focused_block) {
+            tf.requestFocus();
+        }
+        tf.setBounds(_x_ - parent.scroll_x, _y_ - parent.scroll_y, width, height);
+        tf.addMouseListener(this);
+        tf.addFocusListener(fl);
+
+        tf.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
+        if (background != null && background.bgcolor != null) {
+            tf.setBackground(background.bgcolor);
+        }
+        tf.setForeground(color);
+        if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
+               (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||
+               background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || inputType == 3 && background.bgcolor.getAlpha() > 0)) {
+            tf.setOpaque(false);
+            tf.setBorder(null);
+            tf.setBounds(_x_ + borderWidth[3] + paddings[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
+        }
+    }
+
+    public void createButtonInput(FocusListener fl) {
+        if (getComponents().length > 0 && getComponents()[0] instanceof JButton && children.size() > 0) {
+            children.get(0).textContent = ((JButton)this.getComponents()[0]).getText();
+        }
+        removeAll();
+
+        final JButton btn = new JButton();
+        if (children.size() > 0 && children.get(0).textContent != null) {
+            btn.setText(children.get(0).textContent);
+            children.get(0).setTextColor(new Color(0, 0, 0, 0));
+            children.get(0).textContent = "";
+        }
+
+        int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+        Font font = new Font(fontFamily, style, fontSize);
+
+        btn.setPreferredSize(new Dimension(width, height));
+        btn.setFont(font);
+
+        
+        add(btn);
+        btn.setFocusPainted(false);
+        insertButton(btn);
+
+        btn.addFocusListener(fl);
+
+        btn.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
+        if (background != null && background.bgcolor != null) {
+            btn.setBackground(background.bgcolor);
+        }
+        btn.setForeground(color);
+        if (!document.use_native_inputs) {
+            btn.setContentAreaFilled(false);
+        }
+        if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
+               (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||
+               background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || inputType == 3 && background.bgcolor.getAlpha() > 0)) {
+            btn.setOpaque(false);
+            btn.setBorderPainted(false);
+            btn.setBounds(_x_ - parent.scroll_x + borderWidth[3], _y_ - parent.scroll_y + borderWidth[0], width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
+        }
+    }
+
+    public void createRadioOrCheckboxInput(FocusListener fl) {
+        boolean ready = document.ready;
+        document.ready = false;
+        removeAllElements();
+        document.ready = ready;
+        final Block instance = this;
+        final JToggleButton rb;
+        if (inputType == Input.RADIO) {
+            rb = new JRadioButton() {
                 @Override
-                public void stateChanged(ChangeEvent e) {
-
-                    JToggleButton btn = (JToggleButton) e.getSource();
-
-                    if (inputType == Input.RADIO && instance.checked) {
-                        btn.getModel().setSelected(true);
+                public void paintComponent(Graphics g) {
+                    if (instance.document.use_native_inputs) {
+                        Graphics2D g2d = (Graphics2D) g;
+                        g2d.setTransform(AffineTransform.getTranslateInstance(-3 * ratio, 0));
+                        super.paintComponent(g);
                         return;
                     }
-                    
-                    if (btn.isSelected() && inputName != null && !inputName.isEmpty() && inputType == Input.RADIO) {
-                        Vector<Block> group = findBlocksByName(document.root, inputName);
-                        for (int i = 0; i < group.size(); i++) {
-                            if (group.get(i).node != null) group.get(i).node.states.remove("checked");
-                            if (group.get(i) == instance) continue;
-                            if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
-                                ((Block)group.get(i)).checked = false;
-                                ((Block)group.get(i)).updateFormEntry();
-                                Component[] c = group.get(i).getComponents();
-                                for (int j = 0; j < c.length; j++) {
-                                    if (c[j] instanceof JToggleButton) {
-                                        ((JToggleButton)c[j]).getModel().setSelected(false);
-                                    }
+
+                    int size = (int) Math.round(12 * ratio);
+                    //Graphics2D g2d = (Graphics2D) g;
+                    instance.clearBuffer();
+                    Graphics2D g2d = (Graphics2D) instance.buffer.getGraphics();
+
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.setColor(new Color(13, 13, 13, 18));
+                    int x0 = Math.max(0, (int)((getWidth() - size) / 2) - 2);
+                    int y0 = Math.max(0, (int)((getHeight() - size) / 2) - 2);
+                    g2d.drawOval(x0, y0, size, size);
+                    g2d.setColor(new Color(13, 13, 13, 48));
+                    g2d.drawOval(x0 + 1, y0 + 1, size - 2, size - 2);
+                    g2d.setColor(new Color(45, 47, 58, 153));
+                    g2d.setStroke(new BasicStroke(1));
+                    g2d.drawOval(x0 + 2, y0 + 2, size - 4, size - 4);
+                    Color col = instance.background != null && instance.background.bgcolor != null ? instance.background.bgcolor : new Color(245, 245, 245);
+                    g2d.setColor(col);
+                    g2d.fillOval(x0 + 3, y0 + 3, size - 6, size - 6);
+
+                    if (this.getModel().isSelected()) {
+                        g2d.setColor(new Color(45, 47, 58, 153));
+                        g2d.fillOval(x0 + 5, y0 + 5, size - 9, size - 9);
+                        g2d.setColor(new Color(83, 97, 115, 203));
+                        g2d.fillOval(x0 + 6, y0 + 6, size - 11, size - 11);
+                        g2d.setColor(new Color(183, 187, 195, 47));
+                        g2d.fillOval(x0 + 7, y0 + 7, 2, 2);
+                        g2d.setColor(new Color(183, 187, 195, 38));
+                        g2d.fillOval(x0 + 9, y0 + 7, 1, 1);
+                    }
+                }
+            };
+        } else {
+            rb = new JCheckBox() {
+                @Override
+                public void paintComponent(Graphics g) {
+                    if (instance.document.use_native_inputs) {
+                        Graphics2D g2d = (Graphics2D) g;
+                        g2d.setTransform(AffineTransform.getTranslateInstance(-3 * ratio, 0));
+
+                        super.paintComponent(g);
+                        return;
+                    }
+
+                    int size = (int) Math.round(12 * ratio);
+                    //Graphics2D g2d = (Graphics2D) g;
+                    instance.clearBuffer();
+                    Graphics2D g2d = (Graphics2D) instance.buffer.getGraphics();
+
+                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    //g2d.setColor(new Color(13, 13, 13, 18));
+                    int x0 = Math.max(0, (int)((getWidth() - size) / 2) - 2);
+                    int y0 = Math.max(0, (int)((getHeight() - size) / 2) - 2);
+                    //g2d.drawRoundRect(x0, y0, size, size, 2, 2);
+                    g2d.setColor(new Color(13, 13, 13, 26));
+                    g2d.drawRoundRect(x0 + 1, y0 + 1, size - 2, size - 2, 2, 2);
+                    g2d.setColor(new Color(75, 78, 85, 153));
+                    g2d.setStroke(new BasicStroke(1));
+                    g2d.drawRoundRect(x0 + 2, y0 + 2, size - 4, size - 4, 2, 2);
+                    Color col = instance.background != null && instance.background.bgcolor != null ? instance.background.bgcolor : new Color(245, 245, 245);
+                    g2d.setColor(col);
+                    g2d.fillRoundRect(x0 + 3, y0 + 3, size - 6, size - 6, 2, 2);
+
+                    if (this.getModel().isSelected()) {
+                        g2d.setColor(new Color(65, 67, 78, 23));
+                        g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
+                        g2d.drawLine(x0 + 3, y0 + 8, x0 + 7, y0 + 14);
+                        g2d.drawLine(x0 + 7, y0 + 14, x0 + 14, y0 + 2);
+
+                        g2d.setColor(new Color(96, 103, 125));
+
+                        g2d.setStroke(new BasicStroke(3, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
+                        g2d.drawLine(x0 + 2, y0 + 10, x0 + 6, y0 + 14);
+                        g2d.drawLine(x0 + 6, y0 + 14, x0 + 14, y0 + 3);
+
+                        g2d.setColor(new Color(83, 97, 115, 35));
+                        g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 1.0f));
+                        g2d.drawLine(x0 + 2, y0 + 12, x0 + 6, y0 + 15);
+                        g2d.drawLine(x0 + 6, y0 + 15, x0 + 14, y0 + 4);
+                    }
+                }
+            };
+        }
+        if (!document.use_native_inputs) rb.setOpaque(false);
+        add(rb);
+        rb.addFocusListener(fl);
+        int size = (int) Math.round(12 * ratio);
+        rb.setPreferredSize(new Dimension(size, size));
+        if (width < rb.getPreferredSize().width) width = viewport_width = rb.getPreferredSize().width;
+        height = viewport_height = rb.getPreferredSize().height;
+        rb.setBounds(_x_ + width / 2 - rb.getPreferredSize().width / 2 - 1, _y_ + height / 2 - rb.getPreferredSize().height / 2, height, height);
+        if (checked || node != null && node.states.contains("checked")) {
+            checked = true;
+            updateFormEntry();
+            if (node != null && !node.states.contains("checked")) {
+                node.states.add("checked");
+                node.attributes.put("selected", "");
+            }
+            rb.getModel().setSelected(true);
+        }
+        rb.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+
+                JToggleButton btn = (JToggleButton) e.getSource();
+
+                if (inputType == Input.RADIO && instance.checked) {
+                    btn.getModel().setSelected(true);
+                    return;
+                }
+
+                if (btn.isSelected() && inputName != null && !inputName.isEmpty() && inputType == Input.RADIO) {
+                    Vector<Block> group = findBlocksByName(document.root, inputName);
+                    for (int i = 0; i < group.size(); i++) {
+                        if (group.get(i).node != null) group.get(i).node.states.remove("checked");
+                        if (group.get(i) == instance) continue;
+                        if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
+                            ((Block)group.get(i)).checked = false;
+                            ((Block)group.get(i)).updateFormEntry();
+                            Component[] c = group.get(i).getComponents();
+                            for (int j = 0; j < c.length; j++) {
+                                if (c[j] instanceof JToggleButton) {
+                                    ((JToggleButton)c[j]).getModel().setSelected(false);
                                 }
                             }
                         }
                     }
-
-                    checked = inputType == Input.CHECKBOX ? !checked : true;
-                    if (node != null) {
-                        if (checked) node.states.add("checked");
-                        else node.states.remove("checked");
-                    }
-
-                    checked = btn.isSelected();
-                    instance.updateFormEntry();
-                }
-            });
-        }
-        if (inputType == Input.FILE) {
-            boolean ready = document.ready;
-            document.ready = false;
-            removeAllElements();
-
-            final Block label = new Block(document);
-
-            final Block btn = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
-            btn.height = btn.viewport_height = height;
-            
-            createButton(btn, "…");
-
-            addElement(label, true);
-            label.addText("No file selected");
-
-            label.setPositioning(Position.ABSOLUTE);
-            label.setLeft(0, Units.px);
-            label.setTop(2, Units.px);
-            label.width = label.viewport_width = width - btn.width - 6;
-            label.height = label.viewport_height = height;
-            label.fontSize = fontSize;
-            label.setWhiteSpace(WhiteSpace.NO_WRAP);
-            label.setOverflow(Overflow.HIDDEN);
-            label.setTextOverflow(TextOverflow.ELLIPSIS);
-
-            addElement(btn, true);
-
-            btn.setPositioning(Position.ABSOLUTE);
-            btn.setRight(0, Units.px);
-            btn.setTop(0, Units.px);
-
-            ((JButton)btn.getComponent(0)).addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (btn.isObscured()) return;
-                    JFileChooser fileChooser = new JFileChooser();
-                    int result = fileChooser.showOpenDialog(document);
-                    if (result == JFileChooser.APPROVE_OPTION) {
-                        File selectedFile = fileChooser.getSelectedFile();
-                        label.children.get(0).textContent = selectedFile.getAbsolutePath();
-                        label.performLayout();
-                        label.forceRepaint();
-
-                        btn.parent.inputValue = "[filename=\"" + selectedFile.getAbsolutePath() + "\"]";
-                        btn.parent.updateFormEntry();
-                        
-                        document.focused_block = btn.parent;
-                    }
-                }
-            });
-
-            document.ready = ready;
-
-            label.performLayout();
-            label.forceRepaint();
-
-            //label.performLayout();
-            //if (!document.isPainting) label.draw();
-            //JLabel label = new JLabel("No file selected");
-            //label.setFont(new Font(fontFamily, Font.PLAIN, (int) Math.round(12 * ratio)));
-            //add(label);
-            //label.setBounds(_x_ + 2, _y_ + 2, width - btn.width - 10, label.getPreferredSize().height);
-            //label.text_layer.setBounds(_x_, _y_, width, height);
-            if (width < btn.width) width = viewport_width = btn.width;
-        }
-        if (inputType == Input.NUMBER) {
-            boolean ready = document.ready;
-            document.ready = false;
-            removeAllElements();
-
-            if (document.use_native_inputs) {
-                JSpinner spinner = new JSpinner();
-                add(spinner);
-                spinner.setBounds(_x_ - parent.scroll_x, _y_ - parent.scroll_y, width, height);
-                int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
-                Font font = new Font(fontFamily, style, fontSize);
-                spinner.setFont(font);
-                if (background != null && background.bgcolor != null) {
-                    ((NumberEditor)spinner.getEditor()).getTextField().setBackground(background.bgcolor);
-                }
-                ((NumberEditor)spinner.getEditor()).getTextField().setHorizontalAlignment(JTextField.CENTER);
-                ((NumberEditor)spinner.getEditor()).getTextField().setFont(font);
-                ((NumberEditor)spinner.getEditor()).getTextField().setForeground(color);
-                if (!inputValue.isEmpty()) {
-                    try {
-                        spinner.getModel().setValue(Integer.parseInt(inputValue));
-                    } catch (NumberFormatException e) {
-                        inputValue = "0";
-                    }
                 }
 
-                updateFormEntry();
+                checked = inputType == Input.CHECKBOX ? !checked : true;
+                if (node != null) {
+                    if (checked) node.states.add("checked");
+                    else node.states.remove("checked");
+                }
 
-                return true;
+                checked = btn.isSelected();
+                instance.updateFormEntry();
             }
+        });
 
-            int value = 0;
+        inputReady = true;
+    }
 
-            final Block label = new Block(document);
+    public void createFileInput() {
+        boolean ready = document.ready;
+        document.ready = false;
+        removeAllElements();
 
-            final Block btn_inc = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
-                @Override
-                public void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    Graphics2D g2d = (Graphics2D) g;
-                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-                    BasicStroke pen = new BasicStroke(2.18f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
-                    g2d.setStroke(pen);
-                    g2d.setColor(new Color(103, 113, 126));
-                    g2d.drawLine(_x_ - scroll_x + width / 2 - 4, _y_- scroll_y + height / 2 + 2, _x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 - 2);
-                    g2d.setColor(new Color(104, 111, 126));
-                    g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 - 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 + 2);
+        final Block label = new Block(document);
+
+        final Block btn = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        btn.height = btn.viewport_height = height;
+
+        createButton(btn, "…");
+
+        addElement(label, true);
+        label.addText("No file selected");
+
+        label.setPositioning(Position.ABSOLUTE);
+        label.setLeft(0, Units.px);
+        label.setTop(2, Units.px);
+        label.width = label.viewport_width = width - btn.width - 6;
+        label.height = label.viewport_height = height;
+        label.fontSize = fontSize;
+        label.setWhiteSpace(WhiteSpace.NO_WRAP);
+        label.setOverflow(Overflow.HIDDEN);
+        label.setTextOverflow(TextOverflow.ELLIPSIS);
+
+        addElement(btn, true);
+
+        btn.setPositioning(Position.ABSOLUTE);
+        btn.setRight(0, Units.px);
+        btn.setTop(0, Units.px);
+
+        ((JButton)btn.getComponent(0)).addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (btn.isObscured()) return;
+                JFileChooser fileChooser = new JFileChooser();
+                int result = fileChooser.showOpenDialog(document);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    label.children.get(0).textContent = selectedFile.getAbsolutePath();
+                    label.performLayout();
+                    label.forceRepaint();
+
+                    btn.parent.inputValue = "[filename=\"" + selectedFile.getAbsolutePath() + "\"]";
+                    btn.parent.updateFormEntry();
+
+                    document.focused_block = btn.parent;
                 }
-            };
-            btn_inc.width = btn_inc.viewport_width = 20;
-            btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
+            }
+        });
 
-            final Block btn_dec = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
-                @Override
-                public void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    Graphics2D g2d = (Graphics2D) g;
-                    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-                    BasicStroke pen = new BasicStroke(2f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
-                    g2d.setStroke(pen);
-                    g2d.setColor(new Color(103, 113, 126));
-                    g2d.drawLine(_x_ - scroll_x + width / 2 - 4, _y_- scroll_y + height / 2 - 2, _x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 + 2);
-                    g2d.setColor(new Color(104, 111, 126));
-                    g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 + 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 - 2);
-                }
-            };
-            btn_dec.width = btn_dec.viewport_width = 20;
-            btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
+        document.ready = ready;
 
-            createButton(btn_inc, "");
-            createButton(btn_dec, "");
-            btn_inc.width = btn_inc.viewport_width = 20;
-            btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
-            btn_dec.width = btn_dec.viewport_width = 20;
-            btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
+        label.performLayout();
+        label.forceRepaint();
 
-            JButton button_inc = (JButton) btn_inc.getComponent(0);
-            JButton button_dec = (JButton) btn_dec.getComponent(0);
+        //label.performLayout();
+        //if (!document.isPainting) label.draw();
+        //JLabel label = new JLabel("No file selected");
+        //label.setFont(new Font(fontFamily, Font.PLAIN, (int) Math.round(12 * ratio)));
+        //add(label);
+        //label.setBounds(_x_ + 2, _y_ + 2, width - btn.width - 10, label.getPreferredSize().height);
+        //label.text_layer.setBounds(_x_, _y_, width, height);
+        if (width < btn.width) width = viewport_width = btn.width;
+        inputReady = true;
+    }
 
-            button_inc.setText("");
-            button_inc.setPreferredSize(new Dimension(btn_inc.width, btn_inc.height));
+    public void createNumberInput() {
+        boolean ready = document.ready;
+        document.ready = false;
+        removeAllElements();
 
-            button_dec.setText("");
-            button_dec.setPreferredSize(new Dimension(btn_dec.width, btn_dec.height));
-
-            addElement(label, true);
-
+        if (document.use_native_inputs) {
+            JSpinner spinner = new JSpinner();
+            add(spinner);
+            spinner.setBounds(_x_ - parent.scroll_x, _y_ - parent.scroll_y, width, height);
+            int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+            Font font = new Font(fontFamily, style, fontSize);
+            spinner.setFont(font);
+            if (background != null && background.bgcolor != null) {
+                ((NumberEditor)spinner.getEditor()).getTextField().setBackground(background.bgcolor);
+            }
+            ((NumberEditor)spinner.getEditor()).getTextField().setHorizontalAlignment(JTextField.CENTER);
+            ((NumberEditor)spinner.getEditor()).getTextField().setFont(font);
+            ((NumberEditor)spinner.getEditor()).getTextField().setForeground(color);
             if (!inputValue.isEmpty()) {
                 try {
-                    value = Integer.parseInt(inputValue);
-                } catch (NumberFormatException e) {}
+                    spinner.getModel().setValue(Integer.parseInt(inputValue));
+                } catch (NumberFormatException e) {
+                    inputValue = "0";
+                }
             }
 
             updateFormEntry();
-
-            label.addText(value + "");
-
-            label.setPositioning(Position.ABSOLUTE);
-            label.setLeft(2, Units.px);
-            label.setTop(2, Units.px);
-            label.width = label.viewport_width = width - btn_inc.width - 6;
-            label.height = label.viewport_height = height;
-            label.fontSize = fontSize;
-            label.setTextAlign(Block.TextAlign.ALIGN_CENTER);
-            label.setWhiteSpace(WhiteSpace.NO_WRAP);
-            label.setOverflow(Overflow.HIDDEN);
-            label.setTextOverflow(TextOverflow.ELLIPSIS);
-
-            addElement(btn_inc, true);
-            addElement(btn_dec, true);
-
-            btn_inc.setPositioning(Position.ABSOLUTE);
-            btn_inc.setRight((double) borderWidth[1] / ratio, Units.px);
-            btn_inc.setTop(0, Units.px);
-
-            btn_dec.setPositioning(Position.ABSOLUTE);
-            btn_dec.setRight((double) borderWidth[1] / ratio, Units.px);
-            btn_dec.setBottom(1, Units.px);
-
-            document.ready = ready;
-
-            label.performLayout();
-            label.forceRepaint();
-
+            inputReady = true;
         }
-        if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
 
-        return true;
+        int value = 0;
+
+        final Block label = new Block(document);
+
+        final Block btn_inc = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
+            @Override
+            public void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+                BasicStroke pen = new BasicStroke(2.18f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+                g2d.setStroke(pen);
+                g2d.setColor(new Color(103, 113, 126));
+                g2d.drawLine(_x_ - scroll_x + width / 2 - 4, _y_- scroll_y + height / 2 + 2, _x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 - 2);
+                g2d.setColor(new Color(104, 111, 126));
+                g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 - 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 + 2);
+            }
+        };
+        btn_inc.width = btn_inc.viewport_width = 20;
+        btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
+
+        final Block btn_dec = new Block(document, null, -1, -1, 0, 0, Color.BLACK) {
+            @Override
+            public void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+                BasicStroke pen = new BasicStroke(2f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
+                g2d.setStroke(pen);
+                g2d.setColor(new Color(103, 113, 126));
+                g2d.drawLine(_x_ - scroll_x + width / 2 - 4, _y_- scroll_y + height / 2 - 2, _x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 + 2);
+                g2d.setColor(new Color(104, 111, 126));
+                g2d.drawLine(_x_ - scroll_x + width / 2, _y_ - scroll_y + height / 2 + 2, _x_ - scroll_x + width / 2 + 4, _y_ - scroll_y + height / 2 - 2);
+            }
+        };
+        btn_dec.width = btn_dec.viewport_width = 20;
+        btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
+
+        createButton(btn_inc, "");
+        createButton(btn_dec, "");
+        btn_inc.width = btn_inc.viewport_width = 20;
+        btn_inc.height = btn_inc.viewport_height = height / 2 - 1;
+        btn_dec.width = btn_dec.viewport_width = 20;
+        btn_dec.height = btn_dec.viewport_height = height / 2 - 1;
+
+        JButton button_inc = (JButton) btn_inc.getComponent(0);
+        JButton button_dec = (JButton) btn_dec.getComponent(0);
+
+        button_inc.setText("");
+        button_inc.setPreferredSize(new Dimension(btn_inc.width, btn_inc.height));
+
+        button_dec.setText("");
+        button_dec.setPreferredSize(new Dimension(btn_dec.width, btn_dec.height));
+
+        addElement(label, true);
+
+        if (!inputValue.isEmpty()) {
+            try {
+                value = Integer.parseInt(inputValue);
+            } catch (NumberFormatException e) {}
+        }
+
+        updateFormEntry();
+
+        label.addText(value + "");
+
+        label.setPositioning(Position.ABSOLUTE);
+        label.setLeft(2, Units.px);
+        label.setTop(2, Units.px);
+        label.width = label.viewport_width = width - btn_inc.width - 6;
+        label.height = label.viewport_height = height;
+        label.fontSize = fontSize;
+        label.setTextAlign(Block.TextAlign.ALIGN_CENTER);
+        label.setWhiteSpace(WhiteSpace.NO_WRAP);
+        label.setOverflow(Overflow.HIDDEN);
+        label.setTextOverflow(TextOverflow.ELLIPSIS);
+
+        addElement(btn_inc, true);
+        addElement(btn_dec, true);
+
+        btn_inc.setPositioning(Position.ABSOLUTE);
+        btn_inc.setRight((double) borderWidth[1] / ratio, Units.px);
+        btn_inc.setTop(0, Units.px);
+
+        btn_dec.setPositioning(Position.ABSOLUTE);
+        btn_dec.setRight((double) borderWidth[1] / ratio, Units.px);
+        btn_dec.setBottom(1, Units.px);
+
+        document.ready = ready;
+
+        label.performLayout();
+        label.forceRepaint();
     }
 
     public boolean isObscured() {
@@ -8359,6 +8407,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public String defaultInputValue = "";
     public FormEntry formEntry;
     public Block labelFor;
+
+    public boolean inputReady = false;
 
     public double inputNumberStep = 1;
     public double inputNumberMin = 0;
