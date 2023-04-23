@@ -5561,9 +5561,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setWidth(int w) {
         setWidth(w, false);
-        if (!(dimensions.containsKey("width") && dimensions.get("width").expression != null)) {
-            dimensions.put("width", new DynamicValue(w, Units.px, null));
-        }
     }
 
     public void setWidth(int w, int units) {
