@@ -113,11 +113,12 @@ public class Transition {
                 end_height_auto = true;
             }
         }
-        int[] val_start = b.parseValueStringToArray(start_value);
-        int[] val_end = b.parseValueStringToArray(end_value);
+        int axis = property.endsWith("height") ? 1 : 0;
+        int[] val_start = b.parseValueStringToArray(start_value, axis);
+        int[] val_end = b.parseValueStringToArray(end_value, axis);
         if (val_start[1] != val_end[1]) {
-            this.start_value = b.getValueInCssPixels(start_value);
-            this.end_value = b.getValueInCssPixels(end_value);
+            this.start_value = b.getValueInCssPixels(start_value, axis);
+            this.end_value = b.getValueInCssPixels(end_value, axis);
         } else {
             this.start_value = val_start[0];
             this.end_value = val_end[0];
