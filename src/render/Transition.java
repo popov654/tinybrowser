@@ -114,15 +114,20 @@ public class Transition {
             }
         }
         int axis = property.endsWith("height") ? 1 : 0;
-        int[] val_start = b.parseValueStringToArray(start_value, axis);
-        int[] val_end = b.parseValueStringToArray(end_value, axis);
-        if (val_start[1] != val_end[1]) {
-            this.start_value = b.getValueInCssPixels(start_value, axis);
-            this.end_value = b.getValueInCssPixels(end_value, axis);
+        if (!property.matches("z-index|opacity|flex-grow|flex-shrink")) {
+            int[] val_start = b.parseValueStringToArray(start_value, axis);
+            int[] val_end = b.parseValueStringToArray(end_value, axis);
+            if (val_start[1] != val_end[1]) {
+                this.start_value = b.getValueInCssPixels(start_value, axis);
+                this.end_value = b.getValueInCssPixels(end_value, axis);
+            } else {
+                this.start_value = val_start[0];
+                this.end_value = val_end[0];
+                value_units = val_start[1];
+            }
         } else {
-            this.start_value = val_start[0];
-            this.end_value = val_end[0];
-            value_units = val_start[1];
+            this.start_value = Double.parseDouble(start_value);
+            this.end_value = Double.parseDouble(end_value);
         }
     }
 
@@ -131,7 +136,7 @@ public class Transition {
         this.property = property;
         this.duration = duration;
         passiveMode = block.passiveTransitionMode;
-        value_type = "color";
+        value_type = property.matches("z-index|opacity|flex-grow|flex-shrink") ? "length" : "color";
         startColor = start_value;
         endColor = end_value;
     }
@@ -258,8 +263,9 @@ public class Transition {
     private void updateProperty(double value) {
         boolean old_value = block.document.ready;
         if (passiveMode) block.document.ready = false;
-        String[] units = {"px", "%", "em", "rem"};
-        block.setProp(property, value + units[value_units]);
+        String[] units = {"px", "%", "em", "rem", "vw", "vh", "vmin", "vmax"};
+        String val = value + (!property.matches("z-index|opacity|flex-grow|flex-shrink") ? units[value_units] : "");
+        block.setProp(property, val);
         if (passiveMode) block.document.ready = old_value;
     }
 

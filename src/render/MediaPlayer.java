@@ -655,7 +655,7 @@ public class MediaPlayer {
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     int size = width;
 
-                    g2d.setColor(new Color(225, 225, 225));
+                    g2d.setColor(new Color(225, 225, 225, (int) (alpha * 255)));
                     
                     if (!is_playing) {
                         g2d.fillPolygon(new int[] { 6, size - 6, 6 }, new int[] { 6, size / 2, size - 6 }, 3);
@@ -668,6 +668,31 @@ public class MediaPlayer {
                     }
                 }
             };
+            String opacity = "0.78";
+            play_fullscreen.cssStyles.put("opacity", opacity);
+            //play_fullscreen.setCursor("pointer");
+            doc.root.addMouseMotionListener(new MouseMotionListener() {
+
+                boolean hover = false;
+
+                @Override
+                public void mouseDragged(MouseEvent e) {}
+
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    if (!hover && e.getX() >= play_fullscreen._x_ && e.getX() <= play_fullscreen._x_ + play_fullscreen.width &&
+                            e.getY() >= play_fullscreen._y_ && e.getY() <= play_fullscreen._y_ + play_fullscreen.height) {
+                        hover = true;
+                        Transition t = new Transition(play_fullscreen, "opacity", 300, null, "0.92");
+                        t.start();
+                    } else if (hover && !(e.getX() >= play_fullscreen._x_ && e.getX() <= play_fullscreen._x_ + play_fullscreen.width &&
+                            e.getY() >= play_fullscreen._y_ && e.getY() <= play_fullscreen._y_ + play_fullscreen.height)) {
+                        hover = false;
+                        Transition t = new Transition(play_fullscreen, "opacity", 300, null, "0.78");
+                        t.start();
+                    }
+                }
+            });
 
             doc.root.addMouseListener(new MouseListener() {
 
@@ -676,8 +701,8 @@ public class MediaPlayer {
                     if (ep == null) {
                         return;
                     }
-                    if (e.getX() >= play_fullscreen._x_ - play_fullscreen.scroll_x && e.getX() <= play_fullscreen._x_ - play_fullscreen.scroll_x + play_fullscreen.width &&
-                           e.getY() >= play_fullscreen._y_ - play_fullscreen.scroll_y && e.getY() <= play_fullscreen._y_ - play_fullscreen.scroll_y + play_fullscreen.height) {
+                    if (e.getX() >= play_fullscreen._x_ && e.getX() <= play_fullscreen._x_ + play_fullscreen.width &&
+                           e.getY() >= play_fullscreen._y_ && e.getY() <= play_fullscreen._y_ + play_fullscreen.height) {
                         if (ep.getMediaPlayer().isPlaying()) {
                             if (fader != null) {
                                 fader.stop = true;
@@ -722,11 +747,12 @@ public class MediaPlayer {
 
             });
 
-            //controls.setOpaque(true);
             controls.setSize((int) (screenSize.getWidth() * 0.3), 100);
             b.addElement(play_fullscreen);
+            play_fullscreen.setAlpha(Float.parseFloat(opacity));
             play_fullscreen.setWidthHeight(23, 23);
             play_fullscreen.setAutoXMargin();
+
             play_fullscreen.margins[0] = -18;
 
             doc.root.addMouseListener(trackListener);
