@@ -9842,6 +9842,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     //System.out.println("Cursor set");
                 }
                 //System.err.println(node.tagName + " Hovered!");
+            } else if (node == null) {
+                if (cursor != null) {
+                    document.panel.setCursor(cursor);
+                    if (text_layer != null) text_layer.setCursor(cursor);
+                    //System.out.println("Cursor set");
+                }
             }
         } else if (!(x >= _x_ && x < _x_ + viewport_width && y >= _y_ && y < _y_ + viewport_height)) {
             //processMouseOutEvent(node, x, y);
@@ -9862,6 +9868,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                      //System.out.println("Cursor unset");
                  }
                  //System.err.println(node.tagName + " Out!");
+             } else if (node == null) {
+                 if (cursor != null) {
+                     document.panel.setCursor(Cursor.getDefaultCursor());
+                     if (text_layer != null) text_layer.setCursor(Cursor.getDefaultCursor());
+                     //System.out.println("Cursor unset");
+                 }
              }
         }
     }
