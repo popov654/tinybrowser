@@ -261,6 +261,7 @@ public class MediaPlayer {
                     if (type == AUDIO) {
                         mediaPlayerComponent.getMediaPlayer().setTime(time);
                     } else {
+                        pendingTime = time;
                         avPlayerComponent.getMediaPlayer().setTime(time);
                     }
                     fader = new Fader(1);
@@ -720,7 +721,7 @@ public class MediaPlayer {
             if (!is_fullscreen) {
                 avPlayerComponent.getMediaPlayer().play();
             } else {
-                avPlayerComponentFullScreen.getMediaPlayer().play();
+                ep.getMediaPlayer().play();
             }
         }
     }
@@ -728,11 +729,14 @@ public class MediaPlayer {
     public void pause() {
         if (type == AUDIO) {
             mediaPlayerComponent.getMediaPlayer().pause();
+            pendingTime = mediaPlayerComponent.getMediaPlayer().getTime();
         } else {
             if (!is_fullscreen) {
                 avPlayerComponent.getMediaPlayer().pause();
+                pendingTime = avPlayerComponent.getMediaPlayer().getTime();
             } else {
-                avPlayerComponentFullScreen.getMediaPlayer().pause();
+                ep.getMediaPlayer().pause();
+                pendingTime = ep.getMediaPlayer().getTime();
             }
         }
     }
@@ -744,7 +748,7 @@ public class MediaPlayer {
             if (!is_fullscreen) {
                 avPlayerComponent.getMediaPlayer().stop();
             } else {
-                avPlayerComponentFullScreen.getMediaPlayer().stop();
+                ep.getMediaPlayer().stop();
             }
         }
     }
@@ -763,6 +767,7 @@ public class MediaPlayer {
         //avPlayerComponentFullScreen.getMediaPlayer().play();
         //avPlayerComponentFullScreen.getMediaPlayer().setTime(avPlayerComponent.getMediaPlayer().getTime() - correction_delta);
         avPlayerComponent.getMediaPlayer().pause();
+        pendingTime = avPlayerComponent.getMediaPlayer().getTime() - correction_delta;
         is_fullscreen = true;
         strategy.enterFullScreenMode();
     }
@@ -773,14 +778,21 @@ public class MediaPlayer {
         if (!is_fullscreen) return;
         //avPlayerComponent.getMediaPlayer().setTime(avPlayerComponentFullScreen.getMediaPlayer().getTime() - correction_delta);
         //avPlayerComponentFullScreen.getMediaPlayer().pause();
-        avPlayerComponent.getMediaPlayer().setTime(ep.getMediaPlayer().getTime() - correction_delta);
-        if (ep.getMediaPlayer().isPlaying()) avPlayerComponent.getMediaPlayer().play();
+        boolean is_playing = ep.getMediaPlayer().isPlaying();
+        pendingTime = ep.getMediaPlayer().getTime() - correction_delta;
+        avPlayerComponent.getMediaPlayer().setTime(pendingTime);
+        if (is_playing) {
+            avPlayerComponent.getMediaPlayer().play();
+            avPlayerComponent.getMediaPlayer().setTime(pendingTime);
+        }
         ep.getMediaPlayer().pause();
-        removeListeners(avPlayerComponentFullScreen.getMediaPlayer());
+        removeListeners(ep.getMediaPlayer());
         setListeners(avPlayerComponent.getMediaPlayer());
         is_fullscreen = false;
         fullscreen_window.setVisible(false);
     }
+
+    long pendingTime = 0;
 
     JFrame fullscreen_window;
     FullScreenStrategy strategy;
@@ -891,7 +903,9 @@ public class MediaPlayer {
                 if (type == AUDIO) {
                     mediaPlayerComponent.getMediaPlayer().play();
                 } else {
+                    avPlayerComponent.getMediaPlayer().setTime(pendingTime);
                     avPlayerComponent.getMediaPlayer().play();
+                    pendingTime = 0;
                 }
             } else {
                 icon1.icon_state = 0;
@@ -919,10 +933,12 @@ public class MediaPlayer {
             }
             if (type == AUDIO) {
                 if (mediaPlayerComponent.getMediaPlayer().getVolume() == value && direction < 0) {
+                    pendingTime = mediaPlayerComponent.getMediaPlayer().getTime();
                     mediaPlayerComponent.getMediaPlayer().pause();
                 }
             } else {
                 if (avPlayerComponent.getMediaPlayer().getVolume() == value && direction < 0) {
+                    pendingTime = avPlayerComponent.getMediaPlayer().getTime();
                     avPlayerComponent.getMediaPlayer().pause();
                 }
             }
