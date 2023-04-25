@@ -53,8 +53,19 @@ public class RoundedBorder implements Border {
 
     RoundedBorder(Block b, int radius, Color color) {
         this(b, null, radius, color);
+        w = new int[4];
         for (int i = 0; i < 4; i++) {
             w[i] = 0;
+        }
+    }
+
+    RoundedBorder(Block b, int width, int radius, Color color) {
+        this(b, radius, color);
+        for (int i = 0; i < 4; i++) {
+            w[i] = width;
+        }
+        for (int i = 0; i < 4; i++) {
+            if (col[i] == null) col[i] = color;
         }
     }
 

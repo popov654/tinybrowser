@@ -7736,6 +7736,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void addElement(Block b, int pos, boolean preserve_style) {
+        b.document = document;
         type = NodeTypes.ELEMENT;
         if (children.contains(b)) {
             System.err.println("Duplicate block insert");
@@ -8785,8 +8786,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.border = new RoundedBorder(b, b.borderWidth, b.arc, b.borderColor, b.borderType);
 
-        b.background = background;
         if (background != null) {
+            b.background = background.clone();
             b.has_animation = has_animation;
             b.animation_frames = animation_frames;
         }
@@ -8881,6 +8882,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             ch.add(children.get(i));
         }
         return ch;
+    }
+
+    public void changeDocumentRecursive(WebDocument doc) {
+        document = doc;
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).changeDocumentRecursive(doc);
+        }
+        for (int i = 0; i < parts.size(); i++) {
+            parts.get(i).changeDocumentRecursive(doc);
+        }
     }
 
     @Override
