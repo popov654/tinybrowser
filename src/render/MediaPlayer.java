@@ -26,6 +26,7 @@ import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
@@ -496,6 +497,16 @@ public class MediaPlayer {
             ps.document.repaint();
 
             if (is_fullscreen) {
+                if (timeElapsed != null) {
+                    boolean withHours = mediaPlayer.getLength() / 1000 >= 3600;
+                    timeElapsed.setText((withHours ? hours + ":" : "") + (mins < 10 && withHours ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs));
+                    long remaining_time = mediaPlayer.getLength() - new_time;
+                    secs = (int)(remaining_time / 1000) % 60;
+                    mins = (int)((remaining_time / 1000 - secs) / 60 % 60);
+                    hours = (int)((remaining_time / 1000 - secs - mins * 60) / 3600);
+                    timeRemains.setText("-" + (withHours ? hours + ":" : "") + (mins < 10 && withHours ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs));
+                }
+
                 psf.clearBuffer();
                 psf.forceRepaint();
                 psf.document.repaint();
@@ -634,6 +645,10 @@ public class MediaPlayer {
             psf.left = -progress_fullscreen.borderWidth[3];
             psf.setBackgroundColor(new Color(90, 173, 238, 235));
             psf.bg_clip_x = 0;
+
+            int panelWidth = (int) (screenSize.getWidth() * 0.3);
+            int timeLabelsXOffset = (int) (26 * b.ratio);
+            int timeLabelsYOffset = (int) (20 * b.ratio) + progress_fullscreen.height + 10;
             
             JPanel controlsPane = (JPanel)controls.getContentPane();
             controlsPane.setBackground(new Color(0, 0, 0));
@@ -641,6 +656,21 @@ public class MediaPlayer {
 
             controlsPane.removeAll();
             controlsPane.add(doc);
+
+            if (enableTimeDisplay) {
+                timeElapsed = new JLabel("0:00");
+                timeRemains = new JLabel("-0:00");
+                Color labelsColor = new Color(218, 218, 218);
+                timeElapsed.setForeground(labelsColor);
+                timeRemains.setForeground(labelsColor);
+                timeElapsed.setHorizontalAlignment(JLabel.LEFT);
+                timeRemains.setHorizontalAlignment(JLabel.RIGHT);
+                doc.panel.add(timeElapsed, 0);
+                doc.panel.add(timeRemains, 1);
+                int timeLabelsWidth = controlsPane.getFontMetrics(timeElapsed.getFont()).stringWidth("0:00:00") + 10;
+                timeElapsed.setBounds(timeLabelsXOffset, timeLabelsYOffset, timeLabelsWidth, timeElapsed.getPreferredSize().height);
+                timeRemains.setBounds(panelWidth - timeLabelsXOffset - timeLabelsWidth, timeLabelsYOffset, timeLabelsWidth, timeElapsed.getPreferredSize().height);
+            }
 
             controls.setUndecorated(true);
             controls.setAlwaysOnTop(true);
@@ -770,7 +800,7 @@ public class MediaPlayer {
             //fullscreen_window.setComponentZOrder(controls, 0);
             controls.setVisible(false);
 
-            hideControlsTimer = new Timer(2500, new ActionListener() {
+            hideControlsTimer = new Timer(1800, new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     hideControls();
@@ -1161,6 +1191,9 @@ public class MediaPlayer {
 
     JFrame fullscreen_window;
     JFrame controls;
+    JLabel timeElapsed;
+    JLabel timeRemains;
+    boolean enableTimeDisplay = true;
     FullScreenStrategy strategy;
     Timer toggleControlsTimer;
     Timer hideControlsTimer;
