@@ -911,7 +911,7 @@ public class MediaPlayer {
             video_surface_fullscreen.addMouseListener(ml);
 
             mouseTracker = new MouseTracker();
-            showControlsTimer = new Timer(50, mouseTracker);
+            toggleControlsTimer = new Timer(50, mouseTracker);
 
             avPlayerComponent.getMediaPlayer().prepareMedia(url);
             //avPlayerComponentFullScreen.getMediaPlayer().prepareMedia(url);
@@ -1120,7 +1120,7 @@ public class MediaPlayer {
         removeListeners(ep.getMediaPlayer());
         setListeners(avPlayerComponent.getMediaPlayer());
         is_fullscreen = false;
-        showControlsTimer.stop();
+        toggleControlsTimer.stop();
         hideControls(true);
         fullscreen_window.setVisible(false);
     }
@@ -1128,11 +1128,6 @@ public class MediaPlayer {
     public void showControls() {
         if (hideControlsTimer.isRunning()) {
             hideControlsTimer.stop();
-        }
-
-        if (controls.isVisible()) {
-            hideControlsTimer.start();
-            return;
         }
 
         controls.setVisible(true);
@@ -1144,7 +1139,7 @@ public class MediaPlayer {
         
         fullscreen_window.requestFocus();
         video_surface_fullscreen.requestFocus();
-        hideControlsTimer.start();
+        toggleControlsTimer.start();
     }
 
     public void hideControls() {
@@ -1158,7 +1153,7 @@ public class MediaPlayer {
         video_surface_fullscreen.requestFocus();
         if (!exit) {
             mouseTracker.updateLastPoint();
-            showControlsTimer.start();
+            toggleControlsTimer.start();
         }
     }
 
@@ -1167,7 +1162,7 @@ public class MediaPlayer {
     JFrame fullscreen_window;
     JFrame controls;
     FullScreenStrategy strategy;
-    Timer showControlsTimer;
+    Timer toggleControlsTimer;
     Timer hideControlsTimer;
     MouseTracker mouseTracker;
 
@@ -1561,7 +1556,15 @@ public class MediaPlayer {
         public void actionPerformed(ActionEvent e) {
             Point p = MouseInfo.getPointerInfo().getLocation();
             if (!p.equals(last_point) && is_fullscreen) {
-                showControls();
+                if (!controls.isVisible()) {
+                    showControls();
+                } else if (controls.isVisible()) {
+                    if (!controls.getBounds().contains(p)) {
+                        hideControlsTimer.start();
+                    } else {
+                        hideControlsTimer.stop();
+                    }
+                }
             }
             last_point = p;
         }
