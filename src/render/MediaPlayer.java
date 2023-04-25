@@ -13,7 +13,6 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -25,7 +24,6 @@ import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
@@ -35,9 +33,6 @@ import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-import uk.co.caprica.vlcj.player.MediaPlayerEventListener;
-import uk.co.caprica.vlcj.player.TrackInfo;
-import uk.co.caprica.vlcj.player.TrackType;
 import uk.co.caprica.vlcj.player.direct.BufferFormat;
 import uk.co.caprica.vlcj.player.direct.BufferFormatCallback;
 import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
@@ -176,14 +171,10 @@ public class MediaPlayer {
             }
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseEntered(MouseEvent e) {}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseExited(MouseEvent e) {}
 
         });
         b.addMouseMotionListener(new MouseMotionListener() {
@@ -241,14 +232,10 @@ public class MediaPlayer {
         trackListener = new MouseListener() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -301,14 +288,10 @@ public class MediaPlayer {
             }
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseEntered(MouseEvent e) {}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseExited(MouseEvent e) {}
 
         };
         b.addMouseListener(trackListener);
@@ -341,9 +324,7 @@ public class MediaPlayer {
         b.addMouseListener(new MouseListener() {
 
             @Override
-            public void mouseClicked(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
             public void mousePressed(MouseEvent e) {
@@ -370,19 +351,13 @@ public class MediaPlayer {
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseEntered(MouseEvent e) {}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseExited(MouseEvent e) {}
 
         });
 
@@ -412,9 +387,7 @@ public class MediaPlayer {
             }
 
             @Override
-            public void mouseMoved(MouseEvent e) {
-                //throw new UnsupportedOperationException("Not supported yet.");
-            }
+            public void mouseMoved(MouseEvent e) {}
 
         });
 
@@ -749,12 +722,6 @@ public class MediaPlayer {
                             (new Thread(fader)).start();
                         }
                     }
-//                    else if (icon2 != null && e.getX() >= icon2._x_ - icon2.scroll_x && e.getX() <= icon2._x_ - icon2.scroll_x + icon2.width &&
-//                           e.getY() >= icon2._y_ - icon2.scroll_y && e.getY() <= icon2._y_ - icon2.scroll_y + icon2.height) {
-//                        enterFullScreen();
-//                    } else {
-//                        container.document.root.mouseClicked(e);
-//                    }
                 }
 
                 @Override
