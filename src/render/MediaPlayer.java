@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
@@ -908,8 +910,8 @@ public class MediaPlayer {
             video_surface.addMouseListener(ml);
             video_surface_fullscreen.addMouseListener(ml);
 
-            video_surface_fullscreen.addMouseMotionListener(cml);
-            
+            mouseTracker = new MouseTracker();
+            showControlsTimer = new Timer(50, mouseTracker);
 
             avPlayerComponent.getMediaPlayer().prepareMedia(url);
             //avPlayerComponentFullScreen.getMediaPlayer().prepareMedia(url);
@@ -1062,7 +1064,7 @@ public class MediaPlayer {
         ep.getMediaPlayer().setTime(avPlayerComponent.getMediaPlayer().getTime() - correction_delta);
         //avPlayerComponentFullScreen.getMediaPlayer().play();
         //avPlayerComponentFullScreen.getMediaPlayer().setTime(avPlayerComponent.getMediaPlayer().getTime() - correction_delta);
-        controls.setVisible(true);
+        showControls();
 
         final WebDocument doc = (WebDocument) controls.getContentPane().getComponent(0);
         doc.root.performLayout();
@@ -1118,13 +1120,19 @@ public class MediaPlayer {
         removeListeners(ep.getMediaPlayer());
         setListeners(avPlayerComponent.getMediaPlayer());
         is_fullscreen = false;
-        hideControls();
+        showControlsTimer.stop();
+        hideControls(true);
         fullscreen_window.setVisible(false);
     }
 
     public void showControls() {
         if (hideControlsTimer.isRunning()) {
             hideControlsTimer.stop();
+        }
+
+        if (controls.isVisible()) {
+            hideControlsTimer.start();
+            return;
         }
 
         controls.setVisible(true);
@@ -1140,9 +1148,18 @@ public class MediaPlayer {
     }
 
     public void hideControls() {
+        hideControls(false);
+    }
+
+    public void hideControls(boolean exit) {
         WebDocument doc = (WebDocument) controls.getContentPane().getComponent(0);
         doc.root.flushBuffersRecursively();
         controls.setVisible(false);
+        video_surface_fullscreen.requestFocus();
+        if (!exit) {
+            mouseTracker.updateLastPoint();
+            showControlsTimer.start();
+        }
     }
 
     long pendingTime = 0;
@@ -1150,7 +1167,9 @@ public class MediaPlayer {
     JFrame fullscreen_window;
     JFrame controls;
     FullScreenStrategy strategy;
+    Timer showControlsTimer;
     Timer hideControlsTimer;
+    MouseTracker mouseTracker;
 
     boolean is_fullscreen = false;
 
@@ -1535,6 +1554,23 @@ public class MediaPlayer {
 
     public Block getContainer() {
         return container;
+    }
+
+    class MouseTracker implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Point p = MouseInfo.getPointerInfo().getLocation();
+            if (!p.equals(last_point) && is_fullscreen) {
+                showControls();
+            }
+            last_point = p;
+        }
+
+        public void updateLastPoint() {
+            last_point = MouseInfo.getPointerInfo().getLocation();
+        }
+
+        Point last_point = MouseInfo.getPointerInfo().getLocation();
     }
 
     AudioMediaPlayerComponent mediaPlayerComponent;
