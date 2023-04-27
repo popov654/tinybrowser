@@ -671,40 +671,6 @@ public class Layouter {
             return;
         } else if (d.display_type == Block.Display.INLINE) {
 
-            if (d.no_layout && d.parts.size() > 0) {
-                last_line = null;
-                int line_index = 0;
-                
-                if (last_line == null && block.lines.size() > 0) {
-                    last_line = d.parts.get(0).line;
-                }
-
-                if (last_line != null && last_line.elements.contains(d.parts.get(0))) {
-
-                    if (last_line == null || last_line.elements.size() == 1 && last_line.elements.get(0) instanceof Block &&
-                            ((Block)last_line.elements.get(0)).display_type == Block.Display.BLOCK || d.parts.size() > 0 && last_line.width - last_line.cur_pos < d.parts.get(0).width) {
-                        if (last_line != null) {
-                            last_line = block.lines.get(line_index++);
-                        } else if (d.parts.size() > 0) {
-                            block.lines.add(d.parts.get(0).line);
-                            last_line = block.lines.get(0);
-                        } else {
-                            last_line = startNewLine(0, 0, d.parts.get(0));
-                        }
-                    }
-
-                    if (d.node != null) {
-                       d.node.fireEvent("layout", "render");
-                    }
-                    if (d.document.debug) {
-                        System.out.println();
-                        System.out.println("Layout ended for block " + d.toString());
-                    }
-
-                    return;
-                }
-            }
-
             int[][] selection = new int[d.parts.size()][2];
 
             int index = 0;
