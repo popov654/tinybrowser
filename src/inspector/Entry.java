@@ -266,10 +266,20 @@ public class Entry extends javax.swing.JPanel {
                 e.inflate(w);
             }
             if (!node.isPseudo()) {
-                for (int i = 0; i < node.children.size(); i++) {
-                    Entry e = new Entry(node.children.get(i), document);
-                    content.add(e);
-                    e.inflate(w);
+                if (node.tagName.equals("iframe")) {
+                    Block b = Mapper.get(node);
+                    if (b.childDocument != null) {
+                        System.err.println("Child document found");
+                        Entry e = new Entry(b.childDocument.root.node, document);
+                        content.add(e);
+                        e.inflate(w);
+                    }
+                } else {
+                    for (int i = 0; i < node.children.size(); i++) {
+                        Entry e = new Entry(node.children.get(i), document);
+                        content.add(e);
+                        e.inflate(w);
+                    }
                 }
             }
             if (showPseudoElements && node.afterNode != null) {
@@ -477,6 +487,12 @@ public class Entry extends javax.swing.JPanel {
         public void mouseEntered(MouseEvent e) {
             //System.out.println("Entered");
             node.states.add("highlighted");
+
+            Block b = Mapper.get(node);
+            if (b != null && b.childDocument != null) {
+                b.childDocument.root.node.states.add("highlighted");
+            }
+
             updateChildren(true);
             repaint();
             if (document != null) {
@@ -489,6 +505,12 @@ public class Entry extends javax.swing.JPanel {
         public void mouseExited(MouseEvent e) {
             //System.out.println("Exited");
             node.states.remove("highlighted");
+
+            Block b = Mapper.get(node);
+            if (b != null && b.childDocument != null) {
+                b.childDocument.root.node.states.remove("highlighted");
+            }
+
             updateChildren(false);
             repaint();
             if (document != null) {
@@ -577,8 +599,9 @@ public class Entry extends javax.swing.JPanel {
         content.setVisible(false);
         footer.setVisible(false);
         boolean has_children = node.children.size() > 0;
+        boolean has_child_document = node.tagName.equals("iframe") && Mapper.get(node) != null && Mapper.get(node).childDocument != null;
         threeDots.setVisible(has_children);
-        marker.setVisible(has_children);
+        marker.setVisible(has_children || has_child_document);
         headerTag3.setVisible(true);
         opened = false;
 
