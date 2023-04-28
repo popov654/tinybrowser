@@ -9915,6 +9915,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         LinkedHashMap<String, String> newStyles = builder.targetStyles.get(this);
         int count = 0;
         boolean changed_display = false;
+        boolean need_layout = false;
         if (newStyles != null) {
             Set<String> keys = newStyles.keySet();
             for (String key: keys) {
@@ -9954,15 +9955,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (!key.matches("(-[a-z]+-)?transition|cursor")) {
                         count++;
                     }
+                    if (document.requiresLayout(toHyphens(key))) {
+                        need_layout = true;
+                    }
                     document.ready = ready;
                 }
             }
             builder.targetStyles.remove(this);
         }
         if (count > 0) {
-            Block b = doIncrementLayout();
-            if (b == this && changed_display && b.parent != null) {
-                b = b.parent;
+            Block b = this;
+            if (need_layout) {
+                b = doIncrementLayout();
+                if (b == this && changed_display && b.parent != null) {
+                    b = b.parent;
+                }
             }
             if (b != null) b.forceRepaint();
             document.repaint();

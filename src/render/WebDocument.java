@@ -16,6 +16,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -628,21 +629,17 @@ public class WebDocument extends JPanel {
         }
     }
 
-    public void smartUpdate(Block b, int old_width, int old_height) {
-        Set<String> onlyRepaint = new java.util.HashSet<String>();
-        onlyRepaint.add("background");
-        onlyRepaint.add("background-color");
-        onlyRepaint.add("border-color");
-        onlyRepaint.add("color");
-        onlyRepaint.add("cursor");
-        onlyRepaint.add("transition");
+    public boolean requiresLayout(String prop) {
+        return !onlyRepaintProperties.contains(prop);
+    }
 
+    public void smartUpdate(Block b, int old_width, int old_height) {
         if (lastSetProperties == null) {
             lastSetProperties = new HashSet<String>();
         }
 
         Set<String> diff = new HashSet<String>(lastSetProperties);
-        diff.removeAll(onlyRepaint);
+        diff.removeAll(onlyRepaintProperties);
 
         Block block = b;
         if (b.document.lastSetProperties == null || diff.size() > 0) {
@@ -662,10 +659,19 @@ public class WebDocument extends JPanel {
     }
 
 
+    public static Set<String> onlyRepaintProperties = new HashSet(Arrays.asList(
+        new String[] { "box-shadow", "background", "background-color", "border-color", "color" }
+    ));
+
+    public static Set<String> passiveProperies = new HashSet(Arrays.asList(
+        new String[] { "cursor", "transition" }
+    ));
+
 
     public String baseUrl = "";
 
     public Set<String> lastSetProperties;
+    
 
     protected Layouter layouter = new Layouter(this);
 
