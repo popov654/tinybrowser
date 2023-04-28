@@ -391,7 +391,7 @@ public class Entry extends javax.swing.JPanel {
             height = getFontMetrics(content.getComponents()[0].getFont()).getHeight() * rows + 3;
         }
         int w = Math.max(Math.max(header.getPreferredSize().width, content.getPreferredSize().width), min_width);
-        if (getParent().getSize().width < w) w = getParent().getSize().width;
+        //if (getParent().getSize().width < w) w = getParent().getSize().width;
         return new Dimension(w, height);
     }
 
