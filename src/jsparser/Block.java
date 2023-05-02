@@ -995,6 +995,10 @@ public class Block extends Expression {
     }
 
     public static void setVar(String name, JSValue val, Expression exp, int mode) {
+        setVar(name, val, exp, mode, false);
+    }
+
+    public static void setVar(String name, JSValue val, Expression exp, int mode, boolean force) {
         if (name.charAt(0) == '-') {
             Block block = exp instanceof Block ? (Block)exp : exp.parent_block;
             block.error = new JSError(null, "Syntax error in assignment", exp.getStack());
@@ -1013,7 +1017,7 @@ public class Block extends Expression {
                 b = b.parent_block;
             }
         }
-        if (b.parent_block == null && name.equals("window")) return;
+        if (b.parent_block == null && name.equals("window") && !force) return;
         b.scope.put(name, val);
     }
 

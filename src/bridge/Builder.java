@@ -593,7 +593,7 @@ public class Builder {
         if (jsWindow == null) {
             jsWindow = (jsparser.Window) Expression.getVar("window", block);
         } else {
-            Expression.setVar("window", jsWindow, block, Expression.var);
+            jsparser.Block.setVar("window", jsWindow, block, Expression.var, true);
         }
         setParentDocument(block, documentWrap.parentDocument);
         block.setWindowFrame(windowFrame);
