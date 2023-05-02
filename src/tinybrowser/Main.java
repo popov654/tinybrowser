@@ -170,7 +170,7 @@ public class Main {
     public static void testBuilder() {
         Reader reader = new Reader();
         reader.addCustomElement("player", CustomPlayer.class);
-        Document document = reader.readDocument("test2.htm");
+        Document document = reader.readDocument("html" + File.separator + "test2.htm");
         visualBuilderTest(reader, document);
 
         //System.out.println();

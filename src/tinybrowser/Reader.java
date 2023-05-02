@@ -12,6 +12,7 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Vector;
 import javax.swing.BorderFactory;
@@ -29,9 +30,10 @@ import render.WebDocument;
 public class Reader {
 
     public Document readDocument(String file) {
-        if (debug) System.out.println(Main.getInstallPath() + file);
-        HTMLParser hp = new HTMLParser(Main.getInstallPath() + file);
-        return createDocument(hp);
+        String path = Main.getInstallPath() + file;
+        if (debug) System.out.println(path);
+        HTMLParser hp = new HTMLParser(path);
+        return createDocument(hp, path);
     }
 
     public Document createDocumentFromString(String content) {
@@ -39,10 +41,10 @@ public class Reader {
         HTMLParser hp = new HTMLParser();
         hp.data = content;
         hp.scan();
-        return createDocument(hp);
+        return createDocument(hp, null);
     }
 
-    public Document createDocument(HTMLParser hp) {
+    public Document createDocument(HTMLParser hp, String path) {
         if (debug) {
             System.out.println("----------------------------------");
             hp.printTree();
@@ -51,7 +53,16 @@ public class Reader {
         }
 
         Builder builder = new Builder();
-        builder.setBaseUrl(Main.getInstallPath());
+        if (path != null) {
+            path = path.replaceAll("\\\\", "/");
+            path = path.substring(0, path.lastIndexOf("/") + 1);
+            if (!path.matches("(https?|ftp|file)://.*")) {
+                path = path.replaceAll("/", "\\\\");
+            }
+        } else {
+            path = Main.getInstallPath();
+        }
+        builder.setBaseUrl(path);
         builder.customElements = customElements;
 
         Document document = new Document(builder, hp.getRootNode(), null, new DefaultCache());

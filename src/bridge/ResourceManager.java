@@ -39,18 +39,25 @@ public class ResourceManager {
         return document;
     }
 
+    private String getAbsolutePath(String url) {
+        if (url.startsWith("http:") || url.startsWith("https:") || url.startsWith("ftp:") || url.startsWith("file:")) {
+            return url;
+        }
+        return document.builder.baseUrl + url;
+    }
+
     private void findResources(Node node) {
         if (node.nodeType != 1 || node.isPseudo()) return;
         Resource res = null;
         if (node.tagName.equals("img") && node.getAttribute("src") != null && document.asyncImageLoad) {
-            res = new Resource(node.getAttribute("src"), node, Resource.Type.IMAGE);
+            res = new Resource(getAbsolutePath(node.getAttribute("src")), node, Resource.Type.IMAGE);
         } else if (node.tagName.equals("iframe") && node.getAttribute("src") != null && document.asyncIframeLoad) {
-            res = new Resource(node.getAttribute("src"), node, Resource.Type.IFRAME);
+            res = new Resource(getAbsolutePath(node.getAttribute("src")), node, Resource.Type.IFRAME);
         } else if (node.tagName.equals("link") && node.getAttribute("rel") != null &&
               node.getAttribute("rel").equals("stylesheet") &&  node.getAttribute("href") != null && document.enableExternalStyles) {
-            res = new Resource(node.getAttribute("href"), node, Resource.Type.STYLE);
+            res = new Resource(getAbsolutePath(node.getAttribute("href")), node, Resource.Type.STYLE);
         } else if (node.tagName.equals("script") && node.getAttribute("src") != null && document.enableScripts) {
-            res = new Resource(node.getAttribute("src"), node, Resource.Type.SCRIPT);
+            res = new Resource(getAbsolutePath(node.getAttribute("src")), node, Resource.Type.SCRIPT);
         }
         if (res != null) addResource(res);
         for (int i = 0; i < node.children.size(); i++) {
