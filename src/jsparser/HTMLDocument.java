@@ -24,6 +24,10 @@ public class HTMLDocument extends JSObject {
         items.put("createElement", new createElementFunction());
         items.put("createTextNode", new createTextNodeFunction());
 
+        items.put("images", new JSArray());
+        items.put("frames", new JSArray());
+        items.put("forms", new JSArray());
+
         Vector<Node> head = document.getElementsByTagName("head");
         items.put("head", head.size() > 0 ? HTMLElement.create(head.get(0)) : Null.getInstance());
         Vector<Node> body = document.getElementsByTagName("body");

@@ -1077,6 +1077,10 @@ public class Block extends Expression {
         console = c;
     }
 
+    public void replaceDocumentObject(HTMLDocument doc) {
+        scope.put("document", doc);
+    }
+
     public int getType() {
         return block_type;
     }

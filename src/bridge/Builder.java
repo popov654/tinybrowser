@@ -111,7 +111,24 @@ public class Builder {
 
         addNodeChangeListeners(node);
 
+        processSpecialElement(node);
+
         return b;
+    }
+
+    public void processSpecialElement(Node node) {
+        if (node.tagName.matches("img|iframe|form")) {
+            HTMLElement el = HTMLElement.create(node);
+            if (jsWindow == null) {
+                jsWindow = new jsparser.Window(new jsparser.Block());
+                jsWindow.setDocument(node.document);
+            }
+            String key = node.tagName.equals("img") ? "images" : (node.tagName.equals("frame") ? "frame" : "forms");
+            jsparser.JSArray list = (jsparser.JSArray) ((jsparser.JSObject) jsWindow.get("document")).get(key);
+            if (!list.getItems().contains(el)) {
+                list.push(el);
+            }
+        }
     }
 
     public void initElement(final Block b) {
@@ -589,12 +606,14 @@ public class Builder {
             block.scope = scope;
             block.setConsole((jsparser.Console)scope.get("console"));
         }
+
         block.setDocument(parser);
         if (jsWindow == null) {
             jsWindow = (jsparser.Window) Expression.getVar("window", block);
         } else {
-            jsparser.Block.setVar("window", jsWindow, block, Expression.var, true);
+            block.replaceDocumentObject((jsparser.HTMLDocument)jsWindow.get("document"));
         }
+
         setParentDocument(block, documentWrap.parentDocument);
         block.setWindowFrame(windowFrame);
         

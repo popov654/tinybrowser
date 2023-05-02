@@ -605,6 +605,7 @@ public class HTMLElement extends HTMLNode {
             boolean result = node.addChild(newNode);
 
             if (result) {
+                block.builder.processSpecialElement(node);
                 render.Block parent_block = Mapper.get(node);
                 if (newNode.nodeType == 1) {
                     parent_block.addElement(block, true);
@@ -643,6 +644,7 @@ public class HTMLElement extends HTMLNode {
             boolean result = node.insertChild(newNode, ((HTMLNode)args.get(1)).node);
 
             if (result) {
+                block.builder.processSpecialElement(node);
                 int pos = node.children.indexOf(newNode);
                 render.Block parent_block = Mapper.get(node);
                 if (newNode.nodeType == 1) {

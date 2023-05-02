@@ -386,6 +386,10 @@ public class Window extends JSObject {
         }
     };
 
+    public HashMap<String, JSValue> getItems() {
+        return items;
+    }
+
     private Block root;
     private HTMLParser parser;
     private HTMLDocument document;
