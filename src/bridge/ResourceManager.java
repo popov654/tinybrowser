@@ -102,6 +102,9 @@ public class ResourceManager {
                                 }
                                 block.document.ready = false;
                                 block.setBackgroundImage(path);
+                                HTMLElement imgElement = HTMLElement.create(block.node);
+                                imgElement.set("naturalWidth", new jsparser.JSInt(block.background.image.getWidth()));
+                                imgElement.set("naturalHeight", new jsparser.JSInt(block.background.image.getHeight()));
                                 Set<String> keys = block.cssStyles.keySet();
                                 for (String key: keys) {
                                     if (key.startsWith("border")) {

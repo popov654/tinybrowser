@@ -668,6 +668,9 @@ public class Builder {
                 Resource res = documentWrap.getResourceManager().getResourceForBlock(b);
                 if (res != null && res.type == Resource.Type.IMAGE && res.getFile() != null) {
                     b.setBackgroundImage(res.getFile().getPath());
+                    HTMLElement imgElement = HTMLElement.create(b.node);
+                    imgElement.set("naturalWidth", new jsparser.JSInt(b.background.image.getWidth()));
+                    imgElement.set("naturalHeight", new jsparser.JSInt(b.background.image.getHeight()));
                 }
             }
         }
