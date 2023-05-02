@@ -17,7 +17,7 @@ public class Background {
 
     public void setBackgroundImage(String path) {
         if (path == null || path.isEmpty()) {
-            bgImage = null;
+            image = null;
             imgSrc = "";
             return;
         }
@@ -26,13 +26,13 @@ public class Background {
             if (path.equals(imgSrc)) return;
             imgSrc = path;
             if (path.startsWith("http")) {
-                bgImage = ImageIO.read(new URL(path));
+                image = ImageIO.read(new URL(path));
                 String[] str = path.split("/");
                 f = File.createTempFile("tmp_", str[str.length-1]);
-                ImageIO.write(bgImage, "png", f);
+                ImageIO.write(image, "png", f);
             } else {
                 f = new File(path);
-                bgImage = ImageIO.read(f);
+                image = ImageIO.read(f);
             }
         } catch (IOException ex) {}
     }
@@ -118,7 +118,7 @@ public class Background {
         Background background = new Background();
         background.gradient = gradient;
         background.bgcolor = bgcolor;
-        background.bgImage = bgImage;
+        background.image = image;
         background.imgSrc = imgSrc;
 
         background.bg_alpha = bg_alpha;
@@ -136,7 +136,7 @@ public class Background {
 
     public Gradient gradient;
     public Color bgcolor;
-    public BufferedImage bgImage;
+    public BufferedImage image;
     public String imgSrc;
 
 

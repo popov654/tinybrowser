@@ -40,8 +40,8 @@ public class Transition {
         }
         if (property.startsWith("background")) {
 
-            if ((property.equals("background-color") || property.equals("background")) && end_value != null && block.background.gradient == null && block.background.bgImage == null &&
-                  (block.target_background == null || block.target_background.gradient == null && block.target_background.bgImage == null)) {
+            if ((property.equals("background-color") || property.equals("background")) && end_value != null && block.background.gradient == null && block.background.image == null &&
+                  (block.target_background == null || block.target_background.gradient == null && block.target_background.image == null)) {
                 
                 value_type = "color";
 
@@ -305,8 +305,8 @@ public class Transition {
             return;
         }
 
-        if (prop.equals("background-color") && block.background.gradient == null && block.background.bgImage == null &&
-                block.target_background.gradient == null && block.target_background.bgImage == null) {
+        if (prop.equals("background-color") && block.background.gradient == null && block.background.image == null &&
+                block.target_background.gradient == null && block.target_background.image == null) {
             block.background.bgcolor = color;
             for (Block part: block.parts) {
                 part.background.bgcolor = block.background.bgcolor;

@@ -672,7 +672,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             g2d.fillRect(0, 0, bw, bh);
         }
         Background parentBackground = parent != null ? parent.background : null;
-        if (parentBackground != null && parentBackground.bgcolor != null && parentBackground.gradient == null && parentBackground.bgImage == null) {
+        if (parentBackground != null && parentBackground.bgcolor != null && parentBackground.gradient == null && parentBackground.image == null) {
             g2d.setColor(parentBackground.bgcolor);
             //g2d.fillRect(0, 0, bw, bh);
         }
@@ -901,7 +901,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         //if (display_type == 2) System.err.println(width + "x" + height);
-        else if (background.bgImage != null) {
+        else if (background.image != null) {
             paintBackgroundImage(g2d, x0, y0);
         }
     }
@@ -1066,7 +1066,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void paintBackgroundImage(Graphics2D g2d, int x0, int y0) {
-        if (background == null || background.bgImage == null) return;
+        if (background == null || background.image == null) return;
         if (arc[0] > 0 || arc[1] > 0 || arc[2] > 0 || arc[3] > 0) {
             double[] arcs = new double[4];
             for (int i = 0; i < 4; i++) {
@@ -1091,17 +1091,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (background.background_repeat == BackgroundRepeat.NONE) {
             int x = x0 + borderWidth[3] + background.background_pos_x;
             int y = y0 + borderWidth[0] + background.background_pos_y;
-            int iw = background.background_size_x < 0 ? background.bgImage.getWidth() : background.background_size_x;
-            int ih = background.background_size_y < 0 ? background.bgImage.getHeight() : background.background_size_y;
+            int iw = background.background_size_x < 0 ? background.image.getWidth() : background.background_size_x;
+            int ih = background.background_size_y < 0 ? background.image.getHeight() : background.background_size_y;
             //Image scaledImage = bgImage.getScaledInstance(20, 20, java.awt.Image.SCALE_SMOOTH);
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2d.drawImage(background.bgImage, x, y, x+iw, y+ih, 0, 0, background.bgImage.getWidth(), background.bgImage.getHeight(), this);
+            g2d.drawImage(background.image, x, y, x+iw, y+ih, 0, 0, background.image.getWidth(), background.image.getHeight(), this);
         } else {
             int x = x0 + borderWidth[3] + background.background_pos_x;
             int y = y0 + borderWidth[0] + background.background_pos_y;
 
-            int iw = background.background_size_x < 1 ? background.bgImage.getWidth() : background.background_size_x;
-            int ih = background.background_size_y < 1 ? background.bgImage.getHeight() : background.background_size_y;
+            int iw = background.background_size_x < 1 ? background.image.getWidth() : background.background_size_x;
+            int ih = background.background_size_y < 1 ? background.image.getHeight() : background.background_size_y;
 
             int w = x + iw;
             int h = y + ih;
@@ -1123,7 +1123,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     int y2 = Math.min(h, y+ih);
                     int x_from = x < borderWidth[3] ? x0+borderWidth[3]-x : x0;
                     int y_from = y < borderWidth[0] ? y0+borderWidth[0]-y : y0;
-                    g2d.drawImage(background.bgImage, x1, y1, x2, y2, x_from, y_from, x_from+x2-x1, y_from+y2-y1, this);
+                    g2d.drawImage(background.image, x1, y1, x2, y2, x_from, y_from, x_from+x2-x1, y_from+y2-y1, this);
                     x += iw;
                 }
                 y += ih;
@@ -1489,7 +1489,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void displayNextFrame() {
         if (!has_animation) return;
         current_frame = current_frame + 1 > animation_frames.length - 1 ? 0 : current_frame + 1;
-        background.bgImage = animation_frames[current_frame].getImage();
+        background.image = animation_frames[current_frame].getImage();
         last_frame_displayed = System.currentTimeMillis();
         forceRepaint();
         repaint();
@@ -1853,7 +1853,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (background == null) {
             background = new Background();
         }
-        if (background.bgImage == null) {
+        if (background.image == null) {
             if (width < 0) width = viewport_width = (int) Math.round(16 * ratio);
             if (height < 0) height = viewport_height = (int) Math.round(16 * ratio);
             setBorderColor("#8a8a9f");
@@ -1872,12 +1872,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             special = true;
         } else {
             if (width < 0 && height < 0) {
-                width = viewport_width = background.bgImage.getWidth();
-                height = viewport_height = background.bgImage.getHeight();
+                width = viewport_width = background.image.getWidth();
+                height = viewport_height = background.image.getHeight();
                 auto_width = true;
                 auto_height = true;
             } else {
-                double aspect_ratio = (double) background.bgImage.getWidth() / background.bgImage.getHeight();
+                double aspect_ratio = (double) background.image.getWidth() / background.image.getHeight();
                 if (width < 0) {
                     width = viewport_width = (int) (height * aspect_ratio);
                     auto_width = true;
@@ -1956,7 +1956,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void createTextInput(FocusListener fl) {
-        if (background == null || background.bgcolor == null && background.gradient == null && background.bgImage == null) {
+        if (background == null || background.bgcolor == null && background.gradient == null && background.image == null) {
             if (background == null) background = new Background();
             background.bgcolor = document.inputBackgroundColor;
         }
@@ -4897,7 +4897,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             background = new Background();
         }
         if (path == null || path.isEmpty()) {
-            background.bgImage = null;
+            background.image = null;
             background.imgSrc = "";
             forceRepaint();
             return;
@@ -4907,13 +4907,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (path.equals(background.imgSrc)) return;
             background.imgSrc = path;
             if (path.startsWith("http")) {
-                background.bgImage = ImageIO.read(new URL(path));
+                background.image = ImageIO.read(new URL(path));
                 String[] str = path.split("/");
                 f = File.createTempFile("tmp_", str[str.length-1]);
-                ImageIO.write(background.bgImage, "png", f);
+                ImageIO.write(background.image, "png", f);
             } else {
                 f = new File(path);
-                background.bgImage = ImageIO.read(f);
+                background.image = ImageIO.read(f);
             }
             ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
             ir.setInput(ImageIO.createImageInputStream(f));
@@ -4946,13 +4946,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         try {
             File f;
             if (background.imgSrc.startsWith("http")) {
-                background.bgImage = ImageIO.read(new URL(background.imgSrc));
+                background.image = ImageIO.read(new URL(background.imgSrc));
                 String[] str = background.imgSrc.split("/");
                 f = File.createTempFile("tmp_", str[str.length-1]);
-                ImageIO.write(background.bgImage, "png", f);
+                ImageIO.write(background.image, "png", f);
             } else {
                 f = new File(background.imgSrc);
-                background.bgImage = ImageIO.read(f);
+                background.image = ImageIO.read(f);
             }
             ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
             ir.setInput(ImageIO.createImageInputStream(f));
@@ -5774,7 +5774,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             boolean use_fast_update = display_type != Display.FLEX && display_type != Display.INLINE_FLEX && inputType == Input.NONE && document.fast_update;
             document.no_layout = use_fast_update;
             performLayout(use_fast_update);
-            if (viewport_height != old_height && background != null && background.bgImage != null) {
+            if (viewport_height != old_height && background != null && background.image != null) {
                 background.background_pos_x = (int) (old_pos_x * viewport_width);
                 background.background_pos_y = (int) (old_pos_y * viewport_height);
                 background.background_size_x = (int) Math.max(0, old_size_x * viewport_width);
@@ -5811,7 +5811,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         } else if (this == document.root && document.ready) {
             document.root.performLayout();
-            if (viewport_height != old_height && background != null && background.bgImage != null) {
+            if (viewport_height != old_height && background != null && background.image != null) {
                 background.background_pos_x = (int) (old_pos_x * viewport_width);
                 background.background_pos_y = (int) (old_pos_y * viewport_height);
                 background.background_size_x = (int) Math.max(0, old_size_x * viewport_width);
@@ -5852,8 +5852,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         background.background_size_x = getValueInPixels(val, units);
         background.background_size_x_auto = false;
-        if (background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
-            background.background_size_y = (int)Math.round(background.background_size_x / ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
+        if (background.background_size_y_auto && background.image != null && background.image.getHeight() > 0) {
+            background.background_size_y = (int)Math.round(background.background_size_x / ((double) background.image.getWidth() / background.image.getHeight()));
         }
         forceRepaint();
     }
@@ -5869,8 +5869,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         background.background_size_y = getValueInPixels(val, units);
         background.background_size_y_auto = false;
-        if (background.background_size_x_auto && background.bgImage != null) {
-            background.background_size_x = (int)Math.round(background.background_size_y * ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
+        if (background.background_size_x_auto && background.image != null) {
+            background.background_size_x = (int)Math.round(background.background_size_y * ((double) background.image.getWidth() / background.image.getHeight()));
         }
         forceRepaint();
     }
@@ -5908,15 +5908,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         background.background_size_x_auto = val_x < 0;
         background.background_size_y_auto = val_y < 0;
 
-        if (!background.background_size_x_auto && background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
-            background.background_size_y = (int)Math.round(background.background_size_x / ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
+        if (!background.background_size_x_auto && background.background_size_y_auto && background.image != null && background.image.getHeight() > 0) {
+            background.background_size_y = (int)Math.round(background.background_size_x / ((double) background.image.getWidth() / background.image.getHeight()));
         }
-        else if (background.background_size_x_auto && !background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
-            background.background_size_x = (int)Math.round(background.background_size_y * ((double) background.bgImage.getWidth() / background.bgImage.getHeight()));
+        else if (background.background_size_x_auto && !background.background_size_y_auto && background.image != null && background.image.getHeight() > 0) {
+            background.background_size_x = (int)Math.round(background.background_size_y * ((double) background.image.getWidth() / background.image.getHeight()));
         }
-        else if (background.background_size_x_auto && background.background_size_y_auto && background.bgImage != null && background.bgImage.getHeight() > 0) {
-            background.background_size_x = background.bgImage.getWidth();
-            background.background_size_y = background.bgImage.getHeight();
+        else if (background.background_size_x_auto && background.background_size_y_auto && background.image != null && background.image.getHeight() > 0) {
+            background.background_size_x = background.image.getWidth();
+            background.background_size_y = background.image.getHeight();
         }
 
         forceRepaint();
@@ -5931,7 +5931,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (background == null) {
             background = new Background();
         }
-        double r1 = (background.bgImage != null && background.bgImage.getHeight() > 0) ? (double) background.bgImage.getWidth() / background.bgImage.getHeight() : 0;
+        double r1 = (background.image != null && background.image.getHeight() > 0) ? (double) background.image.getWidth() / background.image.getHeight() : 0;
         double r2 = height > 0 ? (double) width / height : 0;
         if (r1 > r2) {
             background.background_size_y_auto = true;
@@ -5949,7 +5949,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (background == null) {
             background = new Background();
         }
-        double r1 = (background.bgImage != null && background.bgImage.getHeight() > 0) ? (double) background.bgImage.getWidth() / background.bgImage.getHeight() : 0;
+        double r1 = (background.image != null && background.image.getHeight() > 0) ? (double) background.image.getWidth() / background.image.getHeight() : 0;
         double r2 = height > 0 ? (double) width / height : 0;
         if (r1 < r2) {
             background.background_size_y_auto = true;
