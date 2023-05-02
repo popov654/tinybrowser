@@ -306,6 +306,16 @@ public class Builder {
         }
     }
 
+    public void loadChildDocumentAsync(final Block b) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                loadChildDocument(b);
+            }
+        });
+        t.start();
+    }
+
     public void setDefaultDisplayType(Block b, boolean force_update) {
         Node node = b.node;
         int old_value = b.display_type;

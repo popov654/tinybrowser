@@ -865,14 +865,25 @@ public class HTMLElement extends HTMLNode {
         render.Block b = Mapper.get(node);
         if (b != null) {
             if (attr.equals("src") && node.tagName.equals("iframe")) {
-                b.builder.loadChildDocument(b);
+                b.builder.loadChildDocumentAsync(b);
             } else if (attr.equals("src") && node.tagName.equals("img")) {
-                b.setBackgroundImage(b.document.baseUrl + node.getAttribute("src"));
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        render.Block b = Mapper.get(node);
+                        b.setBackgroundImage(b.document.baseUrl + node.getAttribute("src"));
+                        HTMLElement imgElement = HTMLElement.create(b.node);
+                        imgElement.set("naturalWidth", new jsparser.JSInt(b.background.image.getWidth()));
+                        imgElement.set("naturalHeight", new jsparser.JSInt(b.background.image.getHeight()));
+                    }
+                });
+                t.start();
             } else if (attr.equals("href")) {
                 b.setHref(value);
             } else if (node.tagName.equals("form")) {
                 if (b.form == null) {
                     render.Form form = new render.Form(b);
+                    b.form = form;
                 }
                 b.form.url = node.getAttribute("action");
                 if (node.hasAttribute("method")) {
