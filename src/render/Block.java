@@ -1987,6 +1987,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Font font = new Font(fontFamily, style, fontSize);
 
         tf.setPreferredSize(new Dimension(width, height));
+        tf.setMargin(new Insets(paddings[0], paddings[3], paddings[2], paddings[1]));
         tf.setFont(font);
 
         add(tf);
@@ -2067,6 +2068,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             tf.setBackground(background.bgcolor);
         }
         tf.setForeground(color);
+
+        if ((inputType == Input.TEXT || inputType == Input.TEXTAREA) && display_type != Display.BLOCK) {
+            setWidth(200);
+        }
+
         if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
                (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||
                background != null && background.bgcolor != null && (background.bgcolor.getAlpha() < 255 || inputType == 3 && background.bgcolor.getAlpha() > 0)) {
@@ -2109,6 +2115,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         btn.setForeground(color);
         if (!document.use_native_inputs) {
             btn.setContentAreaFilled(false);
+        }
+        if (inputType == Input.BUTTON && display_type != Display.BLOCK) {
+            int bw = getFontMetrics(font).stringWidth(btn.getText()) + 8 + borderWidth[3] + paddings[3] + borderWidth[1] + paddings[1];
+            setWidth((int) Math.round((double) bw / ratio));
         }
         if ((borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0) &&
                (borderColor[0].getAlpha() > 0 || borderColor[1].getAlpha() > 0 || borderColor[2].getAlpha() > 0 || borderColor[3].getAlpha() > 0) ||

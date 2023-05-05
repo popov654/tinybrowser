@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=windows-1251" />
+
+<title>Test</title>
+
+<style type="text/css">
+
+form {
+   border: 1px solid #c2c2c2;
+   border-radius: 4px;
+   padding: 12px;
+   max-width: 260px;
+   font-size: 12px;
+}
+
+input[type="text"], textarea {
+   display: block;
+}
+
+</style>
+<script>
+window.addEventListener('load', function() {
+   console.log("Document loaded")
+}, false)
+</script>
+</head>
+<body>
+   <form method="post" action="http://popov654.pp.ru/form.php">
+      <label for="name">Name:</label>
+      <input type="text" name="name" id="name" />
+      <label for="about">About:</label>
+      <textarea name="about" id="about"></textarea>
+      <input type="submit" value="Submit" />
+   </form>
+</body>
+</html>

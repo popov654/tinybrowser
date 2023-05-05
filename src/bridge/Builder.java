@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import jsparser.Expression;
 import jsparser.HTMLElement;
@@ -171,8 +172,40 @@ public class Builder {
             } else if (document != null) {
                 form.url = document.baseUrl;
             }
-        }
-        if (b.document != null && (node.tagName.equals("audio") || node.tagName.equals("video")) &&
+        } else if (node.tagName.matches("(input|textarea|select|button)")) {
+            String type = node.getAttribute("type");
+            if (node.getAttribute("name") != null && !node.getAttribute("name").isEmpty()) {
+                b.inputName = node.getAttribute("name");
+            }
+            if (node.tagName.equals("input") && (type == null || type.equals("text"))) {
+                b.inputType = Block.Input.TEXT;
+                if (node.getAttribute("value") != null) {
+                    b.inputValue = b.defaultInputValue = node.getAttribute("value");
+                }
+                b.inputPlaceholderText = node.getAttribute("placeholder") != null ? node.getAttribute("placeholder") : "";
+            } else if (node.tagName.equals("input") && type.equals("radio")) {
+                b.inputType = Block.Input.RADIO;
+            } else if (node.tagName.equals("input") && type.equals("checkbox")) {
+                b.inputType = Block.Input.CHECKBOX;
+            } else if (node.tagName.equals("input") && type.equals("number")) {
+                b.inputType = Block.Input.NUMBER;
+            } else if (node.tagName.equals("input") && type.equals("file")) {
+                b.inputType = Block.Input.FILE;
+            } else if (node.tagName.equals("input") && type.matches("(submit|reset|button)")) {
+                b.inputType = Block.Input.BUTTON;
+                b.addText(node.getAttribute("value") != null ? node.getAttribute("value") : "");
+                if (type.equals("submit")) b.buttonType = Block.ButtonType.SUBMIT;
+                else if (type.equals("reset")) b.buttonType = Block.ButtonType.RESET;
+            } else if (node.tagName.equals("select")) {
+                b.inputType = Block.Input.SELECT;
+            } else if (node.tagName.equals("textarea")) {
+                b.inputType = Block.Input.TEXTAREA;
+                b.inputValue = b.defaultInputValue = node.getTextContent();
+                b.inputPlaceholderText = node.getAttribute("placeholder") != null ? node.getAttribute("placeholder") : "";
+            } else if (node.tagName.equals("button")) {
+                b.inputType = Block.Input.BUTTON;
+            }
+        } else if (b.document != null && (node.tagName.equals("audio") || node.tagName.equals("video")) &&
                 node.getAttribute("src") != null) {
             String src = node.getAttribute("src");
             if (!src.isEmpty()) {
@@ -726,6 +759,24 @@ public class Builder {
         else if (node.tagName.equals("li")) {
             b.list_item_type = 2;
         }
+        else if (b.inputType != Block.Input.NONE) {
+            b.display_type = Block.Display.INLINE_BLOCK;
+            b.fontSize = b.parent.fontSize;
+            b.setMargins(3, 0, 3, 0);
+            b.setPaddings(1, 2, 2, 2);
+            b.setBorderRadius(2);
+            b.setBorderColor(new Color(118, 118, 123));
+            b.setScaleBorder(false);
+            b.setBorderWidth(1);
+
+            int rows = b.inputType == Block.Input.TEXTAREA ? 3 : 1;
+            if (b.inputType == Block.Input.TEXTAREA && node.getAttribute("rows") != null && node.getAttribute("rows").matches("[1-9][0-9]*")) {
+                rows = Integer.parseInt(node.getAttribute("rows"));
+            }
+            int height = (b.fontSize + 2) * rows + b.paddings[0] + b.paddings[2] + b.borderWidth[0] + b.borderWidth[2];
+
+            b.setHeight((int) Math.floor(height / b.ratio));
+        }
         if (b.display_type != Block.Display.INLINE) {
             if (node.getAttribute("width") != null) {
                 b.setWidth(Integer.parseInt(node.getAttribute("width")));
@@ -782,6 +833,15 @@ public class Builder {
         runtimeStyleMap.clear();
 
         resetStylesRecursive(document.root, false, true);
+
+        if (document.focused_block != null) {
+            java.awt.Component[] c = document.focused_block.getComponents();
+            for (int i = 0; i < c.length; i++) {
+                if (c[i] instanceof javax.swing.text.JTextComponent) {
+                    c[i].requestFocus();
+                }
+            }
+        }
     }
 
     public void applyStyles(Block b) {
@@ -997,6 +1057,20 @@ public class Builder {
             resetStylesRecursive(b.getChildren().get(i), true, force);
         }
 
+        if (b.inputType != Block.Input.NONE && force) {
+            b.inputReady = false;
+            if (b.inputType == Block.Input.BUTTON) {
+                java.awt.Component[] c = b.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    if (c[i] instanceof JButton && b.getChildren().size() > 0) {
+                        b.getChildren().get(0).textContent = ((JButton)c[i]).getText();
+                        break;
+                    }
+                }
+            }
+            b.removeAll();
+        }
+
         b.setNeedRestoreSelection(true);
         if ((b == b.document.root || !no_rec) && !force) {
             boolean use_fast_update = document.fast_update;
@@ -1010,6 +1084,8 @@ public class Builder {
             document.repaint();
         }
         b.setNeedRestoreSelection(false);
+
+        
     }
 
     public void resetStylesRecursive(Block b) {
