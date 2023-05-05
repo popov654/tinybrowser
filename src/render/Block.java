@@ -5520,7 +5520,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void setMaxWidth(int w) {
-        w = (int) (w * ratio);
         max_width = w;
         if (width > w) {
             setWidth(w);

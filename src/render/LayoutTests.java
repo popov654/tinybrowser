@@ -610,7 +610,7 @@ public class LayoutTests extends JFrame {
         document.ready = false;
 
         b.setHeight(-1);
-        b.setMaxWidth(340);
+        b.setMaxWidth(460);
         b.form = new Form(b);
         b.form.method = "POST";
         b.form.url = "http://popov654.pp.ru/form.php";
