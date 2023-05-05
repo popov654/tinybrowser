@@ -6291,7 +6291,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 setMaxWidthPercentage(Float.parseFloat(value.replaceAll("[a-z%]+$", "")));
             }
             Block b = doIncrementLayout(old_width, viewport_height, false);
-            b.forceRepaint();
+            if (b != null) b.forceRepaint();
             if (document != null) document.repaint();
             return;
         }
@@ -7735,7 +7735,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             children.add(tb);
         }
-        if (document.prevent_mixed_content) {
+        if (document != null && document.prevent_mixed_content) {
             normalizeContent();
         }
         if (document != null && document.ready) {
