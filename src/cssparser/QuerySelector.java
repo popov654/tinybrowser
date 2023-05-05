@@ -23,10 +23,18 @@ public class QuerySelector {
             for (int i = 1; i < a.length; i++) {
                 q.combine(new QuerySelector(a[i], group, hp, ""));
             }
-            resultSet = q.resultSet;
-        } else {
-            this.rules = CSSParser.parseRules(rules);
             this.query = query;
+            this.rules = CSSParser.parseRules(rules);
+            this.group = group;
+            this.hp = hp;
+            resultSet = q.resultSet;
+            hoverNodes = q.hoverNodes;
+            focusNodes = q.focusNodes;
+            activeNodes = q.activeNodes;
+            visitedNodes = q.visitedNodes;
+        } else {
+            this.query = query;
+            this.rules = CSSParser.parseRules(rules);
             this.group = group;
             this.hp = hp;
             parse();
@@ -43,6 +51,10 @@ public class QuerySelector {
 
     public void combine(QuerySelector q) {
         resultSet.addAll(q.getElements());
+        hoverNodes.addAll(q.hoverNodes);
+        focusNodes.addAll(q.focusNodes);
+        activeNodes.addAll(q.activeNodes);
+        visitedNodes.addAll(q.visitedNodes);
     }
 
     public Vector<Node> getElements() {
