@@ -35,6 +35,7 @@ public class Form {
                 }
                 String response = Request.makeRequest(url, method, params, "cp1251", true, multipart);
 
+                block.document.debug = true;
                 if (block.document.debug) {
                     System.out.println("Response:\n\n" + response);
                 }

@@ -97,9 +97,9 @@ public class Reader {
         root.builder.setWindowFrame(frame);
         document.setBaseUrl(Main.getInstallPath());
 
-        document.setPreferredSize(new Dimension(460, 240));
         document.width = 460;
-        document.height = 240;
+        document.height = 380;
+        document.setPreferredSize(new Dimension(document.width, document.height));
 
         document.root.width = document.width;
         document.root.height = document.height;

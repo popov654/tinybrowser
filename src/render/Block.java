@@ -6022,15 +6022,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setDisplayType(int value) {
         display_type = value;
-        if (display_type != Display.BLOCK && (auto_width || display_type == Display.INLINE)) {
-            width = borderWidth[3] + paddings[3] + paddings[1] + borderWidth[1];
-            if (height < 0 || display_type == Display.INLINE) {
-                height = borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
+        if (inputType == Input.NONE) {
+            if (display_type != Display.BLOCK && (auto_width || display_type == Display.INLINE)) {
+                width = borderWidth[3] + paddings[3] + paddings[1] + borderWidth[1];
+                if (height < 0 || display_type == Display.INLINE) {
+                    height = borderWidth[0] + paddings[0] + paddings[2] + borderWidth[2];
+                }
             }
-        }
-        if (display_type == Display.INLINE_BLOCK && auto_width) {
-            width = 0;
-            viewport_width = 0;
+            if (display_type == Display.INLINE_BLOCK && auto_width) {
+                width = 0;
+                viewport_width = 0;
+            }
         }
         if (display_type == Display.NONE) {
             removeTextLayers();

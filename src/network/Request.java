@@ -165,6 +165,8 @@ public class Request {
             long end = System.currentTimeMillis();
             System.out.println("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
 
+            debug = false;
+
             return response;
         } catch (MalformedURLException ex) {
             Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);

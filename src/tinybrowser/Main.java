@@ -180,7 +180,7 @@ public class Main {
     }
 
     public static void visualBuilderTest(Reader reader, Document document) {
-        reader.displayDocument(document, "Render Test", 460, 240);
+        reader.displayDocument(document, "Render Test", 480, 380);
         //documentResizeTest(frame, panel, document, 1000, 400);
     }
 
