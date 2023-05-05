@@ -1923,12 +1923,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (document != null) {
                     document.focused_block = (Block) ((Component)e.getSource()).getParent();
                 }
+                if (inputType == Input.TEXT || inputType == Input.TEXTAREA) {
+                    updateInputPlaceholder();
+                }
             }
 
             @Override
             public void focusLost(FocusEvent e) {
                 if (document != null) {
                     document.focused_block = null;
+                }
+                if (inputType == Input.TEXT || inputType == Input.TEXTAREA) {
+                    updateInputPlaceholder();
                 }
             }
         };
@@ -2064,6 +2070,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             tf.setBorder(null);
             tf.setBounds(_x_ + borderWidth[3] + paddings[3], _y_ + borderWidth[0], width - borderWidth[3] - borderWidth[1] - paddings[3] - paddings[1], height - borderWidth[0] - borderWidth[2]);
         }
+        updateFormEntry();
     }
 
     public void createButtonInput(FocusListener fl) {
@@ -2721,11 +2728,32 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         updateFormEntry();
     }
 
+    public void updateInputPlaceholder() {
+        Component[] c = getComponents();
+        for (int i = 0; i < c.length; i++) {
+            if (c[i] instanceof JTextComponent) {
+                JTextComponent textField = (JTextComponent) c[i];
+                String text = textField.getText();
+                if (text.length() == 0 && !c[i].hasFocus()) {
+                    textField.setForeground(inputPlaceholderTextColor);
+                    textField.setText(inputPlaceholderText);
+                } else {
+                    textField.setForeground(color);
+                    textField.setText(inputValue);
+                }
+                break;
+            }
+        }
+    }
+
     public void updateFormEntry() {
         if (inputDisabled || inputName.isEmpty() || ((inputType == Input.RADIO || inputType == Input.CHECKBOX) && !checked) ||
               (inputType == Input.FILE && inputValue.matches("\\s*"))) {
             formEntry = null;
             return;
+        }
+        if (!inputPlaceholderText.isEmpty() && (inputType == Input.TEXT || inputType == Input.TEXTAREA)) {
+            updateInputPlaceholder();
         }
         if (inputType == Input.SELECT) {
             String value = "";
@@ -8477,6 +8505,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Block labelFor;
 
     public boolean inputReady = false;
+
+    public String inputPlaceholderText = "";
+    public Color  inputPlaceholderTextColor = new Color(128, 132, 134);
 
     public double inputNumberStep = 1;
     public double inputNumberMin = 0;
