@@ -6250,6 +6250,84 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             setAutoYMargin();
             return;
         }
+        if (prop.equals("margin-left")) {
+            margins[3] = getValueInPixels(value);
+            Block b = parent.doIncrementLayout();
+            if (b != null) b.forceRepaint();
+            return;
+        }
+        if (prop.equals("margin-right")) {
+            margins[1] = getValueInPixels(value);
+            Block b = parent.doIncrementLayout();
+            if (b != null) b.forceRepaint();
+            return;
+        }
+        if (prop.equals("margin-top")) {
+            margins[0] = getValueInPixels(value);
+            Block b = parent.doIncrementLayout();
+            if (b != null) b.forceRepaint();
+            return;
+        }
+        if (prop.equals("margin-bottom")) {
+            margins[2] = getValueInPixels(value);
+            Block b = parent.doIncrementLayout();
+            if (b != null) b.forceRepaint();
+            return;
+        }
+        if (prop.equals("padding")) {
+            String[] s = value.split("\\s");
+            if (s.length > 0) {
+                if (s.length == 4) {
+                    setProp("padding-top", s[0]);
+                    setProp("padding-right", s[1]);
+                    setProp("padding-bottom", s[2]);
+                    setProp("padding-left", s[3]);
+                    return;
+                } else if (s.length == 3) {
+                    setProp("padding-top", s[0]);
+                    setProp("padding-right", s[1]);
+                    setProp("padding-bottom", s[2]);
+                    setProp("padding-left", s[1]);
+                    return;
+                } else if (s.length == 2) {
+                    setProp("padding-top", s[0]);
+                    setProp("padding-right", s[1]);
+                    setProp("padding-bottom", s[0]);
+                    setProp("padding-left", s[1]);
+                    return;
+                } else {
+                    setProp("padding-top", s[0]);
+                    setProp("padding-right", s[0]);
+                    setProp("padding-bottom", s[0]);
+                    setProp("padding-left", s[0]);
+                    return;
+                }
+            }
+        }
+        if (prop.equals("padding-left")) {
+            paddings[3] = getValueInPixels(value);
+            performLayout();
+            forceRepaint();
+            return;
+        }
+        if (prop.equals("padding-right")) {
+            paddings[1] = getValueInPixels(value);
+            performLayout();
+            forceRepaint();
+            return;
+        }
+        if (prop.equals("padding-top")) {
+            paddings[0] = getValueInPixels(value);
+            performLayout();
+            forceRepaint();
+            return;
+        }
+        if (prop.equals("padding-bottom")) {
+            paddings[2] = getValueInPixels(value);
+            performLayout();
+            forceRepaint();
+            return;
+        }
         if (prop.equals("width") && value.equals("auto")) {
             setWidth(-1);
             return;
