@@ -1884,7 +1884,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     auto_height = false;
                 } else if (height < 0) {
                     height = viewport_height = (int) ((double) width / aspect_ratio);
-                    auto_width = false;
+                    if (inputType != Input.NUMBER) {
+                        auto_width = false;
+                    }
                     auto_height = true;
                 }
             }
@@ -1998,27 +2000,44 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             @Override
             public void keyReleased(KeyEvent e) {
                 Block parent = ((Block)tf.getParent());
-                String text = ((JTextComponent)e.getSource()).getText();
-                ((JTextComponent)e.getSource()).setText(text.replaceAll("[^0-9.-]", "").replaceAll("(?<=.+)-", "").replaceAll("^\\.", ""));
-                if (parent.inputType == Input.NUMBER && parent.inputNumberMin >= 0) {
-                    if (e.getKeyChar() == '-') {
-                        ((JTextComponent)e.getSource()).setText(text.replace("-", ""));
-                        return;
+
+                if (parent.inputType == Input.NUMBER) {
+                    String text = ((JTextComponent)e.getSource()).getText();
+                    ((JTextComponent)e.getSource()).setText(text.replaceAll("[^0-9.-]", "").replaceAll("(?<=.+)-", "").replaceAll("^\\.", ""));
+                    if (parent.inputType == Input.NUMBER && parent.inputNumberMin >= 0) {
+                        if (e.getKeyChar() == '-') {
+                            ((JTextComponent)e.getSource()).setText(text.replace("-", ""));
+                            return;
+                        }
                     }
+
+                    double value = parent.inputNumberMin;
+                    try {
+                        value = Double.parseDouble(((JTextComponent)e.getSource()).getText());
+                    } catch (NumberFormatException ex) {}
+
+                    if (inputNumberStep == (int) Math.floor(inputNumberStep) && value == (int) Math.floor(value)) {
+                        text = Integer.toString((int)Math.round(value));
+                    }
+
+                    int style = (text_bold || text_italic) ? ((text_bold ? Font.BOLD : 0) | (text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
+                    Font font = new Font(fontFamily, style, fontSize);
+
+                    int extra_width = (int) Math.round(30 * ratio - getFontMetrics(font).stringWidth("0"));
+                    int w = getFontMetrics(font).stringWidth(text) + extra_width;
+
+                    parent.inputValue = text;
+
+                    if (parent.auto_width) {
+                        parent.setWidth((int) Math.round(w / ratio));
+                        ((JTextComponent)e.getSource()).setSize(parent.width - parent.borderWidth[3] - parent.borderWidth[1] - 24, getSize().height);
+                    }
+                } else {
+                    parent.inputValue = ((JTextComponent)e.getSource()).getText();
                 }
-
-                double value = parent.inputNumberMin;
-                try {
-                    value = Double.parseDouble(((JTextComponent)e.getSource()).getText());
-                } catch (NumberFormatException ex) {}
-
-                if (inputNumberStep == (int) Math.floor(inputNumberStep) && value == (int) Math.floor(value)) {
-                    text = Integer.toString((int)Math.round(value));
-                }
-
-                parent.inputValue = text;
-
+                
                 parent.updateFormEntry();
+
                 if (parent.node != null) {
                     parent.fireEventForNode(e, parent.node, null, "keyUp");
                     parent.fireEventForNode(e, parent.node, null, "input");
@@ -2065,7 +2084,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         btn.setPreferredSize(new Dimension(width, height));
         btn.setFont(font);
-
         
         add(btn);
         btn.setFocusPainted(false);
@@ -5570,7 +5588,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 width = min_width;
             }
             rules_for_recalc.remove("width");
-            auto_width = false;
+            if (inputType != Input.NUMBER) auto_width = false;
             viewport_width = width;
             if (scrollbar_y != null) {
                 viewport_width = width - scrollbar_y.getPreferredSize().width;
@@ -5613,7 +5631,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         width = viewport_width = (int) (w * ratio);
         height = viewport_height = (int) (h * ratio);
-        auto_width = w < 0;
+        if (inputType != Input.NUMBER) {
+            auto_width = w < 0;
+        }
         auto_height = h < 0;
 
         orig_width = w;
@@ -5627,7 +5647,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             width = min_width;
         }
         rules_for_recalc.remove("width");
-        auto_width = false;
 
         if (auto_x_margin && !auto_width) {
             setAutoXMargin();

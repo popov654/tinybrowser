@@ -588,7 +588,7 @@ public class Layouter {
                             d.setHeight(d.height > 0 && !d.auto_height ? d.orig_height : -1, true);
                         }
                     } else {
-                        d.setWidth(d.width > 0 && !d.auto_width ? d.orig_width : -1, true);
+                        d.setWidth(d.width > 0 && !d.auto_width || d.inputType == Block.Input.NUMBER ? d.orig_width : -1, true);
                     }
                     d.performLayout();
                 }
