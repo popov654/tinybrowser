@@ -266,8 +266,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (scroll_top < 0) {
                 scroll_top = 0;
             }
-            if (scroll_top >= content_y_max + paddings[2] - viewport_height) {
-                scroll_top = content_y_max + paddings[2] - viewport_height;
+            int max = Math.max(height, content_y_max) - parent_height;
+            if (scroll_top >= max) {
+                scroll_top = max;
             }
             scroll_y = parent != null ? parent.scroll_y : scroll_top;
             scrollbar_y.getModel().setValue(scroll_top);
@@ -3649,16 +3650,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 content_x_max = el.getOffsetLeft() - borderWidth[3] + w;
             }
         }
-        int h = el.viewport_height - borderWidth[0] - borderWidth[2];
-        if (el.positioning != Position.ABSOLUTE && positioning != Position.FIXED && el.parent != null && el.height > 0) {
+        int h = el.viewport_height;
+        if (el.positioning != Position.ABSOLUTE && el.positioning != Position.FIXED && el.parent != null && el.height > 0) {
             h += el.margins[2] + paddings[2];
         }
-        if (el.getOffsetTop() - borderWidth[0] + h > content_y_max) {
+        if (el.getOffsetTop() + h > content_y_max) {
             if (el.float_type == FloatType.NONE && el.auto_y_margin && el.margins[0] < 0) {
                 el.margins[0] = 0;
                 el.margins[2] = 0;
             }
-            content_y_max = el.getOffsetTop() - borderWidth[0] + h;
+            content_y_max = el.getOffsetTop() + h;
         }
     }
 
