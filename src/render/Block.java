@@ -263,6 +263,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else if (this.scrollbar_y != null) {
             scroll_top += e.getWheelRotation() * scroll_delta;
             int parent_height = parent != null ? parent.viewport_height : document.height;
+            if (parent != null && parent.inputType == Input.SELECT) {
+                parent_height = parent.children.get(1).viewport_height;
+            }
             if (scroll_top < 0) {
                 scroll_top = 0;
             }
