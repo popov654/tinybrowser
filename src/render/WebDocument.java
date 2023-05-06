@@ -441,6 +441,23 @@ public class WebDocument extends JPanel {
         }
     }
 
+    public void linkElements() {
+        linkElementsInside(root);
+    }
+
+    public void linkElementsInside(Block b) {
+        if (b.node != null && b.node.tagName.equals("label") &&
+              b.node.getAttribute("for") != null && !b.node.getAttribute("for").isEmpty()) {
+            Block target = Mapper.get(b.node.document.getElementById(b.node.getAttribute("for")));
+            if (b != target) {
+                b.labelFor = target;
+            }
+        }
+        for (int i = 0; i < b.children.size(); i++) {
+            linkElementsInside(b.children.get(i));
+        }
+    }
+
     public void resized() {
         //panel.repaint();
         width = getWidth();
