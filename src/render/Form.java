@@ -69,6 +69,17 @@ public class Form {
             if (input.inputType >= Block.Input.RADIO && input.inputType <= Block.Input.CHECKBOX) {
                 ((JToggleButton)input.getComponent(0)).getModel().setSelected(input.checked);
             }
+            if (input.inputType == Block.Input.SELECT && input.children.size() > 1) {
+                Block list = input.children.get(1);
+                int index = 0;
+                for (int i = 0; i < list.children.size(); i++) {
+                    if (list.children.get(i).inputValue.equals(input.inputValue)) {
+                        index = i;
+                        break;
+                    }
+                }
+                input.setInputSelectedIndex(index);
+            }
         }
     }
 
