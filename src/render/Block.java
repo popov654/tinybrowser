@@ -541,8 +541,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
         if (scrollbar_x != null && parent != null) {
-            int x = _x_ + width - (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0) - dx;
-            int y = _y_ + borderWidth[0] - dy;
+            int x = _x_ + borderWidth[3] - dx;
+            int y = _y_ + height - borderWidth[2] - dy - scrollbar_x.getPreferredSize().height;
             scrollbar_x.setBounds(x, y, width - borderWidth[1] - borderWidth[3], scrollbar_x.getPreferredSize().height);
         }
         if (scrollbar_y != null && parent != null) {
@@ -3855,7 +3855,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void performSizeCheck() {
-        if (content_x_max > viewport_width - borderWidth[1] - borderWidth[3]) {
+        if (viewport_width > 0 && content_x_max > viewport_width - borderWidth[1] - borderWidth[3]) {
             addScrollbarX();
         }
         else if (content_x_max <= viewport_width - borderWidth[1] - borderWidth[3] && scrollbar_x != null) {
