@@ -772,6 +772,8 @@ public class LayoutTests extends JFrame {
             list.addElement(item);
         }
 
+        list.getChildren().get(0).checked = true;
+
         d06.inputUseOnlyTextInHeader = true;
         d06.createInputList("list", list, 0);
 
