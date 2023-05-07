@@ -6,11 +6,15 @@ import inspector.JSConsole;
 import inspector.WebInspector;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FocusTraversalPolicy;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
@@ -19,15 +23,20 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
 import org.apache.batik.swing.JSVGCanvas;
 
 /**
@@ -75,6 +84,9 @@ public class WebDocument extends JPanel {
         glass.setBackground(new Color(0, 0, 0, 0));
         panel.add(glass);
         panel.setComponentZOrder(glass, 0);
+
+        panel.setFocusTraversalPolicy(new DefaultFocusTraversalPolicy());
+        panel.setFocusCycleRoot(true);
 
         panel.getInputMap().put(KeyStroke.getKeyStroke("F12"), "inspector");
         panel.getActionMap().put("inspector", new Action() {
@@ -137,6 +149,106 @@ public class WebDocument extends JPanel {
             public void removePropertyChangeListener(PropertyChangeListener listener) {}
 
         });
+
+        panel.getInputMap().put(KeyStroke.getKeyStroke("SPACE"), "action");
+        panel.getActionMap().put("action", new Action() {
+
+            public void actionPerformed(ActionEvent e) {
+                if (focused_block.inputType == Block.Input.SELECT) {
+                    Component[] c = focused_block.getComponents();
+                    for (int i = 0; i < c.length; i++) {
+                        if (c[i] instanceof JButton) {
+                            ((JButton)c[i]).doClick();
+                        }
+                    }
+                }
+            }
+
+            public Object getValue(String key) {
+                return null;
+            }
+
+            public void putValue(String key, Object value) {}
+
+            public void setEnabled(boolean b) {}
+
+            public boolean isEnabled() {
+                return true;
+            }
+
+            public void addPropertyChangeListener(PropertyChangeListener listener) {}
+
+            public void removePropertyChangeListener(PropertyChangeListener listener) {}
+
+        });
+        
+    }
+
+    public Block getFocusedElement() {
+        if (focusIndex >= 0) {
+            return focusableElements.get(focusIndex);
+        }
+        return null;
+    }
+
+    public void updateFocusIndex(Block b) {
+        focusIndex = b != null ? focusableElements.indexOf(b) : -1;
+    }
+
+    class DefaultFocusTraversalPolicy extends FocusTraversalPolicy {
+
+        @Override
+        public Component getComponentAfter(Container aContainer, Component aComponent) {
+            focusIndex++;
+            if (focusIndex >= focusableElements.size()) {
+                focusIndex = 0;
+            }
+            return getInnerComponent(focusableElements.get(focusIndex));
+        }
+
+        @Override
+        public Component getComponentBefore(Container aContainer, Component aComponent) {
+            focusIndex--;
+            if (focusIndex < 0) {
+                focusIndex = focusableElements.size() - 1;
+            }
+            return getInnerComponent(focusableElements.get(focusIndex));
+        }
+
+        @Override
+        public Component getFirstComponent(Container aContainer) {
+            return getInnerComponent(focusableElements.firstElement());
+        }
+
+        @Override
+        public Component getLastComponent(Container aContainer) {
+            return getInnerComponent(focusableElements.lastElement());
+        }
+
+        @Override
+        public Component getDefaultComponent(Container aContainer) {
+            if (focusableElements.size() > 0) {
+                focusIndex = 0;
+                return getInnerComponent(focusableElements.firstElement());
+            }
+            return aContainer;
+        }
+
+        private Component getInnerComponent(Block b) {
+            Component[] c = b.getComponents();
+            for (int i = 0; i < c.length; i++) {
+                if (c[i] instanceof JTextComponent || c[i] instanceof JToggleButton || c[i] instanceof JButton) {
+                    c[i].requestFocus();
+                    if (!((b.inputType == Block.Input.SELECT || b.inputType == Block.Input.FILE) && c[i] instanceof JButton)) {
+                        return c[i];
+                    }
+                }
+            }
+            focused_block = b;
+            b.repaint();
+            return b;
+        }
+
     }
 
     public void setRoot(Block b) {
@@ -321,6 +433,12 @@ public class WebDocument extends JPanel {
 
     public void replaceElement(Block b, Block new_block) {
         b.replaceWith(new_block);
+    }
+
+    public void addFocusableElement(Block b) {
+        if (!focusableElements.contains(b)) {
+            focusableElements.add(b);
+        }
     }
 
     public void resized() {
@@ -701,6 +819,9 @@ public class WebDocument extends JPanel {
     public Block hovered_block;
     public Block focused_block;
     public Block highlighted_block;
+
+    public Vector<Block> focusableElements = new Vector<Block>();
+    public int focusIndex = -1;
 
     public HashMap<Node, HashSet<String>> eventsFired = new HashMap<Node, HashSet<String>>();
     public volatile boolean readyEventFired = false;

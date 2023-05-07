@@ -554,6 +554,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             scrollbar_y.setBounds(x, y, scrollbar_y.getPreferredSize().width, sh);
         }
+        if (document != null && this == document.getFocusedElement()) {
+            int outlineWidth = 1;
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(new Color(30, 145, 212));
+            g2d.setStroke(new BasicStroke(outlineWidth));
+            g2d.drawRoundRect(_x_ - dx - outlineWidth + 1, _y_ - dy - outlineWidth + 1, width + outlineWidth * 2 - 2, height + outlineWidth * 2 - 2, 4, 4);
+            g2d.setColor(new Color(30, 130, 208, 118));
+            g2d.drawRoundRect(_x_ - dx - outlineWidth, _y_ - dy - outlineWidth, width + outlineWidth * 2, height + outlineWidth * 2, 5, 5);
+        }
 
         super.paintComponent(g);
     }
@@ -1926,6 +1936,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             public void focusGained(FocusEvent e) {
                 if (document != null) {
                     document.focused_block = (Block) ((Component)e.getSource()).getParent();
+                    document.updateFocusIndex(document.focused_block);
+                    repaint();
                 }
                 if (inputType == Input.TEXT || inputType == Input.TEXTAREA) {
                     updateInputPlaceholder();
@@ -1936,6 +1948,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             public void focusLost(FocusEvent e) {
                 if (document != null) {
                     document.focused_block = null;
+                    repaint();
                 }
                 if (inputType == Input.TEXT || inputType == Input.TEXTAREA) {
                     updateInputPlaceholder();
@@ -2108,6 +2121,24 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         btn.addFocusListener(fl);
 
+        btn.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    Block b = (Block) ((Component)e.getSource()).getParent();
+                    document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+
+        });
+
         btn.setMargin(new Insets(paddings[0], paddings[1], paddings[2], paddings[3]));
         if (background != null && background.bgcolor != null) {
             btn.setBackground(background.bgcolor);
@@ -2235,7 +2266,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int size = (int) Math.round(12 * ratio);
         rb.setPreferredSize(new Dimension(size, size));
         if (width < rb.getPreferredSize().width) width = viewport_width = rb.getPreferredSize().width;
-        height = viewport_height = rb.getPreferredSize().height;
+        if (document.use_native_inputs || orig_height < 0) {
+            height = viewport_height = rb.getPreferredSize().height;
+        }
         rb.setBounds(_x_ + width / 2 - rb.getPreferredSize().width / 2 - 1, _y_ + height / 2 - rb.getPreferredSize().height / 2, height, height);
         if (checked || node != null && node.states.contains("checked")) {
             checked = true;
@@ -2317,6 +2350,29 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         label.setTextOverflow(TextOverflow.ELLIPSIS);
 
         addElement(btn, true);
+
+        this.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    Component[] c = btn.getComponents();
+                    for (int i = 0; i < c.length; i++) {
+                        if (c[i] instanceof JButton) {
+                            ((JButton)c[i]).doClick();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+
+        });
 
         btn.setPositioning(Position.ABSOLUTE);
         btn.setRight(0, Units.px);
@@ -2517,6 +2573,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         addElement(list);
 
         styleInputList();
+        setFocusable(true);
+
+        final Block instance = this;
+
+        this.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    document.root.mouseClicked(new MouseEvent(instance, MouseEvent.MOUSE_CLICKED, 0, 0, instance._x_ - instance.parent.scroll_x, instance._y_ - instance.parent.scroll_y, 1, false));
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+
+        });
 
         // Find minimal list item height and apply to the list header
         if (!inputUseOnlyTextInHeader) {
@@ -2571,6 +2647,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
 
         styleInputList();
+        setFocusable(true);
+
+        final Block instance = this;
+
+        this.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    document.root.mouseClicked(new MouseEvent(instance, MouseEvent.MOUSE_CLICKED, 0, 0, instance._x_ - instance.parent.scroll_x, instance._y_ - instance.parent.scroll_y, 1, false));
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+
+        });
 
         document.ready = ready;
     }
@@ -2704,9 +2800,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (isDropdown) {
                     int header_width = (int) Math.round((getFontMetrics(new Font(fontFamily, Font.PLAIN, header.fontSize)).stringWidth(header.children.get(0).children.get(0).textContent) / ratio) + header.paddings[1]);
                     int header_height = (int) Math.round((double) (list.children.get(0).fontSize + header.paddings[0] + header.paddings[2] + header.borderWidth[0] + header.borderWidth[2]) / ratio);
-                    if (header_width > max_width + paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1]) {
-                        setWidth(header_width, Units.px);
-                    }
+
+                    setWidth(header_width, Units.px);
+                    list.dimensions.remove("width");
+
                     header.setWidth(header_width, Units.px);
                     header.setHeight(header_height, Units.px);
                     list.setPositioning(Position.ABSOLUTE);
@@ -2921,6 +3018,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         b.parent.increaseNumberInputValue();
                     } else {
                         b.parent.decreaseNumberInputValue();
+                    }
+                    if (document != null) {
+                        Component[] c = b.parent.getComponents();
+                        for (int i = 0; i < c.length; i++) {
+                            if (c[i] instanceof JTextComponent) {
+                                c[i].requestFocus();
+                                break;
+                            }
+                        }
+                        document.focused_block = b.parent;
+                        document.updateFocusIndex(b.parent);
+                        b.parent.repaint();
                     }
                 }
             }
@@ -7913,6 +8022,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         if (b.inputType != Input.NONE) {
             b.addToClosestForm();
+        }
+        if (document != null && (b.inputType != Input.NONE || b.href != null)) {
+            document.addFocusableElement(b);
         }
         addToLayout(b, pos, root);
     }

@@ -637,6 +637,7 @@ public class LayoutTests extends JFrame {
         d01.inputType = Block.Input.TEXT;
         d01.inputName = "name";
         d01.inputPlaceholderText = "Your name";
+        l01.labelFor = d01;
 
         b.addElement(l01, true);
         b.addElement(d01, true);
@@ -663,6 +664,7 @@ public class LayoutTests extends JFrame {
         d02.inputType = Block.Input.TEXTAREA;
         d02.inputName = "summary";
         d02.inputPlaceholderText = "Summary";
+        l02.labelFor = d02;
 
         b.addElement(l02, true);
         b.addElement(d02, true);
