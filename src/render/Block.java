@@ -4255,7 +4255,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         int n = 0;
         for (int i = 0; i < list.size() - n; i++) {
-            if (list.get(i).parent != null && list.get(i).parent.inputType == Input.SELECT && list.get(i) == list.get(i).parent.children.get(1)) {
+            if (i > list.size() - 1) break;
+            if (list.get(i).parent != null && list.get(i).parent.inputType == Input.SELECT && list.get(i).parent.children.size() > 1 && list.get(i) == list.get(i).parent.children.get(1)) {
                 Block b = list.get(i);
                 list.remove(i);
                 list.add(b);
@@ -8116,7 +8117,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 block = doIncrementLayout();
             }
             document.root.setNeedRestoreSelection(true);
-            block.forceRepaint();
+            if (block != null) block.forceRepaint();
             document.root.setNeedRestoreSelection(false);
             document.repaint();
         }
