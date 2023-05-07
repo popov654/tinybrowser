@@ -9172,6 +9172,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return -1;
     }
 
+    public boolean isHidden() {
+        Block b = this;
+        while (b != null) {
+            if (b.display_type == Display.NONE || b.visibility == Visibility.HIDDEN) {
+                return true;
+            }
+            b = b.parent;
+        }
+        return false;
+    }
+
 
     public void mouseClicked(MouseEvent e) {
 
@@ -9552,28 +9563,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void mouseEntered(MouseEvent e) {
-        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
-            return;
-        }
+        if (isHidden()) return;
         if (e.getSource() instanceof JTextField || e.getSource() instanceof JTextArea) {
             document.panel.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
         }
     }
 
     public void mouseExited(MouseEvent e) {
-        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
-            return;
-        }
+        if (isHidden()) return;
         if (e.getSource() instanceof JTextField || e.getSource() instanceof JTextArea) {
             document.panel.setCursor(Cursor.getDefaultCursor());
         }
     }
 
     public void mouseDragged(MouseEvent e) {
+        if (isHidden()) return;
         mouseMoved(e);
-        if (display_type == Display.NONE || visibility == Visibility.HIDDEN) {
-            return;
-        }
         if (sel == null) sel = new int[2];
         int x = e.getX();
         int y = e.getY();
@@ -9893,7 +9898,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             b.children.get(0).processLinks(was_hovered, x, y);
         } else {
             for (int i = 0; i < b.children.size(); i++) {
-                if (b.children.get(i).type == NodeTypes.ELEMENT) {
+                if (b.children.get(i).type == NodeTypes.ELEMENT && !b.children.get(i).isHidden()) {
                     b.children.get(i).mouseMoved(e);
                 }
             }
