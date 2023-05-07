@@ -18,20 +18,18 @@ import java.util.regex.Pattern;
 public class QuerySelector {
     public QuerySelector(String query, SelectorGroup group, HTMLParser hp, String rules) {
         if (query.contains(",")) {
-            String[] a = query.split(",\\s*");
-            QuerySelector q = new QuerySelector(a[0], group, hp, "");
-            for (int i = 1; i < a.length; i++) {
-                q.combine(new QuerySelector(a[i], group, hp, ""));
+            String[] s = query.split(",\\s*");
+            children = new Vector<QuerySelector>();
+            resultSet = new Vector<Node>();
+            for (int i = 0; i < s.length; i++) {
+                QuerySelector q = new QuerySelector(s[i], group, hp, "");
+                children.add(q);
+                resultSet.addAll(q.resultSet);
             }
             this.query = query;
             this.rules = CSSParser.parseRules(rules);
             this.group = group;
             this.hp = hp;
-            resultSet = q.resultSet;
-            hoverNodes = q.hoverNodes;
-            focusNodes = q.focusNodes;
-            activeNodes = q.activeNodes;
-            visitedNodes = q.visitedNodes;
         } else {
             this.query = query;
             this.rules = CSSParser.parseRules(rules);
@@ -47,14 +45,6 @@ public class QuerySelector {
 
     public QuerySelector(String query, HTMLParser hp) {
         this(query, null, hp, "");
-    }
-
-    public void combine(QuerySelector q) {
-        resultSet.addAll(q.getElements());
-        hoverNodes.addAll(q.hoverNodes);
-        focusNodes.addAll(q.focusNodes);
-        activeNodes.addAll(q.activeNodes);
-        visitedNodes.addAll(q.visitedNodes);
     }
 
     public Vector<Node> getElements() {
@@ -521,6 +511,12 @@ public class QuerySelector {
     }
 
     public void apply() {
+        if (children != null) {
+            for (QuerySelector child: children) {
+                child.apply();
+            }
+            return;
+        }
         for (int i = 0; i < resultSet.size(); i++) {
             Styles st = StyleMap.getNodeStyles(resultSet.get(i));
             if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0 || visitedNodes.size() > 0) {
@@ -535,6 +531,12 @@ public class QuerySelector {
     public void apply(int width, int height, double dpi) {
         if (width > group.maxWidth || width < group.minWidth || height > group.maxHeight || height < group.minHeight || dpi < group.minDpi || dpi > group.maxDpi) {
            return;
+        }
+        if (children != null) {
+            for (QuerySelector child: children) {
+                child.apply(width, height, dpi);
+            }
+            return;
         }
         for (int i = 0; i < resultSet.size(); i++) {
             Styles st = StyleMap.getNodeStyles(resultSet.get(i));
@@ -559,6 +561,7 @@ public class QuerySelector {
     private String query;
     private String orig_query;
     private SelectorGroup group = null;
+    private Vector<QuerySelector> children;
     private Vector<Node> resultSet;
     private Vector<Node> hoverNodes;
     private Vector<Node> focusNodes;
