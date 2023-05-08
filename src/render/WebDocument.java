@@ -199,6 +199,7 @@ public class WebDocument extends JPanel {
 
         @Override
         public Component getComponentAfter(Container aContainer, Component aComponent) {
+            if (focusableElements.size() == 0) return null;
             focusIndex++;
             if (focusIndex >= focusableElements.size()) {
                 focusIndex = 0;
@@ -208,6 +209,7 @@ public class WebDocument extends JPanel {
 
         @Override
         public Component getComponentBefore(Container aContainer, Component aComponent) {
+            if (focusableElements.size() == 0) return null;
             focusIndex--;
             if (focusIndex < 0) {
                 focusIndex = focusableElements.size() - 1;
@@ -217,11 +219,13 @@ public class WebDocument extends JPanel {
 
         @Override
         public Component getFirstComponent(Container aContainer) {
+            if (focusableElements.size() == 0) return null;
             return getInnerComponent(focusableElements.firstElement());
         }
 
         @Override
         public Component getLastComponent(Container aContainer) {
+            if (focusableElements.size() == 0) return null;
             return getInnerComponent(focusableElements.lastElement());
         }
 
@@ -231,7 +235,7 @@ public class WebDocument extends JPanel {
                 focusIndex = 0;
                 return getInnerComponent(focusableElements.firstElement());
             }
-            return aContainer;
+            return null;
         }
 
         private Component getInnerComponent(Block b) {
