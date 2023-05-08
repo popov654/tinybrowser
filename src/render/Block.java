@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -2002,6 +2003,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         tf.setFont(font);
 
         add(tf);
+        if (tf instanceof JTextArea) {
+            Set<java.awt.AWTKeyStroke> keys_forward = new HashSet<java.awt.AWTKeyStroke>();
+            keys_forward.add(java.awt.AWTKeyStroke.getAWTKeyStroke("TAB"));
+            Set<java.awt.AWTKeyStroke> keys_backward = new HashSet<java.awt.AWTKeyStroke>();
+            keys_backward.add(java.awt.AWTKeyStroke.getAWTKeyStroke("shift TAB"));
+
+            tf.setFocusTraversalKeys(java.awt.KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, null);
+            tf.setFocusTraversalKeys(java.awt.KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, null);
+            java.awt.KeyboardFocusManager.getCurrentKeyboardFocusManager().setDefaultFocusTraversalKeys(
+                java.awt.KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
+                java.util.Collections.unmodifiableSet(keys_forward));
+            java.awt.KeyboardFocusManager.getCurrentKeyboardFocusManager().setDefaultFocusTraversalKeys(
+                java.awt.KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
+                java.util.Collections.unmodifiableSet(keys_backward));
+        }
         tf.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -2016,6 +2032,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 Block parent = ((Block)tf.getParent());
                 if (parent.node != null) {
                     parent.fireEventForNode(e, parent.node, null, "keyDown");
+                }
+                if (inputType == Input.TEXTAREA && e.getKeyCode() == KeyEvent.VK_TAB) {
+                    if (e.isControlDown()) {
+                        inputValue += "\t";
+                        ((JTextComponent)e.getSource()).setText(inputValue);
+                        updateFormEntry();
+                        e.consume();
+                    }
                 }
             }
 
