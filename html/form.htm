@@ -16,8 +16,11 @@ form {
    font-size: 12px;
 }
 
-input[type="text"], textarea {
+input[type="text"], textarea, select {
    display: block;
+}
+select {
+   width: 110px;
 }
 
 </style>
@@ -33,6 +36,7 @@ window.addEventListener('load', function() {
       <input type="text" name="name" id="name" />
       <label for="about">About:</label>
       <textarea name="about" id="about"></textarea>
+      <select name="choice" id="choice"><option>Pizza</option><option>Stake</option><option>Lazagnia</option></select>
       <input type="submit" value="Submit" />
    </form>
 </body>

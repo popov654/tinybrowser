@@ -181,6 +181,7 @@ public class Builder {
             if (node.getAttribute("name") != null && !node.getAttribute("name").isEmpty()) {
                 b.inputName = node.getAttribute("name");
             }
+            b.inputDisabled = b.node.hasAttribute("disabled");
             if (node.tagName.equals("input") && (type == null || type.equals("text"))) {
                 b.inputType = Block.Input.TEXT;
                 if (node.getAttribute("value") != null) {
@@ -202,6 +203,10 @@ public class Builder {
                 else if (type.equals("reset")) b.buttonType = Block.ButtonType.RESET;
             } else if (node.tagName.equals("select")) {
                 b.inputType = Block.Input.SELECT;
+                if (b.node.hasAttribute("size") && b.node.getAttribute("size").matches("[1-9][0-9]*")) {
+                    b.inputListSize = Integer.parseInt(b.node.getAttribute("size"));
+                }
+                b.inputMultipleSelection = b.node.hasAttribute("multiple");
             } else if (node.tagName.equals("textarea")) {
                 b.inputType = Block.Input.TEXTAREA;
                 b.inputValue = b.defaultInputValue = node.getTextContent();
@@ -305,6 +310,11 @@ public class Builder {
                 frameElement.set("contentWindow", childDocument.builder.jsWindow);
                 frameElement.set("contentDocument", childDocument.builder.jsWindow.get("document"));
             }
+        }
+        
+        if (b.parent != null && b.parent.inputType == Block.Input.SELECT) {
+            b.inputValue = b.node.getAttribute("value") != null ? b.node.getAttribute("value") : b.node.getTextContent();
+            b.checked = b.node.hasAttribute("selected");
         }
 
         if (node.nodeType == 1) {
@@ -914,6 +924,7 @@ public class Builder {
         int old_height = b.viewport_height;
 
         LinkedHashMap<String, String> old_styles = (LinkedHashMap<String, String>) b.cssStyles.clone();
+        boolean ready = document.ready;
         b.document.ready = false;
         if (!document.no_immediate_apply) {
             b.transitions.clear();
@@ -953,7 +964,7 @@ public class Builder {
                 b.cssStyles = old_styles;
             }
         }
-        b.document.ready = true;
+        b.document.ready = ready;
 
         if (!no_update) {
             b.document.smartUpdate(b, old_width, old_height);
@@ -1062,7 +1073,20 @@ public class Builder {
         }
 
         if (b.inputType != Block.Input.NONE && force) {
-            b.inputReady = false;
+            if (b.inputType == Block.Input.SELECT && b.inputReady) {
+                b.getChildren().get(0).paddings = b.getChildren().get(1).paddings = b.paddings;
+                b.paddings = new int[] {0, 0, 0, 0};
+                b.getChildren().get(0).borderWidth = b.getChildren().get(1).borderWidth = b.borderWidth;
+                b.borderWidth = new int[] {0, 0, 0, 0};
+                if (b.background != null) {
+                    if (b.background.bgcolor == null || b.background.bgcolor.getAlpha() == 0) {
+                        b.background.bgcolor = document.inputBackgroundColor;
+                    }
+                    b.getChildren().get(0).background = b.getChildren().get(1).background = b.background;
+                    b.background = new render.Background();
+                }
+            }
+            if (b.inputType != Block.Input.SELECT) b.inputReady = false;
             if (b.inputType == Block.Input.BUTTON) {
                 java.awt.Component[] c = b.getComponents();
                 for (int i = 0; i < c.length; i++) {
@@ -1088,7 +1112,6 @@ public class Builder {
             document.repaint();
         }
         b.setNeedRestoreSelection(false);
-
         
     }
 

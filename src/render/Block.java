@@ -1919,7 +1919,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public boolean processInput() {
-        if (inputType == Input.NONE || inputType == Input.SELECT) return false;
+        if (inputType == Input.NONE) return false;
         if (!inputReady) {
             createInput();
         } else {
@@ -1965,6 +1965,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         else if (inputType >= Input.RADIO && inputType <= Input.CHECKBOX) {
             createRadioOrCheckboxInput(fl);
+        }
+        else if (inputType == Input.SELECT) {
+            createInputList();
         }
         else if (inputType == Input.FILE) {
             createFileInput();
@@ -2577,6 +2580,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return area.isEmpty();
     }
 
+    public void createInputList() {
+        Block list = new Block(document, this, -1, -1, 1, 0, Color.BLACK);
+        for (Block b: children) {
+            b.removeFromContainer();
+            list.addElement(b, true);
+        }
+        children.clear();
+        removeAll();
+        createInputList(inputName, list, inputListSize);
+    }
+
     public void createInputList(String name, Block list, int size) {
         boolean ready = document.ready;
         document.ready = false;
@@ -2949,6 +2963,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     label_block.addElement(copy);
                 }
                 list.display_type = Display.NONE;
+                list.flushBuffersRecursively();
                 list.parent.performLayout();
                 document.root.sortBlocks();
                 document.root.setZIndices();
@@ -8281,15 +8296,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void removeAllElements() {
-        for (int i = 0; i < children.size(); i++) {
-            if (document != null) document.root.remove(children.get(i));
-            if (children.get(i).text_layer != null) {
-                children.get(i).text_layer.removeAll();
+        removeAllElements(true, true);
+    }
+
+    public void removeAllElements(boolean rec, boolean clear_children) {
+        if (rec) {
+            for (int i = 0; i < children.size(); i++) {
+                children.get(i).removeAllElements(rec, false);
             }
-            children.get(i).removeAll();
+            removeTextLayers();
+        } else if (text_layer != null) {
+            remove(text_layer);
         }
-        children.clear();
         removeAll();
+        if (clear_children) {
+            children.clear();
+        }
         if (document != null && document.ready) {
             performLayout();
             forceRepaint();
@@ -8756,7 +8778,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public String inputName = "";
     public String inputValue = "";
     public boolean inputDisabled = false;
-    public int inputListSize = 5;
+    public int inputListSize = 0;
     public boolean inputMultipleSelection = false;
     public boolean inputUseOnlyTextInHeader = false;
     public String defaultInputValue = "";
@@ -9303,6 +9325,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     Block.openPopup = parent.children.get(1);
                 } else {
                     parent.children.get(1).display_type = Display.NONE;
+                    parent.children.get(1).flushBuffersRecursively();
                     Block.openPopup = null;
                 }
                 
