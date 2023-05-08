@@ -87,7 +87,9 @@ public class Reader {
 
         builder.findScripts(hp.getRootNode());
         document.getResourceManager().downloadResources();
-        
+
+        renderDocument.ready = false;
+
         final Block root = builder.buildSubtree(renderDocument, hp.getRootNode().lastElementChild());
         document.rootBlock = root;
         if (debug) root.printTree();

@@ -814,9 +814,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         Block block = this;
         boolean is_list = false;
 
-        while (block != null) {
-            if (block.parent != null && block.parent.inputType == Input.SELECT && block == block.parent.children.get(1) && block.parent.inputListSize == 0) {
-                Rectangle rect = ((javax.swing.JFrame)SwingUtilities.getWindowAncestor(document)).getContentPane().getBounds();
+        while (document != null && block != null) {
+            if (block.parent != null && block.parent.inputType == Input.SELECT && block.parent.children.size() > 1 && block == block.parent.children.get(1) && block.parent.inputListSize == 0) {
+                Component c = SwingUtilities.getWindowAncestor(document);
+                if (c == null) break;
+                Rectangle rect = ((javax.swing.JFrame)c).getContentPane().getBounds();
                 clip_area = new Area(new Rectangle.Double(-(_x_ - scroll_x) - document.getBounds().x, -(_y_ - scroll_y) - document.getBounds().y, rect.width, rect.height));
                 is_list = true;
                 break;
@@ -2650,7 +2652,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+        inputReady = true;
+
         document.ready = ready;
+
     }
 
     public void createInputList(String name, String[] labels, String[] values, int size) {
@@ -2707,6 +2712,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         });
 
+        inputReady = true;
+
         document.ready = ready;
     }
 
@@ -2738,12 +2745,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         list.paddings = Arrays.copyOf(paddings, 4);
         paddings = new int[] { 0, 0, 0, 0 };
 
-        if (list.background == null || list.background.bgcolor == null) {
+        Color transparent = new Color(0, 0, 0, 0);
+
+        if (list.background == null || list.background.bgcolor == null || list.background.bgcolor.equals(transparent)) {
             list.background = new Background();
             list.background.bgcolor = document.inputBackgroundColor;
         }
 
-        if (list.background.bgcolor.getAlpha() < 245) {
+        if (!list.background.bgcolor.equals(transparent) && list.background.bgcolor.getAlpha() < 245) {
             Color col = list.background.bgcolor;
             list.background = new Background();
             list.background.bgcolor = new Color(col.getRed(), col.getGreen(), col.getBlue(), 255);
@@ -2861,8 +2870,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 } else {
                     height = list_height;
                 }
-            } else {
-                
             }
             height = viewport_height = height;
             list.height = list.viewport_height = list_height;
@@ -3016,6 +3023,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (!b.document.use_native_inputs) {
             btn.setOpaque(false);
             btn.setContentAreaFilled(false);
+            btn.setBorderPainted(false);
         }
         b.insertButton(btn);
 
