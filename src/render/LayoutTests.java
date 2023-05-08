@@ -709,8 +709,12 @@ public class LayoutTests extends JFrame {
         d05.setPositioning(Block.Position.STATIC);
         d05.setWidth(180);
         d05.setHeight(18);
+        d05.setBorderColor(new Color(118, 118, 123));
+        d05.setScaleBorder(false);
+        d05.setBorderWidth(1);
+        d05.setBorderRadius(2);
         d05.setMargins(7, 0, 2);
-        d05.setPaddings(3, 1);
+        d05.setPaddings(3, 2);
         d05.setFontSize(12);
         d05.inputType = Block.Input.FILE;
         d05.inputName = "attachment";

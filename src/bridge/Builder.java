@@ -783,6 +783,10 @@ public class Builder {
             b.setScaleBorder(false);
             b.setBorderWidth(1);
 
+            if (b.inputType == Block.Input.FILE) {
+                b.setPaddings(3, 2, 3, 2);
+            }
+
             int rows = b.inputType == Block.Input.TEXTAREA ? 3 : 1;
             if (b.inputType == Block.Input.TEXTAREA && node.getAttribute("rows") != null && node.getAttribute("rows").matches("[1-9][0-9]*")) {
                 rows = Integer.parseInt(node.getAttribute("rows"));

@@ -2354,12 +2354,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.ready = false;
         removeAllElements();
 
-        paddings = new int[] {1, 1, 1, 1};
+        if (display_type != Display.BLOCK) {
+            setWidth(180);
+        }
+
+        if (paddings[0] == 0 && paddings[1] == 0 && paddings[2] == 0 && paddings[3] == 0 &&
+              (borderWidth[0] > 0 || borderWidth[1] > 0 || borderWidth[2] > 0 || borderWidth[3] > 0)) {
+            paddings = new int[] {4, 2, 4, 2};
+        }
+
+        setHeight((int) Math.max(18, Math.round((double)(Math.max(fontSize, 15) + paddings[0] + paddings[2] + borderWidth[0] + borderWidth[2]) / ratio)));
 
         final Block label = new Block(document);
 
         final Block btn = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
-        btn.setHeight(100, Units.percent);
+        btn.setProp("height", "calc(100% + 4px)");
+        btn.height = btn.viewport_height = height - paddings[0] - paddings[2] - borderWidth[0] - borderWidth[2] + 4;
 
         createButton(btn, "…");
 
@@ -2367,8 +2377,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         label.addText("No file selected");
 
         label.setPositioning(Position.ABSOLUTE);
-        label.setLeft(0, Units.px);
-        label.setTop(2, Units.px);
+        label.setLeft(Math.round((double) paddings[3] / ratio), Units.px);
+        label.setTop(Math.round((double) paddings[0] / ratio) + 0.5, Units.px);
         label.width = label.viewport_width = width - btn.width - 6;
         label.height = label.viewport_height = height;
         label.fontSize = fontSize;
@@ -2402,8 +2412,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         });
 
         btn.setPositioning(Position.ABSOLUTE);
-        btn.setRight(0, Units.px);
-        btn.setTop(0, Units.px);
+        btn.setRight(Math.round((double) paddings[3] / ratio), Units.px);
+        btn.setTop(Math.round((double) paddings[0] / ratio)-1, Units.px);
 
         ((JButton)btn.getComponent(0)).addActionListener(new ActionListener() {
             @Override
@@ -3019,6 +3029,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         btn.setText(label);
         btn.setFont(new Font(b.fontFamily, Font.PLAIN, b.fontSize));
+        if (b.height >= 0 && b.height < 24) {
+            btn.setMargin(new Insets(2, 5, 4, 5));
+        }
         int width = b.getFontMetrics(btn.getFont()).stringWidth(label) + 16;
         btn.setPreferredSize(new Dimension(b.width, b.height));
 
