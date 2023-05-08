@@ -65,7 +65,19 @@ public class Reader {
         builder.setBaseUrl(path);
         builder.customElements = customElements;
 
+        WebDocument renderDocument = new WebDocument();
+        
+        renderDocument.width = DEFAULT_WIDTH;
+        renderDocument.height = DEFAULT_HEIGHT;
+
+        renderDocument.root.width = renderDocument.width;
+        renderDocument.root.height = renderDocument.height;
+        renderDocument.root.auto_height = false;
+
+        builder.setDocument(renderDocument);
+
         Document document = new Document(builder, hp.getRootNode(), null, new DefaultCache());
+        document.document = renderDocument;
         builder.documentWrap = document;
 
         CSSParser parser = new CSSParser(hp);
@@ -75,8 +87,8 @@ public class Reader {
 
         builder.findScripts(hp.getRootNode());
         document.getResourceManager().downloadResources();
-
-        final Block root = builder.buildSubtree(null, hp.getRootNode().lastElementChild());
+        
+        final Block root = builder.buildSubtree(renderDocument, hp.getRootNode().lastElementChild());
         document.rootBlock = root;
         if (debug) root.printTree();
 
@@ -97,8 +109,8 @@ public class Reader {
         root.builder.setWindowFrame(frame);
         document.setBaseUrl(Main.getInstallPath());
 
-        document.width = 460;
-        document.height = 380;
+        document.width = DEFAULT_WIDTH;
+        document.height = DEFAULT_HEIGHT;
         document.setPreferredSize(new Dimension(document.width, document.height));
 
         document.root.width = document.width;
@@ -145,8 +157,14 @@ public class Reader {
     }
 
     public void insertDocumentView(final Document documentWrap, Container c, boolean auto_height) {
-        final WebDocument document = new WebDocument();
-        documentWrap.document = document;
+        boolean existed = true;
+
+        if (documentWrap.document == null) {
+            documentWrap.document = new WebDocument();
+            existed = false;
+        }
+
+        final WebDocument document = documentWrap.document;
 
         Block root = documentWrap.getRootBlock();
         java.awt.Frame frame = (java.awt.Frame) SwingUtilities.getWindowAncestor(c);
@@ -163,7 +181,7 @@ public class Reader {
         document.root.auto_height = false;
         document.root.setBounds(document.borderSize, document.borderSize, document.width-document.borderSize*2, document.height-document.borderSize*2);
 
-        document.insertSubtreeWithoutRoot(document.root, root);
+        document.insertSubtreeWithoutRoot(document.root, root, !existed);
         document.linkElements();
         document.root.setId("root");
 
@@ -253,5 +271,8 @@ public class Reader {
     public HashMap<String, Class> customElements = new HashMap<String, Class>();
 
     public boolean debug = false;
+
+    public final static int DEFAULT_WIDTH = 460;
+    public final static int DEFAULT_HEIGHT = 380;
 
 }

@@ -86,7 +86,11 @@ public class Builder {
             for (int i = 0; i < node.children.size(); i++) {
                 Block b = buildSubtree(document, root, node.children.get(i));
                 if (b != null) {
-                    root.getChildren().add(b);
+                    if (document == null) {
+                        root.getChildren().add(b);
+                    } else {
+                        root.addElement(b);
+                    }
                 }
             }
         }
