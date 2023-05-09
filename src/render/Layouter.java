@@ -900,7 +900,7 @@ public class Layouter {
                 }
                 d.setX(p.borderWidth[3] + d.margins[3] + d.left);
             }
-            if (!d.auto_right) {
+            if (!d.auto_right && !d.auto_width) {
                 d.setX(block.viewport_width - d.width - d.right);
             }
             if (d.auto_top) {
@@ -914,7 +914,7 @@ public class Layouter {
                 }
                 d.setY(p.borderWidth[0] + d.margins[0] + d.top);
             }
-            if (!d.auto_bottom) {
+            if (!d.auto_bottom && !d.auto_height) {
                 d.setY(block.viewport_height - d.height - d.bottom);
             }
             if (last_line.elements.size() == 1 && last_line.elements.lastElement() instanceof Block &&

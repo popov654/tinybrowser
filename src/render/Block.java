@@ -2368,7 +2368,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         final Block label = new Block(document);
 
         final Block btn = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
-        btn.setProp("height", "calc(100% + 4px)");
         btn.height = btn.viewport_height = height - paddings[0] - paddings[2] - borderWidth[0] - borderWidth[2] + 4;
 
         createButton(btn, "…");
@@ -2378,7 +2377,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         label.setPositioning(Position.ABSOLUTE);
         label.setLeft(Math.round((double) paddings[3] / ratio), Units.px);
-        label.setTop(Math.round((double) paddings[0] / ratio) + 0.5, Units.px);
+        label.setTop(Math.round((double) paddings[0] / ratio), Units.px);
         label.width = label.viewport_width = width - btn.width - 6;
         label.height = label.viewport_height = height;
         label.fontSize = fontSize;
@@ -2414,6 +2413,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         btn.setPositioning(Position.ABSOLUTE);
         btn.setRight(Math.round((double) paddings[3] / ratio), Units.px);
         btn.setTop(Math.round((double) paddings[0] / ratio)-1, Units.px);
+        btn.setBottom(Math.round((double) paddings[2] / ratio)-1, Units.px);
 
         ((JButton)btn.getComponent(0)).addActionListener(new ActionListener() {
             @Override
@@ -3375,6 +3375,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         boolean is_table_cell = parent != null && parent.parent != null && (parent.parent.display_type == Block.Display.TABLE || parent.parent.display_type == Block.Display.INLINE_TABLE);
 
+        boolean preserve_width = !auto_left && !auto_right && auto_width && (positioning == Position.ABSOLUTE || positioning == Position.FIXED);
+        boolean preserve_height = !auto_top && !auto_bottom && auto_height && (positioning == Position.ABSOLUTE || positioning == Position.FIXED);
+
         if (!is_table_cell && !no_viewport_reset && viewport_width > 0) {
             width = viewport_width + (scrollbar_y != null ? scrollbar_y.getPreferredSize().width : 0);
         }
@@ -3484,7 +3487,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
                 layouter.last_element = -1;
                 Line last = lines.size() > 0 ? lines.lastElement() : null;
-                if (auto_height && last != null) {
+                if (auto_height && !preserve_height && last != null) {
                     viewport_height = height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
                 }
                 if (is_table_cell && auto_width) {
@@ -3541,7 +3544,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 orig_height = (int)Math.floor(height / ratio);
             }
         }
-        if (auto_height) {
+        if (auto_height && !preserve_height) {
             if (lines.size() == 0) {
                 height = paddings[0] + paddings[2] + borderWidth[0] + borderWidth[2];
             } else {
@@ -7909,8 +7912,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
+                    if (auto_width && !auto_right) {
+                        width = viewport_width = parent.width - parent.borderWidth[1] - parent.borderWidth[3] - left - right;
+                        orig_width = (int) Math.round((double) width / ratio);
+                    }
                     setX(parent.borderWidth[3] + margins[3] + left);
                 } else {
+                    if (auto_width && !auto_right) {
+                        width = viewport_width = document.width - document.borderSize * 2 - left - right;
+                        orig_width = (int) Math.round((double) width / ratio);
+                    }
                     setX(left);
                 }
             }
@@ -7927,6 +7938,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             dimensions.remove("right");
         }
+        if (!auto_width && dimensions.containsKey("left")) {
+            dimensions.remove("left");
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -7934,9 +7948,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
-                    setX(parent.borderWidth[3] + margins[3] + parent.width - right - width);
+                    if (auto_width) {
+                        width = viewport_width = parent.width - parent.borderWidth[1] - parent.borderWidth[3] - left - right;
+                        orig_width = (int) Math.round((double) width / ratio);
+                    }
+                    setX(parent.width - parent.borderWidth[1] - right - width + margins[3]);
                 } else {
-                    setX(document.width - document.borderSize * 2 - right - width);
+                    if (auto_width) {
+                        width = viewport_width = document.width - document.borderSize * 2 - left - right;
+                        orig_width = (int) Math.round((double) width / ratio);
+                    }
+                    setX(document.width - document.borderSize * 2 - right - width + margins[3]);
                 }
             }
             forceRepaint();
@@ -7960,8 +7982,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
+                    if (auto_height && !auto_bottom) {
+                        height = viewport_height = parent.height - parent.borderWidth[0] - parent.borderWidth[2] - top - bottom;
+                        orig_height = (int) Math.round((double) height / ratio);
+                    }
                     setY(parent.borderWidth[0] + margins[0] + top);
                 } else {
+                    if (auto_height && !auto_bottom) {
+                        height = viewport_height = document.height - document.borderSize * 2 - top - bottom;
+                        orig_height = (int) Math.round((double) height / ratio);
+                    }
                     setY(top);
                 }
             }
@@ -7979,6 +8009,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             dimensions.remove("bottom");
         }
+        if (!auto_height && dimensions.containsKey("top")) {
+            dimensions.remove("top");
+        }
         Block b = this;
         if (!no_draw && positioning != Block.Position.STATIC) {
             if (positioning == Block.Position.RELATIVE && parent != null) {
@@ -7986,9 +8019,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             else if (positioning == Block.Position.ABSOLUTE || positioning == Block.Position.FIXED) {
                 if (parent != null) {
-                    setY(parent.borderWidth[0] + margins[0] + parent.height - bottom - height);
+                    if (auto_height) {
+                        height = viewport_height = parent.height - parent.borderWidth[0] - parent.borderWidth[2] - top - bottom;
+                        orig_height = (int) Math.round((double) height / ratio);
+                    }
+                    setY(parent.height - parent.borderWidth[2] - bottom - height + margins[0]);
                 } else {
-                    setY(document.height - document.borderSize * 2 - bottom - height);
+                    if (auto_height) {
+                        height = viewport_height = document.height - document.borderSize * 2 - top - bottom;
+                        orig_height = (int) Math.round((double) height / ratio);
+                    }
+                    setY(document.height - document.borderSize * 2 - bottom - height + margins[0]);
                 }
             }
             forceRepaint();

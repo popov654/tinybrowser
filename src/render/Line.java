@@ -90,8 +90,10 @@ public class Line {
             }
         }
 
-        d.setX(x);
-        d.setY(y);
+        if (!(d instanceof Block && (((Block)d).positioning == Block.Position.ABSOLUTE || ((Block)d).positioning == Block.Position.FIXED))) {
+            d.setX(x);
+            d.setY(y);
+        }
 
         if (d instanceof Block && (is_flex || ((Block)d).display_type != Block.Display.BLOCK)) {
             Block b = (Block)d;
