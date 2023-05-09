@@ -132,6 +132,7 @@ public class QuerySelector {
         String psc = getPseudoClasses(expr);
         psc = psc.replaceAll("^:", "");
         if (!psc.isEmpty()) {
+            target = "";
             String[] pseudoclasses = psc.split(":");
             for (int j = 0; j < resultSet.size(); j++) {
                 for (int i = 0; i < pseudoclasses.length; i++) {
@@ -198,6 +199,11 @@ public class QuerySelector {
                         }
                         st.afterStyles.add(this);
                         resultSet.remove(j--);
+                    } else {
+                        if (!target.isEmpty()) {
+                            target += "::";
+                        }
+                        target += pseudoclasses[i];
                     }
                 }
             }
@@ -521,8 +527,10 @@ public class QuerySelector {
             Styles st = StyleMap.getNodeStyles(resultSet.get(i));
             if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0 || visitedNodes.size() > 0) {
                 st.stateStyles.add(this);
-            } else {
+            } else if (target.isEmpty()) {
                 st.styles.putAll(rules);
+            } else {
+                st.specialStyles.add(this);
             }
             st.group = group;
         }
@@ -542,8 +550,10 @@ public class QuerySelector {
             Styles st = StyleMap.getNodeStyles(resultSet.get(i));
             if (hoverNodes.size() > 0 || focusNodes.size() > 0 || activeNodes.size() > 0 || visitedNodes.size() > 0) {
                 st.stateStyles.add(this);
-            } else {
+            } else if (target.isEmpty()) {
                 st.styles.putAll(rules);
+            } else {
+                st.specialStyles.add(this);
             }
             st.group = group;
         }
@@ -557,9 +567,14 @@ public class QuerySelector {
         this.group = group;
     }
 
+    public String getTarget() {
+        return target;
+    }
+
     private String[] parts;
     private String query;
     private String orig_query;
+    private String target = "";
     private SelectorGroup group = null;
     private Vector<QuerySelector> children;
     private Vector<Node> resultSet;

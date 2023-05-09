@@ -5466,6 +5466,26 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setSelectionColor(Color col) {
+        selection_color = col;
+        for (Block part: parts) {
+            part.selection_color = col;
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setSelectionColor(col);
+        }
+    }
+
+    public void setSelectionTextColor(Color col) {
+        selection_text_color = col;
+        for (Block part: parts) {
+            part.selection_text_color = col;
+        }
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setSelectionTextColor(col);
+        }
+    }
+
     public void setCursor(String value) {
         if (value.equals("pointer")) value = "hand";
         value = value.toUpperCase() + "_CURSOR";
@@ -8629,7 +8649,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public int letter_spacing = 0;
     public int word_spacing = 0;
-    public Color selection_color = new Color(0, 0, 196, 186);
+    public Color default_selection_color = new Color(0, 0, 196, 186);
+    public Color selection_color = default_selection_color;
     public Color selection_inactive_color = new Color(120, 120, 120, 186);
     public Color selection_text_color = Color.WHITE;
     private int[] sel = null;

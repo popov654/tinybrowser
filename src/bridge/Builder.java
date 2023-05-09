@@ -877,9 +877,26 @@ public class Builder {
                 }
             }
         }
+        applySpecialStyles(node, b);
         applyInlineStyles(node, b);
         applyRuntimeStyles(node, b);
         if (node.nodeType == 1) generatePseudoElements(node, b);
+    }
+
+    public void applySpecialStyles(Node node, Block b) {
+        Styles st = StyleMap.getNodeStyles(node);
+        for (QuerySelector sel: st.specialStyles) {
+            if (sel.getTarget().equals("selection")) {
+                Set<String> keys = sel.getRules().keySet();
+                for (String key: keys) {
+                    if (key.trim().matches("background(-color)?")) {
+                        b.setSelectionColor(b.parseColor(sel.getRules().get(key)));
+                    } else if (key.trim().equals("color")) {
+                        b.setSelectionTextColor(b.parseColor(sel.getRules().get(key)));
+                    }
+                }
+            }
+        }
     }
 
     public void applyRuntimeStyles(Node node, Block b) {

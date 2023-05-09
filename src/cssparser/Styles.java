@@ -13,5 +13,6 @@ public class Styles {
     public Vector<QuerySelector> stateStyles = new Vector<QuerySelector>();
     public Vector<QuerySelector> beforeStyles = new Vector<QuerySelector>();
     public Vector<QuerySelector> afterStyles = new Vector<QuerySelector>();
+    public Vector<QuerySelector> specialStyles = new Vector<QuerySelector>();
     public SelectorGroup group;
 }
