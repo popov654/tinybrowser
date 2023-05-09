@@ -9732,16 +9732,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                     boolean c1 = b._y_ - scroll_y + offset >= y1 && b._y_ - scroll_y + b.viewport_height - offset <= y2 &&
                                  b._x_ - scroll_x >= x1 && b._x_ - scroll_x + b.viewport_width <= x2;
-                    boolean c2 = b.line != null && y2 > b.line.getY() - scroll_y + b.line.getHeight() &&
+                    boolean c2 = b.line != null && y1 < b.line.getY() - scroll_y + b.line.getHeight() / 2 && y2 > b.line.getY() - scroll_y + b.line.getHeight() &&
                                  x1 <= b._x_ - scroll_x + b.viewport_width && x2 >= b._x_ - scroll_x + b.viewport_width;
                     boolean c3 = b._y_ - scroll_y + b.viewport_height >= y1 && b._y_ - scroll_y + b.viewport_height + offset <= y2 && (!e.isShiftDown() || b._x_ - scroll_x + b.viewport_width <= x2);
                     if (c1 || c2 || c3) {
                         b.selectAll();
                         if (i < sel[0] || sel[0] == -1) sel[0] = i;
                         if (i > sel[1] || sel[1] == -1) sel[1] = i;
-                    } else if (!(e.isShiftDown() && b._y_ - scroll_y + b.viewport_height - offset <= y2)) {
-                        //b.clearSelection();
-                        //b.forceRepaint();
                     }
                 }
             } else if (d instanceof Character) {
