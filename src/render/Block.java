@@ -1535,20 +1535,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (document != null && document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
                 for (int i = 0; i < lines.size(); i++) {
                     for (int j = 0; j < lines.get(i).elements.size(); j++) {
-                        lines.get(i).elements.get(j).setX(lines.get(i).elements.get(j)._getX());
+                        Drawable d = lines.get(i).elements.get(j);
+                        if (d instanceof Block) {
+                            d.setX(((Block)d)._y_ - old_value);
+                        } else {
+                            d.setX(((Character)d).line.getX() + ((Character)d).left);
+                        }
                     }
                 }
             }
             for (int i = 0; i < children.size(); i++) {
                 if (children.get(i).type == NodeTypes.ELEMENT) {
                     children.get(i).no_draw = true;
-                    children.get(i).setX(children.get(i)._getX() + _x_ - old_value);
+                    children.get(i).setX(children.get(i)._x_ - old_value);
                     children.get(i).no_draw = false;
                 }
             }
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).no_draw = true;
-                parts.get(i).setX(parts.get(i)._getX() + _x_ - old_value);
+                parts.get(i).setX(parts.get(i)._x_ - old_value);
                 parts.get(i).no_draw = false;
             }
         }
@@ -1572,20 +1577,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (document != null && document.no_layout && children.size() > 0 && children.get(0).type == NodeTypes.TEXT) {
                 for (int i = 0; i < lines.size(); i++) {
                     for (int j = 0; j < lines.get(i).elements.size(); j++) {
-                        lines.get(i).elements.get(j).setY(lines.get(i).elements.get(j)._getY());
+                        Drawable d = lines.get(i).elements.get(j);
+                        if (d instanceof Block) {
+                            d.setY(((Block)d)._y_ - old_value);
+                        } else {
+                            d.setY(((Character)d).line.getY() + ((Character)d).top);
+                        }
                     }
                 }
             }
             for (int i = 0; i < children.size(); i++) {
                 if (children.get(i).type == NodeTypes.ELEMENT) {
                     children.get(i).no_draw = true;
-                    children.get(i).setY(children.get(i)._getY() + _y_ - old_value);
+                    children.get(i).setY(children.get(i)._y_ - old_value);
                     children.get(i).no_draw = false;
                 }
             }
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).no_draw = true;
-                parts.get(i).setY(parts.get(i)._getY() + _y_ - old_value);
+                parts.get(i).setY(parts.get(i)._y_ - old_value);
                 parts.get(i).no_draw = false;
             }
         }
@@ -2895,7 +2905,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     height = list_height;
                 }
             }
-            height = viewport_height = height;
+            this.height = viewport_height = height;
             list.height = list.viewport_height = list_height;
             orig_height = (int) ((double) height / ratio);
             list.orig_height = (int) ((double) list_height / ratio);
