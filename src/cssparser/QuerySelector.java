@@ -21,15 +21,16 @@ public class QuerySelector {
             String[] s = query.split(",\\s*");
             children = new Vector<QuerySelector>();
             resultSet = new Vector<Node>();
-            for (int i = 0; i < s.length; i++) {
-                QuerySelector q = new QuerySelector(s[i], group, hp, "");
-                children.add(q);
-                resultSet.addAll(q.resultSet);
-            }
             this.query = query;
             this.rules = CSSParser.parseRules(rules);
             this.group = group;
             this.hp = hp;
+            for (int i = 0; i < s.length; i++) {
+                QuerySelector q = new QuerySelector(s[i], group, hp, "");
+                q.rules = this.rules;
+                children.add(q);
+                resultSet.addAll(q.resultSet);
+            }
         } else {
             this.query = query;
             this.rules = CSSParser.parseRules(rules);
