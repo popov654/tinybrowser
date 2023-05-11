@@ -64,14 +64,26 @@ public class Form {
             input.inputValue = input.defaultInputValue;
             input.checked = input.defaultChecked;
             if (input.inputType >= Block.Input.TEXT && input.inputType <= Block.Input.TEXTAREA) {
-                ((JTextComponent)input.getComponent(0)).setText(input.inputValue);
+                java.awt.Component[] c = input.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    if (c[i] instanceof JTextComponent) {
+                        ((JTextComponent)c[i]).setText(input.inputValue);
+                        break;
+                    }
+                }
             }
             if (input.inputType >= Block.Input.RADIO && input.inputType <= Block.Input.CHECKBOX) {
-                ((JToggleButton)input.getComponent(0)).getModel().setSelected(input.checked);
+                java.awt.Component[] c = input.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    if (c[i] instanceof JToggleButton) {
+                        ((JToggleButton)input.getComponent(0)).getModel().setSelected(input.checked);
+                        break;
+                    }
+                }
             }
             if (input.inputType == Block.Input.SELECT && input.children.size() > 1) {
                 Block list = input.children.get(1);
-                int index = 0;
+                int index = -1;
                 for (int i = 0; i < list.children.size(); i++) {
                     if (list.children.get(i).inputValue.equals(input.inputValue)) {
                         index = i;

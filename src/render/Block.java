@@ -2916,11 +2916,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setInputSelectedIndex(int index) {
         Block list = children.lastElement();
-        if (inputType != Input.SELECT || index < 0 || index + 1 >= list.children.size()) return;
+        if (inputType != Input.SELECT || index + 1 >= list.children.size()) return;
         for (int i = 0; i < list.children.size(); i++) {
             list.children.get(i).checked = (i == index);
             list.children.get(i).setBackgroundColor(list.children.get(i).checked ? selection_color : null);
             list.children.get(i).setTextColorRecursive(list.children.get(i).checked ? selection_text_color : color);
+        }
+        if (index < 0) {
+            inputValue = "";
+            children.get(0).children.get(0).textContent = "Select value";
+            children.get(0).performLayout();
         }
         updateFormEntry();
     }
@@ -2967,8 +2972,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
             }
+            Block label_block = children.firstElement().children.firstElement();
             if (inputListSize == 0 && selectedItem != null) {
-                Block label_block = children.firstElement().children.firstElement();
                 if (inputUseOnlyTextInHeader && selectedItem.altText != null) {
                     label_block.children.get(0).textContent = selectedItem.altText;
                 } else if (children.firstElement().children.size() == 1 && !label.isEmpty()) {
@@ -2982,14 +2987,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     label_block.removeAllElements();
                     label_block.addElement(copy);
                 }
-                list.display_type = Display.NONE;
-                list.flushBuffersRecursively();
-                list.parent.performLayout();
-                document.root.sortBlocks();
-                document.root.setZIndices();
-                list.parent.forceRepaint();
-                document.repaint();
+            } else {
+                label_block.children.get(0).children.get(0).textContent = "Select value";
             }
+            
+            list.display_type = Display.NONE;
+            list.flushBuffersRecursively();
+            list.parent.performLayout();
+            document.root.sortBlocks();
+            document.root.setZIndices();
+            list.parent.forceRepaint();
+            document.repaint();
 
             formEntry = new FormEntry(inputName, value);
             return;
