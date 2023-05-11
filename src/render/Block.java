@@ -2673,6 +2673,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     document.root.mouseClicked(new MouseEvent(instance, MouseEvent.MOUSE_CLICKED, 0, 0, instance._x_ - instance.parent.scroll_x, instance._y_ - instance.parent.scroll_y, 1, false));
                 }
+                if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    String value = inputValue;
+                    int index = -1;
+                    Block list = children.get(1);
+                    for (int i = 0; i < list.children.size(); i++) {
+                        if (list.children.get(i).inputValue.equals(value)) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    index += e.getKeyCode() == KeyEvent.VK_DOWN ? 1 : -1;
+                    if (index < 0) {
+                        index = list.children.size()-1;
+                    }
+                    if (index > list.children.size()-1) {
+                        index = 0;
+                    }
+                    setInputSelectedIndex(index);
+                }
             }
 
             @Override
@@ -2749,6 +2768,25 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     document.root.mouseClicked(new MouseEvent(instance, MouseEvent.MOUSE_CLICKED, 0, 0, instance._x_ - instance.parent.scroll_x, instance._y_ - instance.parent.scroll_y, 1, false));
+                }
+                if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    String value = inputValue;
+                    int index = -1;
+                    Block list = children.get(1);
+                    for (int i = 0; i < list.children.size(); i++) {
+                        if (list.children.get(i).inputValue.equals(value)) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    index += e.getKeyCode() == KeyEvent.VK_UP ? 1 : -1;
+                    if (index < 0) {
+                        index = list.children.size()-1;
+                    }
+                    if (index > list.children.size()-1) {
+                        index = 0;
+                    }
+                    setInputSelectedIndex(index);
                 }
             }
 
@@ -2927,7 +2965,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setInputSelectedIndex(int index) {
         Block list = children.lastElement();
-        if (inputType != Input.SELECT || index + 1 >= list.children.size()) return;
+        if (inputType != Input.SELECT || index > list.children.size()-1) return;
         for (int i = 0; i < list.children.size(); i++) {
             list.children.get(i).checked = (i == index);
             list.children.get(i).setBackgroundColor(list.children.get(i).checked ? selection_color : null);
@@ -2969,12 +3007,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             updateInputPlaceholder();
         }
         if (inputType == Input.SELECT) {
+            inputValue = "";
             String value = "";
             String label = "";
             Block selectedItem = null;
             Block list = children.lastElement();
             for (int i = 0; i < list.children.size(); i++) {
                 if (list.children.get(i).checked) {
+                    if (inputValue.isEmpty()) {
+                        inputValue = list.children.get(i).inputValue;
+                    }
                     if (value.length() > 0)  value += ",";
                     value += list.children.get(i).inputValue;
                     if (selectedItem == null) {
@@ -9368,6 +9410,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (int i = 0; i < beforePseudoElement.parts.size(); i++) {
                 beforePseudoElement.parts.get(i).mouseClicked(e);
             }
+        }
+
+        if (inputType == Input.SELECT && isMouseInside(e.getX(), e.getY())) {
+            requestFocus();
+            document.focused_block = this;
+            document.updateFocusIndex(this);
+            repaint();
         }
 
         if (!(children.size() > 0 && children.get(0).type == NodeTypes.TEXT)) {
