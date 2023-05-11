@@ -92,6 +92,7 @@ public class WebDocument extends JPanel {
         panel.getActionMap().put("inspector", new Action() {
 
             public void actionPerformed(ActionEvent e) {
+                if (parent_document != null) return;
                 if (inspector != null) {
                     boolean is_opened = inspector.isVisible();
                     inspector.setVisible(!is_opened);
@@ -123,11 +124,13 @@ public class WebDocument extends JPanel {
             public void removePropertyChangeListener(PropertyChangeListener listener) {}
 
         });
+        final WebDocument self = this;
         panel.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "copy");
         panel.getActionMap().put("copy", new Action() {
 
             public void actionPerformed(ActionEvent e) {
-                StringSelection stringSelection = new StringSelection(selected_text);
+                WebDocument target = active_document != null ? active_document : self; 
+                StringSelection stringSelection = new StringSelection(target.selected_text);
                 Toolkit.getDefaultToolkit().getSystemClipboard()
                     .setContents(stringSelection, null);
             }
