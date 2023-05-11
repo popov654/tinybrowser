@@ -2059,6 +2059,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         e.consume();
                     }
                 }
+                if (inputType == Input.NUMBER) {
+                    if (e.getKeyCode() == KeyEvent.VK_UP) {
+                        increaseNumberInputValue();
+                    }
+                    else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                        decreaseNumberInputValue();
+                    }
+                }
             }
 
             @Override
