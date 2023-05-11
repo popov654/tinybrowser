@@ -1986,6 +1986,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             createNumberInput(fl);
         }
         if (display_type > Display.INLINE_BLOCK) display_type = Display.INLINE_BLOCK;
+        if (vertical_align == VerticalAlign.ALIGN_BASELINE) {
+            vertical_align = VerticalAlign.ALIGN_TOP;
+        }
 
         inputReady = true;
 

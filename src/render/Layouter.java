@@ -881,7 +881,7 @@ public class Layouter {
                 last_block.fontSize = block.fontSize;
             }
 
-            Line line = null;
+            Line line = last_line;
             for (int i = 0; i < d.parts.size(); i++) {
                 Block part = d.parts.get(i);
                 if (part.line != line) last_block = null;
@@ -980,6 +980,13 @@ public class Layouter {
         boolean is_flex = d.parent.display_type == Block.Display.FLEX || d.parent.display_type == Block.Display.INLINE_FLEX;
         boolean x_axis = d.parent.flex_direction == Block.Direction.ROW || d.parent.flex_direction == Block.Direction.ROW_REVERSED;
 
+        Block b = d.original != null ? d.original : d;
+        int index = d.parent.children.indexOf(b);
+        if (index > 0 && d.node != null && d.node.nodeType == 3 && d.node.nodeValue.matches("\\s*")) {
+            d.vertical_align = d.parent.children.get(index-1).vertical_align;
+            d.height = d.parent.children.get(index-1).height;
+        }
+
         int offset = 0;
         Line line = d.line;
         int vertical_align = is_flex ? block.flex_align_items : d.vertical_align;
@@ -1002,6 +1009,8 @@ public class Layouter {
             } else {
                 offset = !block.rtl ? last_block.paddings[3] + last_block.borderWidth[3] - (d.paddings[3] + d.borderWidth[3]) : last_block.width - last_block.borderWidth[1] - last_block.paddings[1] - (d.width - d.borderWidth[1] - d.paddings[1]);
             }
+        } else if (last_block != null) {
+            offset = last_block.getOffsetTop() - line.getY();
         }
 
         if (!is_flex || x_axis) {
