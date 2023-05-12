@@ -152,6 +152,7 @@ public class Builder {
 
         } else if (node.nodeType == TEXT) {
             if (node.nodeValue.matches("\\s*")) {
+                b.display_type = Block.Display.INLINE;
                 return;
             }
             b.type = Block.NodeTypes.TEXT;

@@ -4054,6 +4054,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return b0 == b;
     }
 
+    public boolean isBlock() {
+        return display_type == Display.BLOCK || display_type == Display.FLEX || display_type == Display.TABLE;
+    }
+
+    public boolean isInline() {
+        return display_type == Display.INLINE_BLOCK || display_type == Display.INLINE || display_type == Display.INLINE_FLEX || display_type == Display.INLINE_TABLE;
+    }
+
     public void findPreferredSizes() {
         int max = lines.size() > 0 ? lines.firstElement().width : 0;
         int last = 0;
