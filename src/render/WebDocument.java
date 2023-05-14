@@ -13,6 +13,7 @@ import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -36,6 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.text.JTextComponent;
 import org.apache.batik.swing.JSVGCanvas;
 
@@ -213,6 +215,9 @@ public class WebDocument extends JPanel {
         @Override
         public Component getComponentBefore(Container aContainer, Component aComponent) {
             if (focusableElements.size() == 0) return null;
+            if (focusIndex == -1) {
+                focusIndex = 1;
+            }
             focusIndex--;
             if (focusIndex < 0) {
                 focusIndex = focusableElements.size() - 1;
@@ -235,7 +240,19 @@ public class WebDocument extends JPanel {
         @Override
         public Component getDefaultComponent(Container aContainer) {
             if (focusableElements.size() > 0) {
-                focusIndex = 0;
+                if (focusIndex == -1) {
+                    Timer t = new Timer(10, new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            getInnerComponent(focusableElements.firstElement()).requestFocus();
+                        }
+                    });
+                    t.setRepeats(false);
+                    t.start();
+                    focusIndex = 0;
+
+                    return null;
+                }
                 return getInnerComponent(focusableElements.firstElement());
             }
             return null;
