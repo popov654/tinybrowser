@@ -67,6 +67,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
 import javax.swing.JSpinner;
@@ -2006,7 +2007,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
         removeAll();
         
-        final JTextComponent tf = inputType != Input.TEXTAREA ? new JTextField() : new JTextArea();
+        final JTextComponent tf = inputType != Input.TEXTAREA ? (maskedInput ? new JPasswordField() : new JTextField()) : new JTextArea();
         if (children.size() > 0 && children.get(0).textContent != null) {
             tf.setText(children.get(0).textContent);
             children.get(0).setTextColor(new Color(0, 0, 0, 0));
@@ -3048,9 +3049,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (text.length() == 0 && !c[i].hasFocus()) {
                     textField.setForeground(inputPlaceholderTextColor);
                     textField.setText(inputPlaceholderText);
+                    if (textField instanceof JPasswordField) {
+                        ((JPasswordField)textField).setEchoChar((char)0);
+                    }
                 } else {
                     textField.setForeground(color);
                     textField.setText(inputValue);
+                    if (textField instanceof JPasswordField) {
+                        ((JPasswordField)textField).setEchoChar((new JPasswordField()).getEchoChar());
+                    }
                 }
                 break;
             }
@@ -8995,6 +9002,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public Form form;
     public int inputType = 0;
     public int buttonType = 0;
+    public boolean maskedInput = false;
     public String inputName = "";
     public String inputValue = "";
     public boolean inputDisabled = false;
@@ -9380,6 +9388,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.inputDisabled = inputDisabled;
         b.inputListSize = inputListSize;
         b.inputMultipleSelection = inputMultipleSelection;
+        b.maskedInput = maskedInput;
         b.defaultInputValue = defaultInputValue;
         b.defaultChecked = defaultChecked;
         b.labelFor = labelFor;

@@ -183,8 +183,11 @@ public class Builder {
                 b.inputName = node.getAttribute("name");
             }
             b.inputDisabled = b.node.hasAttribute("disabled");
-            if (node.tagName.equals("input") && (type == null || type.equals("text"))) {
+            if (node.tagName.equals("input") && (type == null || type.equals("text") || type.equals("password"))) {
                 b.inputType = Block.Input.TEXT;
+                if (type.equals("password")) {
+                    b.maskedInput = true;
+                }
                 if (node.getAttribute("value") != null) {
                     b.inputValue = b.defaultInputValue = node.getAttribute("value");
                 }
