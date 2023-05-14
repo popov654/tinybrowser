@@ -2665,32 +2665,92 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         this.addKeyListener(new KeyListener() {
 
+            int hoveredIndex = -1;
+
             @Override
             public void keyTyped(KeyEvent e) {}
 
             @Override
             public void keyPressed(KeyEvent e) {
+
+                Block list = children.get(1);
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    document.root.mouseClicked(new MouseEvent(instance, MouseEvent.MOUSE_CLICKED, 0, 0, instance._x_ - instance.parent.scroll_x, instance._y_ - instance.parent.scroll_y, 1, false));
+                    if (inputListSize == 0 && list.display_type != Display.NONE) {
+                        String value = inputValue;
+                        int index = -1;
+                        for (int i = 0; i < list.children.size(); i++) {
+                            if (list.display_type == Display.NONE && list.children.get(i).inputValue.equals(value) || list.display_type != Display.NONE && list.children.get(i).checked) {
+                                index = i;
+                                break;
+                            }
+                        }
+                        setInputSelectedIndex(index);
+                    } else if (inputListSize == 0) {
+                        document.root.mouseClicked(new MouseEvent(instance, MouseEvent.MOUSE_CLICKED, 0, 0, instance._x_ - instance.parent.scroll_x, instance._y_ - instance.parent.scroll_y, 1, false));
+                    } else if (hoveredIndex >= 0 && hoveredIndex <= list.children.size()-1) {
+                        list.children.get(hoveredIndex).checked = !inputMultipleSelection ? true : !list.children.get(hoveredIndex).checked;
+                    }
                 }
-                if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+
                     String value = inputValue;
                     int index = -1;
-                    Block list = children.get(1);
+                    
                     for (int i = 0; i < list.children.size(); i++) {
-                        if (list.children.get(i).inputValue.equals(value)) {
+                        if (list.display_type == Display.NONE && list.children.get(i).inputValue.equals(value) || list.display_type != Display.NONE && list.children.get(i).checked) {
                             index = i;
+                            if (hoveredIndex == -1) {
+                                hoveredIndex = i;
+                            }
                             break;
                         }
                     }
-                    index += e.getKeyCode() == KeyEvent.VK_DOWN ? 1 : -1;
-                    if (index < 0) {
-                        index = list.children.size()-1;
+
+                    if (inputListSize > 0 && inputMultipleSelection) {
+                        index = hoveredIndex;
                     }
-                    if (index > list.children.size()-1) {
-                        index = 0;
+
+                    if (e.getKeyCode() != KeyEvent.VK_ESCAPE) {
+
+                        index += e.getKeyCode() == KeyEvent.VK_DOWN ? 1 : -1;
+                        if (index < 0) {
+                            index = list.children.size()-1;
+                        }
+                        if (index > list.children.size()-1) {
+                            index = 0;
+                        }
+
+                        hoveredIndex = index;
+
+                        if (inputListSize == 0 && list.display_type == Display.NONE) {
+                            setInputSelectedIndex(index);
+                        } else {
+                            for (int i = 0; i < list.children.size(); i++) {
+                                Block item = list.children.get(i);
+                                if (!inputMultipleSelection) {
+                                    item.checked = (i == index);
+                                }
+
+                                item.setBackgroundColor(item.checked || i == index ? selection_color : null);
+                                item.setTextColorRecursive(item.checked || i == index ? selection_text_color : color);
+                                
+                                if (i == index && item._getY() - list.scroll_top > list.height - list.paddings[2] - list.borderWidth[2] - item.height && (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_UP && index == list.children.size()-1)) {
+                                    list.scroll_top = item._getY() - (list.height - list.paddings[2] - list.borderWidth[2] - item.height);
+                                }
+                                if (i == index && item._getY() - list.scroll_top < list.borderWidth[0] + list.paddings[0] && (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN && index == 0)) {
+                                    list.scroll_top = item._getY() - (list.borderWidth[0] + list.paddings[0]);
+                                }
+                                if (list.scrollbar_y != null) {
+                                    list.scroll_y = list.parent.scroll_y + list.scroll_top;
+                                    list.scrollbar_y.getModel().setValue(list.scroll_top);
+                                    list.forceRepaint();
+                                    list.document.repaint();
+                                }
+                            }
+                        }
+                    } else {
+                        closeInputList();
                     }
-                    setInputSelectedIndex(index);
                 }
             }
 
@@ -3025,32 +3085,27 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                 }
             }
-            Block label_block = children.firstElement().children.firstElement();
-            if (inputListSize == 0 && selectedItem != null) {
-                if (inputUseOnlyTextInHeader && selectedItem.altText != null) {
-                    label_block.children.get(0).textContent = selectedItem.altText;
-                } else if (children.firstElement().children.size() == 1 && !label.isEmpty()) {
-                    label_block.children.get(0).textContent = label;
+            if (inputListSize == 0) {
+                Block label_block = children.firstElement().children.firstElement();
+                if (inputListSize == 0 && selectedItem != null) {
+                    if (inputUseOnlyTextInHeader && selectedItem.altText != null) {
+                        label_block.children.get(0).textContent = selectedItem.altText;
+                    } else if (children.firstElement().children.size() == 1 && !label.isEmpty()) {
+                        label_block.children.get(0).textContent = label;
+                    } else {
+                        Block copy = selectedItem.clone();
+                        copy.paddings = new int[] {0, 0, 0, 0};
+                        copy.setBackgroundColor(new Color(0, 0, 0, 0));
+                        copy.setTextColorRecursive(initialColor);
+                        label_block.removeTextLayers();
+                        label_block.removeAllElements();
+                        label_block.addElement(copy);
+                    }
                 } else {
-                    Block copy = selectedItem.clone();
-                    copy.paddings = new int[] {0, 0, 0, 0};
-                    copy.setBackgroundColor(new Color(0, 0, 0, 0));
-                    copy.setTextColorRecursive(initialColor);
-                    label_block.removeTextLayers();
-                    label_block.removeAllElements();
-                    label_block.addElement(copy);
+                    label_block.children.get(0).children.get(0).textContent = "Select value";
                 }
-            } else {
-                label_block.children.get(0).children.get(0).textContent = "Select value";
+                 closeInputList();
             }
-            
-            list.display_type = Display.NONE;
-            list.flushBuffersRecursively();
-            list.parent.performLayout();
-            document.root.sortBlocks();
-            document.root.setZIndices();
-            list.parent.forceRepaint();
-            document.repaint();
 
             formEntry = new FormEntry(inputName, value);
             return;
@@ -3061,6 +3116,17 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
         formEntry = new FormEntry(inputName, inputValue);
+    }
+
+    public void closeInputList() {
+        Block list = children.lastElement();
+        list.display_type = Display.NONE;
+        list.flushBuffersRecursively();
+        list.parent.performLayout();
+        document.root.sortBlocks();
+        document.root.setZIndices();
+        list.parent.forceRepaint();
+        document.repaint();
     }
 
     private static Block createButton(final Block b, String label, JButton btn) {
