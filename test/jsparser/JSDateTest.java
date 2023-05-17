@@ -26,6 +26,7 @@ public class JSDateTest {
 
     @Before
     public void setUp() {
+        JSParser.setLocale(java.util.Locale.US);
         instance = new JSDate("Sun, Feb 25 2018 18:24:16 GMT+0300");
     }
 

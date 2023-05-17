@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -458,6 +459,16 @@ public class JSParser {
             }
         }
     }
+
+    public static Locale getLocale() {
+        return locale;
+    }
+
+    public static void setLocale(java.util.Locale loc) {
+        locale = loc;
+    }
+
+    private static Locale locale = java.util.Locale.US;
 
     private boolean esc = false;
     private boolean sign = false;

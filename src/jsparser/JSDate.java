@@ -21,17 +21,18 @@ public class JSDate extends JSObject implements Comparable {
         value = val;
     }
     public JSDate(String val) {
+        Locale locale = JSParser.getLocale();
         items.put("__proto__", DateProto.getInstance());
         try {
-            DateFormat format = new SimpleDateFormat("EEE, MMM dd yyyy HH:mm:ss", Locale.US);
+            DateFormat format = new SimpleDateFormat("EEE, MMM dd yyyy HH:mm:ss", locale);
             value = format.parse(val).getTime();
         } catch (ParseException ex1) {
             try {
-                DateFormat format = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss", Locale.US);
+                DateFormat format = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss", locale);
                 value = format.parse(val).getTime();
             } catch (ParseException ex2) {
                 try {
-                    DateFormat format = new SimpleDateFormat("MMM dd yyyy HH:mm:ss", Locale.US);
+                    DateFormat format = new SimpleDateFormat("MMM dd yyyy HH:mm:ss", locale);
                     value = format.parse(val).getTime();
                 } catch (ParseException ex3) {
                     System.err.println("Date parse error");
