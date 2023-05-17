@@ -197,7 +197,15 @@ public class WebDocument extends JPanel {
     }
 
     public void updateFocusIndex(Block b) {
+        if (focusIndex != -1 && focusableElements.get(focusIndex).node != null) {
+            focusableElements.get(focusIndex).node.fireEvent("blur", "render");
+        }
+        
         focusIndex = b != null ? focusableElements.indexOf(b) : -1;
+
+        if (focusIndex != -1 && focusableElements.get(focusIndex).node != null) {
+            focusableElements.get(focusIndex).node.fireEvent("focus", "render");
+        }
     }
 
     class DefaultFocusTraversalPolicy extends FocusTraversalPolicy {
