@@ -8,6 +8,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -18,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import javax.swing.Timer;
 
@@ -183,5 +186,52 @@ public class Util {
         return installPath;
     }
 
+    private static void readSettings() {
+        settings = new HashMap<String, String>();
+        try {
+            FileReader fr = new FileReader(installPath + "settings");
+            String s = "";
+            int ch;
+            while ((ch = fr.read()) != -1) {
+                s += (char) ch;
+            }
+            Scanner sc = new Scanner(s);
+            while (sc.hasNextLine()) {
+                String[] p = sc.nextLine().split("=");
+                if (p.length > 1) {
+                    settings.put(p[0].trim(), p[1].trim());
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void writeSettings() {
+        try {
+            FileWriter fw = new FileWriter(installPath + "settings");
+            Set<String> keys = settings.keySet();
+            for (String key: keys) {
+                fw.write(key + "=" + settings.get(key) + "\n");
+            }
+            fw.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static String getParameter(String key) {
+        if (settings == null) {
+            readSettings();
+        }
+        return settings.get(key);
+    }
+
+    public static void setParameter(String key, String value) {
+        settings.put(key, value);
+        writeSettings();
+    }
+
     public static String installPath;
+    private static HashMap<String, String> settings;
 }

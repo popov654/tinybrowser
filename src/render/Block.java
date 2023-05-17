@@ -2441,8 +2441,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (btn.isObscured()) return;
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setMultiSelectionEnabled(inputMultipleSelection);
+                String dir = Util.getParameter("last_dir");
+                if (dir != null) {
+                    fileChooser.setCurrentDirectory(new File(dir));
+                }
                 int result = fileChooser.showOpenDialog(document);
                 if (result == JFileChooser.APPROVE_OPTION) {
+
+                    Util.setParameter("last_dir", fileChooser.getCurrentDirectory().getAbsolutePath());
 
                     File[] selectedFiles = fileChooser.getSelectedFiles();
                     
