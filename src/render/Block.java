@@ -514,7 +514,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 root.setAttributeNS(null, "height", height + "");
                 root.setAttributeNS(null, "viewBox", "0 0 " + width + " " + height);
                 c[i].setBounds(_x_ - scroll_x, _y_ - scroll_y, width, height);
-                c[i].repaint();
                 continue;
             }
             if (c[i] == text_layer || (!(c[i] instanceof JTextField) && !(c[i] instanceof JTextArea) && !(c[i] instanceof JLabel) && !(c[i] instanceof JButton) && !(c[i] instanceof JRadioButton) && !(c[i] instanceof JCheckBox) && !(c[i] instanceof JSpinner))) continue;
@@ -524,14 +523,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 c[i].setBounds(_x_ + borderWidth[3] - scroll_x, _y_ + borderWidth[0] - scroll_y, width - borderWidth[3] - borderWidth[1], height - borderWidth[0] - borderWidth[2]);
             } else if (inputType == Input.RADIO || inputType == Input.CHECKBOX) {
                 c[i].setBounds(_x_ + width / 2 - c[i].getPreferredSize().width / 2 - 1 - scroll_x, _y_ + height / 2 - c[i].getPreferredSize().height / 2 - scroll_y, height, height);
-                c[i].repaint();
             } else if (c[i] instanceof JLabel && inputType == Input.FILE || c[i] instanceof JButton && parent.inputType == Input.FILE) {
                 if (c[i] instanceof JLabel) {
                     c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ - scroll_y, c[i].getWidth(), height);
                 } else {
                     c[i].setBounds(_x_ + width - scroll_x - c[i].getWidth(), _y_ - scroll_y, c[i].getWidth(), height);
                 }
-                c[i].repaint();
             } else if (inputType == Input.NUMBER) {
                 if (c[i] instanceof JSpinner) {
                     c[i].setBounds(_x_ + borderWidth[3] + paddings[3] - scroll_x, _y_ - scroll_y, c[i].getWidth(), height);
