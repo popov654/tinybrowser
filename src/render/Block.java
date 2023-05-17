@@ -2402,6 +2402,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         label.setTop(Math.round((double) paddings[0] / ratio), Units.px);
         label.width = label.viewport_width = width - btn.width - 6;
         label.height = label.viewport_height = height;
+        label.auto_width = false;
         label.fontSize = fontSize;
         label.setWhiteSpace(WhiteSpace.NO_WRAP);
         label.setOverflow(Overflow.HIDDEN);
