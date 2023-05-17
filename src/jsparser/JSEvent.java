@@ -49,5 +49,10 @@ public class JSEvent extends JSObject {
     @Override
     public void set(String str, JSValue value) {}
 
+    @Override
+    public String toString() {
+        return "Event " + super.toString();
+    }
+
     TreeMap<String, JSValue> data;
 }
