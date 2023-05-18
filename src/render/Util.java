@@ -187,6 +187,7 @@ public class Util {
     }
 
     private static void readSettings() {
+        getInstallPath();
         settings = new HashMap<String, String>();
         try {
             FileReader fr = new FileReader(installPath + "settings");
