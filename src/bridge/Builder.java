@@ -673,6 +673,11 @@ public class Builder {
         if (jsWindow == null) {
             jsWindow = (jsparser.Window) Expression.getVar("window", block);
         } else {
+            if (jsWindow.get("document") == jsparser.Undefined.getInstance()) {
+                try {
+                    Thread.sleep(30);
+                } catch (Exception ex) {}
+            }
             block.replaceDocumentObject((jsparser.HTMLDocument)jsWindow.get("document"));
         }
 

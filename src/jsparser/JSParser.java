@@ -399,7 +399,7 @@ public class JSParser {
                     else stack.removeElementAt(stack.size()-1);
                     t = new Token(String.valueOf(ch));
                     if (!checkLevel(ch)) return;
-                } else if (testObj && ch == '{' || substate > 0) {
+                } else if (testObj && ch == '{' || substate > 0 && substate != 9) {
                     if (ch == '{') stack.add(READ_OBJECT_FIELD);
                     else stack.removeElementAt(stack.size()-1);
                     t = new Token(String.valueOf(ch)+String.valueOf(ch));
