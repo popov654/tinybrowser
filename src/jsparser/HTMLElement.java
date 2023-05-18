@@ -84,7 +84,7 @@ public class HTMLElement extends HTMLNode {
                 if (parents.get(i).listeners_0.get(type) == null) continue;
                 Vector<Function> funcs = (Vector<Function>) parents.get(i).listeners_0.get(type).clone();
                 for (Function func: funcs) {
-                    func.call(args);
+                    func.call((JSObject)event.data.get("target"), args);
                 }
             }
             for (int i = 0; i < parents.size(); i++) {
@@ -92,7 +92,7 @@ public class HTMLElement extends HTMLNode {
                 if (parents.get(i).listeners.get(type) == null) continue;
                 Vector<Function> funcs = (Vector<Function>) parents.get(i).listeners.get(type).clone();
                 for (Function func: funcs) {
-                    func.call(args);
+                    func.call((JSObject)event.data.get("target"), args);
                 }
             }
             if (!type.equals("mousemove")) {
