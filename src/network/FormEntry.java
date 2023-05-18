@@ -17,6 +17,7 @@ public class FormEntry implements Entry {
         key = name;
         isFile = true;
         textValue = "[filename=\"" + file.getAbsolutePath() + "\"]";
+        filename = file.getName();
     }
 
     public FormEntry(String name, File file, boolean read) {
@@ -30,6 +31,7 @@ public class FormEntry implements Entry {
         } catch (IOException ex) {
             Logger.getLogger(FormEntry.class.getName()).log(Level.SEVERE, null, ex);
         }
+        filename = file.getName();
     }
 
     public FormEntry(String name, byte[] value) {
@@ -38,12 +40,22 @@ public class FormEntry implements Entry {
         binaryValue = value;
     }
 
+    public FormEntry(String name, byte[] value, String fileName) {
+        key = name;
+        isBinary = true;
+        binaryValue = value;
+        isFile = true;
+        filename = fileName;
+    }
+
     public FormEntry(String name, String value) {
         key = name;
         isBinary = false;
         textValue = value;
         if (value.matches("\\[filename=\"[^\"]+\"\\]")) {
             isFile = true;
+            String[] path = value.substring(11, value.length()-2).split(File.separator.replace("\\", "\\\\"));
+            filename = path[path.length-1];
         }
     }
 
@@ -63,11 +75,20 @@ public class FormEntry implements Entry {
         textValue = null;
     }
 
+    public void setBlobValue(byte[] value, String fileName) {
+        isBinary = true;
+        binaryValue = value;
+        textValue = null;
+        isFile = true;
+        filename = fileName;
+    }
+
     public void setBlobValue(File file) {
         try {
             textValue = null;
             isBinary = true;
             binaryValue = Util.readFile(file);
+            filename = file.getName();
         } catch (IOException ex) {
             Logger.getLogger(FormEntry.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -75,12 +96,18 @@ public class FormEntry implements Entry {
 
     public void setFileValue(String path) {
         textValue = "[filename=\"" + path + "\"]";
+        String[] p = path.split(File.separator.replace("\\", "\\\\"));
+        filename = p[p.length-1];
         isFile = true;
     }
 
     @Override
     public String getKey() {
         return key;
+    }
+
+    public String getFilename() {
+        return filename;
     }
 
     @Override
@@ -101,9 +128,23 @@ public class FormEntry implements Entry {
         return value;
     }
 
+    public Object setValue(Object value, String fileName) {
+        if (value instanceof byte[]) {
+            setBlobValue((byte[]) value);
+        } else if (value instanceof File) {
+            setBlobValue((File) value);
+        } else if (value instanceof String) {
+            setTextValue((String) value);
+        }
+        filename = fileName;
+
+        return value;
+    }
+
     public String key;
     public boolean isBinary = false;
     public String textValue;
+    public String filename;
     public byte[] binaryValue;
     public boolean isFile = false;
 }
