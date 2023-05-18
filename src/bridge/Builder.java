@@ -200,6 +200,7 @@ public class Builder {
                 b.inputType = Block.Input.NUMBER;
             } else if (node.tagName.equals("input") && type.equals("file")) {
                 b.inputType = Block.Input.FILE;
+                b.inputMultipleSelection = b.node.hasAttribute("multiple");
             } else if (node.tagName.equals("input") && type.matches("(submit|reset|button)")) {
                 b.inputType = Block.Input.BUTTON;
                 b.addText(node.getAttribute("value") != null ? node.getAttribute("value") : "");

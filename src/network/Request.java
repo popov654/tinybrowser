@@ -170,6 +170,12 @@ public class Request {
     public static byte[] prepareBody(HttpURLConnection http, Vector<FormEntry> params, String charset, boolean multipart) {
         byte[] out = new byte[0];
 
+        for (FormEntry entry: params) {
+            if (entry.getValue().startsWith("[filename=")) {
+                multipart = true;
+            }
+        }
+
         if (params == null) params = new Vector<FormEntry>();
         ArrayList<String> parts = new ArrayList<String>();
         String boundary = multipart ? generateBoundary() : "";
@@ -185,7 +191,7 @@ public class Request {
                         content += "\n";
                     }
                     content += "--" + boundary + "\n" +
-                          "Content-Disposition: form-data; name=\"" + URLEncoder.encode(entry.getKey(), charset) + "\"";
+                          "Content-Disposition: form-data; name=\"" + URLEncoder.encode(entry.getKey(), charset).replaceAll("%5B%5D$", "[]") + "\"";
                     boolean isFile = entry.getValue().matches("\\[filename=\"[^\"]+\"\\]");
                     int pos = 0;
                     String contentType = "";
@@ -458,7 +464,7 @@ public class Request {
     public static byte[] getBytes(InputStream is, int size) {
         byte[] result = new byte[size];
         int index = 0;
-        final int buffer_size=1024;
+        final int buffer_size = 1024;
         try {
             byte[] bytes = new byte[buffer_size];
             for(;;)
@@ -470,8 +476,9 @@ public class Request {
                     result[index++] = bytes[i];
                 }
             }
+            is.close();
         }
-        catch(Exception ex) {
+        catch (Exception ex) {
             return null;
         }
 

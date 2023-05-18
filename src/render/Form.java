@@ -30,8 +30,10 @@ public class Form {
                 }
                 Vector<FormEntry> params = new Vector<FormEntry>();
                 for (Block input: inputs) {
-                    if (input.formEntry == null) continue;
-                    params.add(input.formEntry);
+                    if (input.formEntries == null) continue;
+                    for (FormEntry entry: input.formEntries) {
+                        params.add(entry);
+                    }
                 }
                 String response = Request.makeRequest(url, method, params, "cp1251", true, multipart);
 

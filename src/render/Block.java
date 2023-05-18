@@ -2440,14 +2440,29 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             public void actionPerformed(ActionEvent e) {
                 if (btn.isObscured()) return;
                 JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setMultiSelectionEnabled(inputMultipleSelection);
                 int result = fileChooser.showOpenDialog(document);
                 if (result == JFileChooser.APPROVE_OPTION) {
-                    File selectedFile = fileChooser.getSelectedFile();
-                    label.children.get(0).textContent = selectedFile.getAbsolutePath();
+
+                    File[] selectedFiles = fileChooser.getSelectedFiles();
+                    
+                    if (!inputMultipleSelection) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        label.children.get(0).textContent = selectedFile.getAbsolutePath();
+                    } else {
+                        label.children.get(0).textContent = selectedFiles.length > 1 ? selectedFiles.length + " files" : selectedFiles[0].getAbsolutePath();
+                    }
                     label.performLayout();
                     label.forceRepaint();
 
-                    btn.parent.inputValue = "[filename=\"" + selectedFile.getAbsolutePath() + "\"]";
+                    btn.parent.inputValue = "";
+                    for (File file: selectedFiles) {
+                        if (btn.parent.inputValue.length() > 0) {
+                            btn.parent.inputValue += ",";
+                        }
+                        btn.parent.inputValue += "[filename=\"" + file.getAbsolutePath() + "\"]";
+                    }
+                    
                     btn.parent.updateFormEntry();
 
                     document.focused_block = btn.parent;
@@ -3065,25 +3080,32 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void updateFormEntry() {
         if (inputDisabled || inputName.isEmpty() || ((inputType == Input.RADIO || inputType == Input.CHECKBOX) && !checked) ||
               (inputType == Input.FILE && inputValue.matches("\\s*"))) {
-            formEntry = null;
+            formEntries.clear();
             return;
         }
         if (!inputPlaceholderText.isEmpty() && (inputType == Input.TEXT || inputType == Input.TEXTAREA)) {
             updateInputPlaceholder();
         }
+
+        if (inputMultipleSelection && !inputName.endsWith("[]")) {
+            inputName += "[]";
+        }
+
         if (inputType == Input.SELECT) {
+
             inputValue = "";
-            String value = "";
             String label = "";
             Block selectedItem = null;
             Block list = children.lastElement();
+
+            formEntries.clear();
+
             for (int i = 0; i < list.children.size(); i++) {
                 if (list.children.get(i).checked) {
                     if (inputValue.isEmpty()) {
                         inputValue = list.children.get(i).inputValue;
                     }
-                    if (value.length() > 0)  value += ",";
-                    value += list.children.get(i).inputValue;
+                    formEntries.add(new FormEntry(inputName, list.children.get(i).inputValue));
                     if (selectedItem == null) {
                         label = list.children.get(i).children.get(0).textContent;
                         selectedItem = list.children.get(i);
@@ -3111,16 +3133,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
                  closeInputList();
             }
+            
+            return;
+        }
 
-            formEntry = new FormEntry(inputName, value);
-            return;
-        }
         if (inputType == Input.FILE) {
-            String value = children.get(0).children.get(0).textContent;
-            formEntry = new FormEntry(inputName, value);
+            String[] values = inputValue.split(",");
+            formEntries.clear();
+            for (String value: values) {
+                formEntries.add(new FormEntry(inputName, value));
+            }
             return;
         }
-        formEntry = new FormEntry(inputName, inputValue);
+
+        formEntries.clear();
+        formEntries.add(new FormEntry(inputName, inputValue));
     }
 
     public void closeInputList() {
@@ -9008,7 +9035,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean inputMultipleSelection = false;
     public boolean inputUseOnlyTextInHeader = false;
     public String defaultInputValue = "";
-    public FormEntry formEntry;
+    public Vector<FormEntry> formEntries = new Vector<FormEntry>();
     public Block labelFor;
 
     public boolean inputReady = false;
