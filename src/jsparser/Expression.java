@@ -155,6 +155,8 @@ public class Expression {
             source += getContent() + " ";
         }
 
+        boolean is_inner_func = false;
+
         while (token != null && token.getType() != Token.SEMICOLON) {
             if (token.getType() == Token.OP && !token.getContent().matches("[!:,]") && !token.getContent().matches("\\+\\+|--") &&
                   !token.getContent().matches("break|continue|return")) {
@@ -164,11 +166,14 @@ public class Expression {
             if (token.val == null) {
                 content += !token.getContent().matches("\\{\\{|\\}\\}") ? token.getContent() : token.getContent().charAt(0);
             }
-            if (token.val instanceof Function) {
-                content += ((Function)token.val).toPaddedString().trim();
+            else if (token.val instanceof Function) {
+                String body = ((Function)token.val).toPaddedString(level).trim();
+                content += body;
+                is_inner_func = body.split("\n").length > 1;
             }
-            if (token.val != null) {
+            else if (token.val != null) {
                 content = token.val.toString();
+                is_inner_func = content.split("\n").length > 1;
             }
             if (content.equals("if")) {
                 is_condition = true;
@@ -177,7 +182,7 @@ public class Expression {
                 content = "} " + content + " ";
             }
             else if (content.equals("else")) {
-                content = "} " + content + " {";
+                content = " " + content + " ";
                 source += content;
                 break;
             }
@@ -188,11 +193,13 @@ public class Expression {
             }
             token = token.next;
         }
-        source = source.replaceAll(";\\s*", ";\n" + pad);
+        if (!is_inner_func) {
+            source = source.replaceAll(";\\s*", ";\n" + pad);
+        }
         if (ret && !source.matches("^\\s*return.*")) {
             source = source.replaceAll("^(\\s*)", "$1return ").replaceAll("return (;|$)", "return$1");
         }
-        if (!is_condition && !source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}") && !getContent().equals("switch")) source += ";";
+        if (!is_condition && !source.endsWith(" else ") && !source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}") && !getContent().equals("switch")) source += ";";
         if (getContent().equals("switch")) {
             source = source + " {";
         } else if (getContent().equals("case")) {

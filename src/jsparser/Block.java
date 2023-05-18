@@ -1103,19 +1103,23 @@ public class Block extends Expression {
         boolean open_else = false;
         for (int i = 0; i < children.size(); i++) {
             String str = children.get(i).toString(level+1);
+            if (i > 0 && children.get(i-1) instanceof Block && children.get(i).getContent().equals("else")) {
+                result = result.replaceAll("\\s+$", "");
+                str = str.replaceAll("^\\s+", " ").replaceAll("^\\s+", " ");
+            }
             result += str;
             if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
                 open_else = true;
             }
-            if (i < children.size()-1 && (children.get(i) instanceof Block || !children.get(i).getContent().equals("switch"))) result += "\n";
-        }
-        if (open_else) {
-            result += "\n";
-            for (int k = 0; k < level+1; k++) {
-                result += "  ";
+            if (i < children.size()-1 && children.get(i+1) instanceof Block) {
+                result += " ";
             }
-            result += "}";
+            else if (i < children.size()-1 && (children.get(i) instanceof Block || !children.get(i).getContent().equals("switch"))) result += "\n";
+            if (i < children.size()-1 && children.get(i) instanceof Block && children.get(i+1).getContent().equals("else") || open_else) {
+                result = result.replaceAll("\\s+$", " ");
+            }
         }
+
         result += "\n";
 
         String pad = "";
@@ -1128,6 +1132,7 @@ public class Block extends Expression {
         if (c_exp != null || f_in_obj != null) {
             result = pad + (!post_check ? getLoopHeader() + " " + result : "do " + result + " " + getLoopHeader());
         }
+        
         return result;
     }
 
