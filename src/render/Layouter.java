@@ -289,6 +289,7 @@ public class Layouter {
 
     public int last_element = -1;
     public int last_word = -1;
+    public boolean layout_break = false;
 
 
     private boolean omitWhitespace() {
@@ -413,6 +414,7 @@ public class Layouter {
                 if (block.min_size < last_line.cur_pos - last_pos) {
                     block.min_size = last_line.cur_pos - last_pos;
                 }
+                layout_break = true;
                 last_word = -1;
                 return;
             }

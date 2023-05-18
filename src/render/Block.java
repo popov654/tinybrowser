@@ -3624,8 +3624,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (beforePseudoElement != null) blocks.add(0, beforePseudoElement);
         if (afterPseudoElement != null) blocks.add(afterPseudoElement);
 
+        layouter.layout_break = false;
+
         for (int i = 0; i < blocks.size(); i++) {
             Block el = blocks.get(i);
+            if (layouter.layout_break) break;
 
             if (el.type == NodeTypes.TEXT) {
                 if (el.white_space != WhiteSpace.PRE_WRAP && el.textContent.matches("^\\s*$") && (parent.layouter == null || parent.layouter.last_line == null || parent.layouter.last_line.elements.isEmpty())) {
@@ -3642,6 +3645,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (w[j].length() == 0) continue;
                     layouter.last_word = j;
                     layouter.addWord(w[j], f);
+                    if (layouter.layout_break) break;
                     layouter.last_word = -1;
 
                     if (original != null && original.parts.size() > 1) {
