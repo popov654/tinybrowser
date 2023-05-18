@@ -223,6 +223,9 @@ public class ResourceManager {
     }
 
     public void checkResourcesStatus() {
+        if (!document.document.readyEventFired) {
+            return;
+        }
         boolean flag = true;
         for (Resource res: resources) {
             if (!res.isLoaded()) {

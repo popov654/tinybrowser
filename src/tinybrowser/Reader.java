@@ -85,7 +85,7 @@ public class Reader {
         parser.findStyles(hp.getRootNode());
         parser.applyStyles();
 
-        renderDocument.root.node = hp.getRootNode();
+        renderDocument.root.node = hp.getRootNode().lastElementChild();
         renderDocument.root.node.document = hp;
 
         builder.findScripts(hp.getRootNode());
