@@ -816,6 +816,22 @@ public class HTMLElement extends HTMLNode {
     }
 
     @Override
+    public JSValue get(String str) {
+        if (str.equals("files")) {
+            JSArray result = new JSArray();
+            Vector<java.io.File> files = Mapper.get(node).getSelectedFiles();
+            if (files == null) {
+                return Null.getInstance();
+            }
+            for (java.io.File f: files) {
+                result.push(new File(f));
+            }
+            return result;
+        }
+        return super.get(str);
+    }
+
+    @Override
     public void set(String str, JSValue value) {
         if (str.startsWith("on") && (value instanceof Function || value instanceof Null || value instanceof Undefined)) {
             boolean add = !(value instanceof Null || value instanceof Undefined);

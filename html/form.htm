@@ -20,7 +20,7 @@ form::selection {
    color: rgb(15, 15, 15);
 }
 
-input[type="text"], textarea {
+input[type="text"], input[type="file"], textarea {
    display: block;
 }
 select {
@@ -33,6 +33,9 @@ select {
 <script>
 window.addEventListener('load', function() {
    console.log("Document loaded")
+   document.getElementById('file').onchange = function() {
+      console.log(this.files)
+   }
 }, false)
 </script>
 </head>
@@ -43,6 +46,7 @@ window.addEventListener('load', function() {
       <label for="about">About:</label>
       <textarea name="about" id="about"></textarea>
       <select name="choice" id="choice"><option>Pizza</option><option>Stake</option><option>Lazagnia</option></select>
+      <input type="file" name="file" id="file" />
       <input type="submit" value="Submit" /> <input type="reset" value="Reset" />
    </form>
 </body>

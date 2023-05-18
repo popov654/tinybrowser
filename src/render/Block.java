@@ -2454,6 +2454,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     
                     if (!inputMultipleSelection) {
                         File selectedFile = fileChooser.getSelectedFile();
+                        selectedFiles = new File[] { selectedFile };
                         label.children.get(0).textContent = selectedFile.getAbsolutePath();
                     } else {
                         label.children.get(0).textContent = selectedFiles.length > 1 ? selectedFiles.length + " files" : selectedFiles[0].getAbsolutePath();
@@ -3169,6 +3170,21 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.root.setZIndices();
         list.parent.forceRepaint();
         document.repaint();
+    }
+
+    public Vector<File> getSelectedFiles() {
+        if (inputType != Input.FILE) return null;
+        Vector<File> files = new Vector<File>();
+        String[] parts = inputValue.split(",");
+        for (String p: parts) {
+            if (p.matches("\\[filename=\"[^\"]+\"\\]")) {
+                File f = new File(p.substring(11, p.length()-2));
+                if (f.exists()) {
+                    files.add(f);
+                }
+            }
+        }
+        return files;
     }
 
     private static Block createButton(final Block b, String label, JButton btn) {
