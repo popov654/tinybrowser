@@ -109,6 +109,7 @@ public class HTMLParser {
 
     private void addTextNode() {
         if (!cur_text.isEmpty()) {
+            if (curNode == root) return;
             Node text = new Node(curNode, 3);
             text.nodeValue = cur_text;
         }
