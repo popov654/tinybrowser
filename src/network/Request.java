@@ -326,6 +326,12 @@ public class Request {
             if (filename.endsWith(".7z")) {
                 return "application/x-7z-compressed";
             }
+            if (filename.endsWith(".exe")) {
+                return "application/x-msdownload";
+            }
+            if (filename.endsWith(".dmg") || filename.endsWith(".dms")) {
+                return "application/octet-stream";
+            }
             type = "application";
         } else if (filename.matches(".*\\.(ttf|woff2?)$")) {
             type = "font";
