@@ -2468,6 +2468,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         }
                         btn.parent.inputValue += "[filename=\"" + file.getAbsolutePath() + "\"]";
                     }
+
+                    if (btn.parent.node != null) {
+                        btn.parent.node.fireEvent("change", "render");
+                    }
                     
                     btn.parent.updateFormEntry();
 
@@ -3403,6 +3407,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
             }
             inputValue = str;
+            if (node != null) {
+                node.fireEvent("change", "render");
+            }
             updateFormEntry();
         } catch (NumberFormatException e) {}
     }
@@ -9648,6 +9655,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         }
                     }
                 }
+                if (parent.node != null) {
+                    parent.node.fireEvent("change", "render");
+                }
                 parent.updateFormEntry();
                 document.repaint();
                 e.consume();
@@ -9664,6 +9674,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         if (group.get(i).inputType >= Input.RADIO && group.get(i).inputType <= Input.CHECKBOX) {
                             Component[] c = group.get(i).getComponents();
                             if (c.length > 0 && c[0] instanceof JToggleButton) {
+                                if (((JToggleButton)c[0]).getModel().isSelected() && node != null) {
+                                    node.fireEvent("change", "render");
+                                }
                                 ((JToggleButton)c[0]).getModel().setSelected(false);
                             }
                             ((Block)c[i]).checked = false;
@@ -9672,8 +9685,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
 
                 checked = inputType == Input.CHECKBOX ? !checked : true;
-                if (checked) node.states.add("checked");
-                else node.states.remove("checked");
+
+                if (node != null) {
+                    if (checked) node.states.add("checked");
+                    else node.states.remove("checked");
+
+                    node.fireEvent("change", "render");
+                }
 
                 if (inputType == Input.RADIO && getComponents().length > 0) {
                     ((JToggleButton)getComponents()[0]).getModel().setSelected(true);

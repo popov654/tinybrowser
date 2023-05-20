@@ -198,7 +198,11 @@ public class WebDocument extends JPanel {
 
     public void updateFocusIndex(Block b) {
         if (focusIndex != -1 && focusableElements.get(focusIndex).node != null) {
-            focusableElements.get(focusIndex).node.fireEvent("blur", "render");
+            Block last = focusableElements.get(focusIndex);
+            last.node.fireEvent("blur", "render");
+            if (last.inputType != Block.Input.RADIO && last.inputType != Block.Input.CHECKBOX && last.inputType != Block.Input.SELECT) {
+                last.node.fireEvent("change", "render");
+            }
         }
         
         focusIndex = b != null ? focusableElements.indexOf(b) : -1;
