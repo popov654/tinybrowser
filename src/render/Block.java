@@ -3140,9 +3140,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         label_block.addElement(copy);
                     }
                 } else {
-                    label_block.children.get(0).children.get(0).textContent = "Select value";
+                    label_block.children.get(0).textContent = "Select value";
                 }
-                 closeInputList();
+                closeInputList();
             }
             
             return;
