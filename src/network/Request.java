@@ -310,7 +310,7 @@ public class Request {
             type = "audio";
         } else if (filename.matches(".*\\.(avi|mp4|mpg|mkv|mov|ogv|flv|3gpp)$")) {
             type = "video";
-        } else if (filename.matches(".*\\.(docx?|xlsx?|pptx?|psd|7z|rar|zip|pdf|json|xml)$")) {
+        } else if (filename.matches(".*\\.(docx?|xlsx?|pptx?|psd|7z|rar|zip|pdf|json|xml|exe|dmg|dms)$")) {
             if (filename.matches(".*\\.docx?$")) {
                 return filename.endsWith("x") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/msword";
             }
@@ -326,6 +326,12 @@ public class Request {
             if (filename.endsWith(".7z")) {
                 return "application/x-7z-compressed";
             }
+            if (filename.endsWith(".exe")) {
+                return "application/x-msdownload";
+            }
+            if (filename.endsWith(".dmg") || filename.endsWith(".dms")) {
+                return "application/octet-stream";
+            }
             type = "application";
         } else if (filename.matches(".*\\.(ttf|woff2?)$")) {
             type = "font";
@@ -339,7 +345,7 @@ public class Request {
             String[] p = filename.split("\\.");
             return type + "/" + p[p.length-1];
         }
-        return "text/plain";
+        return URLConnection.guessContentTypeFromName(filename);
     }
 
     public static String generateBoundary() {
