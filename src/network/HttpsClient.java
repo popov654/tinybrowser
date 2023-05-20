@@ -9,6 +9,7 @@ import java.security.cert.Certificate;
 
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Vector;
@@ -40,7 +41,8 @@ public class HttpsClient extends JSObject implements Runnable {
         items.put("__proto__", HttpsClientProto.getInstance());
         this.url_string = url;
         this.method = method;
-        this.post_data = post_data.getBytes();
+        this.post_data = new Vector<DataPart>();
+        this.post_data.add(new DataPart("", post_data.getBytes(), ""));
         this.async = async;
     }
 
@@ -53,15 +55,13 @@ public class HttpsClient extends JSObject implements Runnable {
     }
 
     public void setData(String data) {
-        post_data = data.getBytes();
+        post_data = new Vector<DataPart>();
+        post_data.add(new DataPart("", data.getBytes(), ""));
     }
 
     public void setData(String data, String charset) {
-        try {
-            post_data = data.getBytes(charset);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        post_data = new Vector<DataPart>();
+        post_data.add(new DataPart("", data.getBytes(Charset.forName(charset)), ""));
     }
 
     public void setData(FormData data) {
@@ -130,10 +130,10 @@ public class HttpsClient extends JSObject implements Runnable {
                     params.add(entry);
                 }
 
-                post_data = Request.prepareBody(con, params, formData.charset, multipart);
+                Vector<DataPart> parts = Request.prepareBody(con, params, formData.charset, multipart);
             }
 
-            if (post_data != null && post_data.length > 0) {
+            if (post_data != null && post_data.size() > 0) {
                 con.setDoOutput(true);
                 if (requestHeaders.size() > 0) {
                     Set<String> keys = requestHeaders.keySet();
@@ -261,7 +261,7 @@ public class HttpsClient extends JSObject implements Runnable {
 
     private String url_string;
     private String method;
-    private byte[] post_data;
+    private Vector<DataPart> post_data;
     private FormData formData;
     private boolean async;
     private long start_time;
