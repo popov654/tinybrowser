@@ -222,6 +222,7 @@ public class Expression {
         NumberC n = new NumberC();
         JsonObj j = JsonObj.getInstance();
         HttpsClientC h = new HttpsClientC();
+        FormDataC fd = new FormDataC();
         PromiseC p = new PromiseC();
         Block b = new Block(head);
         Window w = new Window(b);
@@ -234,6 +235,7 @@ public class Expression {
         b.scope.put("Math", m);
         b.scope.put("Number", n);
         b.scope.put("JSON", j);
+        b.scope.put("FormData", fd);
         b.scope.put("XMLHttpRequest", h);
         b.scope.put("Promise", p);
         b.scope.put("console", c);

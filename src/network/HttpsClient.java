@@ -1,18 +1,21 @@
 package network;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.Certificate;
-import java.io.*;
 
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
-import java.net.URLEncoder;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Vector;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import jsparser.Expression;
+import jsparser.FormData;
 import jsparser.JSInt;
 import jsparser.JSObject;
 import jsparser.JSParser;
@@ -61,6 +64,15 @@ public class HttpsClient extends JSObject implements Runnable {
         }
     }
 
+    public void setData(FormData data) {
+        requestHeaders.put("Content-Type", data.encoding + "; charset=" + data.charset);
+        formData = data;
+    }
+
+    public void setData(FormData data, String charset) {
+        
+    }
+
     public void setAsync(boolean async) {
         this.async = async;
     }
@@ -101,6 +113,26 @@ public class HttpsClient extends JSObject implements Runnable {
 
             Request.setRequestHeaders(con);
 
+            if (formData != null) {
+                Vector<FormEntry> params = new Vector<FormEntry>();
+                boolean multipart = false;
+
+                Set<String> keys = formData.params.keySet();
+                for (String key: keys) {
+                    FormEntry entry;
+                    JSValue value = formData.params.get(key);
+                    if (value instanceof jsparser.File) {
+                        entry = new FormEntry(key, ((jsparser.File)value).file);
+                        multipart = true;
+                    } else {
+                        entry = new FormEntry(key, value.asString().getValue());
+                    }
+                    params.add(entry);
+                }
+
+                post_data = Request.prepareBody(con, params, formData.charset, multipart);
+            }
+
             if (post_data != null && post_data.length > 0) {
                 con.setDoOutput(true);
                 if (requestHeaders.size() > 0) {
@@ -118,7 +150,7 @@ public class HttpsClient extends JSObject implements Runnable {
             result = get_content(con);
 
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+             e.printStackTrace();
         } catch (IOException e) {
             if (items.containsKey("onerror")) {
                 JSValue val = items.get("onerror");
@@ -137,25 +169,25 @@ public class HttpsClient extends JSObject implements Runnable {
 
             try {
 
-                System.out.println("Response Code : " + con.getResponseCode());
-                System.out.println("Cipher Suite : " + con.getCipherSuite());
-                System.out.println("\n");
+	        System.out.println("Response Code : " + con.getResponseCode());
+	        System.out.println("Cipher Suite : " + con.getCipherSuite());
+	        System.out.println("\n");
 
-                Certificate[] certs = con.getServerCertificates();
-                for(Certificate cert : certs){
+	        Certificate[] certs = con.getServerCertificates();
+	        for(Certificate cert : certs){
                     System.out.println("Cert Type : " + cert.getType());
                     System.out.println("Cert Hash Code : " + cert.hashCode());
                     System.out.println("Cert Public Key Algorithm : " + cert.getPublicKey().getAlgorithm());
                     System.out.println("Cert Public Key Format : " + cert.getPublicKey().getFormat());
                     System.out.println("\n");
-                }
+	        }
 
 	    } catch (SSLPeerUnverifiedException e) {
-                e.printStackTrace();
+	        e.printStackTrace();
 	    } catch (IOException e){
                 e.printStackTrace();
 	    }
-       }
+        }
     }
 
     private String get_content(URLConnection con) {
@@ -164,7 +196,7 @@ public class HttpsClient extends JSObject implements Runnable {
 
         if (con != null) {
 
-            try {
+	    try {
 
                 items.put("status", new JSInt(((HttpURLConnection)con).getResponseCode()));
                 items.put("statusText", new JSString(((HttpURLConnection)con).getResponseMessage()));
@@ -198,7 +230,7 @@ public class HttpsClient extends JSObject implements Runnable {
             } catch (IOException e) {
                 stateChanged(4);
                 e.printStackTrace();
-            }
+	    }
         }
         items.put("response", new JSString(result));
         items.put("responseText", new JSString(result));
@@ -222,6 +254,7 @@ public class HttpsClient extends JSObject implements Runnable {
         }
     }
 
+    @Override
     public void run() {
         request();
     }
@@ -229,6 +262,7 @@ public class HttpsClient extends JSObject implements Runnable {
     private String url_string;
     private String method;
     private byte[] post_data;
+    private FormData formData;
     private boolean async;
     private long start_time;
     private int timeout = 10000;

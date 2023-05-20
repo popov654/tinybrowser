@@ -24,6 +24,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import jsparser.Expression;
 import jsparser.HTMLElement;
+import jsparser.HTMLNode;
 import jsparser.JSObject;
 import jsparser.JSParser;
 import jsparser.JSValue;
@@ -116,18 +117,26 @@ public class Builder {
 
         addNodeChangeListeners(node);
 
+        assignDocument(node);
+
         processSpecialElement(node);
 
         return b;
     }
 
+    public void assignDocument(Node node) {
+        HTMLNode el = HTMLNode.create(node);
+        if (jsWindow == null) {
+            jsWindow = new jsparser.Window(new jsparser.Block());
+            jsWindow.setDocument(node.document);
+        }
+        jsparser.HTMLDocument jsDocument = (jsparser.HTMLDocument) jsWindow.get("document");
+        el.document = jsDocument;
+    }
+
     public void processSpecialElement(Node node) {
         if (node.tagName.matches("img|iframe|form")) {
             HTMLElement el = HTMLElement.create(node);
-            if (jsWindow == null) {
-                jsWindow = new jsparser.Window(new jsparser.Block());
-                jsWindow.setDocument(node.document);
-            }
             String key = node.tagName.equals("img") ? "images" : (node.tagName.equals("frame") ? "frame" : "forms");
             jsparser.JSArray list = (jsparser.JSArray) ((jsparser.JSObject) jsWindow.get("document")).get(key);
             if (!list.getItems().contains(el)) {

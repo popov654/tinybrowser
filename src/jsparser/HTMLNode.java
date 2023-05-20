@@ -212,6 +212,9 @@ public class HTMLNode extends JSObject {
         return type + "Node \"" + node.nodeValue + "\"";
     }
 
+
+    public HTMLDocument document;
+
     public static HashMap<Node, HTMLNode> map = new HashMap<Node, HTMLNode>();
 
     public Node node;

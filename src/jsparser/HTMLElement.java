@@ -605,6 +605,7 @@ public class HTMLElement extends HTMLNode {
             boolean result = node.addChild(newNode);
 
             if (result) {
+                block.builder.assignDocument(node);
                 block.builder.processSpecialElement(node);
                 render.Block parent_block = Mapper.get(node);
                 if (newNode.nodeType == 1) {
@@ -644,6 +645,7 @@ public class HTMLElement extends HTMLNode {
             boolean result = node.insertChild(newNode, ((HTMLNode)args.get(1)).node);
 
             if (result) {
+                block.builder.assignDocument(node);
                 block.builder.processSpecialElement(node);
                 int pos = node.children.indexOf(newNode);
                 render.Block parent_block = Mapper.get(node);
@@ -678,6 +680,7 @@ public class HTMLElement extends HTMLNode {
             boolean result = node.removeChild(((HTMLNode)args.get(0)).node);
 
             if (result) {
+                ((HTMLNode)args.get(0)).document = null;
                 render.Block parent_block = Mapper.get(node);
                 parent_block.removeElement(block);
                 args.get(0).decrementRefCount();

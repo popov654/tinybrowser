@@ -36,6 +36,21 @@ window.addEventListener('load', function() {
    document.getElementById('file').onchange = function() {
       console.log(this.files)
    }
+   
+   /* 
+   
+   FormData fd = new FormData()
+   fd.add('user', 'Alex')
+   fd.add('pass', '123')
+   
+   var xhr = new XMLHttpRequest()
+   xhr.open("POST", "http://popov654.pp.ru/form.php", true)
+   xhr.onload = function() {
+      console.log(this.responseText)
+   }
+   xhr.send(fd)
+   
+   */
 }, false)
 </script>
 </head>

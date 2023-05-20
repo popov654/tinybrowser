@@ -7,6 +7,7 @@ import jsparser.Function;
 import jsparser.JSObject;
 import jsparser.JSString;
 import jsparser.JSValue;
+import jsparser.FormData;
 import jsparser.Null;
 import jsparser.Undefined;
 
@@ -33,7 +34,11 @@ public class HttpsClientProto extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (args.size() > 0 && !args.get(0).equals(Null.getInstance())) {
-                ((HttpsClient)context).setData(args.get(0).asString().getValue());
+                if (!(args.get(0) instanceof FormData)) {
+                    ((HttpsClient)context).setData(args.get(0).asString().getValue());
+                } else {
+                    ((HttpsClient)context).setData((FormData) args.get(0));
+                }
             }
             ((HttpsClient)context).start();
             return Undefined.getInstance();
