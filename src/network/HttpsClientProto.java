@@ -68,7 +68,7 @@ public class HttpsClientProto extends JSObject {
             String str = (String)it.next();
             result += str + ": " + items.get(str).toString();
         }
-        return "{" + result + "}";
+        return "XMLHttpRequest {" + result + "}";
     }
 
     @Override

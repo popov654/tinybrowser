@@ -971,6 +971,10 @@ public class Main {
         return installPath;
     }
 
+    public static String getVersion() {
+        return VERSION;
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -980,5 +984,7 @@ public class Main {
     }
 
     private static String installPath;
+
+    private final static String VERSION  ="0.9.6";
 
 }

@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.net.ssl.HttpsURLConnection;
 import render.Util;
 
 /**
@@ -85,10 +86,17 @@ public class Request {
 
             long start = System.currentTimeMillis();
             URL url = new URL(fullPath);
+
             URLConnection con = url.openConnection();
             HttpURLConnection http = (HttpURLConnection) con;
-            http.setRequestMethod(method);
-            http.setRequestProperty("User-Agent", "TinyBrowser");
+
+            if (http instanceof HttpURLConnection) {
+                ((HttpURLConnection) http).setRequestMethod(method);
+            } else if (http instanceof HttpsURLConnection) {
+                ((HttpsURLConnection) http).setRequestMethod(method);
+            }
+
+            setRequestHeaders(http);
             http.setDoOutput(true);
 
             if (!method.equals("GET")) {
@@ -104,30 +112,9 @@ public class Request {
             }
 
             http.connect();
-            
+
             if (!method.equals("GET")) {
-
-                OutputStream os = null;
-
-                try {
-                    if (debug) {
-                        String size = "";
-                        if (out.length >= 1024 * 1024 * 1024) {
-                            size = Math.floor((double) out.length / (1024 * 1024 * 1024) * 100) / 100 + " GB";
-                        } else if (out.length >= 1024 * 1024) {
-                            size = Math.floor((double) out.length / (1024 * 1024) * 100) / 100 + " MB";
-                        } else {
-                            size = out.length >= 1024 ? Math.floor((double) out.length / 1024 * 100) / 100 + " KB" : out.length + " bytes";
-                        }
-                        System.out.println("Started sending data (" + size + ")");
-                    }
-                    os = http.getOutputStream();
-                    os.write(out);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                } finally {
-                    if (os != null) os.close();
-                }
+                sendData(http, out);
             }
 
             if (http.getContentType() == null || http.getContentType().matches("^(image|audio|video|application)")) {
@@ -167,7 +154,7 @@ public class Request {
         return null;
     }
 
-    public static byte[] prepareBody(HttpURLConnection http, Vector<FormEntry> params, String charset, boolean multipart) {
+    public static byte[] prepareBody(URLConnection http, Vector<FormEntry> params, String charset, boolean multipart) {
         byte[] out = new byte[0];
 
         for (FormEntry entry: params) {
@@ -271,10 +258,41 @@ public class Request {
 
         String contentType = multipart ? "multipart/form-data; boundary=" + boundary : "application/x-www-form-urlencoded;charset=" + charset.toLowerCase();
 
-        http.setFixedLengthStreamingMode(length);
+        if (http instanceof HttpURLConnection) {
+            ((HttpURLConnection) http).setFixedLengthStreamingMode(length);
+        } else if (http instanceof HttpsURLConnection) {
+            ((HttpsURLConnection) http).setFixedLengthStreamingMode(length);
+        }
         http.setRequestProperty("Content-Type", contentType);
 
         return out;
+    }
+
+    public static void sendData(URLConnection http, byte[] data) {
+        OutputStream os = null;
+
+        try {
+            if (debug) {
+                String size = "";
+                if (data.length >= 1024 * 1024 * 1024) {
+                    size = Math.floor((double) data.length / (1024 * 1024 * 1024) * 100) / 100 + " GB";
+                } else if (data.length >= 1024 * 1024) {
+                    size = Math.floor((double) data.length / (1024 * 1024) * 100) / 100 + " MB";
+                } else {
+                    size = data.length >= 1024 ? Math.floor((double) data.length / 1024 * 100) / 100 + " KB" : data.length + " bytes";
+                }
+                System.out.println("Started sending data (" + size + ")");
+            }
+            os = http.getOutputStream();
+            os.write(data);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            if (os != null) try {
+                os.close();
+            } catch (IOException ex) {}
+        }
+
     }
 
 
@@ -356,10 +374,22 @@ public class Request {
 
             long start = System.currentTimeMillis();
             URL url = new URL(fullPath);
-            URLConnection con = url.openConnection();
-            HttpURLConnection http = (HttpURLConnection) con;
-            http.setRequestMethod(method);
-            http.setRequestProperty("User-Agent", "TinyBrowser");
+
+            URLConnection http;
+
+            if (url.getProtocol().equals("https")) {
+                http = (HttpsURLConnection)url.openConnection();
+            } else {
+                http = (HttpURLConnection)url.openConnection();
+            }
+
+            if (http instanceof HttpURLConnection) {
+                ((HttpURLConnection) http).setRequestMethod(method);
+            } else if (http instanceof HttpsURLConnection) {
+                ((HttpsURLConnection) http).setRequestMethod(method);
+            }
+
+            setRequestHeaders(http);
             http.setDoOutput(true);
 
             byte[] out = new byte[0];
@@ -371,17 +401,7 @@ public class Request {
             http.connect();
 
             if (!method.equals("GET")) {
-
-                OutputStream os = null;
-
-                try {
-                    os = http.getOutputStream();
-                    os.write(out);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                } finally {
-                    if (os != null) os.close();
-                }
+                sendData(http, out);
             }
 
             InputStream is = http.getInputStream();
@@ -407,6 +427,13 @@ public class Request {
         }
 
         return null;
+    }
+
+    public static void setRequestHeaders(URLConnection con) {
+        con.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+        con.setRequestProperty("Accept-Encoding", "text/plain");
+        con.setRequestProperty("User-Agent", "TinyBrowser " + tinybrowser.Main.getVersion());
+        con.setRequestProperty("Cache-Control", "no-cache");
     }
 
     public static byte[] readFileToBytes(String filePath) {
