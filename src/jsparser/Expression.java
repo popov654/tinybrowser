@@ -220,6 +220,8 @@ public class Expression {
         Console c = Console.getInstance();
         MathObj m = MathObj.getInstance();
         NumberC n = new NumberC();
+        HTMLNodeC hn = new HTMLNodeC();
+        HTMLElementC he = new HTMLElementC();
         JsonObj j = JsonObj.getInstance();
         HttpsClientC h = new HttpsClientC();
         FormDataC fd = new FormDataC();
@@ -237,6 +239,8 @@ public class Expression {
         b.scope.put("JSON", j);
         b.scope.put("FormData", fd);
         b.scope.put("XMLHttpRequest", h);
+        b.scope.put("Node", hn);
+        b.scope.put("HTMLElement", he);
         b.scope.put("Promise", p);
         b.scope.put("console", c);
         b.is_func = true;

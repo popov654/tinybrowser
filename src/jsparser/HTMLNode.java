@@ -1,15 +1,9 @@
 package jsparser;
 
-import bridge.Mapper;
-import cssparser.StyleMap;
 import htmlparser.Node;
 import htmlparser.NodeActionCallback;
 import htmlparser.NodeEvent;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.Vector;
 
 /**
@@ -21,6 +15,7 @@ public class HTMLNode extends JSObject {
     protected HTMLNode(Node node) {
         this.node = node;
         if (node.parent != null) ref_count = 1;
+        items.put("__proto__", HTMLNodeProto.getInstance());
         //node.addListener(eventListener, node, "any");
     }
 
@@ -89,97 +84,6 @@ public class HTMLNode extends JSObject {
         items.put("childNodes", childNodes);
     }
 
-    class getParentFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            if (node == null) {
-                JSError e = new JSError(null, "TypeError: cannot read properties of null", getCaller().getStack());
-                getCaller().error = e;
-                return Undefined.getInstance();
-            }
-            Node parent = node != null ? node.parent : null;
-            return parent != null ? (parent.nodeType == 1 ? HTMLElement.create(parent) : HTMLNode.create(parent)) : Null.getInstance();
-        }
-    }
-
-    class getPreviousSiblingFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            if (node == null) {
-                JSError e = new JSError(null, "TypeError: cannot read properties of null", getCaller().getStack());
-                getCaller().error = e;
-                return Undefined.getInstance();
-            }
-            Node prev = node != null ? node.previousSibling : null;
-            return prev != null ? (prev.nodeType == 1 ? HTMLElement.create(prev) : HTMLNode.create(prev)) : Null.getInstance();
-        }
-    }
-
-    class getNextSiblingFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            if (node == null) {
-                JSError e = new JSError(null, "TypeError: cannot read properties of null", getCaller().getStack());
-                getCaller().error = e;
-                return Undefined.getInstance();
-            }
-            Node next = node != null ? node.nextSibling : null;
-            return next != null ? (next.nodeType == 1 ? HTMLElement.create(next) : HTMLNode.create(next)) : Null.getInstance();
-        }
-    }
-
-    class getPreviousElementSiblingFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            if (node == null) {
-                JSError e = new JSError(null, "TypeError: cannot read properties of null", getCaller().getStack());
-                getCaller().error = e;
-                return Undefined.getInstance();
-            }
-            Node prev = node != null ? node.previousElementSibling() : null;
-            return prev != null ? (prev.nodeType == 1 ? HTMLElement.create(prev) : HTMLNode.create(prev)) : Null.getInstance();
-        }
-    }
-
-    class getNextElementSiblingFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            if (node == null) {
-                JSError e = new JSError(null, "TypeError: cannot read properties of null", getCaller().getStack());
-                getCaller().error = e;
-                return Undefined.getInstance();
-            }
-            Node next = node != null ? node.nextElementSibling() : null;
-            return next != null ? (next.nodeType == 1 ? HTMLElement.create(next) : HTMLNode.create(next)) : Null.getInstance();
-        }
-    }
-
-    class childNodesFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            if (node == null) {
-                JSError e = new JSError(null, "TypeError: cannot read properties of null", getCaller().getStack());
-                getCaller().error = e;
-                return Undefined.getInstance();
-            }
-            JSArray array = new JSArray();
-            return array;
-        }
-    }
-
-    class childrenFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            if (node == null) {
-                JSError e = new JSError(null, "TypeError: cannot read properties of null", getCaller().getStack());
-                getCaller().error = e;
-                return Undefined.getInstance();
-            }
-            JSArray array = new JSArray();
-            return array;
-        }
-    }
-
     @Override
     public void set(String str, JSValue value) {
         if (str.equals("nodeValue")) {
@@ -218,4 +122,6 @@ public class HTMLNode extends JSObject {
     public static HashMap<Node, HTMLNode> map = new HashMap<Node, HTMLNode>();
 
     public Node node;
+
+    protected String type = "Node";
 }

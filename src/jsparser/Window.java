@@ -143,20 +143,22 @@ public class Window extends JSObject {
             HTMLElement bodyElement = (HTMLElement) document.items.get("body");
             if (bodyElement == null) return Undefined.getInstance();
 
-            return ((Function)bodyElement.items.get("addEventListener")).call(context, args, as_constr);
+            JSObject proto = (JSObject) bodyElement.get("__proto__");
+
+            return ((Function)proto.items.get("addEventListener")).call(bodyElement, args, as_constr);
         }
     }
 
     class removeEventListenerFunction extends Function {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            JSValue document = items.get("document");
             if (document == null) return Undefined.getInstance();
-            JSValue bodyElement = ((JSObject)document).items.get("body");
+            HTMLElement bodyElement = (HTMLElement) document.items.get("body");
             if (bodyElement == null) return Undefined.getInstance();
-            HTMLElement body = (HTMLElement) bodyElement;
 
-            return ((Function)body.items.get("removeEventListener")).call(context, args, as_constr);
+            JSObject proto = (JSObject) bodyElement.get("__proto__");
+
+            return ((Function)proto.items.get("removeEventListener")).call(bodyElement, args, as_constr);
         }
     }
 
