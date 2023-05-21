@@ -323,6 +323,7 @@ public class Builder {
                 }
                 frameElement.set("contentWindow", childDocument.builder.jsWindow);
                 frameElement.set("contentDocument", childDocument.builder.jsWindow.get("document"));
+                node.fireEvent("render", "load");
             }
         }
         
@@ -759,6 +760,7 @@ public class Builder {
             b.isImage = true;
             if (!documentWrap.asyncImageLoad) {
                 b.setBackgroundImage(baseUrl + node.getAttribute("src"));
+                node.fireEvent("render", "load");
             } else {
                 Resource res = documentWrap.getResourceManager().getResourceForBlock(b);
                 if (res != null && res.type == Resource.Type.IMAGE && res.getFile() != null) {
@@ -766,6 +768,7 @@ public class Builder {
                     HTMLElement imgElement = HTMLElement.create(b.node);
                     imgElement.set("naturalWidth", new jsparser.JSInt(b.background.image.getWidth()));
                     imgElement.set("naturalHeight", new jsparser.JSInt(b.background.image.getHeight()));
+                    node.fireEvent("render", "load");
                 }
             }
         }

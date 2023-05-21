@@ -126,6 +126,7 @@ public class ResourceManager {
                                 b.forceRepaint();
                                 document.document.repaint();
                             }
+                            resource.node.fireEvent("render", "load");
                         }
                         resource.setLoaded(true);
                         checkResourcesStatus();
@@ -162,6 +163,7 @@ public class ResourceManager {
                             }
                             frameElement.set("contentWindow", childDocument.builder.jsWindow);
                             frameElement.set("contentDocument", childDocument.builder.jsWindow.get("document"));
+                            resource.node.fireEvent("render", "load");
                         }
                         resource.setLoaded(true);
                         checkResourcesStatus();
@@ -179,6 +181,7 @@ public class ResourceManager {
                             if (document.document != null) {
                                 document.builder.reapplyDocumentStyles(document.document);
                             }
+                            resource.node.fireEvent("render", "load");
                         }
                         resource.setLoaded(true);
                         checkResourcesStatus();
@@ -212,6 +215,7 @@ public class ResourceManager {
                             if (document.document != null) {
                                 document.builder.runScripts();
                             }
+                            resource.node.fireEvent("render", "load");
                         }
                         resource.setLoaded(true);
                         checkResourcesStatus();
