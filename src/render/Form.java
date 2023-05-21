@@ -94,6 +94,13 @@ public class Form {
                 }
                 input.setInputSelectedIndex(index);
             }
+            if (input.inputType == Block.Input.FILE) {
+                input.inputValue = "";
+                Block label = input.children.get(0);
+                label.children.get(0).textContent = "No file selected";
+                label.performLayout();
+                label.forceRepaint();
+            }
         }
     }
 
