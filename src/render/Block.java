@@ -9779,6 +9779,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                 return;
             }
+
+            Block b = (Block) e.getSource();
+            while (b != null && b.inputType == Input.NONE) {
+                b = b.parent;
+            }
+            if (b == null) {
+                if (document.focused_block != null && document.focused_block.node != null) {
+                    document.focused_block.node.fireEvent("render", "blur");
+                }
+                requestFocus();
+                document.focused_block = null;
+                document.updateFocusIndex(null);
+            }
+
         }
 
         
