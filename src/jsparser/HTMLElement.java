@@ -23,7 +23,11 @@ public class HTMLElement extends HTMLNode {
 
     private HTMLElement(Node node) {
         super(node);
-        items.put("__proto__", HTMLElementProto.getInstance());
+        if (node.tagName.equals("form")) {
+            items.put("__proto__", FormElementProto.getInstance());
+        } else {
+            items.put("__proto__", HTMLElementProto.getInstance());
+        }
         node.addListener(eventListener, node, "any");
     }
 
