@@ -173,6 +173,9 @@ public class Builder {
         } else if (node.nodeType == COMMENT) {
             return;
         }
+        if (node.hasAttribute("title") && !(node.tagName.equals("option") && node.children.size() > 1)) {
+            b.tooltip = node.getAttribute("title");
+        }
         if (node.tagName.equals("form")) {
             Form form = new Form(b);
             if (node != null) {

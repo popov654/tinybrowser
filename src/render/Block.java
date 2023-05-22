@@ -9109,6 +9109,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean select_enabled = true;
 
     public String href;
+    public String tooltip;
     
     public Color linkColor = Color.BLUE;
     public int linksUnderlineMode = 0;
@@ -9948,6 +9949,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void mouseEntered(MouseEvent e) {
         if (isHidden()) return;
         if (e.getSource() instanceof JTextField || e.getSource() instanceof JTextArea) {
+            Component c = ((Component)e.getSource()).getParent();
+            while (c != null && !(c instanceof Block)) {
+                c = c.getParent();
+            }
+            if (c != null) {
+                Block b = (Block) c;
+                b.updateStates(e, b._x_ + e.getX(), b._y_ + e.getY());
+            }
             document.panel.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
         }
     }
@@ -9955,6 +9964,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public void mouseExited(MouseEvent e) {
         if (isHidden()) return;
         if (e.getSource() instanceof JTextField || e.getSource() instanceof JTextArea) {
+            Component c = ((Component)e.getSource()).getParent();
+            while (c != null && !(c instanceof Block)) {
+                c = c.getParent();
+            }
+            if (c != null) {
+                Block b = (Block) c;
+                b.updateStates(e, b._x_ + e.getX(), b._y_ + e.getY());
+            }
             document.panel.setCursor(Cursor.getDefaultCursor());
         }
     }
@@ -10429,14 +10446,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     private void processMouseOverEvent(MouseEvent e, htmlparser.Node node, int x, int y) {
         if (parts.size() > 0) return;
-        if (node == null || node.tagName.startsWith("::")) return;
-        if (document.eventWasFired(node, "mouseOut")) return;
-        if (isInnermostBlockForEvent(x, y) && (document.hovered_block == null || document.hovered_block.node != node)) {
-            htmlparser.Node relatedNode = document.hovered_block != null ? document.hovered_block.node : null;
-            if (document.hovered_block != null && document.hovered_block.node != null) {
-                fireEventForNode(e, document.hovered_block.node, node, "mouseOut");
+        if (node != null && !node.tagName.startsWith("::") && !document.eventWasFired(node, "mouseOut")) {
+            if (isInnermostBlockForEvent(x, y) && (document.hovered_block == null || document.hovered_block.node != node)) {
+                htmlparser.Node relatedNode = document.hovered_block != null ? document.hovered_block.node : null;
+                if (document.hovered_block != null && document.hovered_block.node != null) {
+                    fireEventForNode(e, document.hovered_block.node, node, "mouseOut");
+                }
+                fireEventForNode(e, node, relatedNode, "mouseOver");
             }
-            fireEventForNode(e, node, relatedNode, "mouseOver");
+        }
+        if (isInnermostBlockForEvent(x, y) && document.hovered_block != this && (original == null || document.hovered_block != original)) {
             document.hovered_block = this;
         }
     }
@@ -10457,6 +10476,32 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    private void updateTooltip(int x, int y) {
+        if (!document.enable_tooltips) return;
+        if (!isInnermostBlockForEvent(x, y) && (document.hovered_block != null && node != null && document.hovered_block.node != node)) {
+            return;
+        }
+        if (document.focused_block == null && tooltip != null) {
+            document.panel.setComponentZOrder(document.glass, 0);
+            document.glass.setToolTipText(tooltip);
+            if (inputType == Input.TEXT || inputType == Input.TEXTAREA) {
+                document.glass.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+            }
+            document.glass.repaint();
+            
+            Timer t = new Timer(300, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    document.setGlassMouseMotionListener();
+                }
+            });
+            t.setRepeats(false);
+            t.start();
+        } else {
+            document.glass.setToolTipText(null);
+        }
+    }
+
     private void updateStates(MouseEvent e, int x, int y) {
         Block last_hovered_block = document != null ? document.hovered_block : null;
         htmlparser.Node last_hovered_node = (document != null && document.hovered_block != null) ? document.hovered_block.node : null;
@@ -10465,6 +10510,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         int dy = parent != null ? parent.scroll_y : 0;
         
         if (x >= _x_ - dx && x < _x_ - dx + viewport_width && y >= _y_ - dy && y < _y_ - dy + viewport_height) {
+            if (document.hovered_block != this) {
+                updateTooltip(x, y);
+            }
             processMouseOverEvent(e, node, x, y);
             checkForHoveredListItem();
             if (!hovered) {
@@ -10496,7 +10544,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             //processMouseOutEvent(node, x, y);
             if (hovered) {
                 htmlparser.Node relatedNode = document.hovered_block != null ? document.hovered_block.node : null;
-                fireEventForNode(e, node, relatedNode, "mouseLeave");
+                fireEventForNode(e, node, relatedNode, "mouseLeave");                
             }
             hovered = false;
             if (node != null && node.states.contains("hover")) {

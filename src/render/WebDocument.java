@@ -7,6 +7,7 @@ import inspector.WebInspector;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FocusTraversalPolicy;
 import java.awt.Graphics;
@@ -18,6 +19,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.beans.PropertyChangeListener;
@@ -844,6 +846,25 @@ public class WebDocument extends JPanel {
         new String[] { "cursor", "transition" }
     ));
 
+    public void setGlassMouseMotionListener() {
+        MouseMotionListener ml = new MouseMotionListener() {
+            @Override
+            public void mouseDragged(MouseEvent e) {}
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (hovered_block != null && hovered_block.tooltip != null && glass.getToolTipText() != null) {
+                    glass.setCursor(Cursor.getDefaultCursor());
+                    glass.setToolTipText("");
+                }
+                glass.repaint();
+                glass.removeMouseMotionListener(this);
+                panel.setComponentZOrder(glass, panel.getComponentCount()-1);
+            }
+        };
+        glass.addMouseMotionListener(ml);
+    }
+
 
     public String baseUrl = "";
 
@@ -896,6 +917,7 @@ public class WebDocument extends JPanel {
     public boolean use_native_inputs = false;
     public boolean keep_root_scrollbars_outside = false;
     public boolean return_size_for_inlines = true;
+    public boolean enable_tooltips = false;
     public boolean highlight_text = false;
     public boolean smooth_borders = true;
     public double forced_dpi = 0;
