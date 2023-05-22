@@ -9758,6 +9758,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 for (int i = 0; i < c.length; i++) {
                     if (c[i] instanceof JTextComponent) {
                         c[i].requestFocus();
+                        final JTextComponent tc = (JTextComponent) c[i];
+                        Timer t = new Timer(20, new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                tc.requestFocus();
+                            }
+                        });
+                        t.setRepeats(false);
+                        t.start();
                         if (labelFor.node != null) {
                             labelFor.node.fireEvent("focus", "render");
                         }
