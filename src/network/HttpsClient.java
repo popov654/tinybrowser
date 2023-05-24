@@ -22,11 +22,21 @@ import jsparser.JSObject;
 import jsparser.JSParser;
 import jsparser.JSString;
 import jsparser.JSValue;
+import jsparser.Null;
 
 public class HttpsClient extends JSObject implements Runnable {
 
     public HttpsClient() {
         items.put("__proto__", HttpsClientProto.getInstance());
+        JSObject upload = new JSObject();
+        upload.set("onloadstart", Null.getInstance());
+        upload.set("onprogress", Null.getInstance());
+        upload.set("onabort", Null.getInstance());
+        upload.set("onerror", Null.getInstance());
+        upload.set("onload", Null.getInstance());
+        upload.set("ontimeout", Null.getInstance());
+        upload.set("onloadend", Null.getInstance());
+        items.put("upload", upload);
     }
 
     public HttpsClient(String url) {
@@ -38,7 +48,7 @@ public class HttpsClient extends JSObject implements Runnable {
     }
 
     public HttpsClient(String url, String method, String post_data, boolean async) {
-        items.put("__proto__", HttpsClientProto.getInstance());
+        this();
         this.url_string = url;
         this.method = method;
         this.post_data = new Vector<DataPart>();

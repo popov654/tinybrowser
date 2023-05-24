@@ -46,6 +46,13 @@ public class HttpsClientProto extends JSObject {
     }
 
     private HttpsClientProto() {
+        items.put("onloadstart", Null.getInstance());
+        items.put("onprogress", Null.getInstance());
+        items.put("onabort", Null.getInstance());
+        items.put("onerror", Null.getInstance());
+        items.put("onload", Null.getInstance());
+        items.put("ontimeout", Null.getInstance());
+        items.put("onloadend", Null.getInstance());
         items.put("open", new openFunction());
         items.put("send", new sendFunction());
     }
