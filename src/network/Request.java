@@ -108,8 +108,12 @@ public class Request {
 
             debug = true;
 
+            StatusLogger logger = new StatusLogger();
+            Thread t = new Thread(logger);
+            t.start();
+
             if (debug) {
-                System.out.println("Connecting...");
+                logger.post("Connecting...");
             }
 
             http.connect();
@@ -123,15 +127,17 @@ public class Request {
             }
 
             if (debug) {
-                System.out.println("Started receiving data");
+                logger.post("Started receiving data");
             }
 
             response = getResponse(http, charset);
             
             long end = System.currentTimeMillis();
-            System.out.println("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
+            logger.post("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
 
             debug = false;
+
+            logger.stop();
 
             return response;
         } catch (MalformedURLException ex) {
