@@ -47,9 +47,15 @@ public class JSBool extends JSValue implements Comparable {
         return type;
     }
 
+    @Override
     public int compareTo(Object obj) {
         JSBool b = (obj instanceof JSBool) ? (JSBool)obj : ((JSValue)obj).asBool();
         return (int)(asInt().getValue() - b.asInt().getValue());
+    }
+
+    @Override
+    public JSBool clone() {
+        return new JSBool(value);
     }
 
     @Override

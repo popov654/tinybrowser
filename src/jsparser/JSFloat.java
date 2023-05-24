@@ -61,6 +61,7 @@ public class JSFloat extends JSObject implements Comparable {
         return type;
     }
 
+    @Override
     public int compareTo(Object obj) {
         if (obj.equals(Infinity.getInstance(true))) {
             return -1;
@@ -71,6 +72,11 @@ public class JSFloat extends JSObject implements Comparable {
         JSFloat f = (obj instanceof JSFloat) ? (JSFloat)obj : ((JSValue)obj).asFloat();
         if (value - f.getValue() < 0.00001) return 0;
         return value - f.getValue() > 0 ? 1 : -1;
+    }
+
+    @Override
+    public JSFloat clone() {
+        return new JSFloat(value);
     }
 
     @Override

@@ -101,6 +101,11 @@ public abstract class JSValue {
         return call(null, args);
     }
 
+    @Override
+    public JSValue clone() {
+        return create(toString(), null);
+    }
+
     public void incrementRefCount() {
         if (this instanceof Null || this instanceof Undefined) {
             return;

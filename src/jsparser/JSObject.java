@@ -205,6 +205,13 @@ public class JSObject extends JSValue {
         return type;
     }
 
+    @Override
+    public JSObject clone() {
+        JSObject copy = new JSObject();
+        copy.items = (LinkedHashMap<String, JSValue>) items.clone();
+        return copy;
+    }
+
     protected LinkedHashMap<String, JSValue> items = new LinkedHashMap<String, JSValue>();
     private String type = "Object";
     public boolean print_proto = false;

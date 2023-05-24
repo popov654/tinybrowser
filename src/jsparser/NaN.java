@@ -45,6 +45,11 @@ public class NaN extends JSValue {
         return instance;
     }
 
+    @Override
+    public NaN clone() {
+        return instance;
+    }
+
     private static NaN instance = new NaN();
     
     private String value = "NaN";

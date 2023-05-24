@@ -138,9 +138,15 @@ public class JSString extends JSObject implements Comparable {
         return type;
     }
 
+    @Override
     public int compareTo(Object obj) {
         JSString s = (obj instanceof JSString) ? (JSString)obj : ((JSValue)obj).asString();
         return value.compareTo(s.getValue());
+    }
+
+    @Override
+    public JSString clone() {
+        return new JSString(value);
     }
 
     @Override

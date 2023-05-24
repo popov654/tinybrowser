@@ -56,4 +56,31 @@ public class JSValueTest {
         assertEquals("my string", ((JSString)val4).getValue());
     }
 
+    /**
+     * Test of clone method, of class JSValue.
+     */
+    @Test
+    public void testClone() {
+        String type1 = "Integer";
+        String type2 = "Float";
+        String type3 = "Boolean";
+        String type4 = "String";
+        JSValue val1 = JSValue.create(type1, "3");
+        JSValue val2 = JSValue.create(type2, "4.5");
+        JSValue val3 = JSValue.create(type3, "false");
+        JSValue val4 = JSValue.create(type4, "my string");
+        JSValue val1c = val1.clone();
+        JSValue val2c = val2.clone();
+        JSValue val3c = val3.clone();
+        JSValue val4c = val4.clone();
+        assertEquals(type1, val1c.getType());
+        assertEquals(type2, val2c.getType());
+        assertEquals(type3, val3c.getType());
+        assertEquals(type4, val4c.getType());
+        assertEquals(3, ((JSInt)val1c).getValue());
+        assertEquals(4.5, ((JSFloat)val2c).getValue(), 0.0001);
+        assertEquals(false, ((JSBool)val3c).getValue());
+        assertEquals("my string", ((JSString)val4c).getValue());
+    }
+
 }

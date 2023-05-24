@@ -68,6 +68,7 @@ public class JSInt extends JSObject implements Comparable {
         return type;
     }
 
+    @Override
     public int compareTo(Object obj) {
         if (obj.equals(Infinity.getInstance(true))) {
             return -1;
@@ -77,6 +78,11 @@ public class JSInt extends JSObject implements Comparable {
         }
         JSInt i = (obj instanceof JSInt) ? (JSInt)obj : ((JSValue)obj).asInt();
         return (int)(value - i.getValue());
+    }
+
+    @Override
+    public JSInt clone() {
+        return new JSInt(value);
     }
 
     @Override

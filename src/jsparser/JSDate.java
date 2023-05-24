@@ -111,6 +111,11 @@ public class JSDate extends JSObject implements Comparable {
     }
 
     @Override
+    public JSDate clone() {
+        return new JSDate(value);
+    }
+
+    @Override
     public String toString() {
         DateFormat format = new SimpleDateFormat("EEE, MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
         if (tz != null) format.setTimeZone(tz);

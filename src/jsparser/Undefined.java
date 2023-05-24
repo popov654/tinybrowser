@@ -40,6 +40,11 @@ public class Undefined extends JSValue {
     }
 
     @Override
+    public Undefined clone() {
+        return instance;
+    }
+
+    @Override
     public String toString() {
         return type;
     }

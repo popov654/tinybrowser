@@ -44,6 +44,11 @@ public class Null extends JSValue {
     }
 
     @Override
+    public Null clone() {
+        return instance;
+    }
+
+    @Override
     public String toString() {
         return type;
     }
