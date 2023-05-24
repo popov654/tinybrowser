@@ -37,7 +37,7 @@ window.addEventListener('load', function() {
       console.log(this.files)
    }
    
-   /* 
+   /*
    
    FormData fd = new FormData()
    fd.add('user', 'Alex')
@@ -48,9 +48,13 @@ window.addEventListener('load', function() {
    xhr.onload = function() {
       console.log(this.responseText)
    }
+   xhr.onprogress = function(event) {
+      console.log("Load state: " + event.loaded + "/" + event.total + " bytes")
+   }
    xhr.send(fd)
    
    */
+   
 }, false)
 </script>
 </head>

@@ -1,8 +1,6 @@
 package network;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.Certificate;
@@ -10,6 +8,7 @@ import java.security.cert.Certificate;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.Vector;
@@ -153,7 +152,28 @@ public class HttpsClient extends JSObject implements Runnable {
                 } else {
                     con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
                 }
-                Request.sendData(con, post_data);
+                final HttpsClient instance = this;
+                Request.sendData(con, post_data, new NetworkEventListener() {
+                    @Override
+                    public void actionPerformed(String type, HashMap<String, String> data) {
+                        if (type.equals("progress")) {
+                            JSValue val = ((JSObject)items.get("upload")).get("onprogress");
+                            if (val.getType().equals("Function")) {
+                                Vector<JSValue> args = new Vector<JSValue>();
+                                JSObject dataObj = new JSObject();
+                                dataObj.set("loaded", new JSInt(data.get("loaded")));
+                                dataObj.set("total", new JSInt(data.get("total")));
+                                args.add(dataObj);
+                                val.call(instance, args, false);
+                            }
+                        } else if (type.equals("error")) {
+                            JSValue val = ((JSObject)items.get("upload")).get("onprogress");
+                            if (val.getType().equals("Function")) {
+                                val.call(instance, new Vector<JSValue>(), false);
+                            }
+                        }
+                    }
+                });
             }
 
             //dump all the content
@@ -212,19 +232,45 @@ public class HttpsClient extends JSObject implements Runnable {
                 items.put("statusText", new JSString(((HttpURLConnection)con).getResponseMessage()));
                 stateChanged(3);
 
+                JSValue val = items.get("onloadstart");
+                if (val != null && val.getType().equals("Function")) {
+                    val.call(this, new Vector<JSValue>(), false);
+                }
+
                 //System.out.println("****** Content of the URL ********");
-                result = Request.getResponse(con, "UTF-8");
+                final HttpsClient instance = this;
+                result = Request.getResponse(con, "UTF-8", new NetworkEventListener() {
+                    @Override
+                    public void actionPerformed(String type, HashMap<String, String> data) {
+                        if (type.equals("progress")) {
+                            JSValue val = items.get("onprogress");
+                            if (val != null && val.getType().equals("Function")) {
+                                Vector<JSValue> args = new Vector<JSValue>();
+                                JSObject dataObj = new JSObject();
+                                dataObj.set("loaded", new JSInt(data.get("loaded")));
+                                dataObj.set("total", new JSInt(data.get("total")));
+                                args.add(dataObj);
+                                val.call(instance, args, false);
+                            }
+                        } else if (type.equals("error")) {
+                            JSValue val = items.get("onprogress");
+                            if (val != null && val.getType().equals("Function")) {
+                                val.call(instance, new Vector<JSValue>(), false);
+                            }
+                        }
+                    }
+                });
 
             } catch (java.net.ConnectException e) {
                 if (System.currentTimeMillis() - start_time > timeout && items.containsKey("ontimeout")) {
                     JSValue val = items.get("ontimeout");
-                    if (val.getType().equals("Function")) {
+                    if (val != null && val.getType().equals("Function")) {
                         val.call(this, new Vector<JSValue>(), false);
                     }
                 }
                 else if (items.containsKey("onerror")) {
                     JSValue val = items.get("onerror");
-                    if (val.getType().equals("Function")) {
+                    if (val != null && val.getType().equals("Function")) {
                         val.call(this, new Vector<JSValue>(), false);
                     }
                 }

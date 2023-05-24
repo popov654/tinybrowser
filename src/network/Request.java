@@ -1,6 +1,8 @@
 package network;
 
 import cache.Cache;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,6 +19,7 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,8 +73,6 @@ public class Request {
                 }
             }
 
-            byte[] out = new byte[0];
-
             if (method.equals("GET")) {
                 String query = "";
                 for (FormEntry entry: params) {
@@ -119,7 +120,7 @@ public class Request {
             http.connect();
 
             if (!method.equals("GET")) {
-                sendData(http, parts);
+                sendData(http, parts, null);
             }
 
             if (http.getContentType() == null || http.getContentType().matches("^(image|audio|video|application)")) {
@@ -150,11 +151,16 @@ public class Request {
     }
 
     public static String getResponse(URLConnection con, String charset) {
+        return getResponse(con, charset, null);
+    }
+
+    public static String getResponse(URLConnection con, String charset, NetworkEventListener progressListener) {
         InputStream is = null;
         String response = null;
         try {
             is = con.getInputStream();
-            byte[] bytes = getBytes(is, 10000000);
+            int size = Math.min(con.getContentLength(), 30000000);
+            byte[] bytes = getBytes(is, size, progressListener);
             response = new String(bytes, charset);
             Pattern p = Pattern.compile("<meta\\s+con-equiv=\"Content-Type\"\\s+content=\"text/html;\\s*charset=([a-zA-Z0-9-]+)\"");
             Matcher m = p.matcher(response);
@@ -318,7 +324,7 @@ public class Request {
         public volatile boolean stopped = false;
     }
 
-    public static void sendData(URLConnection http, Vector<DataPart> parts) {
+    public static void sendData(URLConnection http, Vector<DataPart> parts, NetworkEventListener progressListener) {
         OutputStream os = null;
 
         int total = 0;
@@ -339,6 +345,12 @@ public class Request {
 
         int chunkNumber = 0;
         int chunksTotal = 0;
+
+        int bytesSent = 0;
+
+        if (progressListener != null) {
+            progressListener.actionPerformed("start", null);
+        }
         
         StatusLogger logger = new StatusLogger();
         Thread t = new Thread(logger);
@@ -356,15 +368,27 @@ public class Request {
                         logger.post("Sending chunk " + chunkNumber + " of " + chunksTotal + " (" + part.total + " bytes)");
                     }
                     byte[] data = part.nextChunk();
-                    //bytesSent += data.length;
+                    bytesSent += data.length;
                     //if (debug) {
                     //    logger.post(bytesSent + " bytes actually sent");
                     //}
                     os.write(data);
+                    if (progressListener != null) {
+                        HashMap<String, String> info = new HashMap<String, String>();
+                        info.put("loaded", bytesSent + "");
+                        info.put("total", total + "");
+                        progressListener.actionPerformed("progress", info);
+                    }
                 }
+            }
+            if (progressListener != null) {
+                progressListener.actionPerformed("end", null);
             }
             logger.stop();
         } catch (IOException ex) {
+            if (progressListener != null) {
+                progressListener.actionPerformed("error", null);
+            }
             ex.printStackTrace();
         } finally {
             if (os != null) try {
@@ -482,7 +506,7 @@ public class Request {
             http.connect();
 
             if (!method.equals("GET")) {
-                sendData(http, parts);
+                sendData(http, parts, null);
             }
 
             InputStream is = http.getInputStream();
@@ -570,14 +594,32 @@ public class Request {
     }
 
     public static byte[] getBytes(InputStream is, int size) {
+        return getBytes(is, size, null);
+    }
+
+    public static byte[] getBytes(InputStream is, int size, NetworkEventListener progressListener) {
         byte[] result = new byte[size];
         int index = 0;
+        int rate = 100;
+        int step = 0;
+
+        if (step % rate == 0 && progressListener != null) {
+            progressListener.actionPerformed("start", null);
+        }
+
         final int buffer_size = 1024;
         try {
             byte[] bytes = new byte[buffer_size];
             for(;;)
             {
                 int count = is.read(bytes, 0, buffer_size);
+                step++;
+                if (step % rate == 1 && progressListener != null) {
+                    HashMap<String, String> info = new HashMap<String, String>();
+                    info.put("loaded", Math.min(buffer_size * step, size) + "");
+                    info.put("total", size + "");
+                    progressListener.actionPerformed("progress", info);
+                }
                 if (count == -1)
                     break;
                 for (int i = 0; i < count; i++) {
@@ -585,8 +627,14 @@ public class Request {
                 }
             }
             is.close();
+            if (progressListener != null) {
+                progressListener.actionPerformed("end", null);
+            }
         }
         catch (Exception ex) {
+            if (step % rate == 0 && progressListener != null) {
+                progressListener.actionPerformed("error", null);
+            }
             return null;
         }
 
