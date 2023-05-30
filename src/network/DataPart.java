@@ -119,6 +119,10 @@ public class DataPart {
         position = pos;
     }
 
+    public byte[] getBytes() {
+        return getSliceBytes(0, total);
+    }
+
     public byte[] getSliceBytes(long start, long end) {
         if (start >= end) {
             return null;

@@ -45,7 +45,7 @@ public class BlobTest {
 
         byte[] bytes = blob1.nextChunk();
 
-        System.out.println();
+        System.out.println("Testing nextChunk() method");
 
         String res = "";
 
@@ -54,8 +54,37 @@ public class BlobTest {
             System.out.print(bytes[i] + " ");
         }
         System.out.println();
+        System.out.println();
 
-        assertEquals("11 12 13 14 15", res.trim()); 
+        assertEquals("11 12 13 14 15", res.trim());
+    }
+
+    /**
+     * Test of getBytes method, of class Blob.
+     */
+    @Test
+    public void testGetBytes() {
+        byte[] b1 = new byte[] { 1, 2, 3, 4 };
+        byte[] b2 = new byte[] { 5, 6 };
+        byte[] b3 = new byte[] { 7, 8, 9 };
+
+
+        Blob blob = new Blob(new Blob[] { new Blob(b1), new Blob(b2), new Blob(b3) });
+        byte[] bytes = blob.getBytes();
+
+        System.out.println("Testing getBytes() method");
+
+        String res = "";
+
+        for (int i = 0; i < bytes.length; i++) {
+            res += bytes[i] + " ";
+            System.out.print(bytes[i] + " ");
+        }
+        System.out.println();
+        System.out.println();
+
+        assertEquals("1 2 3 4 5 6 7 8 9", res.trim());
+
     }
 
     /**
@@ -71,7 +100,8 @@ public class BlobTest {
         Blob blob1 = new Blob(new Blob[] { new Blob(b1), new Blob(b2), new Blob(b3) });
         Blob slice1 = blob1.getSlice(8, 13);
 
-        System.out.println();
+        System.out.println("Testing getSlice() method");
+        System.out.println("");
 
         String res = "";
 
@@ -91,7 +121,6 @@ public class BlobTest {
 
         Blob slice2 = blob1.getSlice(8, 16);
 
-        System.out.println();
 
         res = "";
 
@@ -126,6 +155,9 @@ public class BlobTest {
         Blob slice1 = blob1.getSlice(10, 15);
         Blob slice2 = blob1.getSlice(10, 17);
 
+        System.out.println("Testing deep nesting of blobs");
+        System.out.println("");
+
         System.out.println("Parts number of slice 1: " + slice1.parts.size());
         assertEquals(1, slice1.parts.size());
 
@@ -144,6 +176,8 @@ public class BlobTest {
 
         System.out.println("Parts number of slice 2: " + slice2.parts.size());
         assertEquals(2, slice2.parts.size());
+
+        System.out.println();
 
         
         String res = "";
