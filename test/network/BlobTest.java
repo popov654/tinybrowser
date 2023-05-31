@@ -60,6 +60,34 @@ public class BlobTest {
     }
 
     /**
+     * Test of getSlice method, of class Blob.
+     */
+    @Test
+    public void testTextConcatenation() {
+        Blob blob = new Blob(new Blob[] { new Blob("Test "), new Blob("string") });
+        String content = blob.asTextString();
+        System.out.println("Testing asTextString() method");
+        System.out.println(content);
+        System.out.println();
+
+        assertEquals("Test string", content);
+    }
+
+    /**
+     * Test of asBase64 method, of class Blob.
+     */
+    @Test
+    public void testAsBase64() {
+        Blob blob = new Blob(new Blob[] { new Blob("Test "), new Blob("string") });
+        String content = blob.asBase64();
+        System.out.println("Testing asBase64() method");
+        System.out.println(content);
+        System.out.println();
+
+        assertEquals("data:text/plain;base64,VGVzdCBzdHJpbmc=", content);
+    }
+
+    /**
      * Test of getBytes method, of class Blob.
      */
     @Test

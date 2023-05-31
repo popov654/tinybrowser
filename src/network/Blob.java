@@ -4,6 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -102,6 +106,18 @@ public class Blob extends DataPart {
         byte[] result = getSliceBytes(position, position + length);
         position += length;
 
+        return result;
+    }
+
+    @Override
+    public String asBase64() {
+        String result = "data:" + mimeType + ";base64,";
+        try {
+            Base64 b64 = new Base64();
+            result += new String(b64.encode(getBytes()));
+        } catch (EncoderException ex) {
+            Logger.getLogger(Blob.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return result;
     }
 

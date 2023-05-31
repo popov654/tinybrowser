@@ -3,9 +3,10 @@ package network;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  *
@@ -117,6 +118,22 @@ public class DataPart {
 
     public void seek(long pos) {
         position = pos;
+    }
+
+    public String asTextString() {
+        return new String(getBytes());
+    }
+
+    public String asBase64() {
+        String mimeType = file == null ? "application/octet-stream" : Request.getMimeType(file.getName());
+        String result = "data:" + mimeType + ";base64,";
+        try {
+            Base64 b64 = new Base64();
+            result += new String(b64.encode(getBytes()));
+        } catch (EncoderException ex) {
+            Logger.getLogger(Blob.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return result;
     }
 
     public byte[] getBytes() {
