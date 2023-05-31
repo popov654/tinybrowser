@@ -948,6 +948,43 @@ public class Main {
         exp.eval();
     }
 
+    public static void testDataSlicing() {
+        byte b1[] = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        byte b2[] = new byte[] { 11, 12, 13 };
+        byte b3[] = new byte[] { 14, 15, 16, 17, 18 };
+
+        network.DataPart p1 = new network.DataPart(b1);
+        network.DataPart p2 = new network.DataPart(b2);
+        network.DataPart p3 = new network.DataPart(b3);
+        network.DataPart.CHUNK_SIZE = 3;
+
+        network.DataPart slice1 = p1.getSlice(2, 7);
+        for (int i = 0; i < slice1.content.length; i++) {
+            System.out.print(slice1.content[i] + " ");
+        }
+        System.out.println();
+
+        slice1 = p1.getSlice(2, 13);
+        for (int i = 0; i < slice1.content.length; i++) {
+            System.out.print(slice1.content[i] + " ");
+        }
+        System.out.println();
+
+        network.Blob blob1 = new network.Blob(new network.Blob[] { new network.Blob(b1), new network.Blob(b2), new network.Blob(b3) });
+        network.Blob bslice1 = blob1.getSlice(8, 14);
+
+        System.out.println();
+
+        System.out.println("Parts number: " + bslice1.parts.size());
+        for (int i = 0; i < bslice1.parts.size(); i++) {
+            for (int j = 0; j < bslice1.parts.get(i).content.length; j++) {
+                System.out.print(bslice1.parts.get(i).content[j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
     public static void detectInstallPath() {
         URL location = Main.class.getProtectionDomain().getCodeSource().getLocation();
         String programPath = location.getPath().substring(1).replace('/', File.separatorChar);
@@ -974,6 +1011,8 @@ public class Main {
     public static String getVersion() {
         return VERSION;
     }
+
+    
 
     /**
      * @param args the command line arguments

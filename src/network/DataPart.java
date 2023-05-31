@@ -13,6 +13,12 @@ import java.util.logging.Logger;
  */
 public class DataPart {
 
+    public DataPart() {}
+
+    public DataPart(File f) {
+        this("", f, "");
+    }
+
     public DataPart(String prefix, File f, String postfix) {
         file = f;
         this.prefix = prefix;
@@ -23,6 +29,10 @@ public class DataPart {
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DataPart.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public DataPart(byte[] data) {
+        this("", data, "");
     }
 
     public DataPart(String prefix, byte[] data, String postfix) {
@@ -58,7 +68,7 @@ public class DataPart {
         int size = CHUNK_SIZE;
         int fsize = CHUNK_SIZE;
         if (position + size - prefix.getBytes().length >= file.length()) {
-            fsize = (int) file.length() - (position - prefix.getBytes().length);
+            fsize = (int) (file.length() - (position - prefix.getBytes().length));
             size = fsize + postfix.getBytes().length;
         }
         byte[] result = new byte[size];
@@ -93,7 +103,7 @@ public class DataPart {
             }
             position += postfix_bytes.length;
         }
-        
+
         return result;
     }
 
@@ -105,14 +115,67 @@ public class DataPart {
         position = 0;
     }
 
+    public void seek(long pos) {
+        position = pos;
+    }
+
+    public byte[] getSliceBytes(long start, long end) {
+        if (start >= end) {
+            return null;
+        }
+
+        if (end > total ) {
+            end = total;
+        }
+
+        byte[] data = new byte[(int)(end-start)];
+        int pos = 0;
+        if (content != null) {
+            pos = (int) start;
+            while (pos < end && pos < content.length) {
+                data[(int)(pos-start)] = content[pos];
+                pos++;
+            }
+        } else {
+            long old_pos = position;
+            position = (int) start;
+            while (position < end) {
+                byte[] slice = nextChunk();
+                for (int i = 0; i < slice.length; i++) {
+                    data[(int)(pos-start)] = slice[i];
+                    pos++;
+                    if (pos == end-start) break;
+                }
+            }
+            position = old_pos;
+        }
+
+        return data;
+    }
+
+    public DataPart getSlice(long start, long end) {
+        return new DataPart("", getSliceBytes(start, end), "");
+    }
+
+    public long getSize() {
+        return total;
+    }
+
+    public void dispose() {
+        content = null;
+        file = null;
+        total = 0;
+        position = 0;
+    }
+
     private FileInputStream reader;
 
     public String prefix = "";
     public byte[] content;
     public File file;
-    public int position = 0;
+    public long position = 0;
     public long total = 0;
     public String postfix = "";
 
-    public final static int CHUNK_SIZE = 512000;
+    public static int CHUNK_SIZE = 512000;
 }
