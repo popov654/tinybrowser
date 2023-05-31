@@ -14,46 +14,55 @@ public class Blob extends DataPart {
     public Blob(Blob[] parts) {
         this.parts = new Vector(Arrays.asList(parts));
         calculateSize();
+        detectMimeType();
     }
 
     public Blob(ArrayList<Blob> parts) {
         this.parts = new Vector(parts);
         calculateSize();
+        detectMimeType();
     }
 
     public Blob(Vector<Blob> parts) {
         this.parts = (Vector<Blob>) parts.clone();
         calculateSize();
+        detectMimeType();
     }
 
     public Blob(File file) {
         super("", file, "");
+        mimeType = Request.getMimeType(file.getName());
     }
 
     public Blob(byte[] bytes) {
         super("", bytes, "");
+        mimeType = "application/octet-stream";
     }
 
     public Blob(String str) {
         super("", str.getBytes(), "");
+        mimeType = "text/plain";
     }
 
     public Blob(Blob[] parts, String type) {
         this.parts = new Vector(Arrays.asList(parts));
         mimeType = type;
         calculateSize();
+        detectMimeType();
     }
 
     public Blob(ArrayList<Blob> parts, String type) {
         this.parts = new Vector(parts);
         mimeType = type;
         calculateSize();
+        detectMimeType();
     }
 
     public Blob(Vector<Blob> parts, String type) {
         this.parts = (Vector<Blob>) parts.clone();
         mimeType = type;
         calculateSize();
+        detectMimeType();
     }
 
     public String getType() {
@@ -64,6 +73,22 @@ public class Blob extends DataPart {
         total = 0;
         for (Blob part: parts) {
             total += part.getSize();
+        }
+    }
+
+    public void detectMimeType() {
+        boolean found = false;
+        boolean hasBinary = false;
+        for (Blob part: parts) {
+            if (!part.getType().equals(mimeType) && !found) {
+                mimeType = part.getType();
+                found = true;
+            } else if (!part.getType().equals(mimeType)) {
+                mimeType = hasBinary ? "application/octet-stream" : "text/plain";
+            }
+            if (!part.getType().startsWith("text/") && !part.getType().matches("application/(json|xml|javascript).*")) {
+                hasBinary = true;
+            }
         }
     }
 
