@@ -11,13 +11,12 @@ public class JSBlob extends JSObject {
     public JSBlob(Blob b) {
         items.put("__proto__", JSBlobProto.getInstance());
         blob = b;
+        items.put("type", new JSString(blob.getType()));
+        items.put("size", new JSInt(blob.getSize()));
     }
 
     @Override
     public JSValue get(String key) {
-        if (key.equals("mimeType")) {
-            return new JSString(blob.getType());
-        }
         return super.get(key);
     }
 

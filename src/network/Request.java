@@ -362,12 +362,14 @@ public class Request {
             for (DataPart part: parts) {
                 chunkNumber = 0;
                 chunksTotal = (int) Math.ceil((double) part.total / DataPart.CHUNK_SIZE);
+                int partPos = 0;
                 while (part.hasNextChunk()) {
                     chunkNumber++;
-                    if (debug && part.file != null) {
-                        logger.post("Sending chunk " + chunkNumber + " of " + chunksTotal + " (" + part.total + " bytes)");
-                    }
                     byte[] data = part.nextChunk();
+                    if (debug && part.file != null) {
+                        logger.post("Sending chunk " + chunkNumber + " of " + chunksTotal + " (" + (partPos+1) + "-" + (partPos + data.length) + " of " + part.total + " bytes)");
+                    }
+                    partPos += data.length;
                     bytesSent += data.length;
                     //if (debug) {
                     //    logger.post(bytesSent + " bytes actually sent");
