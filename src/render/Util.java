@@ -142,13 +142,20 @@ public class Util {
     public static byte[] readFile(File file) throws IOException {
         ByteArrayOutputStream ous = null;
         InputStream ios = null;
+        int total = 0;
         try {
             byte[] buffer = new byte[4096];
             ous = new ByteArrayOutputStream();
             ios = new FileInputStream(file);
             int read = 0;
-            while ((read = ios.read(buffer)) != -1) {
+            while (read != -1) {
+                read = ios.read(buffer);
+                if (read == -1) break;
+                total += read;
                 ous.write(buffer, 0, read);
+                if (total >= 10000000) {
+                    break;
+                }
             }
         } finally {
             try {

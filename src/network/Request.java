@@ -16,7 +16,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -99,8 +98,10 @@ public class Request {
             setRequestHeaders(http);
             http.setDoOutput(true);
 
+            Vector<DataPart> parts = new Vector<DataPart>();
+
             if (!method.equals("GET")) {
-                out = prepareBody(http, params, charset, multipart);
+                parts = prepareBody(http, params, charset, multipart);
             }
 
             String response = "";
@@ -114,7 +115,7 @@ public class Request {
             http.connect();
 
             if (!method.equals("GET")) {
-                sendData(http, out);
+                sendData(http, parts);
             }
 
             if (http.getContentType() == null || http.getContentType().matches("^(image|audio|video|application)")) {
@@ -125,19 +126,7 @@ public class Request {
                 System.out.println("Started receiving data");
             }
 
-            InputStream is = http.getInputStream();
-            byte[] bytes = getBytes(is, 10000000);
-            response = new String(bytes, charset);
-
-            Pattern p = Pattern.compile("<meta\\s+http-equiv=\"Content-Type\"\\s+content=\"text/html;\\s*charset=([a-zA-Z0-9-]+)\"");
-            Matcher m = p.matcher(response);
-            if (m.find()) {
-                String explicitCharset = m.group(1);
-                if (debug) {
-                    System.out.println("Charset declaration found: " + explicitCharset.toLowerCase());
-                }
-                response = new String(bytes, charset);
-            }
+            response = getResponse(http, charset);
             
             long end = System.currentTimeMillis();
             System.out.println("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
@@ -154,7 +143,37 @@ public class Request {
         return null;
     }
 
-    public static byte[] prepareBody(URLConnection http, Vector<FormEntry> params, String charset, boolean multipart) {
+    public static String getResponse(URLConnection con, String charset) {
+        InputStream is = null;
+        String response = null;
+        try {
+            is = con.getInputStream();
+            byte[] bytes = getBytes(is, 10000000);
+            response = new String(bytes, charset);
+            Pattern p = Pattern.compile("<meta\\s+con-equiv=\"Content-Type\"\\s+content=\"text/html;\\s*charset=([a-zA-Z0-9-]+)\"");
+            Matcher m = p.matcher(response);
+            if (m.find()) {
+                String explicitCharset = m.group(1);
+                if (debug) {
+                    System.out.println("Charset declaration found: " + explicitCharset.toLowerCase());
+                }
+                response = new String(bytes, charset);
+            }
+            
+        } catch (IOException ex) {
+            Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                is.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return response;
+    }
+
+    public static Vector<DataPart> prepareBody(URLConnection http, Vector<FormEntry> params, String charset, boolean multipart) {
         byte[] out = new byte[0];
 
         for (FormEntry entry: params) {
@@ -164,21 +183,26 @@ public class Request {
         }
 
         if (params == null) params = new Vector<FormEntry>();
-        ArrayList<String> parts = new ArrayList<String>();
+        Vector<String> parts = new Vector<String>();
         String boundary = multipart ? generateBoundary() : "";
-        ArrayList<byte[]> data = new ArrayList<byte[]>();
+        Vector<DataPart> data = new Vector<DataPart>();
         for (FormEntry entry: params) {
             try {
                 String content = "";
+                DataPart part;
                 if (!multipart) {
                     content = URLEncoder.encode(entry.getKey(), charset) + "=" + URLEncoder.encode(entry.getValue(), charset);
-                    data.add(((!data.isEmpty() ? "&" : "") + content).getBytes(Charset.forName(charset)));
+                    part = new DataPart("", ((!data.isEmpty() ? "&" : "") + content).getBytes(Charset.forName(charset)), "");
                 } else {
+                    String header = "";
                     if (!data.isEmpty()) {
-                        content += "\n";
+                        header += "\n";
                     }
-                    content += "--" + boundary + "\n" +
+                    header += "--" + boundary + "\n" +
                           "Content-Disposition: form-data; name=\"" + URLEncoder.encode(entry.getKey(), charset).replaceAll("%5B%5D$", "[]") + "\"";
+                    
+                    String postfix = (entry == params.lastElement()) ? "\n--" + boundary + "--\n" : "";
+
                     boolean isFile = entry.getValue().matches("\\[filename=\"[^\"]+\"\\]");
                     int pos = 0;
                     String contentType = "";
@@ -188,46 +212,48 @@ public class Request {
                         String[] path = entry.getValue().substring(11, pos).split(File.separator.replace("\\", "\\\\"));
                         filename = path[path.length-1];
                         contentType = getMimeType(filename);
-                        content += "; filename=\"" + URLEncoder.encode(filename, charset) + "\"\n";
-                        content += "Content-Type: " + contentType;
-                        content += "\n\n";
+                        
+                        header += "; filename=\"" + URLEncoder.encode(filename, charset) + "\"\n";
+                        header += "Content-Type: " + contentType;
+                        header += "\n\n";
 
                         File file = new File(entry.getValue().substring(11, pos));
 
-                        byte[] b1 = content.getBytes(Charset.forName(charset));
-                        byte[] b2 = null;
+                        byte[] b = null;
                         try {
-                            b2 = Util.readFile(file);
-                            byte[] b = new byte[b1.length + b2.length];
-                            for (int i = 0; i < b1.length + b2.length; i++) {
-                                b[i] = i < b1.length ? b1[i] : b2[i-b1.length];
-                            }
-                            data.add(b);
-                        } catch (IOException ex) {
-                            Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                            b = Util.readFile(file);
+                        } catch (IOException ex) {}
+                            
 
                         String fileData = "";
                         if (contentType.startsWith("text/") || filename.matches(".*\\.(xml|json)$")) {
-                            for (int i = 0; i < b2.length; i++) {
-                                fileData += (char) b2[i];
+                            int limit = (int) Math.min(b.length, 500);
+                            for (int i = 0; i < limit; i++) {
+                                fileData += (char) b[i];
+                            }
+                            if (b.length > limit) {
+                                fileData += "... (" + (b.length - limit) + " bytes more)";
                             }
                         } else {
-                            for (int i = 0; i < 100; i++) {
-                                fileData += Integer.toHexString(b2[i]) + " ";
+                            int limit = (int) Math.min(b.length, 100);
+                            for (int i = 0; i < limit; i++) {
+                                fileData += Integer.toHexString(b[i]) + " ";
                             }
-                            if (b2.length > 100) {
-                                fileData += "... (" + (b2.length - 100) + " bytes more)";
+                            if (b.length > limit) {
+                                fileData += "... (" + (b.length - limit) + " bytes more)";
                             }
                         }
-                        content += fileData;
+                        
+                        content += header + fileData + postfix;
+
+                        part = new DataPart(header, file, postfix);
                     } else {
-                        content += "\n\n";
-                        content += entry.getValue();
-                        data.add(content.getBytes(Charset.forName(charset)));
+                        header += "\n\n";
+                        part = new DataPart(header, (entry.getValue()).getBytes(Charset.forName(charset)), postfix);
                     }
                 }
 
+                data.add(part);
                 parts.add(content);
 
                 if (debug) {
@@ -238,23 +264,14 @@ public class Request {
                 Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        if (multipart) {
-            parts.add("--" + boundary + "--\n");
-            data.add(("\n--" + boundary + "--\n").getBytes(Charset.forName(charset)));
-        }
 
         int length = 0;
-        for (byte[] b: data) {
-            length += b.length;
+        for (DataPart part: data) {
+            length += part.total;
         }
         System.out.println();
-        out = new byte[length];
-        int pos = 0;
-        for (byte[] b: data) {
-            for (int i = 0; i < b.length; i++) {
-                out[pos++] = b[i];
-            }
-        }
+
+        System.out.println(length + " bytes total");
 
         String contentType = multipart ? "multipart/form-data; boundary=" + boundary : "application/x-www-form-urlencoded;charset=" + charset.toLowerCase();
 
@@ -265,26 +282,82 @@ public class Request {
         }
         http.setRequestProperty("Content-Type", contentType);
 
-        return out;
+        return data;
     }
 
-    public static void sendData(URLConnection http, byte[] data) {
+    static class StatusLogger implements Runnable {
+        @Override
+        public void run() {
+            while (!stopped) {
+                while (messages.size() > pos) {
+                    System.out.println(messages.get(pos++));
+                }
+                try {
+                    Thread.sleep(30);
+                } catch (Exception ex) {}
+            }
+        }
+
+        public synchronized void stop() {
+            stopped = true;
+        }
+
+        public synchronized void post(String message) {
+            messages.add(message);
+        }
+
+        public Vector<String> messages = new Vector<String>();
+        public int pos = 0;
+
+        public volatile boolean stopped = false;
+    }
+
+    public static void sendData(URLConnection http, Vector<DataPart> parts) {
         OutputStream os = null;
 
-        try {
-            if (debug) {
-                String size = "";
-                if (data.length >= 1024 * 1024 * 1024) {
-                    size = Math.floor((double) data.length / (1024 * 1024 * 1024) * 100) / 100 + " GB";
-                } else if (data.length >= 1024 * 1024) {
-                    size = Math.floor((double) data.length / (1024 * 1024) * 100) / 100 + " MB";
-                } else {
-                    size = data.length >= 1024 ? Math.floor((double) data.length / 1024 * 100) / 100 + " KB" : data.length + " bytes";
-                }
-                System.out.println("Started sending data (" + size + ")");
+        int total = 0;
+        for (DataPart part: parts) {
+            total += part.total;
+        }
+        if (debug) {
+            String size = "";
+            if (total >= 1024 * 1024 * 1024) {
+                size = Math.floor((double) total / (1024 * 1024 * 1024) * 100) / 100 + " GB";
+            } else if (total >= 1024 * 1024) {
+                size = Math.floor((double) total / (1024 * 1024) * 100) / 100 + " MB";
+            } else {
+                size = total >= 1024 ? Math.floor((double) total / 1024 * 100) / 100 + " KB" : total + " bytes";
             }
+            System.out.println("Started sending data (" + size + ")");
+        }
+
+        int chunkNumber = 0;
+        int chunksTotal = 0;
+        
+        StatusLogger logger = new StatusLogger();
+        Thread t = new Thread(logger);
+        t.start();
+
+        try {
             os = http.getOutputStream();
-            os.write(data);
+
+            for (DataPart part: parts) {
+                chunkNumber = 0;
+                chunksTotal = (int) Math.ceil((double) part.total / DataPart.CHUNK_SIZE);
+                while (part.hasNextChunk()) {
+                    chunkNumber++;
+                    if (debug && part.file != null) {
+                        logger.post("Sending chunk " + chunkNumber + " of " + chunksTotal + " (" + part.total + " bytes)");
+                    }
+                    byte[] data = part.nextChunk();
+                    //bytesSent += data.length;
+                    //if (debug) {
+                    //    logger.post(bytesSent + " bytes actually sent");
+                    //}
+                    os.write(data);
+                }
+            }
+            logger.stop();
         } catch (IOException ex) {
             ex.printStackTrace();
         } finally {
@@ -294,7 +367,6 @@ public class Request {
         }
 
     }
-
 
     public static String getMimeType(String filename) {
         if (filename.endsWith(".jpg")) {
@@ -310,7 +382,7 @@ public class Request {
             type = "audio";
         } else if (filename.matches(".*\\.(avi|mp4|mpg|mkv|mov|ogv|flv|3gpp)$")) {
             type = "video";
-        } else if (filename.matches(".*\\.(docx?|xlsx?|pptx?|psd|7z|rar|zip|pdf|json|xml|exe|dmg|dms)$")) {
+        } else if (filename.matches(".*\\.(docx?|xlsx?|pptx?|psd|7z|rar|zip|pdf|json|xml|exe|dmg|dms|iso|bin|pkg|dump|so)$")) {
             if (filename.matches(".*\\.docx?$")) {
                 return filename.endsWith("x") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/msword";
             }
@@ -329,10 +401,7 @@ public class Request {
             if (filename.endsWith(".exe")) {
                 return "application/x-msdownload";
             }
-            if (filename.endsWith(".dmg") || filename.endsWith(".dms")) {
-                return "application/octet-stream";
-            }
-            type = "application";
+            return "application/octet-stream";
         } else if (filename.matches(".*\\.(ttf|woff2?)$")) {
             type = "font";
         } else if (filename.matches(".*\\.(rtf|css|js|html?)$")) {
@@ -398,16 +467,16 @@ public class Request {
             setRequestHeaders(http);
             http.setDoOutput(true);
 
-            byte[] out = new byte[0];
+            Vector<DataPart> parts = new Vector<DataPart>();
 
             if (!method.equals("GET")) {
-                out = prepareBody(http, params, charset, multipart);
+                parts = prepareBody(http, params, charset, multipart);
             }
 
             http.connect();
 
             if (!method.equals("GET")) {
-                sendData(http, out);
+                sendData(http, parts);
             }
 
             InputStream is = http.getInputStream();
