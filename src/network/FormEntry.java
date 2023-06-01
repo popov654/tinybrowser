@@ -34,6 +34,14 @@ public class FormEntry implements Entry {
         filename = file.getName();
     }
 
+    public FormEntry(String name, jsparser.File file) {
+        key = name;
+        isFile = true;
+        textValue = "[filename=\"" + file.get("name").asString().getValue() + "\"]";
+        filename = file.get("name").asString().getValue();
+        blob = file.blob.getBlob();
+    }
+
     public FormEntry(String name, byte[] value) {
         key = name;
         isBinary = true;
@@ -145,6 +153,7 @@ public class FormEntry implements Entry {
     public boolean isBinary = false;
     public String textValue;
     public String filename;
+    public Blob blob;
     public byte[] binaryValue;
     public boolean isFile = false;
 }

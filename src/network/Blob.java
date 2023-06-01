@@ -43,6 +43,11 @@ public class Blob extends DataPart {
         mimeType = "application/octet-stream";
     }
 
+    public Blob(byte[] bytes, String type) {
+        super("", bytes, "");
+        mimeType = type;
+    }
+
     public Blob(String str) {
         super("", str.getBytes(), "");
         mimeType = "text/plain";
@@ -73,11 +78,12 @@ public class Blob extends DataPart {
         return mimeType;
     }
 
-    private void calculateSize() {
-        total = 0;
+    public void calculateSize() {
+        contentLength = 0;
         for (Blob part: parts) {
-            total += part.getSize();
+            contentLength += part.getSize();
         }
+        total = prefix.getBytes().length + contentLength + postfix.getBytes().length;
     }
 
     public void detectMimeType() {
@@ -101,10 +107,47 @@ public class Blob extends DataPart {
         if (parts.size() == 0) {
             return super.nextChunk();
         }
-        
-        int length = (int) Math.min(total - position, CHUNK_SIZE);
-        byte[] result = getSliceBytes(position, position + length);
-        position += length;
+
+        int size = CHUNK_SIZE;
+        int fsize = (int) Math.min(total, CHUNK_SIZE);
+        if (position + size - prefix.getBytes().length >= contentLength) {
+            fsize = (int) (contentLength - (position - prefix.getBytes().length));
+            size = fsize + postfix.getBytes().length;
+        }
+        byte[] result = new byte[size];
+
+        int pos = 0;
+
+        if (position == 0) {
+            byte[] prefix_bytes = prefix.getBytes();
+            for (int i = 0; i < prefix_bytes.length; i++) {
+                result[pos++] = prefix_bytes[i];
+            }
+            fsize -= prefix_bytes.length;
+            position += prefix_bytes.length;
+        }
+
+        int len = -1;
+        byte[] file_bytes = new byte[fsize];
+        try {
+            long offset = position - prefix.getBytes().length;
+            len = (int) Math.min(contentLength - offset, CHUNK_SIZE);
+            file_bytes = getSliceBytes(offset, offset + len);
+            for (int i = 0; i < file_bytes.length; i++) {
+                result[pos++] = file_bytes[i];
+            }
+            position += len;
+        } catch (Exception ex) {
+            Logger.getLogger(DataPart.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if (position - prefix.length() >= contentLength || len < fsize) {
+            byte[] postfix_bytes = postfix.getBytes();
+            for (int i = 0; i < postfix_bytes.length; i++) {
+                result[pos++] = postfix_bytes[i];
+            }
+            position += postfix_bytes.length;
+        }
 
         return result;
     }

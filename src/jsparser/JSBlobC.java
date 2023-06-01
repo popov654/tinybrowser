@@ -53,7 +53,7 @@ public class JSBlobC extends Function {
                 blobs.add(((JSBlob)list.items.get(i)).blob);
                 if (mimeType.isEmpty()) mimeType = ((JSBlob)list.items.get(i)).blob.getType();
             } else if (list.items.get(i) instanceof JSString) {
-                blobs.add(new Blob(list.items.get(i).asString().getValue().getBytes()));
+                blobs.add(new Blob(list.items.get(i).asString().getValue().getBytes(), "text/plain"));
                 if (mimeType.isEmpty()) mimeType = "text/plain";
             } else if (list.items.get(i) instanceof File) {
                 File file = (File) list.items.get(i);

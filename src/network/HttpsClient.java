@@ -131,7 +131,7 @@ public class HttpsClient extends JSObject implements Runnable {
                     FormEntry entry;
                     JSValue value = formData.params.get(key);
                     if (value instanceof jsparser.File) {
-                        entry = new FormEntry(key, ((jsparser.File)value).file);
+                        entry = new FormEntry(key, (jsparser.File)value);
                         multipart = true;
                     } else {
                         entry = new FormEntry(key, value.asString().getValue());
@@ -147,10 +147,9 @@ public class HttpsClient extends JSObject implements Runnable {
                 if (requestHeaders.size() > 0) {
                     Set<String> keys = requestHeaders.keySet();
                     for (String header: keys) {
+                        if (header.toLowerCase().equals("content-type")) continue;
                         con.setRequestProperty(header, requestHeaders.get(header));
                     }
-                } else {
-                    con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
                 }
                 final HttpsClient instance = this;
                 Request.sendData(con, post_data, new NetworkEventListener() {

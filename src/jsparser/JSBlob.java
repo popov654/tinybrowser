@@ -20,6 +20,14 @@ public class JSBlob extends JSObject {
         return super.get(key);
     }
 
+    public String getMimeType() {
+        return blob.getType();
+    }
+
+    public Blob getBlob() {
+        return blob;
+    }
+
     Blob blob;
     public String type = "Blob";
 }

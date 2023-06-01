@@ -189,7 +189,7 @@ public class Request {
         byte[] out = new byte[0];
 
         for (FormEntry entry: params) {
-            if (entry.getValue().startsWith("[filename=")) {
+            if (entry.getValue().startsWith("[filename=") || entry.blob != null) {
                 multipart = true;
             }
         }
@@ -215,27 +215,38 @@ public class Request {
                     
                     String postfix = (entry == params.lastElement()) ? "\n--" + boundary + "--\n" : "";
 
-                    boolean isFile = entry.getValue().matches("\\[filename=\"[^\"]+\"\\]");
+                    boolean isFile = entry.getValue().matches("\\[filename=\"[^\"]+\"\\]") || entry.blob != null;
                     int pos = 0;
                     String contentType = "";
                     String filename = "";
                     if (isFile) {
-                        pos = entry.getValue().indexOf("\"", 11);
-                        String[] path = entry.getValue().substring(11, pos).split(File.separator.replace("\\", "\\\\"));
-                        filename = path[path.length-1];
-                        contentType = getMimeType(filename);
+                        if (entry.blob == null) {
+                            pos = entry.getValue().indexOf("\"", 11);
+                            String[] path = entry.getValue().substring(11, pos).split(File.separator.replace("\\", "\\\\"));
+                            filename = path[path.length-1];
+                            contentType = getMimeType(filename);
+                        } else {
+                            filename = entry.getFilename();
+                            contentType = entry.blob.getType();
+                        }
                         
                         header += "; filename=\"" + URLEncoder.encode(filename, charset) + "\"\n";
                         header += "Content-Type: " + contentType;
                         header += "\n\n";
 
-                        File file = new File(entry.getValue().substring(11, pos));
-
                         byte[] b = null;
-                        try {
-                            b = Util.readFile(file);
-                        } catch (IOException ex) {}
-                            
+                        File file = null;
+
+                        if (entry.blob == null) {
+                            file = new File(entry.getValue().substring(11, pos));
+                            try {
+                                b = Util.readFile(file);
+                            } catch (IOException ex) {}
+                        } else {
+                            b = entry.blob.nextChunk();
+                            entry.blob.seek(0);
+                        }
+
 
                         String fileData = "";
                         if (contentType.startsWith("text/") || filename.matches(".*\\.(xml|json)$")) {
@@ -258,7 +269,14 @@ public class Request {
                         
                         content += header + fileData + postfix;
 
-                        part = new DataPart(header, file, postfix);
+                        if (file != null) {
+                            part = new DataPart(header, file, postfix);
+                        } else {
+                            part = entry.blob.clone();
+                            part.prefix = header;
+                            part.postfix = postfix;
+                            ((Blob)part).calculateSize();
+                        }
                     } else {
                         header += "\n\n";
                         part = new DataPart(header, (entry.getValue()).getBytes(Charset.forName(charset)), postfix);
@@ -366,7 +384,7 @@ public class Request {
                 while (part.hasNextChunk()) {
                     chunkNumber++;
                     byte[] data = part.nextChunk();
-                    if (debug && part.file != null) {
+                    if (debug && (part.file != null || part instanceof Blob)) {
                         logger.post("Sending chunk " + chunkNumber + " of " + chunksTotal + " (" + (partPos+1) + "-" + (partPos + data.length) + " of " + part.total + " bytes)");
                     }
                     partPos += data.length;

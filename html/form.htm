@@ -40,8 +40,11 @@ window.addEventListener('load', function() {
    /*
    
    FormData fd = new FormData()
+   
    fd.add('user', 'Alex')
    fd.add('pass', '123')
+   var file = new File(['Test ', 'string'], 'file.txt')
+   fd.add('attachment', file)
    
    var xhr = new XMLHttpRequest()
    xhr.open("POST", "http://popov654.pp.ru/form.php", true)

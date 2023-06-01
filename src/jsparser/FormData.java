@@ -60,6 +60,9 @@ public class FormData extends JSObject {
                     getCaller().error = e;
                     return Undefined.getInstance();
                 }
+                if (args.get(1) instanceof File) {
+                    encoding = "multipart/formdata";
+                }
                 params.put(args.get(0).asString().getValue(), args.get(1));
                 return new JSBool(true);
             }

@@ -31,7 +31,7 @@ public class FileC extends Function {
         } */
 
         if (args.size() > 1 && args.get(1).getType().equals("String")) {
-            return new File(blob, args.get(1).asString().getValue(), blob.getType());
+            return new File(blob, args.get(1).asString().getValue(), blob.getMimeType());
         }
 
         return new File(blob, blob.getType());

@@ -24,6 +24,7 @@ public class DataPart {
         file = f;
         this.prefix = prefix;
         this.postfix = postfix;
+        contentLength = f.length();
         total = prefix.getBytes().length + f.length() + postfix.getBytes().length;
         try {
             reader = new FileInputStream(file);
@@ -39,6 +40,7 @@ public class DataPart {
     public DataPart(String prefix, byte[] data, String postfix) {
         this.prefix = prefix;
         this.postfix = postfix;
+        contentLength = data.length;
         total = prefix.getBytes().length + data.length + postfix.getBytes().length;
         content = data;
     }
@@ -196,6 +198,7 @@ public class DataPart {
     public File file;
     public long position = 0;
     public long total = 0;
+    public long contentLength = 0;
     public String postfix = "";
 
     public static int CHUNK_SIZE = 512000;
