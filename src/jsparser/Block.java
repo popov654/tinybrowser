@@ -468,7 +468,10 @@ public class Block extends Expression {
                 }
                 if (end.prev.getType() == Token.BRACE_CLOSE) {
                     t = t.prev;
-                    while (t != null && t.getType() != Token.BRACE_OPEN) {
+                    int lvl = 0;
+                    while (t != null && (t.getType() != Token.BRACE_OPEN || lvl < 0)) {
+                        if (t.prev.getType() == Token.BRACE_OPEN) lvl++;
+                        if (t.prev.getType() == Token.BRACE_CLOSE) lvl--;
                         t = t.prev;
                     }
                     t2 = t;
@@ -477,15 +480,18 @@ public class Block extends Expression {
                         return;
                     }
                     func_args = new Vector<String>();
-                    while (t2 != null && t2.getType() != Token.BRACE_CLOSE) {
+                    lvl = 0;
+                    while (t2 != null && (t2.getType() != Token.BRACE_CLOSE || lvl > 0)) {
                         if (t2.getType() == Token.VAR_NAME) {
                             if (!(t2.prev.getType() == Token.OP && t2.prev.getContent().equals(",") || t2.prev.getType() == Token.BRACE_OPEN)
                                     || !(t2.next.getType() == Token.OP && t2.next.getContent().equals(",") || t2.next.getType() == Token.BRACE_CLOSE)) {
                                 System.err.println("Syntax error in function declaration");
                                 return;
                             }
-                            func_args.add(end.getContent());
+                            func_args.add(t2.getContent());
                         }
+                        if (t2.next.getType() == Token.BRACE_OPEN) lvl++;
+                        if (t2.next.getType() == Token.BRACE_CLOSE) lvl--;
                         t2 = t2.next;
                     }
                     Token ts = new Token("function");
@@ -526,10 +532,14 @@ public class Block extends Expression {
                     Token t3 = new Token("return");
                     t3.prev = t;
                     t.next = t3;
+                    int lvl = 0;
                     while (tt.next != null && tt.next.getType() != Token.SEMICOLON &&
                             !(tt.next.getType() != Token.OP && tt.getContent().equals(",")) &&
-                            tt.next.getType() != Token.BRACE_CLOSE && tt.next.getType() != Token.ARRAY_END &&
+                            (tt.next.getType() != Token.BRACE_CLOSE || lvl > 0) &&
+                            tt.next.getType() != Token.ARRAY_END &&
                             tt.next.getType() != Token.OBJECT_END) {
+                        if (tt.next.getType() == Token.BRACE_OPEN) lvl++;
+                        if (tt.next.getType() == Token.BRACE_CLOSE) lvl--;
                         tt = tt.next;
                     }
                     if (tt == end) {

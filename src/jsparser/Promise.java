@@ -64,7 +64,6 @@ public class Promise extends JSObject {
                         next.get(i).onFulfilled.call(null, args, false);
                     }
                     next.clear();
-                    next = null;
                 }
             } else {
                 Block b = onFulfilled.getCaller();
@@ -94,7 +93,6 @@ public class Promise extends JSObject {
                 next.get(i).onRejected.call(null, args, false);
             }
             next.clear();
-            next = null;
         }
         for (int i = 0; i < containers.size(); i++) {
             containers.get(i).notify(this, result, state);
