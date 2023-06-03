@@ -910,6 +910,13 @@ public class Expression {
             return;
         }
         boolean as_constr = false;
+        if (!ts.prev.val.getType().equals("Function")) {
+            JSError e = new JSError(null, "Runtime error: " + ts.prev.getContent() + " is not a callable", parent_block.getStack());
+            parent_block.error = e;
+            System.err.println("Runtime error: " + ts.prev.getContent() + " is not a callable");
+            thr = true;
+            return;
+        }
         ((Function)ts.prev.val).setCaller(parent_block);
         if (ts.prev.ctx == null) ts.prev.ctx = Expression.getVar("window", this); 
         if (ts.prev.prev.getType() == Token.KEYWORD && ts.prev.prev.getContent().equals("new")) {
