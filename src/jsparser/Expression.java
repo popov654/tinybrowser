@@ -225,6 +225,8 @@ public class Expression {
         JsonObj j = JsonObj.getInstance();
         HttpsClientC h = new HttpsClientC();
         FormDataC fd = new FormDataC();
+        JSBlobC blob = new JSBlobC();
+        FileC file = new FileC();
         PromiseC p = new PromiseC();
         Block b = new Block(head);
         Window w = new Window(b);
@@ -238,6 +240,8 @@ public class Expression {
         b.scope.put("Number", n);
         b.scope.put("JSON", j);
         b.scope.put("FormData", fd);
+        b.scope.put("Blob", blob);
+        b.scope.put("File", file);
         b.scope.put("XMLHttpRequest", h);
         b.scope.put("Node", hn);
         b.scope.put("HTMLElement", he);
