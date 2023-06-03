@@ -79,7 +79,7 @@ public class BlobTest {
     @Test
     public void testAsBase64() {
         Blob blob = new Blob(new Blob[] { new Blob("Test "), new Blob("string") });
-        String content = blob.asBase64();
+        String content = blob.asDataURL();
         System.out.println("Testing asBase64() method");
         System.out.println(content);
         System.out.println();

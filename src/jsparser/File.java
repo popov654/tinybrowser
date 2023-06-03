@@ -19,6 +19,7 @@ public class File extends JSObject {
             items.put("lastModified", new JSInt(file.lastModified()));
             items.put("lastModifiedDate", new JSDate(file.lastModified()));
         }
+        items.put("__proto__", FileProto.getInstance());
         mimeType = Request.getMimeType(file.getName());
     }
 

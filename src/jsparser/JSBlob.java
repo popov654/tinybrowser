@@ -11,6 +11,7 @@ public class JSBlob extends JSObject {
     public JSBlob(Blob b) {
         items.put("__proto__", JSBlobProto.getInstance());
         blob = b;
+        items.put("__proto__", JSBlobProto.getInstance());
         items.put("type", new JSString(blob.getType()));
         items.put("size", new JSInt(blob.getSize()));
     }

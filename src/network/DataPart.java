@@ -126,7 +126,7 @@ public class DataPart {
         return new String(getBytes());
     }
 
-    public String asBase64() {
+    public String asDataURL() {
         String mimeType = file == null ? "application/octet-stream" : Request.getMimeType(file.getName());
         String result = "data:" + mimeType + ";base64,";
         try {

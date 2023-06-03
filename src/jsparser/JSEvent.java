@@ -10,6 +10,22 @@ import java.util.Vector;
  */
 public class JSEvent extends JSObject {
 
+    public JSEvent(JSObject target, String eventType, HashMap<String, String> data) {
+        items.put("type", new JSString(eventType));
+        items.put("cancelBubble", new JSBool(false));
+        items.put("defaultPrevented", new JSBool(false));
+        items.put("target", target);
+        items.put("stopPropagation", new stopPropagationFunction(this));
+        items.put("preventDefault", new preventDefaultFunction(this));
+        if (data == null) return;
+        Set<String> keys = data.keySet();
+        for (String key: keys) {
+            String type = JSValue.getType(data.get(key));
+            JSValue val = JSValue.create(type, data.get(key));
+            items.put(key, val);
+        }
+    }
+
     public JSEvent(HTMLElement target, HTMLElement relatedTarget, HashMap<String, String> data) {
         items.put("cancelBubble", new JSBool(false));
         items.put("defaultPrevented", new JSBool(false));

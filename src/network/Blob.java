@@ -153,7 +153,7 @@ public class Blob extends DataPart {
     }
 
     @Override
-    public String asBase64() {
+    public String asDataURL() {
         String result = "data:" + mimeType + ";base64,";
         try {
             Base64 b64 = new Base64();

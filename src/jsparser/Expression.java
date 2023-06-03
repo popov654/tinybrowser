@@ -227,6 +227,7 @@ public class Expression {
         FormDataC fd = new FormDataC();
         JSBlobC blob = new JSBlobC();
         FileC file = new FileC();
+        FileReaderC fileR = new FileReaderC();
         PromiseC p = new PromiseC();
         Block b = new Block(head);
         Window w = new Window(b);
@@ -242,6 +243,7 @@ public class Expression {
         b.scope.put("FormData", fd);
         b.scope.put("Blob", blob);
         b.scope.put("File", file);
+        b.scope.put("FileReader", fileR);
         b.scope.put("XMLHttpRequest", h);
         b.scope.put("Node", hn);
         b.scope.put("HTMLElement", he);
@@ -1782,7 +1784,7 @@ public class Expression {
                         }
                         if (op.prev.ctx.getType().matches("Object|Function")) {
                             JSValue old_val = ((JSObject)op.prev.ctx).get(index.asString().getValue());
-                            if (!(old_val != null && old_val == result)) {
+                            if (!(old_val != null && old_val == result) && !old_val.getType().equals("undefined")) {
                                 if (old_val != null) {
                                     old_val.decrementRefCount();
                                 }
