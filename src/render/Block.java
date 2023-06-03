@@ -20,6 +20,11 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
@@ -44,6 +49,8 @@ import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +63,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
@@ -2430,6 +2440,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         });
 
+        addDragAndDropSupport(btn, label);
+
         btn.setPositioning(Position.ABSOLUTE);
         btn.setRight(Math.round((double) paddings[3] / ratio), Units.px);
         btn.setTop(Math.round((double) paddings[0] / ratio)-1, Units.px);
@@ -2495,6 +2507,81 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         //label.text_layer.setBounds(_x_, _y_, width, height);
         if (width < btn.width) width = viewport_width = btn.width;
         inputReady = true;
+    }
+
+    private void addDragAndDropSupport(final Block btn, final Block label) {
+        setDropTarget(new DropTarget() {
+            @Override
+            public synchronized void drop(DropTargetDropEvent evt) {
+                try {
+                    evt.acceptDrop(DnDConstants.ACTION_COPY);
+                    List<File> selectedFiles = getSelectedFiles(evt);
+
+                    File selectedFile = selectedFiles.size() > 0 ? selectedFiles.get(0) : null;
+
+                    if (!inputMultipleSelection) {
+                        label.children.get(0).textContent = selectedFile.getAbsolutePath();
+                    } else {
+                        label.children.get(0).textContent = selectedFiles.size() > 1 ? selectedFiles.size() + " files" : selectedFiles.get(0).getAbsolutePath();
+                    }
+                    label.performLayout();
+                    label.forceRepaint();
+
+                    btn.parent.inputValue = "";
+                    for (File file: selectedFiles) {
+                        if (btn.parent.inputValue.length() > 0) {
+                            btn.parent.inputValue += ",";
+                        }
+                        btn.parent.inputValue += "[filename=\"" + file.getAbsolutePath() + "\"]";
+                    }
+
+                    if (btn.parent.node != null) {
+                        btn.parent.node.fireEvent("change", "render");
+                    }
+
+                    btn.parent.updateFormEntry();
+
+                    document.focused_block = btn.parent;
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            private List<File> getSelectedFiles(DropTargetDropEvent evt) {
+                try {
+                    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                        return (List<File>) evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                    }
+
+                    ArrayList<File> files = new ArrayList<File>();
+                    DataFlavor nixFileDataFlavor = new DataFlavor("text/uri-list;class=java.lang.String");
+                    String data = (String) evt.getTransferable().getTransferData(nixFileDataFlavor);
+
+                    String[] lines = data.split("\r?\n");
+                    for (String line: lines) {
+                        if (line.startsWith("#") || line.isEmpty()) {
+                            // comment line, by RFC 2483
+                            continue;
+                        }
+                        try {
+                            files.add(new File(new URI(line)));
+                        } catch (URISyntaxException ex) {}
+                    }
+
+                    return files;
+
+                } catch (ClassNotFoundException ex) {
+                    Logger.getLogger(Block.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (UnsupportedFlavorException ex) {
+                    Logger.getLogger(Block.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(Block.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                return new ArrayList<File>();
+            }
+        });
     }
 
     public void createNumberInput(FocusListener fl) {
