@@ -47,8 +47,18 @@ window.addEventListener('load', function() {
    
    */
    
-   // var blob = new Blob(['Test ', 'string'])
-   // blob.text().then(v => console.log(v))
+   /*
+   
+   var blob = new Blob(['Test ', 'string'])
+   var href = URL.createObjectURL(blob)
+   
+   var link = document.createElement('a')
+   link.href = href
+   link.textContent = 'Link'
+   document.body.appendChild(link)
+   blob.text().then(v => console.log(v))
+   
+   */
    
    /*
    

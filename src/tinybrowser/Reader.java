@@ -3,18 +3,15 @@ package tinybrowser;
 import bridge.Builder;
 import bridge.Document;
 import bridge.Mapper;
-import bridge.Resource;
 import cache.DefaultCache;
 import cssparser.CSSParser;
 import htmlparser.HTMLParser;
-import htmlparser.Node;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -112,7 +109,7 @@ public class Reader {
         Block root = documentWrap.rootBlock;
 
         root.builder.setWindowFrame(frame);
-        document.setBaseUrl(Main.getInstallPath());
+        //document.setBaseUrl(Main.getInstallPath());
 
         document.width = DEFAULT_WIDTH;
         document.height = DEFAULT_HEIGHT;
@@ -174,7 +171,7 @@ public class Reader {
         Block root = documentWrap.getRootBlock();
         java.awt.Frame frame = (java.awt.Frame) SwingUtilities.getWindowAncestor(c);
         root.builder.setWindowFrame(frame);
-        document.setBaseUrl(Main.getInstallPath());
+        //document.setBaseUrl(Main.getInstallPath());
 
         Dimension size = c.getPreferredSize();
         document.setPreferredSize(new Dimension(size.width, size.height));

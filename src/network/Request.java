@@ -18,6 +18,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,6 +41,11 @@ public class Request {
 
     public static String makeRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart) {
         try {
+            if (path.startsWith("blob://")) {
+                Util.downloadFile(WebDocument.active_document, path);
+                return null;
+            }
+
             String fullPath = baseURL + path;
             if (cache != null && !noCache) {
                 fullPath = cache.get(fullPath);
@@ -485,6 +491,11 @@ public class Request {
 
     public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart, boolean force_download) {
         try {
+            if (path.startsWith("blob://")) {
+                Util.downloadFile(WebDocument.active_document, path);
+                return null;
+            }
+            
             String fullPath = baseURL + path;
             if (cache != null && !noCache) {
                 fullPath = cache.get(fullPath);
@@ -670,7 +681,7 @@ public class Request {
     }
 
     public static boolean isFileLink(String url) {
-        return url.matches(".*\\.(txt|rtf|pdf|rar|zip|7z|cab|exe|msi|iso|psd|bmp|gif|jpeg|jpg|png|ico|wav|flac|mp3|aac|ac3|mp2|ogg|m4a|avi|mp4|m4v|flv|mkv|mov|qt|3gpp)$");
+        return url.matches(".*\\.(txt|rtf|pdf|rar|zip|7z|cab|exe|msi|iso|psd|bmp|gif|jpeg|jpg|png|ico|wav|flac|mp3|aac|ac3|mp2|ogg|m4a|avi|mp4|m4v|flv|mkv|mov|qt|3gpp)$") || url.startsWith("blob://");
     }
 
     public static Cache getCache() {
@@ -680,6 +691,44 @@ public class Request {
     public static void setCache(Cache cache) {
         Request.cache = cache;
     }
+
+    public static UUID addBlob(URL url, Blob blob) {
+        String origin = url != null ? url.getHost() : "local";
+        HashMap<UUID, Blob> blobs = blobMap.get(origin);
+        if (blobs == null) {
+            blobs = new HashMap<UUID, Blob>();
+            blobMap.put(origin, blobs);
+        }
+        UUID uuid = UUID.randomUUID();
+        blobs.put(uuid, blob);
+
+        return uuid;
+    }
+
+    public static void removeBlob(URL url, UUID blobId) {
+        String origin = url != null ? url.getHost() : "local";
+        HashMap<UUID, Blob> blobs = blobMap.get(origin);
+        if (blobs == null) {
+            return;
+        }
+        blobs.remove(UUID.randomUUID());
+    }
+
+    public static Blob getBlob(URL url, UUID guid) {
+        String origin = url != null ? url.getHost() : "local";
+        HashMap<UUID, Blob> blobs = blobMap.get(origin);
+        if (blobs == null) {
+            return null;
+        }
+
+        return blobs.get(guid);
+    }
+
+    public static Blob getBlob(URL url, String guid) {
+        return getBlob(url, UUID.fromString(guid));
+    }
+
+    public static HashMap<String, HashMap<UUID, Blob>> blobMap = new HashMap<String, HashMap<UUID, Blob>>();
 
     public static int boundarySize = 16;
     public static boolean debug = false;

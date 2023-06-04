@@ -206,6 +206,8 @@ public class Window extends JSObject {
         screen.set("height", new JSInt(screenSize.height));
         items.put("screen", screen);
 
+        items.put("URL", URLObj.getInstance());
+
         tr = new TaskRunner(timers);
     }
     

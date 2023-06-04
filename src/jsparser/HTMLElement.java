@@ -425,24 +425,19 @@ public class HTMLElement extends HTMLNode {
                 }
             }
         }
+        if (str.matches("href|src|action|enctype")) {
+            Vector<JSValue> args = new Vector<JSValue>();
+            args.add(new JSString(str));
+            args.add(value.asString());
+            ((Function)get("setAttribute")).call(this, args);
+        }
         updateNode(str, value.asString().getValue());
         super.set(str, value);
     }
 
     @Override
     public void set(JSString str, JSValue value) {
-        if (str.getValue().startsWith("on") && (value instanceof Function || value instanceof Null || value instanceof Undefined)) {
-            boolean add = !(value instanceof Null || value instanceof Undefined);
-            Function func = (Function) items.get(add ? "addEventListener" : "removeEventListener");
-            if (func != null) {
-                Vector<JSValue> args = new Vector<JSValue>();
-                args.add(new JSString(str.getValue().substring(2).toLowerCase()));
-                args.add(add ? value : items.get(str.getValue()));
-                if (args.get(1) instanceof Function) func.call(this, args);
-            }
-        }
-        updateNode(str.asString().getValue(), value != null ? value.asString().getValue() : null);
-        super.set(str, value);
+        set(str.asString().getValue(), value);
     }
 
     private void updateNode(String attr, String value) {

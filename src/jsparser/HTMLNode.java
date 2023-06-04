@@ -5,6 +5,7 @@ import htmlparser.NodeActionCallback;
 import htmlparser.NodeEvent;
 import java.util.HashMap;
 import java.util.Vector;
+import render.WebDocument;
 
 /**
  *
@@ -89,12 +90,13 @@ public class HTMLNode extends JSObject {
         if (str.equals("nodeValue") || str.equals("textContent")) {
             if (node.nodeType == 1) {
                 Node child = new Node(3);
+                render.Block parent = bridge.Mapper.get(node);
+                parent.addText(value.asString().getValue());
                 child.nodeValue = value.asString().getValue();
                 node.children.add(child);
-            } else {
-                node.nodeValue = value.asString().getValue();
-                items.put("nodeValue", new JSString(node.nodeValue));
             }
+            node.nodeValue = value.asString().getValue();
+            items.put("nodeValue", new JSString(node.nodeValue));
             items.put("textContent", new JSString(node.getTextContent()));
             node.fireEvent("valueChanged", "node");
         }

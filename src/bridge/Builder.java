@@ -756,7 +756,8 @@ public class Builder {
         Node node = b.node;
         if (node == null) return;
         if (node.tagName.equals("a")) {
-            b.href = baseUrl + node.getAttribute("href");
+            String linkURL = node.getAttribute("href") != null ? node.getAttribute("href") : "";
+            b.href = (linkURL.matches("^(https?|ftp|file|blob)://.*") ? "" : baseUrl) + linkURL;
             b.color = b.linkColor;
         }
         else if (node.tagName.equals("img") && !b.special) {

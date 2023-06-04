@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.channels.FileChannel;
@@ -29,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.Timer;
+import network.Blob;
 import network.Request;
 
 /**
@@ -201,83 +203,133 @@ public class Util {
     }
 
     public static void downloadFile(final WebDocument document, final String url) {
+        if (url.startsWith("blob://")) {
+            String guid = url.substring(7);
+            URL document_url = null;
+            try {
+                if (document != null) {
+                    String docURL = document.baseUrl;
+                    if (!docURL.matches("^(https?|ftp|file)://.*")) {
+                        docURL = "file:///" + docURL;
+                    }
+                    document_url = new URL(docURL);
+                }
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(Util.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            Blob blob = Request.getBlob(document_url, guid);
+            if (blob != null) {
+                downloadFile(document, blob, guid);
+            }
+            return;
+        }
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 File file = Request.makeDownloadRequest(url);
-                File dir = new File(System.getProperty("user.home"));
-                boolean ask = !Util.getParameter("download_ask").matches("false|0");
-                if (ask) {
-                    String path = Util.getParameter("download_dir");
-                    if (path != null) {
-                        path = path.replaceAll("%(USER_?HOME|USER_?PROFILE)%", System.getProperty("user.home").replace("\\", "\\\\"));
-                        dir = new File(path);
+                saveFile(document, file, url);
+            }
+        });
+        t.start();
+    }
+
+    public static void downloadFile(final WebDocument document, final Blob blob, final String guid) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (blob == null) return;
+                    File file = File.createTempFile("tmp_", "");
+                    FileOutputStream fos = new FileOutputStream(file);
+                    while (blob.hasNextChunk()) {
+                        fos.write(blob.nextChunk());
                     }
-                    JFileChooser fileChooser = new JFileChooser();
-                    fileChooser.setCurrentDirectory(dir);
-                    //fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    fileChooser.setDialogTitle("Save File As");
-                    fileChooser.setApproveButtonText("Save");
+                    fos.close();
+                    String fileName = guid == null ? file.getName() : guid;
+                    saveFile(document, file, fileName);
+                } catch (IOException ex) {
+                    Logger.getLogger(Util.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        t.start();
+    }
 
-                    String[] parts = url.split("/");
+    public static void downloadFile(final WebDocument document, final Blob blob) {
+        downloadFile(document, blob, null);
+    }
 
-                    File dest = new File(path + File.separatorChar + parts[parts.length-1]);
-                    fileChooser.setSelectedFile(dest);
+    public static void saveFile(WebDocument document, File file, String url) {
+        File dir = new File(System.getProperty("user.home"));
+        boolean ask = !Util.getParameter("download_ask").matches("false|0");
+        if (ask) {
+            String path = Util.getParameter("download_dir");
+            if (path != null) {
+                path = path.replaceAll("%(USER_?HOME|USER_?PROFILE)%", System.getProperty("user.home").replace("\\", "\\\\"));
+                dir = new File(path);
+            }
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setCurrentDirectory(dir);
+            //fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fileChooser.setDialogTitle("Save File As");
+            fileChooser.setApproveButtonText("Save");
 
-                    int result = fileChooser.showSaveDialog(document);
-                    if (result == JFileChooser.APPROVE_OPTION) {
-                        dir = fileChooser.getSelectedFile();
-                        if (!Util.getParameter("download_remember_last_dir").matches("(false|0)")) {
-                            Util.setParameter("download_dir", path);
+            String[] parts = url.split("/");
+
+            File dest = new File(path + File.separatorChar + parts[parts.length-1]);
+            fileChooser.setSelectedFile(dest);
+
+            int result = fileChooser.showSaveDialog(document);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                dir = fileChooser.getSelectedFile();
+                if (!Util.getParameter("download_remember_last_dir").matches("(false|0)")) {
+                    Util.setParameter("download_dir", path);
+                }
+            } else {
+                file.delete();
+                return;
+            }
+        } else {
+            String path = Util.getParameter("download_dir");
+            dir = new File(path);
+        }
+        try {
+            File copy = new File(dir.getAbsolutePath());
+            if (copy.exists() && copy.length() > 0) {
+                int input = javax.swing.JOptionPane.showConfirmDialog(document, "File already exists. Do you want to overwrite it?", "Warning", javax.swing.JOptionPane.YES_NO_OPTION);
+                if (input == javax.swing.JOptionPane.NO_OPTION) {
+                    if (!ask) {
+                        int n = 1;
+                        String name = copy.getName().substring(0, copy.getName().lastIndexOf("."));
+                        String ext = copy.getName().substring(copy.getName().lastIndexOf("."));
+                        String filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
+                        copy = new File(dir.getParent() + File.separatorChar + filename);
+                        while (copy.exists() && copy.length() > 0) {
+                            n++;
+                            filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
+                            copy = new File(dir.getParent() + File.separatorChar + filename);
                         }
                     } else {
                         file.delete();
                         return;
                     }
-                } else {
-                    String path = Util.getParameter("download_dir");
-                    dir = new File(path);
-                }
-                try {
-                    File copy = new File(dir.getAbsolutePath());
-                    if (copy.exists() && copy.length() > 0) {
-                        int input = javax.swing.JOptionPane.showConfirmDialog(document, "File already exists. Do you want to overwrite it?", "Warning", javax.swing.JOptionPane.YES_NO_OPTION);
-                        if (input == javax.swing.JOptionPane.NO_OPTION) {
-                            if (!ask) {
-                                int n = 1;
-                                String name = copy.getName().substring(0, copy.getName().lastIndexOf("."));
-                                String ext = copy.getName().substring(copy.getName().lastIndexOf("."));
-                                String filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
-                                copy = new File(dir.getParent() + File.separatorChar + filename);
-                                while (copy.exists() && copy.length() > 0) {
-                                    n++;
-                                    filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
-                                    copy = new File(dir.getParent() + File.separatorChar + filename);
-                                }
-                            } else {
-                                file.delete();
-                                return;
-                            }
-                        }
-                    }
-                    long size = file.length();
-
-                    FileChannel dest = (new RandomAccessFile(copy.getAbsolutePath(), "rw")).getChannel();
-                    dest.truncate(0);
-                    FileChannel src = (new RandomAccessFile(file.getAbsolutePath(), "r")).getChannel();
-                    dest.transferFrom(src, 0, src.size());
-                    dest.close();
-                    src.close();
-                    file.delete();
-
-                    String[] p = url.split("/");
-                    System.out.println(String.format("File %s (%d bytes) was saved to %s", p[p.length-1], size, copy.getAbsolutePath()));
-                } catch (IOException ex) {
-                    Logger.getLogger(Block.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        });
-        t.start();
+            long size = file.length();
+
+            FileChannel dest = (new RandomAccessFile(copy.getAbsolutePath(), "rw")).getChannel();
+            dest.truncate(0);
+            FileChannel src = (new RandomAccessFile(file.getAbsolutePath(), "r")).getChannel();
+            dest.transferFrom(src, 0, src.size());
+            dest.close();
+            src.close();
+            file.delete();
+
+            String[] p = url.split("/");
+            System.out.println(String.format("File %s (%d bytes) was saved to %s", p[p.length-1], size, copy.getAbsolutePath()));
+        } catch (IOException ex) {
+            Logger.getLogger(Block.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public static String getInstallPath() {
