@@ -1,8 +1,6 @@
 package network;
 
 import cache.Cache;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
 import render.Util;
+import render.WebDocument;
 
 /**
  *
@@ -121,6 +120,11 @@ public class Request {
 
             if (!method.equals("GET")) {
                 sendData(http, parts, null);
+            }
+
+            if (http.getHeaderField("content-disposition") != null && http.getHeaderField("content-disposition").startsWith("attachment")) {
+                Util.downloadFile(WebDocument.active_document, path);
+                return null;
             }
 
             if (http.getContentType() == null || http.getContentType().matches("^(image|audio|video|application)")) {
@@ -479,7 +483,7 @@ public class Request {
     }
 
 
-    public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart) {
+    public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart, boolean force_download) {
         try {
             String fullPath = baseURL + path;
             if (cache != null && !noCache) {
@@ -598,19 +602,23 @@ public class Request {
     }
 
     public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, boolean noCache) {
-        return makeBinaryRequest(path, method, params, defaultCharset, noCache, false);
+        return makeBinaryRequest(path, method, params, defaultCharset, noCache, false, false);
     }
 
     public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, boolean noCache, boolean multipart) {
-        return makeBinaryRequest(path, method, params, defaultCharset, noCache, multipart);
+        return makeBinaryRequest(path, method, params, defaultCharset, noCache, multipart, false);
     }
 
     public static File makeBinaryRequest(String path) {
-        return makeBinaryRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, false, false);
+        return makeBinaryRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, false, false, false);
     }
 
     public static File makeBinaryRequest(String path, boolean noCache) {
-        return makeBinaryRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, noCache, false);
+        return makeBinaryRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, noCache, false, false);
+    }
+
+    public static File makeDownloadRequest(String path) {
+        return makeBinaryRequest(path, "GET", new Vector<FormEntry>(), defaultCharset, true, false, true);
     }
 
     public static byte[] getBytes(InputStream is, int size) {
@@ -659,6 +667,14 @@ public class Request {
         }
 
         return Arrays.copyOf(result, index);
+    }
+
+    public static boolean isFileLink(String url) {
+        return url.matches(".*\\.(txt|rtf|pdf|rar|zip|7z|cab|exe|msi|iso|psd|bmp|gif|jpeg|jpg|png|ico|wav|flac|mp3|aac|ac3|mp2|ogg|m4a|avi|mp4|m4v|flv|mkv|mov|qt|3gpp)$");
+    }
+
+    public static Cache getCache() {
+        return Request.cache;
     }
 
     public static void setCache(Cache cache) {

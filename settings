@@ -1,2 +1,5 @@
-last_dir=D:\
 locale=en_US
+last_dir=D:\
+download_dir=%USER_HOME%\Downloads
+download_ask=true
+download_remember_last_dir=true

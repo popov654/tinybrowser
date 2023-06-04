@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import network.Request;
@@ -58,6 +59,52 @@ public class DefaultCache extends Cache {
         f = new File(path);
 
         return f.exists();
+    }
+
+    @Override
+    public void remove(String url) {
+        if (!url.startsWith("http")) {
+            return;
+        }
+
+        int pos = url.lastIndexOf("/");
+        if (pos == -1) return;
+
+        String filename = url.substring(pos+1);
+        url = url.substring(0, pos);
+
+        String hash = getHash(url);
+
+        String[] parts = new String[levels + 1];
+
+        for (int i = 0; i < levels; i++) {
+            parts[i] = hash.substring(0, length[0]);
+            hash = hash.substring(length[0]);
+        }
+        parts[levels] = hash.substring(0, length[1]);
+
+        ArrayList<File> paths = new ArrayList<File>();
+
+        File f = new File(cacheDir);
+        if (!f.exists()) return;
+
+        String path = cacheDir + File.separatorChar;
+        for (int i = 0; i < parts.length; i++) {
+            path += parts[i] + File.separatorChar;
+            f = new File(path);
+            paths.add(f);
+            if (!f.exists()) return;
+        }
+
+        path += filename;
+        f = new File(path);
+
+        f.delete();
+        for (int i = paths.size()-1; i >= 0; i--) {
+            paths.get(i).delete();
+        }
+
+        return;
     }
 
     @Override

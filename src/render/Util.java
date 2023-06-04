@@ -12,17 +12,24 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.Timer;
+import network.Request;
 
 /**
  *
@@ -172,6 +179,107 @@ public class Util {
         return ous.toByteArray();
     }
 
+    public static void openBrowser(String url) {
+        String os = System.getProperty("os.name").toLowerCase();
+        Runtime rt = Runtime.getRuntime();
+        try {
+            if (os.indexOf("win") >= 0) rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+            else if (os.indexOf("mac") >= 0) rt.exec("open " + url);
+            else {
+                String[] browsers = { "google-chrome", "firefox", "mozilla", "epiphany", "konqueror",
+                                 "netscape", "opera", "links", "lynx" };
+                StringBuffer cmd = new StringBuffer();
+                for (int i = 0; i < browsers.length; i++)
+                    if(i == 0)
+                        cmd.append(String.format(    "%s \"%s\"", browsers[i], url));
+                    else
+                        cmd.append(String.format(" || %s \"%s\"", browsers[i], url));
+
+                rt.exec(new String[] { "sh", "-c", cmd.toString() });
+            }
+        } catch (IOException ex) {}
+    }
+
+    public static void downloadFile(final WebDocument document, final String url) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File file = Request.makeDownloadRequest(url);
+                File dir = new File(System.getProperty("user.home"));
+                boolean ask = !Util.getParameter("download_ask").matches("false|0");
+                if (ask) {
+                    String path = Util.getParameter("download_dir");
+                    if (path != null) {
+                        path = path.replaceAll("%(USER_?HOME|USER_?PROFILE)%", System.getProperty("user.home").replace("\\", "\\\\"));
+                        dir = new File(path);
+                    }
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setCurrentDirectory(dir);
+                    //fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                    fileChooser.setDialogTitle("Save File As");
+                    fileChooser.setApproveButtonText("Save");
+
+                    String[] parts = url.split("/");
+
+                    File dest = new File(path + File.separatorChar + parts[parts.length-1]);
+                    fileChooser.setSelectedFile(dest);
+
+                    int result = fileChooser.showSaveDialog(document);
+                    if (result == JFileChooser.APPROVE_OPTION) {
+                        dir = fileChooser.getSelectedFile();
+                        if (!Util.getParameter("download_remember_last_dir").matches("(false|0)")) {
+                            Util.setParameter("download_dir", path);
+                        }
+                    } else {
+                        file.delete();
+                        return;
+                    }
+                } else {
+                    String path = Util.getParameter("download_dir");
+                    dir = new File(path);
+                }
+                try {
+                    File copy = new File(dir.getAbsolutePath());
+                    if (copy.exists() && copy.length() > 0) {
+                        int input = javax.swing.JOptionPane.showConfirmDialog(document, "File already exists. Do you want to overwrite it?", "Warning", javax.swing.JOptionPane.YES_NO_OPTION);
+                        if (input == javax.swing.JOptionPane.NO_OPTION) {
+                            if (!ask) {
+                                int n = 1;
+                                String name = copy.getName().substring(0, copy.getName().lastIndexOf("."));
+                                String ext = copy.getName().substring(copy.getName().lastIndexOf("."));
+                                String filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
+                                copy = new File(dir.getParent() + File.separatorChar + filename);
+                                while (copy.exists() && copy.length() > 0) {
+                                    n++;
+                                    filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
+                                    copy = new File(dir.getParent() + File.separatorChar + filename);
+                                }
+                            } else {
+                                file.delete();
+                                return;
+                            }
+                        }
+                    }
+                    long size = file.length();
+
+                    FileChannel dest = (new RandomAccessFile(copy.getAbsolutePath(), "rw")).getChannel();
+                    dest.truncate(0);
+                    FileChannel src = (new RandomAccessFile(file.getAbsolutePath(), "r")).getChannel();
+                    dest.transferFrom(src, 0, src.size());
+                    dest.close();
+                    src.close();
+                    file.delete();
+
+                    String[] p = url.split("/");
+                    System.out.println(String.format("File %s (%d bytes) was saved to %s", p[p.length-1], size, copy.getAbsolutePath()));
+                } catch (IOException ex) {
+                    Logger.getLogger(Block.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        t.start();
+    }
+
     public static String getInstallPath() {
         if (installPath == null) {
             URL location = Util.class.getProtectionDomain().getCodeSource().getLocation();
@@ -195,7 +303,7 @@ public class Util {
 
     private static void readSettings() {
         getInstallPath();
-        settings = new HashMap<String, String>();
+        settings = new LinkedHashMap<String, String>();
         try {
             FileReader fr = new FileReader(installPath + "settings");
             String s = "";

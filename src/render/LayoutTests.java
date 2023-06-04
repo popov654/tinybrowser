@@ -570,11 +570,32 @@ public class LayoutTests extends JFrame {
         d01.linkColor = new Color(6, 66, 162);
         d01.linksUnderlineMode = 1;
 
+        d01.margins[1] = 18;
+
+        Block d02 = new Block(document, b, -1, -1, 0, 0, Color.BLACK);
+        d02.setPositioning(Block.Position.STATIC);
+        d02.setDisplayType(Block.Display.INLINE);
+        d02.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d02.addText("Download Link");
+        b.addElement(d02);
+        d02.setHref("http://popov654.pp.ru/copybox/photo.jpg");
+        d02.linkColor = new Color(6, 66, 162);
+        d02.linksUnderlineMode = 1;
+
         if (this.isVisible()) {
             document.root.performLayout();
             document.root.forceRepaintAll();
             document.repaint();
         }
+
+        Timer t1 = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                network.Request.makeRequest("http://popov654.pp.ru/copybox/photo.jpg");
+            }
+        });
+        t1.setRepeats(false);
+        t1.start();
     }
 
     public void testImages(int width, int height) {
@@ -1415,7 +1436,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 5;
+        int test = 1;
         int list_type = 2;
 
         if (args.length > 0) {

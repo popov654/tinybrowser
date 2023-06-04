@@ -14,4 +14,8 @@ public class Cache {
         return url;
     }
 
+    public void remove(String url) {
+        return;
+    }
+
 }

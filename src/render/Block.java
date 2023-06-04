@@ -47,11 +47,15 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.Kernel;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -91,6 +95,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
 import network.FormEntry;
+import network.Request;
 import org.apache.batik.swing.JSVGCanvas;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -9813,22 +9818,30 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     document.active_block.applyStylesBatch();
                 }
 
-                node.states.add("active");
+                if (node != null) node.states.add("active");
 
                 document.active_block = this;
 
                 if (node != null && node.defaultPrevented) {
                     node.defaultPrevented = false;
                 } else if (href != null) {
-                    openBrowser(href);
-                    node.states.add("visited");
+                    if (document.download_links_only || Request.isFileLink(href)) {
+                        Util.downloadFile(document, href);
+                    } else {
+                        Util.openBrowser(href);
+                    }
+                    if (node != null) node.states.add("visited");
                 } else {
                     Block b = this.parent;
                     while (b != null && b.href == null) {
                         b = b.parent;
                     }
                     if (b != null && b.href != null) {
-                        openBrowser(b.href);
+                        if (document.download_links_only || Request.isFileLink(b.href)) {
+                            Util.downloadFile(document, b.href);
+                        } else {
+                            Util.openBrowser(b.href);
+                        }
                         node.states.add("visited");
                     }
                 }
@@ -10450,27 +10463,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
             if (textRenderingMode == 1) forceRepaint();
         }
-    }
-
-    private void openBrowser(String url) {
-        String os = System.getProperty("os.name").toLowerCase();
-        Runtime rt = Runtime.getRuntime();
-        try {
-            if (os.indexOf("win") >= 0) rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
-            else if (os.indexOf("mac") >= 0) rt.exec("open " + url);
-            else {
-                String[] browsers = { "google-chrome", "firefox", "mozilla", "epiphany", "konqueror",
-                                 "netscape", "opera", "links", "lynx" };
-                StringBuffer cmd = new StringBuffer();
-                for (int i = 0; i < browsers.length; i++)
-                    if(i == 0)
-                        cmd.append(String.format(    "%s \"%s\"", browsers[i], url));
-                    else
-                        cmd.append(String.format(" || %s \"%s\"", browsers[i], url));
-
-                rt.exec(new String[] { "sh", "-c", cmd.toString() });
-            }
-        } catch (IOException ex) {}
     }
 
     private HashMap<String, String> getEventData(KeyEvent e, String type) {

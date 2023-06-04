@@ -866,6 +866,15 @@ public class WebDocument extends JPanel {
     }
 
 
+    public boolean getDownloadLinksOnly() {
+        return download_links_only;
+    }
+
+    public void setDownloadLinksOnly(boolean value) {
+        download_links_only = value;
+    }
+
+
     public String baseUrl = "";
 
     public Set<String> lastSetProperties;
@@ -891,6 +900,8 @@ public class WebDocument extends JPanel {
     public boolean is_video_fullscreen = false;
     public boolean ignore_transitions = false;
     public boolean no_immediate_apply = false;
+
+    public boolean download_links_only = false;
 
     public boolean debug = false;
 
