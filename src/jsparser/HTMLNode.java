@@ -86,9 +86,15 @@ public class HTMLNode extends JSObject {
 
     @Override
     public void set(String str, JSValue value) {
-        if (str.equals("nodeValue")) {
-            node.nodeValue = value.asString().getValue();
-            items.put("nodeValue", new JSString(node.nodeValue));
+        if (str.equals("nodeValue") || str.equals("textContent")) {
+            if (node.nodeType == 1) {
+                Node child = new Node(3);
+                child.nodeValue = value.asString().getValue();
+                node.children.add(child);
+            } else {
+                node.nodeValue = value.asString().getValue();
+                items.put("nodeValue", new JSString(node.nodeValue));
+            }
             items.put("textContent", new JSString(node.getTextContent()));
             node.fireEvent("valueChanged", "node");
         }
