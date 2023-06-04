@@ -983,9 +983,9 @@ public class Layouter {
         boolean x_axis = d.parent.flex_direction == Block.Direction.ROW || d.parent.flex_direction == Block.Direction.ROW_REVERSED;
 
         Block b = d.original != null ? d.original : d;
-        int index = d.parent.children.indexOf(b);
+        int index = d.line.elements.indexOf(b);
         if (index > 0 && d.node != null && d.node.nodeType == 3 && d.node.nodeValue.matches("\\s*")) {
-            d.vertical_align = d.parent.children.get(index-1).vertical_align;
+            d.vertical_align = ((Block)d.line.elements.get(index-1)).vertical_align;
             d.height = d.parent.children.get(index-1).height;
         }
 
@@ -998,7 +998,7 @@ public class Layouter {
         else if (vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
             offset = line.height - (x_axis ? d.height : d.width);
         }
-        else if (vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null) {
+        else if (vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null && last_block.line == d.line) {
             int st1 = (last_block.text_bold || last_block.text_italic) ? ((last_block.text_bold ? Font.BOLD : 0) | (last_block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             int st2 = (d.text_bold || d.text_italic) ? ((d.text_bold ? Font.BOLD : 0) | (d.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             Font f1 = new Font(last_block.fontFamily, st1, last_block.fontSize);
@@ -1011,8 +1011,10 @@ public class Layouter {
             } else {
                 offset = !block.rtl ? last_block.paddings[3] + last_block.borderWidth[3] - (d.paddings[3] + d.borderWidth[3]) : last_block.width - last_block.borderWidth[1] - last_block.paddings[1] - (d.width - d.borderWidth[1] - d.paddings[1]);
             }
-        } else if (last_block != null) {
+        } else if (last_block != null && last_block.line == d.line) {
             offset = last_block.getOffsetTop() - line.getY();
+        } else {
+            offset = 0;
         }
 
         if (!is_flex || x_axis) {
