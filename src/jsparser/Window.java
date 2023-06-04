@@ -197,6 +197,9 @@ public class Window extends JSObject {
         items.put("removeEventListener", new removeEventListenerFunction());
         items.put("getComputedStyle", new getComputedStyleFunction());
 
+        Location location = new Location();
+        items.put("location", location);
+
         JSObject screen = new JSObject();
         java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
         screen.set("width", new JSInt(screenSize.width));
@@ -215,6 +218,11 @@ public class Window extends JSObject {
         this.parser = document;
         this.document = new HTMLDocument(document);
         items.put("document", this.document);
+    }
+
+    public void setLocation(String url) {
+        Location loc = ((Location)items.get("location"));
+        loc.setURL(url);
     }
 
     public void setWindowFrame(Frame frame) {

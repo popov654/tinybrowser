@@ -129,6 +129,7 @@ public class Builder {
         if (jsWindow == null) {
             jsWindow = new jsparser.Window(new jsparser.Block());
             jsWindow.setDocument(node.document);
+            jsWindow.setLocation(baseUrl);
         }
         jsparser.HTMLDocument jsDocument = (jsparser.HTMLDocument) jsWindow.get("document");
         el.document = jsDocument;
@@ -692,6 +693,7 @@ public class Builder {
                 } catch (Exception ex) {}
             }
             block.replaceDocumentObject((jsparser.HTMLDocument)jsWindow.get("document"));
+            scope.put("location", jsWindow.get("location"));
         }
 
         setParentDocument(block, documentWrap.parentDocument);
