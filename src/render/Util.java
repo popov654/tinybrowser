@@ -262,6 +262,7 @@ public class Util {
     public static void saveFile(WebDocument document, File file, String url) {
         File dir = new File(System.getProperty("user.home"));
         boolean ask = !Util.getParameter("download_ask").matches("false|0");
+        String[] parts = url.split("/");
         if (ask) {
             String path = Util.getParameter("download_dir");
             if (path != null) {
@@ -273,8 +274,6 @@ public class Util {
             //fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             fileChooser.setDialogTitle("Save File As");
             fileChooser.setApproveButtonText("Save");
-
-            String[] parts = url.split("/");
 
             File dest = new File(path + File.separatorChar + parts[parts.length-1]);
             fileChooser.setSelectedFile(dest);
@@ -291,27 +290,22 @@ public class Util {
             }
         } else {
             String path = Util.getParameter("download_dir");
-            dir = new File(path);
+            dir = new File(path + File.separatorChar + parts[parts.length-1]);
         }
         try {
             File copy = new File(dir.getAbsolutePath());
             if (copy.exists() && copy.length() > 0) {
                 int input = javax.swing.JOptionPane.showConfirmDialog(document, "File already exists. Do you want to overwrite it?", "Warning", javax.swing.JOptionPane.YES_NO_OPTION);
                 if (input == javax.swing.JOptionPane.NO_OPTION) {
-                    if (!ask) {
-                        int n = 1;
-                        String name = copy.getName().substring(0, copy.getName().lastIndexOf("."));
-                        String ext = copy.getName().substring(copy.getName().lastIndexOf("."));
-                        String filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
+                    int n = 1;
+                    String name = copy.getName().substring(0, copy.getName().lastIndexOf("."));
+                    String ext = copy.getName().substring(copy.getName().lastIndexOf("."));
+                    String filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
+                    copy = new File(dir.getParent() + File.separatorChar + filename);
+                    while (copy.exists() && copy.length() > 0) {
+                        n++;
+                        filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
                         copy = new File(dir.getParent() + File.separatorChar + filename);
-                        while (copy.exists() && copy.length() > 0) {
-                            n++;
-                            filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
-                            copy = new File(dir.getParent() + File.separatorChar + filename);
-                        }
-                    } else {
-                        file.delete();
-                        return;
                     }
                 }
             }
