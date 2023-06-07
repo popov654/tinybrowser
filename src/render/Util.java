@@ -390,6 +390,10 @@ public class Util {
     }
 
     public static void setParameter(String key, String value) {
+        String home_dir = System.getProperty("user.home");
+        if (value.startsWith(home_dir)) {
+            value = value.replace(home_dir, "%USER_HOME%");
+        }
         settings.put(key, value);
         writeSettings();
     }
