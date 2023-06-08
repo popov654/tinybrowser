@@ -47,6 +47,10 @@ public class DataPart {
 
     public byte[] nextChunk() {
 
+        if (base64) {
+            return base64enc.nextChunk();
+        }
+
         if (content != null) {
             byte[] prefix_bytes = prefix.getBytes();
             byte[] postfix_bytes = postfix.getBytes();
@@ -105,6 +109,12 @@ public class DataPart {
                 result[pos++] = postfix_bytes[i];
             }
             position += postfix_bytes.length;
+        }
+
+        if (!hasNextChunk() && file != null) {
+            try {
+                reader = new FileInputStream(file);
+            } catch (FileNotFoundException ex) {}
         }
 
         return result;
@@ -172,6 +182,11 @@ public class DataPart {
             }
             position = old_pos;
         }
+        if (file != null) {
+            try {
+                reader = new FileInputStream(file);
+            } catch (FileNotFoundException ex) {}
+        }
 
         return data;
     }
@@ -201,5 +216,9 @@ public class DataPart {
     public long contentLength = 0;
     public String postfix = "";
 
-    public static int CHUNK_SIZE = 512000;
+
+    public boolean base64 = false;
+    public Base64Encoder base64enc = new Base64Encoder(this);
+
+    public static int CHUNK_SIZE = 512040;
 }

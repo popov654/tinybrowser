@@ -108,6 +108,10 @@ public class Blob extends DataPart {
             return super.nextChunk();
         }
 
+        if (base64) {
+            return base64enc.nextChunk();
+        }
+
         int size = CHUNK_SIZE;
         int fsize = (int) Math.min(total, CHUNK_SIZE);
         if (position + size - prefix.getBytes().length >= contentLength) {
