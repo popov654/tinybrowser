@@ -16,8 +16,10 @@ public class ArrayProto extends JSObject {
             if (args.size() == 0) {
                 return ((JSArray)context).get((int)((JSArray)context).length().getValue()-1);
             } else {
-                ((JSArray)context).push(args.get(0));
-                return args.get(0);
+                for (JSValue value: args) {
+                    ((JSArray)context).push(value);
+                }
+                return ((JSArray)context).length();
             }
         }
     }
@@ -46,7 +48,9 @@ public class ArrayProto extends JSObject {
             if (args.size() == 0) {
                 return ((JSArray)context).length();
             }
-            ((JSArray)context).unshift(args.get(0));
+            for (JSValue value: args) {
+                ((JSArray)context).unshift(value);
+            }
             return ((JSArray)context).length();
         }
     }
