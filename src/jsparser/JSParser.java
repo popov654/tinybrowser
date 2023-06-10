@@ -392,7 +392,7 @@ public class JSParser {
                 String s = data.substring(pos+1).trim();
                 boolean testObj = (s.replaceAll("\n", " ").matches("[a-zA-Z0-9_-]+\\s*(:\\s*[^}:,]+.*|,\\s*\\S+.*|\\s*\\}$)") ||
                                   s.replaceAll("\n", " ").matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*")) &&
-                                  !(cur.getType() == Token.KEYWORD && !cur.getContent().equals("return"));
+                                  !(cur.getType() == Token.KEYWORD && !cur.getContent().matches("throw|return"));
                 if (ch == '{' && cur.getContent().equals(")") ||
                         ch == '}' && substate == READ_FUNC_BLOCK) {
                     if (ch == '{') stack.add(READ_FUNC_BLOCK);
