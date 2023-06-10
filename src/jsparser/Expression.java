@@ -380,7 +380,7 @@ public class Expression {
                 if (t.next != null) {
                     t.prev.next = null;
                 }
-                if (last != start || last.prev.getType() != Token.KEYWORD) {
+                if (last != start || last.prev != null && last.prev.getType() != Token.KEYWORD) {
                     Token t2 = new Token("");
                     last.prev = t2;
                     t2.next = last;
@@ -408,7 +408,147 @@ public class Expression {
             t2.next = null;
             start = t2;
         }
-        processCond();
+    }
+
+    private void processTernaryOperator(Token token) {
+        Token t = token;
+        if (t.next == null) {
+            JSError e = new JSError(null, "SyntaxError: hanging '?' at the end of expression", parent_block.getStack());
+            parent_block.error = e;
+            System.err.println("SyntaxError: hanging '?' at the end of expression");
+            thr = true;
+            return;
+        }
+        int level1 = 0;
+        int level2 = 0;
+        int level3 = 0;
+        while (t.prev != null && !t.prev.getContent().equals(",") && !t.prev.getContent().equals("(")) {
+            if (t.prev.getType() == Token.ARRAY_START && level1 == 0) break;
+            if (t.prev.getType() == Token.OBJECT_START && level2 == 0) break;
+            if (t.prev.getType() == Token.BRACE_OPEN && level3 == 0) break;
+            if (t.prev.getType() == Token.ARRAY_START) level1++;
+            if (t.prev.getType() == Token.OBJECT_START) level2++;
+            if (t.prev.getType() == Token.BRACE_OPEN) level3++;
+            if (t.prev.getType() == Token.ARRAY_END) level1--;
+            if (t.prev.getType() == Token.OBJECT_END) level2--;
+            if (t.prev.getType() == Token.BRACE_CLOSE) level3--;
+
+            t = t.prev;
+        }
+        
+        token.prev.next = null;
+        Token before = t.prev;
+        t.prev = null;
+
+        Expression exp;
+        if (t.next != start) {
+            Token th = new Token("");
+            th.next = t;
+            t.prev = th;
+            exp = new Expression(t, parent_block);
+        } else {
+            exp = new Expression(t.next, parent_block);
+        }
+        
+        exp.silent = true;
+        exp.eval();
+
+        t = token.next;
+
+        while (t != end && !(t.next != null && t.next.getType() == Token.BRACE_CLOSE && level3 == 0)) {
+            if (t.getType() == Token.ARRAY_START) level1++;
+            if (t.getType() == Token.OBJECT_START) level2++;
+            if (t.getType() == Token.BRACE_OPEN) level3++;
+            if (t.getType() == Token.ARRAY_END) level1--;
+            if (t.getType() == Token.OBJECT_END) level2--;
+            if (t.getType() == Token.BRACE_CLOSE) level3--;
+            t = t.next;
+        }
+
+        Token after = t.next;
+
+        t.next = null;
+        
+        int lvl = token.p / 20;
+
+        level1 = 0;
+        level2 = 0;
+        level3 = 0;
+
+        while (t.prev.p != lvl * 20 + priorities.get(":") || level1 > 0 || level2 > 0 || level3 > 0) {
+            if (t.getType() == Token.ARRAY_START) level1++;
+            if (t.getType() == Token.OBJECT_START) level2++;
+            if (t.getType() == Token.BRACE_OPEN) level3++;
+            if (t.getType() == Token.ARRAY_END) level1--;
+            if (t.getType() == Token.OBJECT_END) level2--;
+            if (t.getType() == Token.BRACE_CLOSE) level3--;
+            t = t.prev;
+        }
+
+        if (!t.prev.getContent().equals(":")) {
+            JSError e = new JSError(null, "SyntaxError: ':' expected after '?' in ternary operator", parent_block.getStack());
+            parent_block.error = e;
+            System.err.println("SyntaxError: ':' expected after '?' in ternary operator");
+            thr = true;
+            return;
+        }
+
+        Token t2 = t;
+
+        t.prev.prev.next = null;
+
+        t = t.prev;
+
+        while (t.prev != null && t.prev.p != lvl * 20 + priorities.get("?")) {
+            t = t.prev;
+        }
+
+        Token t3 = t;
+
+        if (t.next != null) {
+            t.next.prev.next = null;
+        }
+
+        Expression e;
+
+        boolean result = exp.getValue().asBool().getValue();
+
+        if (result) {
+            Token th = new Token("");
+            th.next = t3;
+            t3.prev = th;
+            e = new Expression(t3, parent_block);
+        } else {
+            Token th = new Token("");
+            th.next = t2;
+            t2.prev = th;
+            e = new Expression(t2, parent_block);
+        }
+        if (e != null) {
+            e.silent = true;
+            e.eval();
+            if (!result && t2 == end) {
+                start.setContent(e.getValue().toString());
+                start.val = e.getValue();
+                start.next = null;
+                token.next = null;
+                return;
+            }
+            Token res = new Token(e.getValue().toString());
+            res.val = e.getValue();
+            if (before != null) {
+                before.next = res;
+            } else {
+                res.prev = start.prev;
+                start = res;
+            }
+            res.prev = before;
+            if (t.next != null) {
+                t.next.prev = res;
+            }
+            res.next = after;
+            token.next = res.next;
+        }
     }
 
     private void processCond() {
@@ -420,63 +560,9 @@ public class Expression {
             if (t.getType() == Token.OBJECT_START) level2++;
             if (t.getType() == Token.ARRAY_END) level1--;
             if (t.getType() == Token.OBJECT_END) level2--;
-            if (t.getType() == Token.OP && t.p == priorities.get("?") &&
+            if (t.getType() == Token.OP && t.getContent().equals("?") &&
                     level1 == 0 && level2 == 0) {
-                if (t.getContent().equals("?")) {
-                    t.prev.next = null;
-                    Token th = new Token("");
-                    start.prev = th;
-                    th.next = start;
-                    Expression exp = new Expression(start, parent_block);
-                    exp.silent = true;
-                    exp.eval();
-
-                    Token t2 = end;
-                    level1 = 0;
-                    level2 = 0;
-                    if (t2.getType() == Token.ARRAY_START) level1++;
-                    if (t2.getType() == Token.OBJECT_START) level2++;
-                    if (t2.getType() == Token.ARRAY_END) level1--;
-                    if (t2.getType() == Token.OBJECT_END) level2--;
-                    while (t2.getType() != Token.OP || t2.p != priorities.get(":") ||
-                            !t2.getContent().equals(":") || level1 != 0 || level2 != 0) {
-                        if (t2.getType() == Token.ARRAY_START) level1++;
-                        if (t2.getType() == Token.OBJECT_START) level2++;
-                        if (t2.getType() == Token.ARRAY_END) level1--;
-                        if (t2.getType() == Token.OBJECT_END) level2--;
-                        t2 = t2.prev;
-                        if (t2 == t) break;
-                    }
-                    if (t2 != t) {
-                        Expression e = null;
-                        if (exp.getValue().asBool().getValue()) {
-                            t2.prev.next = null;
-                            th = new Token("");
-                            t2.next = t.next;
-                            t.next.prev = th;
-                            e = new Expression(t.next, parent_block);
-                        } else {
-                            th = new Token("");
-                            th.next = t2.next;
-                            t2.next.prev = th;
-                            e = new Expression(t2.next, parent_block);
-                        }
-                        if (e != null) {
-                            e.silent = true;
-                            e.eval();
-                            th = new Token(e.getValue().toString());
-                            th.val = e.getValue();
-                            start.prev.next = th;
-                            th.next = null;
-                            start = th;
-                        }
-                        t = start;
-                        break;
-                    } else {
-                        System.err.println("Syntax error");
-                        return;
-                    }
-                }
+                processTernaryOperator(t);
             }
             t = t.next;
         }
@@ -1071,6 +1157,10 @@ public class Expression {
             // No operators in chain
             if (p == 0) break;
             String c = op.getContent();
+            if (c.equals("?")) {
+                processTernaryOperator(op);
+                continue;
+            }
             if (c.equals("++") || c.equals("--")) {
                 //++5, ++a
                 if (op.next != null && (op.next.getType() == Token.VALUE || op.next.getType() == Token.VAR_NAME)) {

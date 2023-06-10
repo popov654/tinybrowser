@@ -42,10 +42,12 @@ public class Block extends Expression {
             type = end.getType();
             if (((type <= 6 || type >= 9 && type <= 12) && start == null) ||
                 type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield")) {
-                if (type == 15 && end.prev != null) {
+                if (type == 15 && end.prev != null && end.prev.getType() != Token.EMPTY && !end.getContent().matches("(new|yield)")) {
                     end.prev.next = null;
                 }
-                start = end;
+                if (start == null || !end.getContent().matches("(new|yield)")) {
+                    start = end;
+                }
             }
             if (start != null && (end.next == null || type == Token.SEMICOLON ||
                     (type != Token.BLOCK_START && type != Token.BLOCK_END && end.next.getType() == Token.KEYWORD && !end.next.getContent().matches("let|var|break|continue|return|throw|delete|function|class|new|yield")) ||
