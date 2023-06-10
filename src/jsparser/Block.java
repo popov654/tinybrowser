@@ -1122,13 +1122,13 @@ public class Block extends Expression {
             String str = children.get(i).toString(level+1);
             if (i > 0 && children.get(i-1) instanceof Block && children.get(i).getContent().equals("else")) {
                 result = result.replaceAll("\\s+$", "");
-                str = str.replaceAll("^\\s+", " ").replaceAll("^\\s+", " ");
+                str = str.replaceAll("^\\s+", " ");
             }
             result += str;
             if (str.matches("\\s*\\}?\\s*else\\s*\\{?")) {
                 open_else = true;
             }
-            if (i < children.size()-1 && children.get(i+1) instanceof Block) {
+            if (i < children.size()-1 && children.get(i+1) instanceof Block && (open_else || children.get(i).start.getContent().matches("(for|while|switch)"))) {
                 result += " ";
             }
             else if (i < children.size()-1 && (children.get(i) instanceof Block || !children.get(i).getContent().equals("switch"))) result += "\n";
