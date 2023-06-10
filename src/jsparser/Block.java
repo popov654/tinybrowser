@@ -40,8 +40,11 @@ public class Block extends Expression {
         int level = 0;
         while (end != null) {
             type = end.getType();
-            if ((type <= 6 || (type >= 9 && type <= 12) ||
-                type == 15 && end.getContent().matches("let|var|break|continue|return|throw|delete|new|yield")) && start == null) {
+            if (((type <= 6 || type >= 9 && type <= 12) && start == null) ||
+                type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield")) {
+                if (type == 15 && end.prev != null) {
+                    end.prev.next = null;
+                }
                 start = end;
             }
             if (start != null && (end.next == null || type == Token.SEMICOLON ||
@@ -110,6 +113,8 @@ public class Block extends Expression {
                     children.add(if_exp);
                     
                     end = th;
+                    start = null;
+
                     continue;
                 } else {
                     System.err.println("Syntax error");
