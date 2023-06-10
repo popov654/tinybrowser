@@ -20,7 +20,7 @@ public class FileC extends Function {
 
     @Override
     public JSValue call(JSObject context, Vector<JSValue> args) {
-        JSBlobC constr = new JSBlobC();
+        JSBlobC constr = (JSBlobC) ((JSObject)Expression.getVar("window", getCaller().parent_block)).get("Blob");
 
         JSBlob blob = (JSBlob) constr.call(context, args);
 

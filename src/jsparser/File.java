@@ -1,45 +1,44 @@
 package jsparser;
 
-import java.util.Vector;
+import network.Blob;
 import network.Request;
 
 /**
  *
  * @author Alex
  */
-public class File extends JSObject {
+public class File extends JSBlob {
 
     public File(java.io.File f) {
-        file = f;
-        items.put("__proto__", FileProto.getInstance());
+        super(new Blob(f));
         if (file != null) {
+            file = f;
             items.put("name", new JSString(file.getName()));
             items.put("type", new JSString(Request.getMimeType(file.getName())));
             items.put("size", new JSInt(file.length()));
             items.put("lastModified", new JSInt(file.lastModified()));
             items.put("lastModifiedDate", new JSDate(file.lastModified()));
         }
-        items.put("__proto__", FileProto.getInstance());
         mimeType = Request.getMimeType(file.getName());
     }
 
     public File(JSBlob blob) {
+        super(blob.getBlob());
         items.put("__proto__", FileProto.getInstance());
-        this.blob = blob;
         this.mimeType = "application/octet-stream";
         this.name = "blob";
     }
 
     public File(JSBlob blob, String name) {
+        super(blob.getBlob());
         items.put("__proto__", FileProto.getInstance());
-        this.blob = blob;
         this.mimeType = "application/octet-stream";
         this.name = name;
     }
 
     public File(JSBlob blob, String name, String type) {
+        super(blob.getBlob());
         items.put("__proto__", FileProto.getInstance());
-        this.blob = blob;
         this.mimeType = type;
         this.name = name;
     }
@@ -61,7 +60,6 @@ public class File extends JSObject {
     }
 
     public java.io.File file;
-    public JSBlob blob = null;
     public String mimeType;
     public String name;
 }

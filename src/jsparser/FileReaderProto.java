@@ -22,7 +22,7 @@ public class FileReaderProto extends JSObject {
                 return Undefined.getInstance();
             }
 
-            final JSBlob blob = args.get(0) instanceof File ? ((File) args.get(0)).blob : (JSBlob) args.get(0);
+            final JSBlob blob = (JSBlob) args.get(0);
 
             final JSValue callback = ((FileReader)context).get("onload");
             if (callback instanceof Function) {
@@ -55,7 +55,7 @@ public class FileReaderProto extends JSObject {
                 return Undefined.getInstance();
             }
 
-            final JSBlob blob = args.get(0) instanceof File ? ((File) args.get(0)).blob : (JSBlob) args.get(0);
+            final JSBlob blob = (JSBlob) args.get(0);
 
             final JSValue callback = ((FileReader)context).get("onload");
             if (callback instanceof Function) {

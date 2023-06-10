@@ -9,14 +9,7 @@ import java.util.Vector;
 public class FileProto extends JSObject {
 
     private FileProto() {
-        items.put("asBlob", new asBlobFunction());
-    }
-
-    class asBlobFunction extends Function {
-        @Override
-        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
-            return ((File)context).blob;
-        }
+        items.put("__proto__", JSBlobProto.getInstance());
     }
 
     public static FileProto getInstance() {

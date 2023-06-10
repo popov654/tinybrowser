@@ -39,7 +39,7 @@ public class FormEntry implements Entry {
         isFile = true;
         textValue = "[filename=\"" + file.get("name").asString().getValue() + "\"]";
         filename = file.get("name").asString().getValue();
-        blob = file.blob.getBlob();
+        blob = file.getBlob();
     }
 
     public FormEntry(String name, byte[] value) {

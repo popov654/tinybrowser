@@ -58,7 +58,7 @@ public class JSBlobC extends Function {
             } else if (list.items.get(i) instanceof File) {
                 File file = (File) list.items.get(i);
                 if (file.blob != null) {
-                    blobs.add(file.blob.blob);
+                    blobs.add(file.blob);
                     if (mimeType.isEmpty()) mimeType = "application/octet-stream";
                 } else {
                     blobs.add(new Blob(file.file));

@@ -27,7 +27,7 @@ public class URLObj extends JSObject {
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
-            JSBlob blob = args.get(0) instanceof File ? ((File) args.get(0)).blob : (JSBlob) args.get(0);
+            JSBlob blob = (JSBlob) args.get(0);
 
             JSObject window = (JSObject) Block.getVar("window", getCaller());
             JSObject location = (JSObject) window.get("location");

@@ -8,6 +8,8 @@ import network.Blob;
  */
 public class JSBlob extends JSObject {
 
+    public JSBlob() {}
+
     public JSBlob(Blob b) {
         items.put("__proto__", JSBlobProto.getInstance());
         blob = b;
