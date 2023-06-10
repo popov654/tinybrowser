@@ -34,7 +34,7 @@ public class FileC extends Function {
             return new File(blob, args.get(1).asString().getValue(), blob.getMimeType());
         }
 
-        return new File(blob, blob.getType());
+        return new File(blob, blob.getMimeType());
     }
     
 }
