@@ -2068,7 +2068,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     if (e.isControlDown()) {
                         inputValue += "\t";
                         ((JTextComponent)e.getSource()).setText(inputValue);
-                        updateFormEntry();
+                        updateFormEntry(true);
                         e.consume();
                     }
                 }
@@ -2121,7 +2121,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     parent.inputValue = ((JTextComponent)e.getSource()).getText();
                 }
                 
-                parent.updateFormEntry();
+                parent.updateFormEntry(true);
 
                 if (parent.node != null) {
                     parent.fireEventForNode(e, parent.node, null, "keyUp");
@@ -3180,6 +3180,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void updateFormEntry(boolean updateNode) {
+        updateFormEntry();
+        if (updateNode) {
+            node.setAttribute("value", inputValue);
+        }
+    }
+
     public void updateFormEntry() {
         if (inputDisabled || inputName.isEmpty() || ((inputType == Input.RADIO || inputType == Input.CHECKBOX) && !checked) ||
               (inputType == Input.FILE && inputValue.matches("\\s*"))) {
@@ -3236,7 +3243,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
                 closeInputList();
             }
-            
             return;
         }
 
@@ -3246,6 +3252,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (String value: values) {
                 formEntries.add(new FormEntry(inputName, value));
             }
+            node.setAttribute("value", inputValue);
             return;
         }
 
@@ -3518,7 +3525,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             if (node != null) {
                 node.fireEvent("change", "render");
             }
-            updateFormEntry();
+            updateFormEntry(true);
         } catch (NumberFormatException e) {}
     }
 
@@ -9768,7 +9775,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (parent.node != null) {
                     parent.node.fireEvent("change", "render");
                 }
-                parent.updateFormEntry();
+                parent.updateFormEntry(true);
                 document.repaint();
                 e.consume();
 
@@ -9891,7 +9898,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 return;
             }
 
-            Block b = (Block) e.getSource();
+            Block b = e.getSource() instanceof Block ? (Block) e.getSource() : (Block) ((Component)e.getSource()).getParent();
             while (b != null && b.inputType == Input.NONE) {
                 b = b.parent;
             }

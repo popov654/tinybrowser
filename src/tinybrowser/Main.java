@@ -1018,7 +1018,7 @@ public class Main {
      */
     public static void main(String[] args) {
         //testHTMLParser();
-        testBuilder("html" + File.separator + "form.htm");
+        testBuilder("html" + File.separator + "files.htm");
     }
 
     private static String installPath;

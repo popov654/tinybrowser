@@ -228,6 +228,7 @@ public class Expression {
         JSBlobC blob = new JSBlobC();
         FileC file = new FileC();
         FileReaderC fileR = new FileReaderC();
+        FileWriterC fileW = new FileWriterC();
         PromiseC p = new PromiseC();
         Block b = new Block(head);
         Window w = new Window(b);
@@ -244,6 +245,7 @@ public class Expression {
         b.scope.put("Blob", blob);
         b.scope.put("File", file);
         b.scope.put("FileReader", fileR);
+        b.scope.put("FileWriter", fileW);
         b.scope.put("XMLHttpRequest", h);
         b.scope.put("Node", hn);
         b.scope.put("HTMLElement", he);

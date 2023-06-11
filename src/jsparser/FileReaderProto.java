@@ -1,6 +1,5 @@
 package jsparser;
 
-import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -106,4 +105,3 @@ public class FileReaderProto extends JSObject {
     private String type = "Object";
     private static FileReaderProto instance = null;
 }
-

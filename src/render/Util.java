@@ -233,7 +233,7 @@ public class Util {
         t.start();
     }
 
-    public static void downloadFile(final WebDocument document, final Blob blob, final String guid) {
+    public static void downloadFile(final WebDocument document, final Blob blob, final String name) {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -245,7 +245,7 @@ public class Util {
                         fos.write(blob.nextChunk());
                     }
                     fos.close();
-                    String fileName = guid == null ? file.getName() : guid;
+                    String fileName = name == null ? file.getName() : name;
                     saveFile(document, file, fileName);
                 } catch (IOException ex) {
                     Logger.getLogger(Util.class.getName()).log(Level.SEVERE, null, ex);

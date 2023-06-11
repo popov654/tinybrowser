@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=windows-1251" />
+
+<title>Test</title>
+
+<style type="text/css">
+
+form {
+   border: 1px solid #c2c2c2;
+   border-radius: 4px;
+   padding: 12px;
+   max-width: 260px;
+   font-size: 12px;
+}
+form::selection {
+   background: rgb(231, 154, 0);
+   color: rgb(15, 15, 15);
+}
+
+input[type="text"], input[type="file"], textarea {
+   display: block;
+   margin-bottom: 10px;
+}
+select {
+   display: block;
+   width: 110px;
+   margin: 6px 0px;
+}
+#result {
+   width: 80%;
+   height: 80px;
+}
+
+</style>
+<script>
+window.addEventListener('load', function() {
+   console.log("Document loaded")
+   // document.getElementById('file').onchange = function() {
+   //    console.log(this.files)
+   // }
+   
+   document.getElementById('read_btn').onclick = function(event) {
+      event.preventDefault()
+      
+      var files = document.getElementById('file').files
+      if (files.length == 0) return
+      
+      var fr = new FileReader()
+      fr.onload = function() {
+         console.log("File content: " + this.result)
+         document.getElementById('result').value = this.result
+      }
+      fr.readAsText(files[0])
+   }
+   
+   document.getElementById('write_btn').onclick = function(event) {
+      event.preventDefault()
+      
+      if (document.getElementById('result').value != '') {
+         var fw = new FileWriter()
+         fw.writeText(document.getElementById('result').value, null, 'windows-1251')
+      }
+   }
+   
+   /*
+   
+   var blob = new Blob(['Test ', 'string'])
+   var href = URL.createObjectURL(blob)
+   
+   var link = document.createElement('a')
+   link.href = href
+   link.textContent = 'Link'
+   document.body.appendChild(link)
+   
+   */
+   
+}, false)
+</script>
+</head>
+<body>
+   <form method="post">
+      <textarea id="result"></textarea>
+      <input type="file" name="file" id="file" />
+      <button id="read_btn">Read</button> <button id="write_btn">Write</button> <input type="reset" value="Reset" />
+   </form>
+</body>
+</html>
