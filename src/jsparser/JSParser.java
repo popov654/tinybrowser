@@ -151,7 +151,7 @@ public class JSParser {
             if (state == READY) {
                 boolean num = false;
                 //Found a number literal
-                if ((ch == '+' || ch == '-') && pos < data.length()-1 && data.substring(pos).matches("[+-][0-9].*") || ch >= '0' && ch <= '9') {
+                if ((ch == '+' || ch == '-') && pos < data.length()-1 && data.substring(pos).replaceAll("\r?\n", "").matches("[+-][0-9].*") || ch >= '0' && ch <= '9') {
                     boolean flag = false;
                     if (ch >= '0' && ch <= '9') flag = true;
                     else {
@@ -267,7 +267,7 @@ public class JSParser {
             }
 
             if (state == READY && (substate == 0 || substate == READ_FUNC_BLOCK) && (ch == '\n' || ch == ';') &&
-                    cur.getType() != Token.SEMICOLON) {
+                    cur.getType() != Token.SEMICOLON && cur.getType() != Token.BLOCK_START) {
                 Token t = new Token(";");
                 last_token = "";
                 cur.next = t;
@@ -390,8 +390,8 @@ public class JSParser {
                 }
                 Token t;
                 String s = data.substring(pos+1).trim();
-                boolean testObj = (s.replaceAll("\n", " ").matches("[a-zA-Z0-9_-]+\\s*(:\\s*[^}:,]+.*|,\\s*\\S+.*|\\s*\\}$)") ||
-                                  s.replaceAll("\n", " ").matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*")) &&
+                boolean testObj = (s.replaceAll("\r?\n", " ").matches("[a-zA-Z0-9_-]+\\s*(:\\s*[^}:,]+.*|,\\s*\\S+.*|\\s*\\}$)") ||
+                                  s.replaceAll("\r?\n", " ").matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*")) &&
                                   !(cur.getType() == Token.KEYWORD && !cur.getContent().matches("throw|return"));
                 if (ch == '{' && cur.getContent().equals(")") ||
                         ch == '}' && substate == READ_FUNC_BLOCK) {

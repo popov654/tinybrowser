@@ -45,7 +45,7 @@ public class Block extends Expression {
                 if (type == 15 && end.prev != null && end.prev.getType() != Token.EMPTY && !end.getContent().matches("(new|yield)")) {
                     end.prev.next = null;
                 }
-                if (start == null || !end.getContent().matches("(new|yield)")) {
+                if (start == null || type == 15 && !end.getContent().matches("(new|yield)")) {
                     start = end;
                 }
             }
@@ -405,7 +405,7 @@ public class Block extends Expression {
                 func_named = false;
                 func_class = end.getContent().equals("class");
             }
-            else if (type == Token.FIELD_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN ||
+            else if (type == Token.FIELD_NAME && (end.prev == null || end.prev.getType() == Token.EMPTY || end.prev.getContent().equals(",")) && end.next != null && end.next.getType() == Token.BRACE_OPEN ||
                      type == Token.VAR_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN && parent != null && parent.func_class) {
                 int lvl = 0;
                 Token t = end.next;
