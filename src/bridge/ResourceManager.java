@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -268,6 +269,7 @@ public class ResourceManager {
                 File f = new File(path);
                 FileReader fr = new FileReader(f);
                 while (fr.ready() && offset < f.length()) {
+                    Arrays.fill(buffer, (char)0);
                     int len = fr.read(buffer);
                     offset += len;
                     sb.append(buffer);
