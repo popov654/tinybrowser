@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
 import javax.swing.JTextField;
+import javax.swing.text.JTextComponent;
 
 /**
  *
@@ -477,7 +478,13 @@ public class HTMLElement extends HTMLNode {
                 }
             } else if (attr.equals("value") && b.inputType != render.Block.Input.NONE) {
                 if (b.inputType >= render.Block.Input.TEXT && b.inputType <= render.Block.Input.TEXTAREA) {
-                    ((JTextField) b.getComponent(0)).setText(value);
+                    java.awt.Component[] c = b.getComponents();
+                    for (int i = 0; i < c.length; i++) {
+                        if (c[i] instanceof JTextComponent) {
+                            ((JTextComponent) c[i]).setText(value);
+                            break;
+                        }
+                    }
                     b.inputValue = value != null ? value : "";
                 } else if (attr.equals("checked") && b.inputType >= render.Block.Input.RADIO && b.inputType <= render.Block.Input.CHECKBOX) {
                     b.checked = value != null;

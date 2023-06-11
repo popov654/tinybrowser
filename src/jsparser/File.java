@@ -18,8 +18,10 @@ public class File extends JSBlob {
             items.put("size", new JSInt(file.length()));
             items.put("lastModified", new JSInt(file.lastModified()));
             items.put("lastModifiedDate", new JSDate(file.lastModified()));
+            mimeType = Request.getMimeType(file.getName());
+        } else {
+            mimeType = "application/octet-stream";
         }
-        mimeType = Request.getMimeType(file.getName());
     }
 
     public File(JSBlob blob) {
