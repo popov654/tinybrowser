@@ -991,6 +991,7 @@ public class Layouter {
 
         int offset = 0;
         Line line = d.line;
+        boolean isEmpty = d.display_type == Block.Display.INLINE && d.children.size() == 0 && d.textContent == null;
         int vertical_align = is_flex ? block.flex_align_items : d.vertical_align;
         if (vertical_align == Block.VerticalAlign.ALIGN_MIDDLE) {
             offset = Math.round((line.height - (x_axis ? d.height : d.width)) / 2);
@@ -998,7 +999,7 @@ public class Layouter {
         else if (vertical_align == Block.VerticalAlign.ALIGN_BOTTOM) {
             offset = line.height - (x_axis ? d.height : d.width);
         }
-        else if (vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null && last_block.line == d.line) {
+        else if (vertical_align == Block.VerticalAlign.ALIGN_BASELINE && last_block != null && last_block.line == d.line && !isEmpty) {
             int st1 = (last_block.text_bold || last_block.text_italic) ? ((last_block.text_bold ? Font.BOLD : 0) | (last_block.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             int st2 = (d.text_bold || d.text_italic) ? ((d.text_bold ? Font.BOLD : 0) | (d.text_italic ? Font.ITALIC : 0)) : Font.PLAIN;
             Font f1 = new Font(last_block.fontFamily, st1, last_block.fontSize);
