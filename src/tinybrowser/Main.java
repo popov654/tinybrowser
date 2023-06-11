@@ -166,10 +166,10 @@ public class Main {
         qs.printResults();
     }
 
-    public static void testBuilder() {
+    public static void testBuilder(String path) {
         Reader reader = new Reader();
         reader.addCustomElement("player", CustomPlayer.class);
-        Document document = reader.readDocument("html" + File.separator + "form.htm");
+        Document document = reader.readDocument(path);
         visualBuilderTest(reader, document);
 
         //System.out.println();
@@ -1018,7 +1018,7 @@ public class Main {
      */
     public static void main(String[] args) {
         //testHTMLParser();
-        testBuilder();
+        testBuilder("html" + File.separator + "form.htm");
     }
 
     private static String installPath;
