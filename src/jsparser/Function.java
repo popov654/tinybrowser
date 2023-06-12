@@ -31,9 +31,7 @@ public class Function extends JSObject {
         JSValue r1 = body.scope.get("resolve");
         JSValue r2 = body.scope.get("reject");
         if (body == null) return Undefined.getInstance();
-        if (body.parent_block != null) {
-            body.scope = new HashMap<String, JSValue>();
-        }
+        body.scope = new HashMap<String, JSValue>();
         if (!is_lambda) {
             body.scope.put("arguments", new JSArray(args));
         }

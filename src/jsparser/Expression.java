@@ -2287,16 +2287,16 @@ public class Expression {
 
     public void decrementRefCount() {
         ref_count--;
-        if (ref_count == 0 && this instanceof Block) {
+        if (ref_count == 0 && this instanceof Block && ((Block)this).parent_block != null) {
             //System.err.println("Clearing scope");
             ((Block)this).scope.clear();
         }
         Block b = parent_block;
         while (b != null) {
             b.ref_count--;
-            if (b.ref_count == 0 && b instanceof Block) {
+            if (b.ref_count == 0 && b.parent_block != null) {
                 //System.err.println("Clearing scope");
-                ((Block)b).scope.clear();
+                b.scope.clear();
             }
             b = b.parent_block;
         }

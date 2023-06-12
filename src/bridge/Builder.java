@@ -783,13 +783,13 @@ public class Builder {
         Set<String> attrs = node.attributes.keySet();
         for (String attr: attrs) {
             if (attr.startsWith("on")) {
-                String eventType = attr.substring(2);
                 String code = node.getAttribute(attr);
                 jsparser.Function handler = new jsparser.Function(new Vector<String>(), compileScript(node, code), null);
-                Vector<JSValue> args = new Vector<JSValue>();
-                args.add(new JSString(eventType));
-                args.add(handler);
-                ((jsparser.Function) el.get("addEventListener")).call(el, args);
+                jsparser.Block b = new jsparser.Block();
+                b.scope = scope;
+                handler.getBody().scope = new HashMap<String, JSValue>();
+                handler.getBody().parent_block = b;
+                el.set(attr, handler);
             }
         }
     }

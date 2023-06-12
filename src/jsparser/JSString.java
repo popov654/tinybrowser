@@ -11,6 +11,7 @@ public class JSString extends JSObject implements Comparable {
         items.put("__proto__", StringProto.getInstance());
     }
     public JSString(String val) {
+        if (val == null) val = "";
         items.put("__proto__", StringProto.getInstance());
         value = val;
     }
