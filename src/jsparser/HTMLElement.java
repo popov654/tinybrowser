@@ -60,14 +60,16 @@ public class HTMLElement extends HTMLNode {
             Vector<HTMLElement> parents = getParents();
             if (data != null) data.put("bubbles", parents.size() > 1 ? "true" : "false");
             JSEvent event = new JSEvent(HTMLElement.create(node), e.relatedTarget != null && e.relatedTarget.nodeType == 1 ? HTMLElement.create(e.relatedTarget) : null, data);
-            Vector<JSValue> args = new Vector<JSValue>();
-            args.add(event);
+            Vector<JSValue> args;
             String type = data.get("type").replaceAll("(^\"|\"$)", "");
             for (int i = parents.size()-1; i >= 0; i--) {
                 if (event.get("cancelBubble").asBool().getValue()) break;
                 if (parents.get(i).listeners_0.get(type) == null) continue;
                 Vector<Function> funcs = (Vector<Function>) parents.get(i).listeners_0.get(type).clone();
                 for (Function func: funcs) {
+                    args = new Vector<JSValue>();
+                    args.add(event);
+                    args.addAll(func.getBoundArguments());
                     func.call((JSObject)event.items.get("target"), args);
                 }
             }
@@ -76,6 +78,9 @@ public class HTMLElement extends HTMLNode {
                 if (parents.get(i).listeners.get(type) == null) continue;
                 Vector<Function> funcs = (Vector<Function>) parents.get(i).listeners.get(type).clone();
                 for (Function func: funcs) {
+                    args = new Vector<JSValue>();
+                    args.add(event);
+                    args.addAll(func.getBoundArguments());
                     func.call((JSObject)event.items.get("target"), args);
                 }
             }
