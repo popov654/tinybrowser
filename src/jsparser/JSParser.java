@@ -151,7 +151,7 @@ public class JSParser {
             if (state == READY) {
                 boolean num = false;
                 //Found a number literal
-                if ((ch == '+' || ch == '-') && pos < data.length()-1 && data.substring(pos).replaceAll("\r?\n", "").matches("[+-][0-9].*") || ch >= '0' && ch <= '9') {
+                if ((ch == '+' || ch == '-') && pos < data.length()-1 && data.substring(pos).replaceAll("\r?\n", "").matches("[+-](0?[1-9]+|0x[0-9a-fA-F]+).*") || ch >= '0' && ch <= '9') {
                     boolean flag = false;
                     if (ch >= '0' && ch <= '9') flag = true;
                     else {
@@ -359,7 +359,7 @@ public class JSParser {
             }
 
             //Reading a number literal (cont.)
-            if (state == READ_NUMBER && !(ch == '.' || ch == 'E' || ch == 'e' || ch >= '0' && ch <= '9') &&
+            if (state == READ_NUMBER && !(ch == '.' || ch == 'E' || ch == 'e' || ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'f' || ch >= 'A' && ch <= 'F' || pos > 0 && pos < data.length()-1 && data.substring(pos-1, pos+1).equals("0x")) &&
                     !(sign || (ch == '+' || ch == '-') && pos > 0 && data.substring(pos-1, pos).matches("[Ee]"))) {
                 if (Character.isWhitespace(ch) ||
                         substate == READ_OBJECT_VALUE && (ch == ',' || ch == '}') ||

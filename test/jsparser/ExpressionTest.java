@@ -165,6 +165,30 @@ public class ExpressionTest {
      * Test of eval method, of class Expression.
      */
     @Test
+    public void testOctBaseNumber() {
+        JSParser jp = new JSParser("052");
+        System.out.print("052 = ");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("42", exp.getValue().toString());
+    }
+
+        /**
+     * Test of eval method, of class Expression.
+     */
+    @Test
+    public void testHexBaseNumber() {
+        JSParser jp = new JSParser("0xAD");
+        System.out.print("0xAD = ");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("173", exp.getValue().toString());
+    }
+
+    /**
+     * Test of eval method, of class Expression.
+     */
+    @Test
     public void testSingleValueUnaryMinusWithBraces() {
         JSParser jp = new JSParser("(-2)");
         System.out.print("(-2) = ");

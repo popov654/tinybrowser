@@ -1836,7 +1836,7 @@ public class Expression {
                         if (orig_types[i].equals("String")) {
                             int value = 0;
                             try {
-                                value = Integer.parseInt(a[i].getContent());
+                                value = Integer.parseInt(a[i].getContent(), getIntegerBase(a[i].getContent()));
                             } catch(NumberFormatException e) {}
                             a[i].val = new JSInt(value);
                             a[i].setContent(String.valueOf(value));
@@ -2183,6 +2183,15 @@ public class Expression {
             }
         }
         return this;
+    }
+
+    public int getIntegerBase(String str) {
+        if (str.startsWith("0x")) {
+            return 16;
+        } else if (str.startsWith("0")) {
+            return 8;
+        }
+        return 10;
     }
 
     public JSValue getValue() {

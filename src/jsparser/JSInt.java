@@ -8,9 +8,16 @@ public class JSInt extends JSObject implements Comparable {
     public JSInt(String val) {
         items.put("__proto__", NumberProto.getInstance());
         try {
-            if (val.matches("[0-9]+")) {
+            if (val.matches("0x[0-9a-fA-F]+")) {
+                value = Long.parseLong(val.substring(2), 16);
+            }
+            else if (val.matches("0[1-9][0-9]*")) {
+                value = Long.parseLong(val, 8);
+            }
+            else if (val.matches("[0-9]+")) {
                 value = Long.parseLong(val);
-            } else {
+            }
+            else {
                 value = (int)Float.parseFloat(val);
             }
         } catch(NumberFormatException e) {

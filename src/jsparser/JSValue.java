@@ -28,7 +28,7 @@ public abstract class JSValue {
         if (value.matches("^([\"']).*\\1$")) {
             return "String";
         }
-        if (value.matches("^[+-]?[0-9]+$")) {
+        if (value.matches("^[+-]?(0x[0-9a-fA-F]+|0?[0-9]+)$")) {
             return "Integer";
         }
         if (value.matches("^[+-]?[0-9]+(\\.[0-9]+([eE]-?[0-9]+)?)?$")) {
