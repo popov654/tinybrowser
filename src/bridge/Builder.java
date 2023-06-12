@@ -13,7 +13,9 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -27,6 +29,7 @@ import jsparser.HTMLElement;
 import jsparser.HTMLNode;
 import jsparser.JSObject;
 import jsparser.JSParser;
+import jsparser.JSString;
 import jsparser.JSValue;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.apache.batik.swing.JSVGCanvas;
@@ -672,13 +675,34 @@ public class Builder {
         }
     }
 
+    public jsparser.Block compileScript(Node node, String code) {
+        Node n = new Node(1);
+        Node text = new Node(3);
+        text.nodeValue = code;
+        n.children.add(text);
+        ScriptElement sc = new ScriptElement(n);
+        sc.content = code;
+        compileScript(sc);
+        return sc.getBody();
+    }
+
     public void compileScript(ScriptElement script) {
         HTMLParser parser = this.document.root.node.document;
         JSParser jp = new JSParser(script.content);
         jsparser.Block block = (jsparser.Block)Expression.create(jp.getHead());
+        Set<String> globals = new HashSet<String>(Arrays.asList(new String[] {"document", "window", "location", "screen", "alert", "confirm", "prompt", "console", "eval", "setTimeout", "clearTimeout", "setInterval", "clearInterval",
+            "parseInt", "parseFloat", "getComputedStyle", "addEventListener", "removeEventListener", "Object", "Number", "HTMLElement", "Node", "Math", "Array", "String", "Date", "Function", "Promise", "JSON", "Blob", "File", "FileReader", "FileWriter", "FormData", "URL", "XMLHttpRequest"}));
         if (scope == null) {
             scope = block.scope;
         } else {
+            HashMap<String, JSValue> sc = block.scope;
+            Vector<String> keys = new Vector<String>(sc.keySet());
+            for (String key: keys) {
+                if (globals.contains(key)) {
+                    sc.remove(key);
+                }
+            }
+            scope.putAll(sc);
             block.scope = scope;
             block.setConsole((jsparser.Console)scope.get("console"));
         }
@@ -750,6 +774,31 @@ public class Builder {
 
     public void setWindowFrame(java.awt.Frame window) {
         this.windowFrame = window;
+    }
+
+    public void setHandlers(Node node) {
+        if (node.nodeType != 1) return;
+        HTMLElement el = HTMLElement.create(node);
+
+        Set<String> attrs = node.attributes.keySet();
+        for (String attr: attrs) {
+            if (attr.startsWith("on")) {
+                String eventType = attr.substring(2);
+                String code = node.getAttribute(attr);
+                jsparser.Function handler = new jsparser.Function(new Vector<String>(), compileScript(node, code), null);
+                Vector<JSValue> args = new Vector<JSValue>();
+                args.add(new JSString(eventType));
+                args.add(handler);
+                ((jsparser.Function) el.get("addEventListener")).call(el, args);
+            }
+        }
+    }
+
+    public void setHandlersRecursive(Node node) {
+        setHandlers(node);
+        for (Node child: node.children) {
+            setHandlersRecursive(child);
+        }
     }
 
     public void applyDefaultStyles(Block b) {

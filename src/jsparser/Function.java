@@ -31,7 +31,9 @@ public class Function extends JSObject {
         JSValue r1 = body.scope.get("resolve");
         JSValue r2 = body.scope.get("reject");
         if (body == null) return Undefined.getInstance();
-        body.scope = new HashMap<String, JSValue>();
+        if (body.parent_block != null) {
+            body.scope = new HashMap<String, JSValue>();
+        }
         if (!is_lambda) {
             body.scope.put("arguments", new JSArray(args));
         }
@@ -220,6 +222,10 @@ public class Function extends JSObject {
             result += params.get(i);
         }
         return result;
+    }
+
+    public Vector<JSValue> getBoundArguments() {
+        return bound_args;
     }
 
     @Override

@@ -228,6 +228,7 @@ public class Reader {
                 document.resized();
                 document.root.builder.updateWindowObjects();
                 if (!document.readyEventFired && document.getParent().getWidth() > 0) {
+                    document.root.builder.setHandlersRecursive(document.root.node);
                     document.root.builder.runScripts();
                     document.fireReadyEvent();
                     documentWrap.getResourceManager().checkResourcesStatus();
