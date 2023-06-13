@@ -872,6 +872,9 @@ public class Builder {
 
             b.setHeight((int) Math.floor(height / b.ratio));
         }
+        if (b.inputType != Block.Input.NONE) {
+            b.box_sizing = Block.BoxSizing.BORDER_BOX;
+        }
         if (b.display_type != Block.Display.INLINE) {
             if (node.getAttribute("width") != null) {
                 b.setWidth(Integer.parseInt(node.getAttribute("width")));

@@ -6178,8 +6178,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setWidth(int w, int units) {
         int value = (int) Math.round(getValueInCssPixels(w, units, 0));
-        if (units == Units.percent) {
-            value -= (int) ((double) (margins[3] + margins[1]) / ratio);
+        if (inputType != Input.RADIO && inputType != Input.CHECKBOX && inputType != Input.FILE && inputType != Input.SELECT) {
+            if (box_sizing <= BoxSizing.PADDING_BOX) {
+                value += borderWidth[3] + borderWidth[1];
+            }
+            if (box_sizing == BoxSizing.CONTENT_BOX) {
+                value += paddings[3] + paddings[1];
+            }
         }
         if (units != Units.px) {
             dimensions.put("width", new DynamicValue(w, units, null));
@@ -6308,6 +6313,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setHeight(int h, int units) {
         int value = (int) Math.round(getValueInCssPixels(h, units, 1));
+        if (box_sizing <= BoxSizing.PADDING_BOX) {
+            value += paddings[0] + paddings[2];
+        }
+        if (box_sizing == BoxSizing.CONTENT_BOX) {
+            value += borderWidth[0] + borderWidth[2];
+        }
         if (units != Units.px) {
             dimensions.put("height", new DynamicValue(h, units, null));
         } else {
@@ -6581,6 +6592,31 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setBoxSizing(int value) {
+        int old_value = box_sizing;
+        box_sizing = value;
+        if (width < 0 || height < 0) return;
+        int w = width;
+        int h = height;
+        if (old_value == BoxSizing.BORDER_BOX && value <= BoxSizing.PADDING_BOX) {
+            w += borderWidth[3] + borderWidth[1];
+            h += borderWidth[0] + borderWidth[2];
+        }
+        if (old_value > BoxSizing.CONTENT_BOX && value == BoxSizing.CONTENT_BOX) {
+            w += paddings[3] + paddings[1];
+            h += paddings[0] + paddings[2];
+        }
+        if (old_value == BoxSizing.CONTENT_BOX && value >= BoxSizing.PADDING_BOX) {
+            w -= borderWidth[3] + borderWidth[1];
+            h -= borderWidth[0] + borderWidth[2];
+        }
+        if (old_value < BoxSizing.BORDER_BOX && value == BoxSizing.BORDER_BOX) {
+            w -= paddings[3] + paddings[1];
+            h -= paddings[0] + paddings[2];
+        }
+        setWidthHeight((int) Math.round(w / ratio), (int) Math.round(h / ratio));
+    }
+
     public void removeTextLayers() {
         if (text_layer != null) {
             remove(text_layer);
@@ -6629,6 +6665,16 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         prop = toHyphens(prop);
         if (original != null) {
             original.setProp(prop, value);
+        }
+        if (prop.equals("box-sizing")) {
+            String[] sizing_types = new String[] { "content-box", "padding-box", "border-box" };
+            for (int i = 0; i < sizing_types.length; i++) {
+                if (sizing_types[i].equals(value)) {
+                    setBoxSizing(i);
+                    break;
+                }
+            }
+            return;
         }
         if (prop.equals("display")) {
             String[] display_types = new String[] { "block", "inline-block", "inline", "none",  "table", "inline-table", "table-row", "table-cell" };
@@ -8946,6 +8992,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public int visibility = 0;
     public int float_type = 0;
     public int clear_type = 0;
+    public int box_sizing = 0;
 
     public int letter_spacing = 0;
     public int word_spacing = 0;
@@ -9052,6 +9099,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         public static final int REPEAT_X = 1;
         public static final int REPEAT_Y = 2;
         public static final int REPEAT_XY = 3;
+    }
+
+    public static class BoxSizing {
+        public static final int CONTENT_BOX = 0;
+        public static final int PADDING_BOX = 1;
+        public static final int BORDER_BOX = 2;
     }
 
     public static class Overflow {
@@ -9418,6 +9471,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.parent = this.parent;
         b.display_type = this.display_type;
         b.positioning = this.positioning;
+        b.box_sizing = box_sizing;
 
         b.type = this.type;
         b.textContent = this.textContent;
