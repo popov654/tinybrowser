@@ -2388,7 +2388,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         document.ready = false;
         removeAllElements();
 
-        if (display_type != Display.BLOCK) {
+        if (auto_width) {
             setWidth(180);
         }
 
@@ -6120,7 +6120,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             return;
         }
 
-        if (w < 0 && inputType == Input.NONE) {
+        if (w < 0 && inputType != Input.RADIO && inputType != Input.CHECKBOX) {
             if (parent != null) {
                 boolean is_flex = parent.display_type == Block.Display.FLEX || parent.display_type == Block.Display.INLINE_FLEX;
                 boolean x_axis = parent.flex_direction == Block.Direction.ROW || parent.flex_direction == Block.Direction.ROW_REVERSED;
