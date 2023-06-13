@@ -579,6 +579,7 @@ public class LayoutTests extends JFrame {
         d02.addText("Download Link");
         b.addElement(d02);
         d02.setHref("http://popov654.pp.ru/copybox/photo.jpg");
+        d02.downloadFileName = "test.jpg";
         d02.linkColor = new Color(6, 66, 162);
         d02.linksUnderlineMode = 1;
 

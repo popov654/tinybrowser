@@ -202,7 +202,7 @@ public class Util {
         } catch (IOException ex) {}
     }
 
-    public static void downloadFile(final WebDocument document, final String url) {
+    public static void downloadFile(final WebDocument document, final String url, final String name) {
         if (url.startsWith("blob://")) {
             String guid = url.substring(7);
             URL document_url = null;
@@ -219,7 +219,8 @@ public class Util {
             }
             Blob blob = Request.getBlob(document_url, guid);
             if (blob != null) {
-                downloadFile(document, blob, guid);
+                String filename = name != null ? name : guid;
+                downloadFile(document, blob, filename);
             }
             return;
         }
@@ -227,7 +228,7 @@ public class Util {
             @Override
             public void run() {
                 File file = Request.makeDownloadRequest(url);
-                saveFile(document, file, url);
+                saveFile(document, file, url, name);
             }
         });
         t.start();
@@ -260,9 +261,15 @@ public class Util {
     }
 
     public static void saveFile(WebDocument document, File file, String url) {
+        saveFile(document, file, url, null);
+    }
+
+    public static void saveFile(WebDocument document, File file, String url, String name) {
         File dir = new File(System.getProperty("user.home"));
         boolean ask = !Util.getParameter("download_ask").matches("false|0");
         String[] parts = url.split("/");
+        String filename = name != null ? name : parts[parts.length-1];
+        String ext = filename.substring(filename.lastIndexOf("."));
         if (ask) {
             String path = Util.getParameter("download_dir");
             if (path != null) {
@@ -275,7 +282,7 @@ public class Util {
             fileChooser.setDialogTitle("Save File As");
             fileChooser.setApproveButtonText("Save");
 
-            File dest = new File(path + File.separatorChar + parts[parts.length-1]);
+            File dest = new File(path + File.separatorChar + filename);
             fileChooser.setSelectedFile(dest);
 
             int result = fileChooser.showSaveDialog(document);
@@ -290,7 +297,7 @@ public class Util {
             }
         } else {
             String path = Util.getParameter("download_dir");
-            dir = new File(path + File.separatorChar + parts[parts.length-1]);
+            dir = new File(path + File.separatorChar + filename);
         }
         try {
             File copy = new File(dir.getAbsolutePath());
@@ -298,9 +305,9 @@ public class Util {
                 int input = javax.swing.JOptionPane.showConfirmDialog(document, "File already exists. Do you want to overwrite it?", "Warning", javax.swing.JOptionPane.YES_NO_OPTION);
                 if (input == javax.swing.JOptionPane.NO_OPTION) {
                     int n = 1;
-                    String name = copy.getName().substring(0, copy.getName().lastIndexOf("."));
-                    String ext = copy.getName().substring(copy.getName().lastIndexOf("."));
-                    String filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
+                    name = copy.getName().substring(0, copy.getName().lastIndexOf("."));
+                    ext = copy.getName().substring(copy.getName().lastIndexOf("."));
+                    filename = name + " (" + n + ")" + (!ext.isEmpty() ? ext : "");
                     copy = new File(dir.getParent() + File.separatorChar + filename);
                     while (copy.exists() && copy.length() > 0) {
                         n++;

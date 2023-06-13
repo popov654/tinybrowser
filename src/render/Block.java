@@ -9262,6 +9262,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     public boolean select_enabled = true;
 
     public String href;
+    public String target = "external";
+    public String downloadFileName;
     public String tooltip;
     
     public Color linkColor = Color.BLUE;
@@ -9502,6 +9504,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.href = href;
         b.hasParentLink = hasParentLink;
         b.linksUnderlineMode = linksUnderlineMode;
+
+        b.target = target;
+        b.downloadFileName = downloadFileName;
 
         b.fontSize = this.fontSize;
         b.fontFamily = this.fontFamily;
@@ -9887,8 +9892,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (node != null && node.defaultPrevented) {
                     node.defaultPrevented = false;
                 } else if (href != null) {
-                    if (document.download_links_only || Request.isFileLink(href)) {
-                        Util.downloadFile(document, href);
+                    if (document.download_links_only || Request.isFileLink(href) || downloadFileName != null) {
+                        Util.downloadFile(document, href, downloadFileName);
                     } else {
                         Util.openBrowser(href);
                     }
@@ -9899,8 +9904,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         b = b.parent;
                     }
                     if (b != null && b.href != null) {
-                        if (document.download_links_only || Request.isFileLink(b.href)) {
-                            Util.downloadFile(document, b.href);
+                        if (document.download_links_only || Request.isFileLink(b.href) || b.downloadFileName != null) {
+                            Util.downloadFile(document, b.href, downloadFileName);
                         } else {
                             Util.openBrowser(b.href);
                         }

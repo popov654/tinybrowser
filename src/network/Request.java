@@ -42,7 +42,7 @@ public class Request {
     public static String makeRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart) {
         try {
             if (path.startsWith("blob://")) {
-                Util.downloadFile(WebDocument.active_document, path);
+                Util.downloadFile(WebDocument.active_document, path, null);
                 return null;
             }
 
@@ -129,7 +129,7 @@ public class Request {
             }
 
             if (http.getHeaderField("content-disposition") != null && http.getHeaderField("content-disposition").startsWith("attachment")) {
-                Util.downloadFile(WebDocument.active_document, path);
+                Util.downloadFile(WebDocument.active_document, path, null);
                 return null;
             }
 
@@ -492,7 +492,7 @@ public class Request {
     public static File makeBinaryRequest(String path, String method, Vector<FormEntry> params, String charset, boolean noCache, boolean multipart, boolean force_download) {
         try {
             if (path.startsWith("blob://")) {
-                Util.downloadFile(WebDocument.active_document, path);
+                Util.downloadFile(WebDocument.active_document, path, null);
                 return null;
             }
             

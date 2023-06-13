@@ -177,6 +177,16 @@ public class Builder {
         } else if (node.nodeType == COMMENT) {
             return;
         }
+        if (node.tagName.equals("a")) {
+            String linkURL = node.getAttribute("href") != null ? node.getAttribute("href") : "";
+            b.href = (linkURL.matches("^(https?|ftp|file|blob)://.*") ? "" : baseUrl) + linkURL;
+            if (node.hasAttribute("target") && !node.getAttribute("target").isEmpty()) {
+                b.target = node.getAttribute("target");
+            }
+            if (node.hasAttribute("download") && !node.getAttribute("download").isEmpty()) {
+                b.downloadFileName = node.getAttribute("download");
+            }
+        }
         if (node.hasAttribute("title") && !(node.tagName.equals("option") && node.children.size() > 1)) {
             b.tooltip = node.getAttribute("title");
         }
@@ -805,8 +815,6 @@ public class Builder {
         Node node = b.node;
         if (node == null) return;
         if (node.tagName.equals("a")) {
-            String linkURL = node.getAttribute("href") != null ? node.getAttribute("href") : "";
-            b.href = (linkURL.matches("^(https?|ftp|file|blob)://.*") ? "" : baseUrl) + linkURL;
             b.color = b.linkColor;
         }
         else if (node.tagName.equals("img") && !b.special) {

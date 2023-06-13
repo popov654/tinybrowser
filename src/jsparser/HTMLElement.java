@@ -406,7 +406,7 @@ public class HTMLElement extends HTMLNode {
             }
             return result;
         }
-        if (str.matches("href|src|action|enctype|value|checked|selected")) {
+        if (str.matches("href|src|target|download|action|enctype|value|checked|selected")) {
             return new JSString(node.getAttribute(str));
         }
         return super.get(str);
@@ -434,7 +434,7 @@ public class HTMLElement extends HTMLNode {
                 }
             }
         }
-        if (str.matches("href|src|action|enctype|value|checked|selected")) {
+        if (str.matches("href|src|target|download|action|enctype|value|checked|selected")) {
             Vector<JSValue> args = new Vector<JSValue>();
             args.add(new JSString(str));
             args.add(value.asString());
