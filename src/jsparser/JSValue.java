@@ -138,9 +138,10 @@ public abstract class JSValue {
                 JSObject obj = (JSObject) this;
                 Set<String> keys = obj.items.keySet();
                 for (String key: keys) {
-                    if (key.equals("__proto__")) continue;
+                    if (key.matches("__proto__|constructor")) continue;
+                    System.out.println(key);
                     JSValue val = obj.items.get(key);
-                    if (val != null) {
+                    if (val != null && val != this) {
                         val.decrementRefCount();
                     }
                 }
