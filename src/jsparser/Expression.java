@@ -747,6 +747,22 @@ public class Expression {
                     }
                     nt.val = Undefined.getInstance();
                     nt.ctx = ctx;
+                    if (nt.next != null && nt.next.getType() == Token.BRACE_OPEN) {
+                        t2 = nt.next;
+                        int level = 0;
+                        while (t2.next != null && (t2.next.getType() != Token.BRACE_CLOSE || level > 0)) {
+                            if (t2.next.getType() == Token.BRACE_OPEN) level++;
+                            if (t2.next.getType() == Token.BRACE_CLOSE) level--;
+                            t2 = t2.next;
+                        }
+                        t2 = t2.next;
+                        if (t2 != null) {
+                            nt.next = t2.next;
+                            t2.next.prev = nt;
+                        } else {
+                            nt.next = null;
+                        }
+                    }
                 }
                 return;
             }
@@ -2231,11 +2247,12 @@ public class Expression {
     private static Hashtable<String, Integer> priorities = new Hashtable<String, Integer>();
 
     static {
-        priorities.put("++", 17);
-        priorities.put("--", 17);
-        priorities.put("~", 17);
+        priorities.put("++", 18);
+        priorities.put("--", 18);
+        priorities.put("~", 18);
+        priorities.put("instanceof", 18);
+        priorities.put("typeof", 18);
         priorities.put("!", 17);
-        priorities.put("typeof", 17);
         priorities.put("*", 16);
         priorities.put("/", 16);
         priorities.put("%", 16);
@@ -2249,7 +2266,6 @@ public class Expression {
         priorities.put(">=", 13);
         priorities.put("<=", 13);
         priorities.put("in", 13);
-        priorities.put("instanceof", 13);
         priorities.put("==", 12);
         priorities.put("!=", 12);
         priorities.put("===", 12);
