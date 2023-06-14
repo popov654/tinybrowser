@@ -597,6 +597,10 @@ public class Expression {
             }
             t = t.next;
         }
+        if (t.val == null && t.getType() == Token.VAR_NAME && (t.next == null || t.next.getType() == Token.OP)) {
+            t.val = Expression.getVar(t.getContent(), this);
+            return;
+        }
         if (((t.getType() == Token.VALUE && t.val != null && t.val.getType().equals("String")) || t.getType() == Token.VAR_NAME || t.getType() == Token.ARRAY_ENTITY || t.getType() == Token.OBJECT_ENTITY) &&
                 t.next != null && (t.next.getType() == Token.DOT ||
                 t.next.getType() == Token.ARRAY_START || t.next.getType() == Token.BRACE_OPEN)) {
@@ -1343,6 +1347,10 @@ public class Expression {
                        op.next.next != null && (op.next.next.getType() == Token.DOT ||
                        op.next.next.getType() == Token.ARRAY_START) || op.next.getType() == Token.BRACE_OPEN)) {
                         accessObjectProperties(op.next);
+                    } else if (op.next.getType() == Token.VAR_NAME && (op.next.next == null || op.next.next.getType() == Token.OP ||
+                           op.next.next.getType() == Token.ARRAY_START || op.next.next.getType() == Token.BRACE_OPEN ||
+                           op.next.next.getType() == Token.ARRAY_END || op.next.next.getType() == Token.BRACE_CLOSE)) {
+                        op.next.val = Expression.getVar(op.next.getContent(), this);
                     }
                     op.next.val = new JSBool(!(op.next.val.asBool()).getValue());
                     op.next.setContent(op.next.val.toString());
