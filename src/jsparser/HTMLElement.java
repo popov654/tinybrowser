@@ -415,6 +415,8 @@ public class HTMLElement extends HTMLNode {
     @Override
     public void set(String str, JSValue value) {
         if (str.startsWith("on") && (value instanceof Function || value instanceof Null || value instanceof Undefined)) {
+            node.attributes.remove(str);
+            ((JSArray)items.get("attributes")).removeProperty(str);
             boolean add = !(value instanceof Null || value instanceof Undefined);
             Function func = (Function) ((JSObject)get("__proto__")).get(add ? "addEventListener" : "removeEventListener");
             if (func != null) {

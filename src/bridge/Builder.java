@@ -24,12 +24,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.text.JTextComponent;
 import jsparser.Expression;
 import jsparser.HTMLElement;
 import jsparser.HTMLNode;
 import jsparser.JSObject;
 import jsparser.JSParser;
-import jsparser.JSString;
 import jsparser.JSValue;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.apache.batik.swing.JSVGCanvas;
@@ -422,10 +422,35 @@ public class Builder {
             @Override
             public void nodeChanged(NodeEvent e, String source) {
                 if (source.equals("render") || document == null) return;
-                Block b = Mapper.get(e.target);
+                final Block b = Mapper.get(e.target);
                 b.document = document;
                 b.node = e.target;
+
+                Vector<String> attrs = new Vector<String>(e.getData().keySet());
+                if (attrs.size() == 1 && attrs.get(0).equals("value")) {
+                    b.setInputValue(e.getData().get("value"), false);
+                    return;
+                }
+                boolean eventsOnly = false;
+                for (String attr: attrs) {
+                    if (!attr.startsWith("on")) {
+                        eventsOnly = false;
+                    }
+                }
+                if (eventsOnly) return;
+
+                boolean hadFocus = (b == document.focused_block);
+
                 initElement(b);
+                
+                java.awt.Component[] c = b.getComponents();
+                for (int i = 0; i < c.length; i++) {
+                    if (c[i] instanceof JTextComponent) {
+                        if (hadFocus) {
+                            c[i].requestFocus();
+                        }
+                    }
+                }
                 //b.replaceWith(builder.buildElement(document, b.parent, node));
                 node.removeListener(this);
             }
@@ -814,6 +839,8 @@ public class Builder {
     public void applyDefaultStyles(Block b) {
         Node node = b.node;
         if (node == null) return;
+        boolean ready = document.ready;
+        document.ready = false;
         if (node.tagName.equals("a")) {
             b.color = b.linkColor;
         }
@@ -890,6 +917,15 @@ public class Builder {
             if (node.getAttribute("height") != null) {
                 b.setHeight(Integer.parseInt(node.getAttribute("height")));
             }
+        }
+        boolean flag = b.inputReady;
+        if (b.inputType != Block.Input.NONE && flag) {
+            b.inputReady = false;
+        }
+        String value = b.inputValue;
+        document.ready = ready;
+        if (b.inputType != Block.Input.NONE && flag) {
+            b.doIncrementLayout();
         }
     }
 

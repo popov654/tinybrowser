@@ -1980,6 +1980,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         };
 
+        boolean ready = document.ready;
+        document.ready = false;
+
         if (inputType == Input.TEXT || inputType == Input.TEXTAREA) {
             createTextInput(fl);
         }
@@ -2002,6 +2005,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (vertical_align == VerticalAlign.ALIGN_BASELINE) {
             vertical_align = VerticalAlign.ALIGN_TOP;
         }
+        document.ready = ready;
 
         inputReady = true;
 
@@ -2158,8 +2162,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void createButtonInput(FocusListener fl) {
-        if (getComponents().length > 0 && getComponents()[0] instanceof JButton && children.size() > 0) {
-            children.get(0).textContent = ((JButton)this.getComponents()[0]).getText();
+        Component[] c = getComponents();
+        for (int i = 0; i < c.length; i++) {
+            if (c[i] instanceof JButton && children.size() > 0) {
+                children.get(0).textContent = ((JButton)c[i]).getText();
+                break;
+            }
         }
         removeAll();
 
@@ -3180,10 +3188,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         }
     }
 
+    public void setInputValue(String value, boolean updateNode) {
+        inputValue = value;
+        updateFormEntry(updateNode);
+    }
+
     public void updateFormEntry(boolean updateNode) {
         updateFormEntry();
         if (updateNode) {
-            node.setAttribute("value", inputValue);
+            node.attributes.put("value", inputValue);
         }
     }
 
@@ -3252,7 +3265,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             for (String value: values) {
                 formEntries.add(new FormEntry(inputName, value));
             }
-            node.setAttribute("value", inputValue);
+            node.attributes.put("value", inputValue);
             return;
         }
 
@@ -6345,7 +6358,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         Block last = this;
 
-        if (layouter != null || parts.size() > 0 && parts.get(0).layouter != null) {
+        if (layouter != null || parts.size() > 0 && parts.get(0).layouter != null || inputType > 0) {
             boolean use_fast_update = display_type != Display.FLEX && display_type != Display.INLINE_FLEX && inputType == Input.NONE && document.fast_update;
             document.no_layout = use_fast_update;
             performLayout(use_fast_update);

@@ -416,7 +416,9 @@ public class Node {
             replaceValue(document.getNamesIndex(), attributes.get("name"), val);
         }
         String result = attributes.put(attr, val);
-        fireEvent("attributesChanged", "node");
+        HashMap<String, String> data = new HashMap<String, String>();
+        data.put(attr, val);
+        fireEvent("attributesChanged", "node", data, null);
         return result;
     }
 
@@ -535,6 +537,7 @@ public class Node {
     public Vector<String> states = new Vector<String>();
 
     public Vector<NodeChangeListener> listeners = new Vector<NodeChangeListener>();
+    public boolean dontFireEvents = false;
 
     public Node previousSibling;
     public Node nextSibling;
