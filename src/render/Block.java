@@ -3399,6 +3399,19 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             @Override
             public void mouseClicked(MouseEvent e) {
+                boolean wasClicked = clicked;
+                Timer t = new Timer(50, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clicked = false;
+                    }
+                });
+                t.setRepeats(false);
+                t.start();
+                if (wasClicked) {
+                    return;
+                }
+                clicked = true;
                 Block b = (Block) ((Component)e.getSource()).getParent();
                 document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
                 if (b.parent != null && b.parent.inputType == Input.NUMBER) {
@@ -3420,13 +3433,20 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                         b.parent.repaint();
                     }
                 }
+                document.focused_block = null;
+                document.updateFocusIndex(null);
             }
 
             @Override
             public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {}
+            public void mouseReleased(MouseEvent e) {
+                Block b = (Block) ((Component)e.getSource()).getParent();
+                if (b.isMouseInside(b._x_ + e.getX(), b._y_ + e.getY())) {
+                    mouseClicked(e);
+                }
+            }
 
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -3438,6 +3458,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
             @Override
             public void mouseExited(MouseEvent e) {}
+
+            boolean clicked = false;
 
         });
 
