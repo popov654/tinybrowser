@@ -41,11 +41,16 @@ public class Block extends Expression {
         while (end != null) {
             type = end.getType();
             if (((type <= 6 || type >= 9 && type <= 12) && start == null) ||
-                type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield")) {
-                if (type == 15 && end.prev != null && end.prev.getType() != Token.EMPTY && !end.getContent().matches("(new|yield)")) {
+                  type == 6 || type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield")) {
+                boolean needSplit = type == Token.KEYWORD && !end.getContent().matches("new|yield") ||
+                                    type == Token.VAR_NAME && end.prev != null && end.prev.getContent().matches("\\)|}");
+                if (end.prev != null && end.prev.getType() != Token.EMPTY && needSplit) {
                     end.prev.next = null;
                 }
-                if (start == null || type == 15 && !end.getContent().matches("(new|yield)")) {
+                if (start == null || needSplit) {
+                    if (start != null) {
+                        addChildExpression(start, end);
+                    }
                     start = end;
                 }
             }
@@ -66,25 +71,7 @@ public class Block extends Expression {
                     start = null;
                     continue;
                 }
-                Token t = new Token("");
-                start.prev = t;
-                t.next = start;
-
-                if (type == Token.SEMICOLON ||
-                    type == Token.BLOCK_START || type == Token.BLOCK_END) {
-                    end.prev.next = null;
-                }
-
-                Expression e = new Expression(start, this);
-                e.silent = silent;
-                children.add(e);
-                if (parent != null && parent.func_class && e.start.next != null && e.start.next.getContent().equals("=")) {
-                    String name = e.start.getContent();
-                    e.start = e.start.next.next;
-                    e.silent = true;
-                    e.eval();
-                    Expression.setVar(name, e.getValue(), e, Block.let);
-                }
+                addChildExpression(start, end);
 
                 if (end.next == null) return;
 
@@ -708,6 +695,27 @@ public class Block extends Expression {
             else {
                 end = end.next;
             }
+        }
+    }
+
+    public void addChildExpression(Token head, Token last) {
+        Token t = new Token("");
+        head.prev = t;
+        t.next = head;
+
+        if (last.getType() == Token.SEMICOLON || last.getType() == Token.BLOCK_START || last.getType() == Token.BLOCK_END) {
+            last.prev.next = null;
+        }
+
+        Expression e = new Expression(head, this);
+        e.silent = silent;
+        children.add(e);
+        if (parent_block != null && parent_block.func_class && e.start.next != null && e.start.next.getContent().equals("=")) {
+            String name = e.start.getContent();
+            e.start = e.start.next.next;
+            e.silent = true;
+            e.eval();
+            Expression.setVar(name, e.getValue(), e, Block.let);
         }
     }
     

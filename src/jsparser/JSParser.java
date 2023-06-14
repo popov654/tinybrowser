@@ -240,7 +240,7 @@ public class JSParser {
                         substate == READ_OBJECT_VALUE && ch == ',' ||
                         substate == READ_ARRAY && ch == ',') {
                     state = READY;
-                    if (substate == READ_OBJECT_FIELD) {
+                    if (substate == READ_OBJECT_FIELD && !Token.keywords.contains(last_token) && cur.getType() != Token.BRACE_CLOSE && cur.getType() != Token.ARRAY_END) {
                         last_token = "<" + last_token + ">";
                     } else if (ch == '(' && (last_token.matches("function|class") || cur.prev != null && cur.prev.getContent().matches("function|class") ||
                           cur.prev != null && cur.prev.getContent().equals("*") && cur.prev.prev != null && cur.prev.prev.getContent().equals("function"))) {
@@ -393,13 +393,13 @@ public class JSParser {
                 boolean testObj = (s.replaceAll("\r?\n", " ").matches("[a-zA-Z0-9_-]+\\s*(:\\s*[^}:,]+.*|,\\s*\\S+.*|\\s*\\}$)") ||
                                   s.replaceAll("\r?\n", " ").matches("\"[a-zA-Z0-9 _-]+\"\\s*:.*")) &&
                                   !(cur.getType() == Token.KEYWORD && !cur.getContent().matches("throw|return"));
-                if (ch == '{' && cur.getContent().equals(")") ||
+                if (ch == '{' && cur.getContent().matches("\\)|else|do|switch") ||
                         ch == '}' && substate == READ_FUNC_BLOCK) {
                     if (ch == '{') stack.add(READ_FUNC_BLOCK);
                     else stack.removeElementAt(stack.size()-1);
                     t = new Token(String.valueOf(ch));
                     if (!checkLevel(ch)) return;
-                } else if (testObj && ch == '{' || substate > 0 && substate != 9) {
+                } else if (testObj && ch == '{' || ch == '}' && substate > 0 && substate != 9) {
                     if (ch == '{') stack.add(READ_OBJECT_FIELD);
                     else stack.removeElementAt(stack.size()-1);
                     t = new Token(String.valueOf(ch)+String.valueOf(ch));
