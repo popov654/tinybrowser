@@ -9719,13 +9719,23 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         return false;
     }
 
-
-    public void mouseClicked(MouseEvent e) {
-
-        if (display_type == Display.NONE || visibility == Visibility.HIDDEN || e.isConsumed()) {
-            return;
+    public void doMouseClick() {
+        MouseEvent e = new MouseEvent(this, MouseEvent.MOUSE_CLICKED, 0, 0, _x_ - parent.scroll_x, _y_ - parent.scroll_y, 1, false);
+        int old_width = width;
+        int old_height = height;
+        boolean hidden = false;
+        if (width <= 0 || height <= 0) {
+            width = height = viewport_width = viewport_height = 1;
+            hidden = true;
         }
+        processClick(e);
+        if (hidden) {
+            width = viewport_width = old_width;
+            height = viewport_height = old_height;
+        }
+    }
 
+    private void processClick(MouseEvent e) {
         if (childDocument != null) {
             childDocument.getRoot().mouseClicked(e);
             return;
@@ -9817,7 +9827,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     parent.children.get(1).flushBuffersRecursively();
                     Block.openPopup = null;
                 }
-                
+
                 parent.performLayout();
                 document.root.sortBlocks();
                 document.root.setZIndices();
@@ -9955,7 +9965,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
                 return;
             }
-            
+
             if (labelFor != null) {
                 Component[] c = labelFor.getComponents();
                 for (int i = 0; i < c.length; i++) {
@@ -10007,7 +10017,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         }
 
-        
+
         if (textRenderingMode == 0 && (text_layer == null || text_layer.getComponents().length == 0)) {
             return;
         }
@@ -10101,6 +10111,14 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         } else {
             original.last_click = System.currentTimeMillis();
         }
+    }
+
+
+    public void mouseClicked(MouseEvent e) {
+        if (display_type == Display.NONE || visibility == Visibility.HIDDEN || e.isConsumed()) {
+            return;
+        }
+        processClick(e);
     }
 
     public void mousePressed(MouseEvent e) {

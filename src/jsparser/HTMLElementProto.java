@@ -442,6 +442,19 @@ public class HTMLElementProto extends JSObject {
         }
     }
 
+    class clickFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            HTMLElement element = (HTMLElement) context;
+            Node node = element.node;
+            if (node != null) {
+                render.Block block = Mapper.get(node);
+                block.doMouseClick();
+            }
+            return Undefined.getInstance();
+        }
+    }
+
     private HTMLElementProto() {
         items.put("__proto__", HTMLNodeProto.getInstance());
         
@@ -463,6 +476,8 @@ public class HTMLElementProto extends JSObject {
 
         items.put("addEventListener", new addEventListenerFunction());
         items.put("removeEventListener", new removeEventListenerFunction());
+
+        items.put("click", new clickFunction());
     }
 
     public static HTMLElementProto getInstance() {
