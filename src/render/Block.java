@@ -717,7 +717,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             paintShadow(x0, y0);
         }
 
-        if (parent != null) {
+        if (parent != null && buffer != null) {
             g = buffer.getGraphics();
             g2d = (Graphics2D) g;
 
