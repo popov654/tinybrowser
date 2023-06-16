@@ -131,6 +131,15 @@ public class Expression {
 
     public void updateSource() {
         source = "";
+        if (parts.size() > 0) {
+            for (Expression part: parts) {
+                if (!source.isEmpty()) {
+                    source += ", ";
+                }
+                source += part.source;
+            }
+            return;
+        }
         Token token = start;
         int level = -1;
         Expression b = this;
@@ -372,19 +381,69 @@ public class Expression {
         }
     }
 
+    private void setOpPriorities() {
+        Token t = start;
+        int level = 0;
+        while (t != null) {
+            if (t.getType() == Token.OP) {
+                t.p = level * 20 + priorities.get(t.getContent());
+            }
+            t = t.next;
+        }
+    }
+
+    private void applyBracesRuntime() {
+        Token op = start;
+        while (op != null) {
+            if (op.getType() == Token.BRACE_OPEN &&
+                  !(op.prev != null && (op.prev.getType() == Token.VAR_NAME || op.prev.getType() == Token.FIELD_NAME || op.prev.getType() == Token.KEYWORD ||
+                                        op.prev.getType() == Token.BRACE_CLOSE || op.prev.getType() == Token.OBJECT_ENTITY))) {
+                Token ct = op.next;
+                int level = 0;
+                while (ct != null && !(ct.getType() == Token.BRACE_CLOSE && level == 0)) {
+                    if (ct.getType() == Token.BRACE_OPEN) level++;
+                    if (ct.getType() == Token.BRACE_CLOSE) level--;
+                    ct = ct.next;
+                }
+                if (op.next == null || ct == null) {
+                    System.err.println("Syntax error: ')' expected");
+                    break;
+                }
+                ct.prev.next = null;
+                Token nt = new Token("x");
+                nt.prev = op.prev;
+                op.prev.next = nt;
+                if (op == start) {
+                    start = nt;
+                }
+                nt.next = ct.next;
+                if (ct.next != null) {
+                    ct.next.prev = nt;
+                }
+                nt.index = null;
+                nt.exp = new Expression(op.next, parent_block);
+                op = ct;
+            }
+            op = op.next;
+        }
+    }
+
     private void process() {
         Token t = start;
         Token last = t;
-        Vector<Expression> e = new Vector<Expression>();
         int level1 = 0;
         int level2 = 0;
+        int level3 = 0;
+        parts.clear();
         while (t != null) {
             if (t.getType() == Token.ARRAY_START) level1++;
             if (t.getType() == Token.OBJECT_START) level2++;
+            if (t.getType() == Token.BRACE_OPEN) level3++;
             if (t.getType() == Token.ARRAY_END) level1--;
             if (t.getType() == Token.OBJECT_END) level2--;
+            if (t.getType() == Token.BRACE_CLOSE) level3--;
             if (t.next == null || t.getType() == Token.OP && t.p == priorities.get(",") &&
-                    level1 == 0 && level2 == 0) {
+                    level1 == 0 && level2 == 0 && level3 == 0) {
                 if (t.next != null) {
                     t.prev.next = null;
                 }
@@ -395,26 +454,28 @@ public class Expression {
                 }
                 Expression exp = new Expression(last, parent_block);
                 exp.silent = true;
-                e.add(exp);
+                parts.add(exp);
                 if (t != null) {
                     last = t.next;
                 }
             }
             t = t.next;
         }
-        if (e.size() > 1) {
-            for (int i = 0; i < e.size(); i++) {
-                e.get(i).eval();
+        if (parts.size() > 1) {
+            for (int i = 0; i < parts.size(); i++) {
+                parts.get(i).eval();
                 if (parent_block.error != null) {
                     return;
                 }
             }
-            Expression exp = e.get(e.size()-1);
+            Expression exp = parts.lastElement();
             Token t2 = new Token(exp.getValue().toString());
             t2.val = exp.getValue();
             start.prev.next = t2;
             t2.next = null;
             start = t2;
+        } else {
+            parts.clear();
         }
     }
 
@@ -604,7 +665,7 @@ public class Expression {
             t = t.next;
         }
         if (t.val == null && t.getType() == Token.VAR_NAME && (t.next == null || t.next.getType() == Token.OP)) {
-            t.val = Expression.getVar(t.getContent(), this);
+            t.val = t.exp != null ? t.exp.eval().getValue() : Expression.getVar(t.getContent(), this);
             return;
         }
         if (((t.getType() == Token.VALUE && t.val != null && t.val.getType().equals("String")) || t.getType() == Token.VAR_NAME || t.getType() == Token.ARRAY_ENTITY || t.getType() == Token.OBJECT_ENTITY) &&
@@ -617,13 +678,25 @@ public class Expression {
             Token t2 = t.next;
             while (t2 != null && t2.getType() != Token.BRACE_OPEN && t2.getType() != Token.BRACE_CLOSE && t2.getType() != Token.OP) {
                 if (t2.getType() == Token.VAR_NAME && t2.prev.getType() == Token.DOT) {
-                    v.add(JSValue.create("String", t2.getContent()));
+                    if (t2.exp != null) {
+                        v.add(t2.val == null ? t2.exp.eval().getValue() : t2.val);
+                    } else {
+                        v.add(JSValue.create("String", t2.getContent()));
+                    }
                 } else if ((t2.getType() == Token.VAR_NAME || t2.getType() == Token.VALUE) && t2.prev.getType() == Token.ARRAY_START) {
                     if (t2.next.getType() == Token.ARRAY_END) {
                         if (t2.getType() == Token.VAR_NAME) {
-                            v.add(Expression.getVar(t2.getContent(), this));
+                            if (t2.exp != null) {
+                                v.add(t2.val == null ? t2.exp.eval().getValue() : t2.val);
+                            } else {
+                                v.add(Expression.getVar(t2.getContent(), this));
+                            }
                         } else {
-                            v.add(JSValue.create(JSValue.getType(t2.getContent()), t2.getContent()));
+                            if (t2.exp != null) {
+                                v.add(t2.val == null ? t2.exp.eval().getValue() : t2.val);
+                            } else {
+                                v.add(JSValue.create(JSValue.getType(t2.getContent()), t2.getContent()));
+                            }
                         }
                     } else {
                         Token t3 = t2.next;
@@ -936,6 +1009,8 @@ public class Expression {
                     t.val = new JSInt(((JSInt)t.val).getValue() * (-1));
                 }
                 t.setContent(t.val.toString());
+            } else if (t.val instanceof Infinity) {
+                t.val = Infinity.getInstance(!((Infinity)t.val).isPositive());
             }
             t.prev.prev.next = t;
             if (t.prev == start) {
@@ -1003,6 +1078,8 @@ public class Expression {
                     accessObjectProperties(t);
                     t = t.prev.next;
                     params.add(t.val);
+                } else if (t.exp != null) {
+                    params.add(t.val == null ? t.exp.eval().getValue() : t.val);
                 } else {
                     params.add(Expression.getVar(t.getContent(), this));
                 }
@@ -1146,7 +1223,12 @@ public class Expression {
             return exec.eval();
         }
         n = 0;
-        applyBraces();
+
+        // Use single-level priority strategy,
+        // move expressions inside braces to `exp` field
+        applyBracesRuntime();
+        setOpPriorities();
+
         process();
         if (parent_block.error != null) {
             return this;
@@ -1188,6 +1270,31 @@ public class Expression {
             if (c.equals("?")) {
                 processTernaryOperator(op);
                 continue;
+            }
+            if (op.getType() == Token.BRACE_OPEN) {
+                Token ct = op.next;
+                int level = 0;
+                while (ct != null && !(ct.getType() == Token.BRACE_CLOSE && level == 0)) {
+                    if (ct.getType() == Token.BRACE_OPEN) level++;
+                    if (ct.getType() == Token.BRACE_CLOSE) level--;
+                    ct = ct.next;
+                }
+                if (op.next == null || ct == null) {
+                    System.err.println("Syntax error: ')' expected");
+                    break;
+                }
+                ct.prev.next = null;
+                if (ct.next != null) {
+                    Token nt = new Token("x");
+                    nt.prev = op.prev;
+                    op.prev.next = nt;
+                    nt.next = ct.next;
+                    if (ct.next != null) {
+                        ct.next.prev = nt;
+                    }
+                    nt.index = null;
+                    nt.exp = new Expression(op.next, parent_block);
+                }
             }
             if (c.equals("++") || c.equals("--")) {
                 //++5, ++a
@@ -1434,7 +1541,7 @@ public class Expression {
                  c.matches("<<|>>|>>>|&|\\^|\\|") || c.matches("&&|\\|\\||\\?|:|,") ||
                  c.matches("[\\*/%&|^=+-]?=") || c.equals("in") || c.equals("instanceof")) {
                 if (c.matches("\\+|-") && (op.prev.getType() == Token.OP && !op.prev.getContent().matches("\\+\\+|--") ||
-                        op.prev.getType() == Token.EMPTY || op.prev.getType() == Token.BRACE_OPEN)) {
+                        op.prev.getType() == Token.EMPTY || op.prev.getType() == Token.BRACE_OPEN) && op.next != null && op.next.val == null && op.next.exp == null) {
                     op.p = 0;
                     continue;
                 }
@@ -1470,7 +1577,25 @@ public class Expression {
                     System.err.println("Syntax error");
                     break;
                 }
-                String types = JSValue.getType(op.prev.getContent()) + "|" + JSValue.getType(op.next.getContent());
+                String type1 = "null";
+                String type2 = "null";
+                if (op.prev.getType() != Token.VALUE && !op.getContent().endsWith("=") && (op.prev.exp != null || op.prev.val != null)) {
+                    if (op.prev.exp != null && op.prev.val == null) {
+                        op.prev.val = op.prev.exp.eval().getValue();
+                    }
+                    type1 = op.prev.val != null ? op.prev.val.getType() : Expression.getVar(op.prev.getContent(), this).getType();
+                } else {
+                    type1 = JSValue.getType(op.prev.getContent());
+                }
+                if (op.next.getType() != Token.VALUE && (op.next.next == null || op.next.next.getType() != Token.DOT && op.next.next.getType() != Token.ARRAY_START)) {
+                    if (op.next.exp != null && op.next.val == null) {
+                        op.next.val = op.next.exp.eval().getValue();
+                    }
+                    type2 = op.next.val != null ? op.next.val.getType() : Expression.getVar(op.next.getContent(), this).getType();
+                } else {
+                    type2 = JSValue.getType(op.next.getContent());
+                }
+                String types = type1 + "|" + type2;
                 String type = getResultType(types, c);
                 if (type.equals("error")) {
                     break;
@@ -1530,11 +1655,12 @@ public class Expression {
                         return this;
                     }
                     if (!op.getContent().equals("=") && op.prev.val == null && op.prev.getType() == Token.VAR_NAME) {
-                        JSValue val = Expression.getVar(op.prev.getContent(), this);
+                        JSValue val = op.prev.exp != null ? (op.prev.val == null ? op.prev.exp.eval().getValue() : op.prev.val) :
+                                                            Expression.getVar(op.prev.getContent(), this);
                         if (val == null) {
                             break;
                         }
-                        if (!op.getContent().matches("[\\*/%&|^+-]?=")) {
+                        if (!op.getContent().matches("[\\*/%&|^+-]?=") && op.prev.exp == null) {
                             Token t2 = new Token(val.toString());
                             t2.val = val;
                             t2.prev = op.prev.prev;
@@ -1553,21 +1679,26 @@ public class Expression {
                         }
                     }
                     if (op.next.val == null && op.next.getType() == Token.VAR_NAME && !op.getContent().matches("&&|\\|\\||,")) {
-                        JSValue val = Expression.getVar(op.next.getContent(), this);
+                        JSValue val = op.next.exp != null ? (op.prev.val == null ? op.next.exp.eval().getValue() : op.next.val) :
+                                                            Expression.getVar(op.next.getContent(), this);
                         if (val == null) {
                             break;
                         }
-                        Token t2 = new Token(val.toString());
-                        t2.val = val;
-                        t2.next = op.next.next;
-                        t2.prev = op;
-                        if (end == op.next) {
-                            end = t2;
+                        if (op.next.exp == null) {
+                            Token t2 = new Token(val.toString());
+                            t2.val = val;
+                            t2.next = op.next.next;
+                            t2.prev = op;
+                            if (end == op.next) {
+                                end = t2;
+                            }
+                            if (op.next.next != null) {
+                                op.next.next.prev = t2;
+                            }
+                            op.next = t2;
+                        } else {
+                            op.next.val = val;
                         }
-                        if (op.next.next != null) {
-                            op.next.next.prev = t2;
-                        }
-                        op.next = t2;
                         types = types.split("\\|")[0] + "|" + op.next.val.getType();
                         type = getResultType(types, c);
                         if (c.equals("in") || c.equals("instanceof")) {
@@ -1603,7 +1734,14 @@ public class Expression {
                     }
                 }
                 JSValue result = null;
-                if (c.matches("\\+=?")) {
+                if (c.matches("\\+|-") && (op == start || (op.prev.getType() == Token.EMPTY || op.prev.getType() == Token.OP))) {
+                    if (op.next.val == null) {
+                        System.err.println("Unary minus error");
+                    }
+                    checkForUnaryMinus(op.next);
+                    result = op.next.val;
+                }
+                else if (c.matches("\\+=?")) {
                     if (type.equals("Array"))
                        result = ((JSArray)op.prev.val).concat((JSArray)op.next.val);
                     else if (type.equals("String"))
@@ -2104,23 +2242,25 @@ public class Expression {
                     continue;
                 }
 
-                if (result != null) {
-                    if (!c.equals("=") && !type.equals("Array") && !type.equals("Object") && !type.equals("Function")) {
-                        op.prev.val = JSValue.create(type, result.toString());
-                        op.prev.setContent(result.toString());
+                if (op.prev.next != start) {
+                    if (result != null) {
+                        if (!c.equals("=") && !type.equals("Array") && !type.equals("Object") && !type.equals("Function")) {
+                            op.prev.val = JSValue.create(type, result.toString());
+                            op.prev.setContent(result.toString());
+                        } else {
+                            op.prev.val = result;
+                        }
+                        op.prev.next = op.next.next;
+                        if (op.next.next != null) {
+                            op.next.next.prev = op.prev;
+                        }
+                        // (a) -> a
+                        removeBraces(op.prev);
+                        op = null;
                     } else {
-                        op.prev.val = result;
+                        parent_block.error = new JSError(null, "Operator " + c + " is not supported", getStack());
+                        return this;
                     }
-                    op.prev.next = op.next.next;
-                    if (op.next.next != null) {
-                        op.next.next.prev = op.prev;
-                    }
-                    // (a) -> a
-                    removeBraces(op.prev);
-                    op = null;
-                } else {
-                    parent_block.error = new JSError(null, "Operator " + c + " is not supported", getStack());
-                    return this;
                 }
             }
         }
@@ -2154,7 +2294,11 @@ public class Expression {
             if (start.getType() == Token.VALUE) {
                 start.val = JSValue.create(JSValue.getType(start.getContent()), start.getContent());
             } else if (start.getType() == Token.VAR_NAME) {
-                start.val = Expression.getVar(start.getContent(), this);
+                if (start.exp != null) {
+                    start.val = start.exp.eval().getValue();
+                } else {
+                    start.val = Expression.getVar(start.getContent(), this);
+                }
             }
         }
         if (start.val.getType().equals("Float")) {
@@ -2163,7 +2307,7 @@ public class Expression {
                 start.val = new JSInt((int)val);
             }
         }
-        if (start.val.getType().matches("Array|Integer|Float|Number|Object|String|Function")) {
+        if (start.val.getType().matches("Array|Integer|Float|Number|Object|String|Function") && start.next != null) {
             accessObjectProperties(start);
         }
         while (!thr && start.next != null && start.next.getType() == Token.BRACE_OPEN) {
@@ -2371,6 +2515,7 @@ public class Expression {
     private boolean thr;
 
     public boolean is_cond;
+    public Vector<Expression> parts = new Vector<Expression>();
 
     public Block parent_block;
     public Token yt = null;

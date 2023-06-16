@@ -66,6 +66,7 @@ public class Token {
     public JSValue ctx;
     public JSValue index;
     public int p;
+    public Expression exp;
 
     public static Vector<String> keywords = new Vector<String>();
 
