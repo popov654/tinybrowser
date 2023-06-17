@@ -1378,35 +1378,6 @@ public class Expression {
             // No operators in chain
             if (p == 0) break;
             String c = op.getContent();
-            if (c.equals("?")) {
-                processTernaryOperators(op);
-                continue;
-            }
-            if (op.getType() == Token.BRACE_OPEN) {
-                Token ct = op.next;
-                int level = 0;
-                while (ct != null && !(ct.getType() == Token.BRACE_CLOSE && level == 0)) {
-                    if (ct.getType() == Token.BRACE_OPEN) level++;
-                    if (ct.getType() == Token.BRACE_CLOSE) level--;
-                    ct = ct.next;
-                }
-                if (op.next == null || ct == null) {
-                    System.err.println("Syntax error: ')' expected");
-                    break;
-                }
-                ct.prev.next = null;
-                if (ct.next != null) {
-                    Token nt = new Token("x");
-                    nt.prev = op.prev;
-                    op.prev.next = nt;
-                    nt.next = ct.next;
-                    if (ct.next != null) {
-                        ct.next.prev = nt;
-                    }
-                    nt.index = null;
-                    nt.exp = new Expression(op.next, parent_block);
-                }
-            }
             if (c.equals("++") || c.equals("--")) {
                 //++5, ++a
                 if (op.next != null && (op.next.getType() == Token.VALUE || op.next.getType() == Token.VAR_NAME)) {
