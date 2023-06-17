@@ -292,7 +292,6 @@ public class JSParser {
                     cur.next = t;
                     t.prev = cur;
                     cur = t;
-                    continue;
                 }
                 if (substate == READ_OBJECT_FIELD) {
                     System.err.println("Unexpected array value on line " + line);
