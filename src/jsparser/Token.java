@@ -15,6 +15,7 @@ public class Token {
             type = str.charAt(0) == '{' ? BLOCK_START : BLOCK_END;
         } else if (str.matches("[,<>~^|&*/%!?:+=-]{1,3}|typeof|in|instanceof")) {
             type = OP;
+            p = Expression.priorities.get(str);
         } else if (str.matches("^\\(.*\\)$")) {
             type = FUNC_ARGS;
         } else if (str.matches("^[a-zA-Z$][a-zA-Z0-9$_-]*$")) {

@@ -1328,13 +1328,12 @@ public class Expression {
         }
         n = 0;
 
-        processCommas();
-        processTernaryOps();
-
         // Use single-level priority strategy,
         // move expressions inside braces to `exp` field
         applyBracesRuntime();
-        setOpPriorities();
+
+        processCommas();
+        processTernaryOps();
         
         if (parent_block.error != null) {
             return this;
@@ -2517,7 +2516,7 @@ public class Expression {
         return start.prev != null && start.getType() != Token.KEYWORD && start.prev.getType() == Token.KEYWORD ? start.prev.getContent() : start.getContent();
     }
 
-    private static Hashtable<String, Integer> priorities = new Hashtable<String, Integer>();
+    static Hashtable<String, Integer> priorities = new Hashtable<String, Integer>();
 
     static {
         priorities.put("++", 18);
@@ -2560,6 +2559,7 @@ public class Expression {
         priorities.put("|=", 5);
         priorities.put("=", 5);
         priorities.put(",", 4);
+        priorities.put("=>", 4);
     }
 
     public static JSValue getVar(String name, Expression exp) {
