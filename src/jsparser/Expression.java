@@ -395,22 +395,26 @@ public class Expression {
     private void applyBracesRuntime() {
         Token op = start;
         while (op != null) {
-            if (op.getType() == Token.BRACE_OPEN &&
+            boolean isOpenBrace = op.getType() == Token.BRACE_OPEN &&
                   !(op.prev != null && (op.prev.getType() == Token.VAR_NAME || op.prev.getType() == Token.FIELD_NAME || op.prev.getType() == Token.KEYWORD ||
-                                        op.prev.getType() == Token.BRACE_CLOSE || op.prev.getType() == Token.OBJECT_ENTITY))) {
+                                        op.prev.getType() == Token.BRACE_CLOSE || op.prev.getType() == Token.OBJECT_ENTITY));
+            if (isOpenBrace) {
                 Token ct = op.next;
-                int level = 0;
-                while (ct != null && !(ct.getType() == Token.BRACE_CLOSE && level == 0)) {
-                    if (ct.getType() == Token.BRACE_OPEN) level++;
-                    if (ct.getType() == Token.BRACE_CLOSE) level--;
+                int level1 = 0;
+                int level2 = 0;
+                while (ct != null && !(ct.getType() == Token.BRACE_CLOSE && level1 == 0 && level2 == 0)) {
+                    if (ct.getType() == Token.BRACE_OPEN) level1++;
+                    if (ct.getType() == Token.BRACE_CLOSE) level1--;
+                    if (ct.getType() == Token.ARRAY_START) level2++;
+                    if (ct.getType() == Token.ARRAY_END) level2--;
                     ct = ct.next;
                 }
                 if (op.next == null || ct == null) {
-                    System.err.println("Syntax error: ')' expected");
+                    System.err.println("Syntax error: '" + (op.getType() == Token.BRACE_OPEN ? ")" : "]") + "' expected");
                     break;
                 }
-                ct.prev.next = null;
                 Token nt = new Token("x");
+                ct.prev.next = null;
                 nt.prev = op.prev;
                 op.prev.next = nt;
                 if (op == start) {
@@ -428,7 +432,44 @@ public class Expression {
         }
     }
 
-    private void process() {
+    private void applySquareBracesRuntime() {
+        Token op = start;
+        while (op != null) {
+            boolean isOpenBrace = op.getType() == Token.ARRAY_START && op.prev != null && op != start && op.prev.getType() == Token.VAR_NAME;
+            if (isOpenBrace) {
+                Token ct = op.next;
+                int level1 = 0;
+                int level2 = 0;
+                while (ct != null && !(ct.getType() == Token.ARRAY_END && level1 == 0 && level2 == 0)) {
+                    if (ct.getType() == Token.BRACE_OPEN) level1++;
+                    if (ct.getType() == Token.BRACE_CLOSE) level1--;
+                    if (ct.getType() == Token.ARRAY_START) level2++;
+                    if (ct.getType() == Token.ARRAY_END) level2--;
+                    ct = ct.next;
+                }
+                if (op.next == null || ct == null) {
+                    System.err.println("Syntax error: '" + (op.getType() == Token.BRACE_OPEN ? ")" : "]") + "' expected");
+                    break;
+                }
+                Token nt = new Token("x");
+                ct.prev.next = null;
+                nt.prev = op;
+                Token head = op.next;
+                op.next = nt;
+                if (op == start) {
+                    start = nt;
+                }
+                nt.next = ct;
+                ct.prev = nt;
+                nt.index = null;
+                nt.exp = new Expression(head, parent_block);
+                op = ct;
+            }
+            op = op.next;
+        }
+    }
+
+    private void processCommas() {
         Token t = start;
         Token last = t;
         int level1 = 0;
@@ -442,7 +483,7 @@ public class Expression {
             if (t.getType() == Token.ARRAY_END) level1--;
             if (t.getType() == Token.OBJECT_END) level2--;
             if (t.getType() == Token.BRACE_CLOSE) level3--;
-            if (t.next == null || t.getType() == Token.OP && t.p == priorities.get(",") &&
+            if (t.next == null || t.getType() == Token.OP && t.getContent().equals(",") &&
                     level1 == 0 && level2 == 0 && level3 == 0) {
                 if (t.next != null) {
                     t.prev.next = null;
@@ -479,7 +520,7 @@ public class Expression {
         }
     }
 
-    private void processTernaryOperator(Token token) {
+    private void processTernaryOperators(Token token) {
         Token t = token;
         if (t.next == null) {
             JSError e = new JSError(null, "SyntaxError: hanging '?' at the end of expression", parent_block.getStack());
@@ -491,7 +532,7 @@ public class Expression {
         int level1 = 0;
         int level2 = 0;
         int level3 = 0;
-        while (t.prev != null && !t.prev.getContent().equals(",") && !t.prev.getContent().equals("(")) {
+        while (t != start && !t.prev.getContent().equals(",") && !t.prev.getContent().equals("(")) {
             if (t.prev.getType() == Token.ARRAY_START && level1 == 0) break;
             if (t.prev.getType() == Token.OBJECT_START && level2 == 0) break;
             if (t.prev.getType() == Token.BRACE_OPEN && level3 == 0) break;
@@ -544,7 +585,7 @@ public class Expression {
         level2 = 0;
         level3 = 0;
 
-        while (t.prev.p != lvl * 20 + priorities.get(":") || level1 > 0 || level2 > 0 || level3 > 0) {
+        while (t.prev != token && !t.prev.getContent().equals(":") || level1 > 0 || level2 > 0 || level3 > 0) {
             if (t.getType() == Token.ARRAY_START) level1++;
             if (t.getType() == Token.OBJECT_START) level2++;
             if (t.getType() == Token.BRACE_OPEN) level3++;
@@ -568,15 +609,11 @@ public class Expression {
 
         t = t.prev;
 
-        while (t.prev != null && t.prev.p != lvl * 20 + priorities.get("?")) {
+        while (t.prev != token && !t.prev.getContent().equals(":") && !t.prev.getContent().equals("?")) {
             t = t.prev;
         }
 
         Token t3 = t;
-
-        if (t.next != null) {
-            t.next.prev.next = null;
-        }
 
         Expression e;
 
@@ -605,11 +642,12 @@ public class Expression {
             }
             Token res = new Token(e.getValue().toString());
             res.val = e.getValue();
-            if (before != null) {
-                before.next = res;
-            } else {
+            if (before.next == start) {
                 res.prev = start.prev;
                 start = res;
+            }
+            if (before != null) {
+                before.next = res;
             }
             res.prev = before;
             if (t.next != null) {
@@ -620,7 +658,7 @@ public class Expression {
         }
     }
 
-    private void processCond() {
+    private void processTernaryOps() {
         Token t = start;
         int level1 = 0;
         int level2 = 0;
@@ -631,7 +669,7 @@ public class Expression {
             if (t.getType() == Token.OBJECT_END) level2--;
             if (t.getType() == Token.OP && t.getContent().equals("?") &&
                     level1 == 0 && level2 == 0) {
-                processTernaryOperator(t);
+                processTernaryOperators(t);
             }
             t = t.next;
         }
@@ -1224,16 +1262,19 @@ public class Expression {
         }
         n = 0;
 
+        processCommas();
+        processTernaryOps();
+
         // Use single-level priority strategy,
         // move expressions inside braces to `exp` field
         applyBracesRuntime();
         setOpPriorities();
-
-        process();
+        
         if (parent_block.error != null) {
             return this;
         }
         initArraysAndObjects();
+        applySquareBracesRuntime();
 
         source = "";
         updateSource();
@@ -1268,7 +1309,7 @@ public class Expression {
             if (p == 0) break;
             String c = op.getContent();
             if (c.equals("?")) {
-                processTernaryOperator(op);
+                processTernaryOperators(op);
                 continue;
             }
             if (op.getType() == Token.BRACE_OPEN) {
