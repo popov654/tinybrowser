@@ -440,6 +440,11 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("8", exp.getValue().toString());
+        jp = new JSParser("var s = \"string\"; var i = 3; s[5 > 3 ? 0 : 2]");
+        System.out.println("var s = \"string\"; var i = 3; s[5 > 3 ? 0 : 2]");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("s", ((JSString)exp.getValue()).getValue());
     }
     
     /**
@@ -601,6 +606,11 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("i", ((JSString)exp.getValue()).getValue());
+        jp = new JSParser("var s = \"string\"; var i = 3; s[i-1]");
+        System.out.println("var s = \"string\"; var i = 3; s[i-1]");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("r", ((JSString)exp.getValue()).getValue());
         jp = new JSParser("[1, 2, 3][0] + [1, 2, 3][1]");
         System.out.println("[1, 2, 3][0] + [1, 2, 3][1]");
         exp = Expression.create(jp.getHead());
