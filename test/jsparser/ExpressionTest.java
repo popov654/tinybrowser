@@ -357,11 +357,28 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("undefined", exp.getValue().toString());
+        assertNull(((Block)exp).error);
+        
         jp = new JSParser("a || a.b");
         System.out.println("a || a.b");
         exp = Expression.create(jp.getHead());
         exp.eval();
+        assertEquals("null", exp.getValue().toString());
+        assertNotNull(((Block)exp).error);
+        
+        jp = new JSParser("a && a.func()");
+        System.out.println("a && a.func()");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
         assertEquals("undefined", exp.getValue().toString());
+        assertNull(((Block)exp).error);
+
+        jp = new JSParser("a || a.func()");
+        System.out.println("a || a.func()");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("null", exp.getValue().toString());
+        assertNotNull(((Block)exp).error);
     }
 
     /**

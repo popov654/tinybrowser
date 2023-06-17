@@ -567,6 +567,8 @@ public class Expression {
         if (parts.size() > 1) {
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).eval();
+                error = parts.get(i).error;
+                thr = parts.get(i).thr;
                 if (parent_block.error != null) {
                     return;
                 }
@@ -588,7 +590,7 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: hanging '?' at the end of expression", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: hanging '?' at the end of expression");
-            thr = true;
+            error = true;
             return;
         }
         int level1 = 0;
@@ -661,7 +663,7 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: ':' expected after '?' in ternary operator", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: ':' expected after '?' in ternary operator");
-            thr = true;
+            error = true;
             return;
         }
 
@@ -766,6 +768,8 @@ public class Expression {
         }
         if (t.val == null && t.getType() == Token.VAR_NAME && (t.next == null || t.next.getType() == Token.OP)) {
             t.val = t.exp != null ? t.exp.eval().getValue() : Expression.getVar(t.getContent(), this);
+            error = t.exp.error;
+            thr = t.exp.thr;
             return;
         }
         if (((t.getType() == Token.VALUE && t.val != null && t.val.getType().equals("String")) || t.getType() == Token.VAR_NAME || t.getType() == Token.ARRAY_ENTITY || t.getType() == Token.OBJECT_ENTITY) &&
@@ -1141,7 +1145,7 @@ public class Expression {
             }
             JSError e = new JSError(null, name + " is not a function", getStack());
             parent_block.error = e;
-            thr = true;
+            error = true;
             return;
         }
         Token ts = t;
@@ -1165,7 +1169,7 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: function call error", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: function call error");
-            thr = true;
+            error = true;
             return;
         }
         Vector<JSValue> params = new Vector<JSValue>();
@@ -1192,14 +1196,14 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: missing ')' after function arguments list", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: missing ')' after function arguments list");
-            thr = true;
+            error = true;
             return;
         }
         if (t.prev.getType() == Token.OP && t.prev.getContent().equals(",")) {
             JSError e = new JSError(null, "Hanging comma is not allowed in function arguments list", parent_block.getStack());
             parent_block.error = e;
             System.err.println("Hanging comma is not allowed in function arguments list");
-            thr = true;
+            error = true;
             return;
         }
         boolean as_constr = false;
@@ -1207,7 +1211,7 @@ public class Expression {
             JSError e = new JSError(null, "Runtime error: " + ts.prev.getContent() + " is not a callable", parent_block.getStack());
             parent_block.error = e;
             System.err.println("Runtime error: " + ts.prev.getContent() + " is not a callable");
-            thr = true;
+            error = true;
             return;
         }
         ((Function)ts.prev.val).setCaller(parent_block);
@@ -1691,12 +1695,12 @@ public class Expression {
                 } else {
                     type1 = JSValue.getType(op.prev.getContent());
                 }
-                if (op.next.getType() != Token.VALUE && (op.next.next == null || op.next.next.getType() != Token.DOT && op.next.next.getType() != Token.ARRAY_START)) {
+                if (op.next.getType() != Token.VALUE && !op.getContent().matches("&&|\\|\\|") && (op.next.next == null || op.next.next.getType() != Token.DOT && op.next.next.getType() != Token.ARRAY_START)) {
                     if (op.next.exp != null && op.next.val == null) {
                         op.next.val = op.next.exp.eval().getValue();
                     }
                     type2 = op.next.val != null ? op.next.val.getType() : Expression.getVar(op.next.getContent(), this).getType();
-                } else {
+                } else if (!op.getContent().matches("&&|\\|\\|")) {
                     type2 = JSValue.getType(op.next.getContent());
                 }
                 String types = type1 + "|" + type2;
@@ -1818,6 +1822,57 @@ public class Expression {
                         types = op.prev.val.getType() + "|" + op.next.val.getType();
                         type = getResultType(types, c);
                     }
+                }
+                if (c.equals("&&") || c.equals("||")) {
+                    if (op.prev.val == null) {
+                        if (op.prev.exp != null) {
+                            op.prev.val = op.prev.exp.eval().getValue();
+                        } else {
+                            op.prev.val = JSValue.create(JSValue.getType(op.prev.getContent()), op.prev.getContent());
+                        }
+                    }
+                    boolean val = op.prev.val.asBool().getValue();
+                    Token ct = op.next;
+                    Token ct2 = op.prev;
+                    int level = 0;
+                    while (ct != null) {
+                        if (ct.getType() == Token.BRACE_OPEN) level++;
+                        if (ct.getType() == Token.BRACE_CLOSE) level--;
+                        if (ct.getType() == Token.VALUE || ct.getType() == Token.VAR_NAME) {
+                            if (ct.val == null && (c.equals("&&") && val || c.equals("||") && !val)) {
+                                Token tt = ct.prev;
+                                accessObjectProperties(ct);
+                                ct = tt.next;
+                                if (error || thr) break;
+                            }
+                            if (c.equals("&&") && val && !ct.val.asBool().getValue()) {
+                                val = false;
+                            }
+                            if (c.equals("||") && !val && ct.val.asBool().getValue()) {
+                                ct2 = ct;
+                                val = true;
+                            }
+                            if (c.equals("&&") && val) ct2 = ct;
+                        }
+                        if (ct.getType() == Token.OP && ct.p < p ||
+                                ct.getType() == Token.BRACE_CLOSE && level == -1) {
+                            break;
+                        }
+                        ct = ct.next;
+                    }
+                    if (error || thr) break;
+                    op.prev.val = ct2.val;
+                    op.prev.setContent(ct2.getContent());
+                    op.prev.next = ct;
+                    if (ct != null) {
+                        ct.prev = op.prev;
+                    }
+                    if (ct == null) {
+                        end = op.prev;
+                    }
+                    // (a) -> a
+                    removeBraces(op.prev);
+                    continue;
                 }
                 if (op.prev.val != null && !op.prev.val.getType().equals(type) && !type.equals("Boolean")) {
                     if (op.prev.val instanceof JSDate) {
@@ -2194,51 +2249,6 @@ public class Expression {
                         c.matches("[!<>=]=") || c.matches("[!=]==")) {
                     type = "Boolean";
                 }
-                if (c.equals("&&") || c.equals("||")) {
-                    if (op.prev.val == null) {
-                        op.prev.val = JSValue.create(JSValue.getType(op.prev.getContent()), op.prev.getContent());
-                    }
-                    boolean val = op.prev.val.asBool().getValue();
-                    Token ct = op.next;
-                    Token ct2 = op.prev;
-                    int level = 0;
-                    while (ct != null) {
-                        if (ct.getType() == Token.BRACE_OPEN) level++;
-                        if (ct.getType() == Token.BRACE_CLOSE) level--;
-                        if (ct.getType() == Token.VALUE || ct.getType() == Token.VAR_NAME) {
-                            if (ct.val == null && (c.equals("&&") && val || c.equals("||") && !val)) {
-                                Token tt = ct.prev;
-                                accessObjectProperties(ct);
-                                ct = tt.next;
-                            }
-                            if (c.equals("&&") && val && !ct.val.asBool().getValue()) {
-                                val = false;
-                            }
-                            if (c.equals("||") && !val && ct.val.asBool().getValue()) {
-                                ct2 = ct;
-                                val = true;
-                            }
-                            if (c.equals("&&") && val) ct2 = ct;
-                        }
-                        if (ct.getType() == Token.OP && ct.p < p ||
-                                ct.getType() == Token.BRACE_CLOSE && level == -1) {
-                            break;
-                        }
-                        ct = ct.next;
-                    }
-                    op.prev.val = ct2.val;
-                    op.prev.setContent(ct2.getContent());
-                    op.prev.next = ct;
-                    if (ct != null) {
-                        ct.prev = op.prev;
-                    }
-                    if (ct == null) {
-                        end = op.prev;
-                    }
-                    // (a) -> a
-                    removeBraces(op.prev);
-                    continue;
-                }
 
                 if (c.equals("?")) {
                     Token op2 = null;
@@ -2368,6 +2378,9 @@ public class Expression {
                 }
             }
         }
+        if (error) {
+            return this;
+        }
         if (start.val == null && start.getType() == Token.OP && start.getContent().matches("\\+|-")) {
             checkForUnaryMinus(start.next);
         }
@@ -2400,6 +2413,7 @@ public class Expression {
             } else if (start.getType() == Token.VAR_NAME) {
                 if (start.exp != null) {
                     start.val = start.exp.eval().getValue();
+                    error = start.exp.error;
                 } else {
                     start.val = Expression.getVar(start.getContent(), this);
                 }
@@ -2413,6 +2427,10 @@ public class Expression {
         }
         if (start.val.getType().matches("Array|Integer|Float|Number|Object|String|Function") && start.next != null) {
             accessObjectProperties(start);
+        }
+        if (start.next != null && (start.next.getType() == Token.DOT || start.next.getType() == Token.ARRAY_START)) {
+            parent_block.error = new JSError(start.val, "Access error: undefined is not an object", getStack());
+            error = true;
         }
         while (!thr && start.next != null && start.next.getType() == Token.BRACE_OPEN) {
             functionCall(start.next);
@@ -2473,6 +2491,7 @@ public class Expression {
     }
 
     public JSValue getValue() {
+        if (error) return Null.getInstance();
         return reusable ? exec.getValue() : start.val;
     }
 
@@ -2617,6 +2636,8 @@ public class Expression {
     private boolean ret;
     private boolean del;
     private boolean thr;
+
+    public boolean error = false;
 
     public boolean is_cond;
     public Vector<Expression> parts = new Vector<Expression>();
