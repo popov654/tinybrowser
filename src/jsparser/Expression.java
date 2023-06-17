@@ -469,6 +469,68 @@ public class Expression {
         }
     }
 
+    private void processLogicalOps() {
+        processLogicalOps("||");
+        processLogicalOps("&&");
+    }
+
+    private void processLogicalOps(String operator) {
+        Token op = start;
+        Token head = op;
+        while (op != null) {
+            if (op.getType() == Token.OP && op.getContent().equals(operator)) {
+                if (op.next == null || op == start) {
+                    System.err.println("Syntax error: unexpected '" + operator + "' operator");
+                    break;
+                }
+
+                if (head == start && head.next != op) {
+                    if (op.next == null || op == start) {
+                        System.err.println("Syntax error: unexpected '" + operator + "' operator");
+                        break;
+                    }
+                    op.prev.next = null;
+                    Token nt = new Token("x");
+                    head.prev.next = nt;
+                    nt.prev = head.prev;
+                    nt.next = op;
+                    op.prev = nt;
+                    nt.exp = new Expression(head, parent_block);
+                    start = nt;
+                }
+                
+                head = op.next;
+                Token ct = head;
+                
+                int level1 = 0;
+                int level2 = 0;
+                while (ct != null && !(ct.getType() == Token.OP && ct.p <= op.p)) {
+                    if (ct.getType() == Token.BRACE_OPEN) level1++;
+                    if (ct.getType() == Token.BRACE_CLOSE) level1--;
+                    if (ct.getType() == Token.ARRAY_START) level2++;
+                    if (ct.getType() == Token.ARRAY_END) level2--;
+                    if (ct.getType() == Token.BRACE_CLOSE && level1 < 0) break;
+                    ct = ct.next;
+                }
+
+                if (head.next != op) {
+                    Token nt = new Token("x");
+                    head.prev.next = nt;
+                    nt.prev = op;
+                    op.next = nt;
+                    nt.next = ct;
+                    if (ct != null) {
+                        ct.prev = nt;
+                    }
+                    nt.exp = new Expression(head, parent_block);
+                    op = ct;
+                    if (op == null) break;
+                }
+            }
+            op = op.next;
+        }
+    }
+
     private void processCommas() {
         Token t = start;
         Token last = t;
@@ -1275,6 +1337,7 @@ public class Expression {
         }
         initArraysAndObjects();
         applySquareBracesRuntime();
+        processLogicalOps();
 
         source = "";
         updateSource();
