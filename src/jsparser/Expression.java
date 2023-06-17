@@ -739,6 +739,17 @@ public class Expression {
         }
     }
 
+    private void getTokenValue(Token t) {
+        if (t.val == null && t.getType() == Token.VAR_NAME) {
+            t.val = t.exp != null ? t.exp.eval().getValue() : Expression.getVar(t.getContent(), this);
+            if (t.exp != null) {
+                error = t.exp.error;
+                thr = t.exp.thr;
+            }
+            return;
+        }
+    }
+
     private void accessObjectProperties(Token t) {
         if (t.getType() == Token.BRACE_OPEN) {
             Token t2 = t;
@@ -766,18 +777,12 @@ public class Expression {
             }
             t = t.next;
         }
-        if (t.val == null && t.getType() == Token.VAR_NAME && (t.next == null || t.next.getType() == Token.OP)) {
-            t.val = t.exp != null ? t.exp.eval().getValue() : Expression.getVar(t.getContent(), this);
-            error = t.exp.error;
-            thr = t.exp.thr;
-            return;
-        }
+        getTokenValue(t);
         if (((t.getType() == Token.VALUE && t.val != null && t.val.getType().equals("String")) || t.getType() == Token.VAR_NAME || t.getType() == Token.ARRAY_ENTITY || t.getType() == Token.OBJECT_ENTITY) &&
                 t.next != null && (t.next.getType() == Token.DOT ||
                 t.next.getType() == Token.ARRAY_START || t.next.getType() == Token.BRACE_OPEN)) {
             Vector<JSValue> v = new Vector<JSValue>();
-            JSValue val = t.getType() == Token.VAR_NAME && t.val == null ? Expression.getVar(t.getContent(), this) : t.val;
-            if (t.val == null) t.val = val;
+            JSValue val = t.val;
             JSValue ctx = Expression.getVar("window", this);
             Token t2 = t.next;
             while (t2 != null && t2.getType() != Token.BRACE_OPEN && t2.getType() != Token.BRACE_CLOSE && t2.getType() != Token.OP) {
@@ -859,7 +864,6 @@ public class Expression {
                 }
                 t2 = t2.next;
             }
-            boolean error = false;
             int last = 0;
             for (int i = 0; i < v.size(); i++) {
                 if (!val.getType().matches("Array|Integer|Float|Number|String|Object|Function")) {
