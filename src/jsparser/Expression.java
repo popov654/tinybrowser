@@ -589,7 +589,7 @@ public class Expression {
         if (parts.size() > 1) {
             for (int i = 0; i < parts.size(); i++) {
                 parts.get(i).eval();
-                error = parts.get(i).error;
+                err = parts.get(i).err;
                 thr = parts.get(i).thr;
                 if (parent_block.error != null) {
                     return;
@@ -612,7 +612,7 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: hanging '?' at the end of expression", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: hanging '?' at the end of expression");
-            error = true;
+            err = true;
             return;
         }
         int level1 = 0;
@@ -685,7 +685,7 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: ':' expected after '?' in ternary operator", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: ':' expected after '?' in ternary operator");
-            error = true;
+            err = true;
             return;
         }
 
@@ -765,7 +765,7 @@ public class Expression {
         if (t.val == null && t.getType() == Token.VAR_NAME) {
             t.val = t.exp != null ? t.exp.eval().getValue() : Expression.getVar(t.getContent(), this);
             if (t.exp != null) {
-                error = t.exp.error;
+                err = t.exp.err;
                 thr = t.exp.thr;
             }
             return;
@@ -891,7 +891,7 @@ public class Expression {
             int last = 0;
             for (int i = 0; i < v.size(); i++) {
                 if (!val.getType().matches("Array|Integer|Float|Number|String|Object|Function")) {
-                    error = true;
+                    err = true;
                     break;
                 }
                 if (v.get(i) == null) return;
@@ -900,7 +900,7 @@ public class Expression {
                     if (index instanceof JSString) {
                         index = ((JSString)index).parseInt();
                         if (index instanceof NaN) {
-                            error = true;
+                            err = true;
                             break;
                         }
                     } else {
@@ -913,7 +913,7 @@ public class Expression {
                         val = ((JSString)val).get((int)((JSInt)index).getValue());
                     }
                     if (val instanceof Undefined) {
-                        if (i < v.size()-1) error = true;
+                        if (i < v.size()-1) err = true;
                         break;
                     }
                 }
@@ -935,13 +935,13 @@ public class Expression {
                         ((DynamicContext)val).setContext(this.parent_block);
                     }
                     if (val instanceof Undefined) {
-                        if (i < v.size()-1) error = true;
+                        if (i < v.size()-1) err = true;
                         last = i;
                         break;
                     }
                 }
             }
-            if (error) {
+            if (err) {
                 if (parent_block.strict_mode) {
                     parent_block.error = new JSError(null, "Incorrect field access: " + v.get(last) + " does not exist", getStack());
                 } else {
@@ -1173,7 +1173,7 @@ public class Expression {
             }
             JSError e = new JSError(null, name + " is not a function", getStack());
             parent_block.error = e;
-            error = true;
+            err = true;
             return;
         }
         Token ts = t;
@@ -1197,7 +1197,7 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: function call error", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: function call error");
-            error = true;
+            err = true;
             return;
         }
         Vector<JSValue> params = new Vector<JSValue>();
@@ -1250,14 +1250,14 @@ public class Expression {
             JSError e = new JSError(null, "SyntaxError: missing ')' after function arguments list", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: missing ')' after function arguments list");
-            error = true;
+            err = true;
             return;
         }
         if (t.prev.getType() == Token.OP && t.prev.getContent().equals(",")) {
             JSError e = new JSError(null, "Hanging comma is not allowed in function arguments list", parent_block.getStack());
             parent_block.error = e;
             System.err.println("Hanging comma is not allowed in function arguments list");
-            error = true;
+            err = true;
             return;
         }
         boolean as_constr = false;
@@ -1265,7 +1265,7 @@ public class Expression {
             JSError e = new JSError(null, "Runtime error: " + ts.prev.getContent() + " is not a callable", parent_block.getStack());
             parent_block.error = e;
             System.err.println("Runtime error: " + ts.prev.getContent() + " is not a callable");
-            error = true;
+            err = true;
             return;
         }
         ((Function)ts.prev.val).setCaller(parent_block);
@@ -1880,7 +1880,7 @@ public class Expression {
                                 Token tt = ct.prev;
                                 accessObjectProperties(ct);
                                 ct = tt.next;
-                                if (error || thr) break;
+                                if (err || thr) break;
                             }
                             if (c.equals("&&") && val && !ct.val.asBool().getValue()) {
                                 val = false;
@@ -1897,7 +1897,7 @@ public class Expression {
                         }
                         ct = ct.next;
                     }
-                    if (error || thr) break;
+                    if (err || thr) break;
                     op.prev.val = ct2.val;
                     op.prev.setContent(ct2.getContent());
                     op.prev.next = ct;
@@ -2419,7 +2419,7 @@ public class Expression {
                 }
             }
         }
-        if (error) {
+        if (err) {
             return this;
         }
         if (start.val == null && start.getType() == Token.OP && start.getContent().matches("\\+|-")) {
@@ -2454,7 +2454,7 @@ public class Expression {
             } else if (start.getType() == Token.VAR_NAME) {
                 if (start.exp != null) {
                     start.val = start.exp.eval().getValue();
-                    error = start.exp.error;
+                    err = start.exp.err;
                 } else {
                     start.val = Expression.getVar(start.getContent(), this);
                 }
@@ -2471,7 +2471,7 @@ public class Expression {
         }
         if (start.next != null && (start.next.getType() == Token.DOT || start.next.getType() == Token.ARRAY_START)) {
             parent_block.error = new JSError(start.val, "Access error: undefined is not an object", getStack());
-            error = true;
+            err = true;
         }
         while (!thr && start.next != null && start.next.getType() == Token.BRACE_OPEN) {
             functionCall(start.next);
@@ -2532,7 +2532,7 @@ public class Expression {
     }
 
     public JSValue getValue() {
-        if (error) return Null.getInstance();
+        if (err) return Null.getInstance();
         return reusable ? exec.getValue() : start.val;
     }
 
@@ -2679,7 +2679,7 @@ public class Expression {
     private boolean del;
     private boolean thr;
 
-    public boolean error = false;
+    public boolean err = false;
 
     public boolean is_cond;
     public Vector<Expression> parts = new Vector<Expression>();
