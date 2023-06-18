@@ -167,8 +167,18 @@ public class Expression {
         boolean is_inner_func = false;
 
         while (token != null && token.getType() != Token.SEMICOLON) {
+            boolean isTernary = false;
+            if (token.getContent().equals(":")) {
+                Token t = token.prev;
+                while (t != null && !t.getContent().equals("?") && t.getType() == Token.OBJECT_START) {
+                    t = t.prev;
+                }
+                if (t != null && t.getContent().equals("?")) {
+                    isTernary = true;
+                }
+            }
             if (token.getType() == Token.OP && !token.getContent().matches("[!:,]") && !token.getContent().matches("\\+\\+|--") &&
-                  !token.getContent().matches("break|continue|return")) {
+                  !token.getContent().matches("break|continue|return") || token.getContent().equals(":") && isTernary) {
                 source += " ";
             }
             String content = "";
