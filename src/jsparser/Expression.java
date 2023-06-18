@@ -1677,34 +1677,6 @@ public class Expression {
                     op.p = 0;
                     continue;
                 }
-//                if (c.equals(",") && op.prev.prev != null && op.prev.prev.getType() == Token.BRACE_OPEN &&
-//                        op.prev.prev.prev != null && (op.prev.prev.prev.getType() == Token.VAR_NAME ||
-//                        op.prev.prev.prev.getType() == Token.OBJECT_ENTITY)) {
-//                    functionCall(op.prev.prev);
-//                    continue;
-//                }
-//                if (c.equals(",")) {
-//                    Token ct = op.prev;
-//                    int level = 0;
-//                    while (ct != null && ct.getType() != Token.BRACE_OPEN && level <= 0) {
-//                        if (ct.getType() == Token.BRACE_OPEN) level++;
-//                        if (ct.getType() == Token.BRACE_CLOSE) level--;
-//                        if (level > 0) {
-//                            break;
-//                        }
-//                        ct = ct.prev;
-//                    }
-//
-//                    if (op.next == null) {
-//                        parent_block.error = new JSError(null, "Hanging " + c + "operator is not allowed", getStack());
-//                        break;
-//                    }
-//
-//                    if (ct.prev != null && ct.prev != null && ct.prev.getType() != Token.OP && ct.prev.getType() != Token.EMPTY) {
-//                        functionCall(ct);
-//                        continue;
-//                    }
-//                }
                 if (op.prev == null || op.next == null) {
                     System.err.println("Syntax error");
                     break;
