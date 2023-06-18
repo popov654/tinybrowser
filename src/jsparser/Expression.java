@@ -629,7 +629,7 @@ public class Expression {
 
         t = token.next;
 
-        while (t != end && !(t.next != null && t.next.getType() == Token.BRACE_CLOSE && level3 == 0)) {
+        while (t != end && !(t.next != null && (t.next.getType() == Token.BRACE_CLOSE || t.next.getContent().equals(",")) && level3 == 0)) {
             if (t.getType() == Token.ARRAY_START) level1++;
             if (t.getType() == Token.OBJECT_START) level2++;
             if (t.getType() == Token.BRACE_OPEN) level3++;

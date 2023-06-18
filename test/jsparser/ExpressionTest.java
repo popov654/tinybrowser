@@ -445,6 +445,11 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("s", ((JSString)exp.getValue()).getValue());
+        jp = new JSParser("var test = function(n) { return n+1 } test(5 > 3 ? 9 - 6 : 2)");
+        System.out.println("var test = function(n) { return n+1 } test(5 > 3 ? 9 - 6 : 2)");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("4", exp.getValue().toString());
     }
     
     /**
