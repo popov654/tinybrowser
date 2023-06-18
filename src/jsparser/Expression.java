@@ -1332,6 +1332,9 @@ public class Expression {
         }
         n = 0;
 
+        source = "";
+        updateSource();
+
         // Use single-level priority strategy,
         // move expressions inside braces to `exp` field
         applyBracesRuntime();
@@ -1345,9 +1348,6 @@ public class Expression {
         initArraysAndObjects();
         applySquareBracesRuntime();
         processLogicalOps();
-
-        source = "";
-        updateSource();
 
         if (parent_block.error != null) {
             return this;
