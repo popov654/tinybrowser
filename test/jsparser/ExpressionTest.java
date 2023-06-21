@@ -1235,11 +1235,11 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("8", exp.getValue().toString());
-        jp = new JSParser("Math.sin(Math.PI / 2)");
-        System.out.println("Math.sin(Math.PI / 2)");
+        jp = new JSParser("3 - Math.sin(Math.PI / 2 - 0)");
+        System.out.println("3 - Math.sin(Math.PI / 2 - 0)");
         exp = Expression.create(jp.getHead());
         exp.eval();
-        assertEquals("1", exp.getValue().toString());
+        assertEquals("2", exp.getValue().toString());
         jp = new JSParser("Math.sin(Math.PI)");
         System.out.println("Math.sin(Math.PI)");
         exp = Expression.create(jp.getHead());

@@ -57,6 +57,10 @@ public class Token {
         return type;
     }
 
+    public void setType(int value) {
+        type = value;
+    }
+
     private String str;
     private int type;
 

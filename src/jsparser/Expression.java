@@ -486,7 +486,7 @@ public class Expression {
 
     private void processLogicalOps(String operator) {
         Token op = start;
-        Token head = op;
+        boolean first = true;
         while (op != null) {
             if (op.getType() == Token.OP && op.getContent().equals(operator)) {
                 if (op.next == null || op == start) {
@@ -494,11 +494,20 @@ public class Expression {
                     break;
                 }
 
-                if (head == start && head.next != op) {
-                    if (op.next == null || op == start) {
-                        System.err.println("Syntax error: unexpected '" + operator + "' operator");
-                        break;
+                Token head;
+
+                if (first) {
+                    head = op.prev;
+                    int level = 0;
+                    while (head != start && (!head.getContent().equals("(") || level < 0)) {
+                        if (head.getContent().equals("(")) level++;
+                        if (head.getContent().equals(")")) level--;
+                        head = head.prev;
                     }
+                    if (head != start) {
+                        head = head.next;
+                    }
+
                     op.prev.next = null;
                     Token nt = new Token("x");
                     head.prev.next = nt;
@@ -506,7 +515,10 @@ public class Expression {
                     nt.next = op;
                     op.prev = nt;
                     nt.exp = new Expression(head, parent_block);
-                    start = nt;
+                    if (head == start) {
+                        start = nt;
+                    }
+                    first = false;
                 }
                 
                 head = op.next;
@@ -762,16 +774,18 @@ public class Expression {
 
     private void accessObjectProperties(Token t) {
         if (t.getType() == Token.BRACE_OPEN) {
-            Token t2 = t;
+            Token t2 = t.next;
             int level = 0;
-            while (t2 != null && (t2.getType() != Token.BRACE_CLOSE || level > 1)) {
+            while (t2 != null && (t2.getType() != Token.BRACE_CLOSE || level > 0)) {
                 if (t2.getType() == Token.BRACE_OPEN) level++;
                 if (t2.getType() == Token.BRACE_CLOSE) level--;
                 t2 = t2.next;
             }
-            accessObjectProperties(t.next);
+            if (t.next != null) {
+                accessObjectProperties(t.next);
+            }
+            if (t == null || t2 == null || t2.next == null) return;
             t = t2.next;
-            if (t == null) return;
         }
         while (t.getType() == Token.KEYWORD && t.getContent().matches("new|yield")) {
             if (t.getContent().equals("yield") && t.next == null) {
@@ -1081,7 +1095,7 @@ public class Expression {
 
     private void removeBraces(Token t) {
         if ((t.prev.prev == null || (t.prev.prev.getType() != Token.VAR_NAME &&
-                  t.prev.prev.getType() != Token.OBJECT_ENTITY)) &&
+                  t.prev.prev.getType() != Token.OBJECT_ENTITY)) && t.next != null &&
                t.prev.getType() == Token.BRACE_OPEN &&
                t.next.getType() == Token.BRACE_CLOSE) {
             t.prev.prev.next = t;
@@ -1188,25 +1202,51 @@ public class Expression {
         }
         Vector<JSValue> params = new Vector<JSValue>();
         t = t.next;
-        while (t != null && t.getType() != Token.BRACE_CLOSE) {
-            if (t.getType() == Token.VALUE) {
-                params.add(JSValue.create(JSValue.getType(t.getContent()), t.getContent()));
-            } else if ((t.getType() == Token.VAR_NAME || t.getType() == Token.BRACE_OPEN || t.getType() == Token.KEYWORD && t.getContent().matches("new|yield")) && t.val == null) {
-                if (!(t.next.getType() == Token.OP && t.next.getContent().equals(",")) && t.next.getType() != Token.BRACE_CLOSE) {
-                    accessObjectProperties(t);
-                    t = t.prev.next;
-                    params.add(t.val);
-                } else if (t.exp != null) {
-                    params.add(t.val == null ? t.exp.eval().getValue() : t.val);
+        int level1 = 0;
+        int level2 = 0;
+        Token last = t;
+        while (t.next != null && !(t.getType() == Token.BRACE_CLOSE && (t.prev == ts || level1 < 0 && level2 == 0))) {
+            if (t.getType() == Token.BRACE_OPEN) level1++;
+            if (t.getType() == Token.BRACE_CLOSE) level1--;
+            if (t.getType() == Token.ARRAY_START) level2++;
+            if (t.getType() == Token.ARRAY_END) level2--;
+            if ((t.next.getContent().equals(",") || t.next.getType() == Token.BRACE_CLOSE) && level1 == 0 && level2 == 0 && t == last) {
+                if (last.getType() == Token.VALUE && last.val == null) {
+                    params.add(JSValue.create(JSValue.getType(last.getContent()), last.getContent()));
+                } else if (last.val != null) {
+                    params.add(last.val);
                 } else {
-                    params.add(Expression.getVar(t.getContent(), this));
+                    params.add(Expression.getVar(last.getContent(), this));
                 }
-            } else if (t.val != null) {
-                params.add(t.val);
+                t = t.next;
+                if (!(t != null && t.getType() == Token.BRACE_CLOSE && level1 == 0)) {
+                    last = t.next;
+                } else {
+                    break;
+                }
             }
-            t = t.next;
+            else if ((t.next.getContent().equals(",") || t.next.getType() == Token.BRACE_CLOSE) && level1 == 0 && level2 == 0) {
+                t = t.next;
+                t.prev.next = null;
+                Expression exp = new Expression(last, parent_block);
+                exp.eval();
+                Token tr = new Token("x");
+                tr.val = exp.getValue();
+                tr.prev = last.prev;
+                last.prev.next = tr;
+                tr.next = t;
+                t.prev = tr;
+                params.add(tr.val);
+                if (!(t != null && t.getType() == Token.BRACE_CLOSE && level1 == 0)) {
+                    last = t.next;
+                } else {
+                    break;
+                }
+            } else {
+                t = t.next;
+            }
         }
-        if (t == null) {
+        if (t == null || t.getType() != Token.BRACE_CLOSE) {
             JSError e = new JSError(null, "SyntaxError: missing ')' after function arguments list", parent_block.getStack());
             parent_block.error = e;
             System.err.println("SyntaxError: missing ')' after function arguments list");
@@ -1637,174 +1677,187 @@ public class Expression {
                     op.p = 0;
                     continue;
                 }
-                if (c.equals(",") && op.prev.prev != null && op.prev.prev.getType() == Token.BRACE_OPEN &&
-                        op.prev.prev.prev != null && (op.prev.prev.prev.getType() == Token.VAR_NAME ||
-                        op.prev.prev.prev.getType() == Token.OBJECT_ENTITY)) {
-                    functionCall(op.prev.prev);
-                    continue;
-                }
-                if (c.equals(",")) {
-                    Token ct = op.prev;
-                    int level = 0;
-                    while (ct != null && ct.getType() != Token.BRACE_OPEN && level <= 0) {
-                        if (ct.getType() == Token.BRACE_OPEN) level++;
-                        if (ct.getType() == Token.BRACE_CLOSE) level--;
-                        if (level > 0) {
-                            break;
-                        }
-                        ct = ct.prev;
-                    }
-                    
-                    if (op.next == null) {
-                        parent_block.error = new JSError(null, "Hanging " + c + "operator is not allowed", getStack());
-                        break;
-                    }
-
-                    if (ct.prev != null && ct.prev != null && ct.prev.getType() != Token.OP && ct.prev.getType() != Token.EMPTY) {
-                        functionCall(ct);
-                        continue;
-                    }
-                }
+//                if (c.equals(",") && op.prev.prev != null && op.prev.prev.getType() == Token.BRACE_OPEN &&
+//                        op.prev.prev.prev != null && (op.prev.prev.prev.getType() == Token.VAR_NAME ||
+//                        op.prev.prev.prev.getType() == Token.OBJECT_ENTITY)) {
+//                    functionCall(op.prev.prev);
+//                    continue;
+//                }
+//                if (c.equals(",")) {
+//                    Token ct = op.prev;
+//                    int level = 0;
+//                    while (ct != null && ct.getType() != Token.BRACE_OPEN && level <= 0) {
+//                        if (ct.getType() == Token.BRACE_OPEN) level++;
+//                        if (ct.getType() == Token.BRACE_CLOSE) level--;
+//                        if (level > 0) {
+//                            break;
+//                        }
+//                        ct = ct.prev;
+//                    }
+//
+//                    if (op.next == null) {
+//                        parent_block.error = new JSError(null, "Hanging " + c + "operator is not allowed", getStack());
+//                        break;
+//                    }
+//
+//                    if (ct.prev != null && ct.prev != null && ct.prev.getType() != Token.OP && ct.prev.getType() != Token.EMPTY) {
+//                        functionCall(ct);
+//                        continue;
+//                    }
+//                }
                 if (op.prev == null || op.next == null) {
                     System.err.println("Syntax error");
                     break;
                 }
                 String type1 = "null";
                 String type2 = "null";
-                if (op.prev.getType() != Token.VALUE && !op.getContent().endsWith("=") && (op.prev.exp != null || op.prev.val != null)) {
-                    if (op.prev.exp != null && op.prev.val == null) {
-                        op.prev.val = op.prev.exp.eval().getValue();
-                    }
-                    type1 = op.prev.val != null ? op.prev.val.getType() : Expression.getVar(op.prev.getContent(), this).getType();
-                } else {
-                    type1 = JSValue.getType(op.prev.getContent());
-                }
-                if (op.next.getType() != Token.VALUE && !op.getContent().matches("&&|\\|\\|") && (op.next.next == null || op.next.next.getType() != Token.DOT && op.next.next.getType() != Token.ARRAY_START)) {
-                    if (op.next.exp != null && op.next.val == null) {
-                        op.next.val = op.next.exp.eval().getValue();
-                    }
-                    type2 = op.next.val != null ? op.next.val.getType() : Expression.getVar(op.next.getContent(), this).getType();
-                } else if (!op.getContent().matches("&&|\\|\\|")) {
-                    type2 = JSValue.getType(op.next.getContent());
-                }
+
                 String types = type1 + "|" + type2;
-                String type = getResultType(types, c);
-                if (type.equals("error")) {
-                    break;
-                }
-                if (!type.equals("Array") && !type.equals("Object")) {
-                    if (op.prev.val == null && op.prev.getType() == Token.VALUE) op.prev.val = JSValue.create(type, op.prev.getContent());
-                    if (op.next.val == null && op.next.getType() == Token.VALUE) op.next.val = JSValue.create(type, op.next.getContent());
-                    if (op.prev.val == null && !op.getContent().equals(",") && (op.prev.getType() == Token.VAR_NAME || op.prev.getType() == Token.ARRAY_ENTITY || op.prev.getType() == Token.OBJECT_ENTITY) &&
-                            op.prev != start && op.prev.prev.getType() == Token.DOT ||
-                            op.prev.getType() == Token.ARRAY_END ||
-                            op.prev.val == null && !op.getContent().equals(",") && op.prev.getType() == Token.BRACE_CLOSE) {
-                        Token ct = op.prev;
-                        int level = 0;
-                        while (!((ct.getType() == Token.OP || ct.getType() == Token.BRACE_OPEN) && level == 0 ||
-                                ct.getType() == Token.EMPTY || ct.getType() == Token.SEMICOLON)) {
-                            if (ct.getType() == Token.BRACE_OPEN) level++;
-                            if (ct.getType() == Token.BRACE_CLOSE) level--;
-                            ct = ct.prev;
+                String type = "null";
+
+                if (!op.getContent().equals(",")) {
+                    if (op.prev.getType() != Token.VALUE && !op.getContent().endsWith("=") && (op.prev.exp != null || op.prev.val != null)) {
+                        if (op.prev.exp != null && op.prev.val == null) {
+                            op.prev.val = op.prev.exp.eval().getValue();
                         }
-                        //We need to travel until the head of the expression, it may be after "(",
-                        //so we need to know whether the "(" symbol is part of the expression or is it the
-                        //boundary
-                        while (op.prev.getType() == Token.BRACE_CLOSE && ct.next.getType() == Token.BRACE_OPEN && ct.getType() != Token.EMPTY &&
-                                ct.getType() != Token.SEMICOLON && ct.getType() == Token.OP && ct.getType() == Token.BRACE_OPEN) {
-                            level = 0;
-                            ct = ct.prev;
-                            while (!((ct.getType() == Token.OP || ct.getType() == Token.BRACE_OPEN) && level == -1 ||
+                        type1 = op.prev.val != null ? op.prev.val.getType() : Expression.getVar(op.prev.getContent(), this).getType();
+                    } else {
+                        type1 = JSValue.getType(op.prev.getContent());
+                    }
+                    if (op.next.getType() != Token.VALUE && !op.getContent().matches("&&|\\|\\|") && (op.next.next == null || op.next.next.getType() != Token.DOT && op.next.next.getType() != Token.ARRAY_START)) {
+                        if (op.next.exp != null && op.next.val == null) {
+                            op.next.val = op.next.exp.eval().getValue();
+                        }
+                        type2 = op.next.val != null ? op.next.val.getType() : Expression.getVar(op.next.getContent(), this).getType();
+                    } else if (!op.getContent().matches("&&|\\|\\|")) {
+                        type2 = JSValue.getType(op.next.getContent());
+                    }
+                    types = type1 + "|" + type2;
+                    type = getResultType(types, c);
+                    if (type.equals("error")) {
+                        break;
+                    }
+                    if (!type.equals("Array") && !type.equals("Object")) {
+                        if (op.prev.val == null && op.prev.getType() == Token.VALUE) {
+                            op.prev.val = JSValue.create(type, op.prev.getContent());
+                        }
+                        if (op.next.val == null && op.next.getType() == Token.VALUE) {
+                            op.next.val = JSValue.create(type, op.next.getContent());
+                        }
+                        if (op.prev.val == null && !op.getContent().equals(",") && (op.prev.getType() == Token.VAR_NAME || op.prev.getType() == Token.ARRAY_ENTITY || op.prev.getType() == Token.OBJECT_ENTITY) &&
+                                op.prev != start && op.prev.prev.getType() == Token.DOT ||
+                                op.prev.getType() == Token.ARRAY_END ||
+                                op.prev.val == null && !op.getContent().equals(",") && op.prev.getType() == Token.BRACE_CLOSE) {
+                            Token ct = op.prev;
+                            int level = 0;
+                            while (!((ct.getType() == Token.OP || ct.getType() == Token.BRACE_OPEN) && level == 0 ||
                                     ct.getType() == Token.EMPTY || ct.getType() == Token.SEMICOLON)) {
                                 if (ct.getType() == Token.BRACE_OPEN) level++;
                                 if (ct.getType() == Token.BRACE_CLOSE) level--;
                                 ct = ct.prev;
                             }
-                        }
-                        accessObjectProperties(ct.next);
-                        types = (op.prev.val != null ? op.prev.val.getType() : "null") + "|" + (op.next.val != null ? op.next.val.getType() : JSValue.getType(op.next.getContent()));
-                        type = getResultType(types, c);
-                    }
-                    if (op.next.next != null && op.next.next.getType() == Token.BRACE_OPEN) {
-                        functionCall(op.next.next);
-                    }
-                    if (op.next != null && op.next.getType() == Token.KEYWORD && op.next.getContent().equals("new") &&
-                            op.next.next.next != null && op.next.next.next.getType() == Token.BRACE_OPEN) {
-                        functionCall(op.next.next.next);
-                    }
-                    if (op.next != null && !op.getContent().matches("&&|\\|\\||,") &&
-                            ((op.next.getType() == Token.VAR_NAME || op.next.getType() == Token.ARRAY_ENTITY || op.next.getType() == Token.OBJECT_ENTITY ||
-                             (op.next.getType() == Token.KEYWORD && op.next.getContent().matches("new|yeild"))) &&
-                            op.next.next != null && (op.next.next.getType() == Token.DOT ||
-                            op.next.next.getType() == Token.ARRAY_START) || op.next.getType() == Token.BRACE_OPEN)) {
-                        accessObjectProperties(op.next);
-                        types = types.split("\\|")[0] + "|" + op.next.val.getType();
-                        type = getResultType(types, c);
-                    }
-                    if (op.next != null && op.next.getType() == Token.KEYWORD && op.next.getContent().equals("yield") &&
-                            op.next.next != null && op.next.next.getType() == Token.VALUE) {
-                        checkYield(op.next.next);
-                        return this;
-                    }
-                    if (!op.getContent().equals("=") && op.prev.val == null && op.prev.getType() == Token.VAR_NAME) {
-                        JSValue val = op.prev.exp != null ? (op.prev.val == null ? op.prev.exp.eval().getValue() : op.prev.val) :
-                                                            Expression.getVar(op.prev.getContent(), this);
-                        if (val == null) {
-                            break;
-                        }
-                        if (!op.getContent().matches("[\\*/%&|^+-]?=") && op.prev.exp == null) {
-                            Token t2 = new Token(val.toString());
-                            t2.val = val;
-                            t2.prev = op.prev.prev;
-                            t2.next = op;
-                            if (start == op.prev) {
-                                start = t2;
+                            //We need to travel until the head of the expression, it may be after "(",
+                            //so we need to know whether the "(" symbol is part of the expression or is it the
+                            //boundary
+                            while (op.prev.getType() == Token.BRACE_CLOSE && ct.next.getType() == Token.BRACE_OPEN && ct.getType() != Token.EMPTY &&
+                                    ct.getType() != Token.SEMICOLON && ct.getType() == Token.OP && ct.getType() == Token.BRACE_OPEN) {
+                                level = 0;
+                                ct = ct.prev;
+                                while (!((ct.getType() == Token.OP || ct.getType() == Token.BRACE_OPEN) && level == -1 ||
+                                        ct.getType() == Token.EMPTY || ct.getType() == Token.SEMICOLON)) {
+                                    if (ct.getType() == Token.BRACE_OPEN) level++;
+                                    if (ct.getType() == Token.BRACE_CLOSE) level--;
+                                    ct = ct.prev;
+                                }
                             }
-                            if (op.prev.prev != null) {
-                                op.prev.prev.next = t2;
-                            }
-                            op.prev = t2;
-                            types = op.prev.val.getType() + "|" + types.split("\\|")[1];
+                            accessObjectProperties(ct.next);
+                            types = (op.prev.val != null ? op.prev.val.getType() : "null") + "|" + (op.next.val != null ? op.next.val.getType() : JSValue.getType(op.next.getContent()));
                             type = getResultType(types, c);
-                        } else {
-                            op.prev.val = val;
                         }
-                    }
-                    if (op.next.val == null && op.next.getType() == Token.VAR_NAME && !op.getContent().matches("&&|\\|\\||,")) {
-                        JSValue val = op.next.exp != null ? (op.prev.val == null ? op.next.exp.eval().getValue() : op.next.val) :
-                                                            Expression.getVar(op.next.getContent(), this);
-                        if (val == null) {
-                            break;
+                        if (op.next.next != null && op.next.next.getType() == Token.BRACE_OPEN) {
+                            functionCall(op.next.next);
                         }
-                        if (op.next.exp == null) {
-                            Token t2 = new Token(val.toString());
-                            t2.val = val;
-                            t2.next = op.next.next;
-                            t2.prev = op;
-                            if (end == op.next) {
-                                end = t2;
+                        if (op.next != null && op.next.getType() == Token.KEYWORD && op.next.getContent().equals("new") &&
+                                op.next.next.next != null && op.next.next.next.getType() == Token.BRACE_OPEN) {
+                            functionCall(op.next.next.next);
+                        }
+                        if (op.next != null && !op.getContent().matches("&&|\\|\\||,") &&
+                                ((op.next.getType() == Token.VAR_NAME || op.next.getType() == Token.ARRAY_ENTITY || op.next.getType() == Token.OBJECT_ENTITY ||
+                                 (op.next.getType() == Token.KEYWORD && op.next.getContent().matches("new|yeild"))) &&
+                                op.next.next != null && (op.next.next.getType() == Token.DOT ||
+                                op.next.next.getType() == Token.ARRAY_START) || op.next.getType() == Token.BRACE_OPEN)) {
+                            accessObjectProperties(op.next);
+                            types = types.split("\\|")[0] + "|" + op.next.val.getType();
+                            type = getResultType(types, c);
+                        }
+                        if (op.next != null && op.next.getType() == Token.KEYWORD && op.next.getContent().equals("yield") &&
+                                op.next.next != null && op.next.next.getType() == Token.VALUE) {
+                            checkYield(op.next.next);
+                            return this;
+                        }
+                        if (!op.getContent().equals("=") && op.prev.val == null && op.prev.getType() == Token.VAR_NAME) {
+                            JSValue val = op.prev.exp != null ? (op.prev.val == null ? op.prev.exp.eval().getValue() : op.prev.val) :
+                                                                Expression.getVar(op.prev.getContent(), this);
+                            if (val == null) {
+                                break;
                             }
-                            if (op.next.next != null) {
-                                op.next.next.prev = t2;
+                            if (!op.getContent().matches("[\\*/%&|^+-]?=") && op.prev.exp == null) {
+                                Token t2 = new Token(val.toString());
+                                if (val instanceof JSObject && !(val instanceof JSString)) {
+                                    t2.setType(Token.VAR_NAME);
+                                }
+                                t2.val = val;
+                                t2.prev = op.prev.prev;
+                                t2.next = op;
+                                if (start == op.prev) {
+                                    start = t2;
+                                }
+                                if (op.prev.prev != null) {
+                                    op.prev.prev.next = t2;
+                                }
+                                op.prev = t2;
+                                types = op.prev.val.getType() + "|" + types.split("\\|")[1];
+                                type = getResultType(types, c);
+                            } else {
+                                op.prev.val = val;
                             }
-                            op.next = t2;
-                        } else {
-                            op.next.val = val;
                         }
-                        types = types.split("\\|")[0] + "|" + op.next.val.getType();
-                        type = getResultType(types, c);
-                        if (c.equals("in") || c.equals("instanceof")) {
-                            type = "Boolean";
+                        if (op.next.val == null && op.next.getType() == Token.VAR_NAME && !op.getContent().matches("&&|\\|\\||,")) {
+                            JSValue val = op.next.exp != null ? (op.prev.val == null ? op.next.exp.eval().getValue() : op.next.val) :
+                                                                Expression.getVar(op.next.getContent(), this);
+                            if (val == null) {
+                                break;
+                            }
+                            if (op.next.exp == null) {
+                                Token t2 = new Token(val.toString());
+                                t2.val = val;
+                                t2.next = op.next.next;
+                                t2.prev = op;
+                                if (end == op.next) {
+                                    end = t2;
+                                }
+                                if (op.next.next != null) {
+                                    op.next.next.prev = t2;
+                                }
+                                op.next = t2;
+                            } else {
+                                op.next.val = val;
+                            }
+                            types = types.split("\\|")[0] + "|" + op.next.val.getType();
+                            type = getResultType(types, c);
+                            if (c.equals("in") || c.equals("instanceof")) {
+                                type = "Boolean";
+                            }
                         }
-                    }
-                    if (c.equals("=") && op.next.getType() != Token.VAR_NAME && op.next.val != null) {
-                        type = op.next.val.getType();
-                    } else if (c.equals("=") && (op.next.getType() == Token.VAR_NAME || op.next.getType() == Token.VALUE) && op.next.val == null) {
-                        JSValue val = Expression.getVar(op.next.getContent(), this);
-                        if (val != null) type = val.getType();
-                    } else if (c.matches("[\\*/%&|^+-]=")) {
-                        types = op.prev.val.getType() + "|" + op.next.val.getType();
-                        type = getResultType(types, c);
+                        if (c.equals("=") && op.next.getType() != Token.VAR_NAME && op.next.val != null) {
+                            type = op.next.val.getType();
+                        } else if (c.equals("=") && (op.next.getType() == Token.VAR_NAME || op.next.getType() == Token.VALUE) && op.next.val == null) {
+                            JSValue val = Expression.getVar(op.next.getContent(), this);
+                            if (val != null) type = val.getType();
+                        } else if (c.matches("[\\*/%&|^+-]=")) {
+                            types = op.prev.val.getType() + "|" + op.next.val.getType();
+                            type = getResultType(types, c);
+                        }
                     }
                 }
                 if (c.equals("&&") || c.equals("||")) {
@@ -1858,7 +1911,7 @@ public class Expression {
                     removeBraces(op.prev);
                     continue;
                 }
-                if (op.prev.val != null && !op.prev.val.getType().equals(type) && !type.equals("Boolean")) {
+                if (!c.equals(",") && op.prev.val != null && !op.prev.val.getType().equals(type) && !type.equals("Boolean")) {
                     if (op.prev.val instanceof JSDate) {
                         if (type.equals("Integer")) op.prev.val = op.prev.val.asInt();
                         else if (type.equals("Float")) op.prev.val = op.prev.val.asFloat();
@@ -1867,7 +1920,7 @@ public class Expression {
                         op.prev.val = JSValue.create(type, op.prev.val.asString().getValue());
                     }
                 }
-                if (!c.equals("=") && op.next.val != null && !op.next.val.getType().equals(type) && !type.equals("Boolean") && !type.equals("Number")) {
+                if (!c.equals("=") && !c.equals(",") && op.next.val != null && !op.next.val.getType().equals(type) && !type.equals("Boolean") && !type.equals("Number")) {
                     if (op.next.val instanceof JSDate) {
                         if (type.equals("Integer")) op.next.val = op.next.val.asInt();
                         else if (type.equals("Float")) op.next.val = op.next.val.asFloat();
@@ -2289,9 +2342,12 @@ public class Expression {
 
                     Token ct = op.prev;
                     int level = 0;
-                    while (ct != null && ct.getType() != Token.BRACE_OPEN && level <= 0) {
+                    while (ct != null && (ct.getType() != Token.BRACE_OPEN || level <= 0)) {
                         if (ct.getType() == Token.BRACE_OPEN) level++;
                         if (ct.getType() == Token.BRACE_CLOSE) level--;
+                        if (ct.getType() == Token.BRACE_OPEN && level > 0) {
+                            break;
+                        }
                         if (level > 0) {
                             if (ct.prev.getType() == Token.ARRAY_END || ct.prev.getType() == Token.BRACE_CLOSE ||
                                    ct.prev.getType() == Token.OBJECT_ENTITY || ct.prev.getType() == Token.VAR_NAME) {
@@ -2301,17 +2357,17 @@ public class Expression {
                         }
                         ct = ct.prev;
                     }
-                    if (ct.prev != null && ct.prev != null && ct.prev.getType() != Token.OP && ct.prev.getType() != Token.EMPTY) {
+                    if (ct.prev != null && ct.prev.getType() != Token.OP && ct.prev.getType() != Token.EMPTY) {
                         functionCall(ct);
                     }
-                    
+
                     ct = op.next;
                     Token op2 = op;
                     if (ct == null) {
                         parent_block.error = new JSError(null, "Hanging " + c + "operator is not allowed", getStack());
                         break;
                     }
-                    
+
                     if (!is_func_call) {
                         level = 0;
                         while (ct.next != null) {
@@ -2345,6 +2401,7 @@ public class Expression {
                         if (!c.equals("=") && !type.equals("Array") && !type.equals("Object") && !type.equals("Function")) {
                             op.prev.val = JSValue.create(type, result.toString());
                             op.prev.setContent(result.toString());
+                            op.prev.setType(Token.VALUE);
                         } else {
                             op.prev.val = result;
                         }
