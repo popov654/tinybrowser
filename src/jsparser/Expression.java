@@ -177,7 +177,7 @@ public class Expression {
                     isTernary = true;
                 }
             }
-            if (token.getType() == Token.OP && !token.getContent().matches("[!:,]") && !token.getContent().matches("\\+\\+|--") &&
+            if (token.getType() == Token.OP && !token.getContent().matches("[!:,]|\\+\\+|--|typeof") &&
                   !token.getContent().matches("break|continue|return") || token.getContent().equals(":") && isTernary) {
                 source += " ";
             }
