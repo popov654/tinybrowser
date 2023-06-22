@@ -131,7 +131,7 @@ public class Block extends Expression {
                 if (end.next != null && end.next.getType() == Token.BRACE_OPEN) {
                     Token t = end.next.next;
                     int lvl = 0;
-                    while (t != null && (t.getType() != Token.BRACE_CLOSE || lvl > 0)) {
+                    while (t != null && (!t.getContent().equals(")") || lvl > 0)) {
                         if (t.getType() == Token.BRACE_OPEN) lvl++;
                         if (t.getType() == Token.BRACE_CLOSE) lvl--;
                         t = t.next;
@@ -175,7 +175,7 @@ public class Block extends Expression {
             }
             else if (type == Token.KEYWORD && end.getContent().equals("for")) {
                 Token t = end.next;
-                if (t == null || t.getType() != Token.BRACE_OPEN) {
+                if (t == null || !t.getContent().equals("(")) {
                     System.err.println("Syntax error in for declaration");
                     return;
                 }
@@ -392,8 +392,8 @@ public class Block extends Expression {
                 func_named = false;
                 func_class = end.getContent().equals("class");
             }
-            else if (type == Token.FIELD_NAME && (end.prev == null || end.prev.getType() == Token.EMPTY || end.prev.getContent().equals(",")) && end.next != null && end.next.getType() == Token.BRACE_OPEN ||
-                     type == Token.VAR_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN && parent != null && parent.func_class) {
+            else if (type == Token.FIELD_NAME && (end.prev == null || end.prev.getType() == Token.EMPTY || end.prev.getContent().equals(",")) && end.next != null && end.next.getContent().equals("(") ||
+                     type == Token.VAR_NAME && end.next != null && end.next.getContent().equals("(") && parent != null && parent.func_class) {
                 int lvl = 0;
                 Token t = end.next;
                 while (t.next != null) {
@@ -418,7 +418,7 @@ public class Block extends Expression {
                     end = end.next;
                 }
                 if (end != null && (end.getType() == Token.VAR_NAME || end.getType() == Token.FIELD_NAME)) {
-                    if (end.next == null || (!func_class && end.next.getType() != Token.BRACE_OPEN || func_class && end.next.getType() != Token.BLOCK_START)) {
+                    if (end.next == null || (!func_class && !end.next.getContent().equals("(") || func_class && end.next.getType() != Token.BLOCK_START)) {
                         System.err.println("Syntax error in function declaration");
                         return;
                     }
@@ -427,17 +427,17 @@ public class Block extends Expression {
                     }
                     if (!func_class) end = end.next.next;
                 } else {
-                    if (end == null || end.getType() != Token.BRACE_OPEN) {
+                    if (end == null || !end.getContent().equals("(")) {
                         System.err.println("Syntax error in function declaration");
                         return;
                     }
                     end = end.next;
                 }
                 func_args = new Vector<String>();
-                while (end != null && (!func_class && end.getType() != Token.BRACE_CLOSE || func_class && end.next.getType() != Token.BLOCK_START)) {
+                while (end != null && (!func_class && !end.getContent().equals(")") || func_class && end.next.getType() != Token.BLOCK_START)) {
                     if (end.getType() == Token.VAR_NAME) {
-                        if (!(end.prev.getType() == Token.OP && end.prev.getContent().equals(",") || end.prev.getType() == Token.BRACE_OPEN)
-                                || !(end.next.getType() == Token.OP && end.next.getContent().equals(",") || end.next.getType() == Token.BRACE_CLOSE)) {
+                        if (!(end.prev.getType() == Token.OP && end.prev.getContent().equals(",") || end.prev.getContent().equals("("))
+                                || !(end.next.getType() == Token.OP && end.next.getContent().equals(",") || end.next.getContent().equals(")"))) {
                             System.err.println("Syntax error in function declaration");
                             return;
                         }
@@ -460,12 +460,12 @@ public class Block extends Expression {
                     System.err.println("Syntax error in function declaration");
                     return;
                 }
-                if (end.prev.getType() == Token.BRACE_CLOSE) {
+                if (end.prev.getContent().equals(")")) {
                     t = t.prev;
                     int lvl = 0;
-                    while (t != null && (t.getType() != Token.BRACE_OPEN || lvl < 0)) {
-                        if (t.prev.getType() == Token.BRACE_OPEN) lvl++;
-                        if (t.prev.getType() == Token.BRACE_CLOSE) lvl--;
+                    while (t != null && (!t.getContent().equals("(") || lvl < 0)) {
+                        if (t.prev.getContent().equals("(")) lvl++;
+                        if (t.prev.getContent().equals(")")) lvl--;
                         t = t.prev;
                     }
                     t2 = t;
@@ -475,17 +475,17 @@ public class Block extends Expression {
                     }
                     func_args = new Vector<String>();
                     lvl = 0;
-                    while (t2 != null && (t2.getType() != Token.BRACE_CLOSE || lvl > 0)) {
+                    while (t2 != null && (!t2.getContent().equals(")") || lvl > 0)) {
                         if (t2.getType() == Token.VAR_NAME) {
-                            if (!(t2.prev.getType() == Token.OP && t2.prev.getContent().equals(",") || t2.prev.getType() == Token.BRACE_OPEN)
-                                    || !(t2.next.getType() == Token.OP && t2.next.getContent().equals(",") || t2.next.getType() == Token.BRACE_CLOSE)) {
+                            if (!(t2.prev.getType() == Token.OP && t2.prev.getContent().equals(",") || t2.prev.getContent().equals("("))
+                                    || !(t2.next.getType() == Token.OP && t2.next.getContent().equals(",") || t2.next.getContent().equals(")"))) {
                                 System.err.println("Syntax error in function declaration");
                                 return;
                             }
                             func_args.add(t2.getContent());
                         }
-                        if (t2.next.getType() == Token.BRACE_OPEN) lvl++;
-                        if (t2.next.getType() == Token.BRACE_CLOSE) lvl--;
+                        if (t2.next.getContent().equals("(")) lvl++;
+                        if (t2.next.getContent().equals(")")) lvl--;
                         t2 = t2.next;
                     }
                     Token ts = new Token("function");
@@ -529,11 +529,11 @@ public class Block extends Expression {
                     int lvl = 0;
                     while (tt.next != null && tt.next.getType() != Token.SEMICOLON &&
                             !(tt.next.getType() != Token.OP && tt.getContent().equals(",")) &&
-                            (tt.next.getType() != Token.BRACE_CLOSE || lvl > 0) &&
+                            (!tt.next.getContent().equals(")") || lvl > 0) &&
                             tt.next.getType() != Token.ARRAY_END &&
                             tt.next.getType() != Token.OBJECT_END) {
-                        if (tt.next.getType() == Token.BRACE_OPEN) lvl++;
-                        if (tt.next.getType() == Token.BRACE_CLOSE) lvl--;
+                        if (tt.next.getContent().equals("(")) lvl++;
+                        if (tt.next.getContent().equals(")")) lvl--;
                         tt = tt.next;
                     }
                     if (tt == end) {

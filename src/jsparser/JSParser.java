@@ -176,11 +176,15 @@ public class JSParser {
                     }
                 }
                 //Found an operator
-                if (!num && String.valueOf(ch).matches("[,<>~^|&*/%!?:+=-]")) {
+                if (!num && String.valueOf(ch).matches("[,.<>~^|&*/%!?\\[\\]:+=-]") && !(cur.getContent().matches("\\+?=|\\+|\\(|,|typeof") && ch == '[')) {
                     last_token = "";
                     state = READ_OPERATOR;
                     String s = pos + 2 < data.length() ? data.substring(pos, pos+2) : data.substring(pos);
-                    if (cur.getType() == Token.OP && ch != '~' && ch != '!' && (!s.equals("++") && !s.equals("--") &&
+                    if (cur.getType() == Token.OP && ch != '~' && ch != '!' && ch != '[' &&
+                            !(cur.getContent().equals("(") && (ch == '+' || ch == '-')) &&
+                            !(cur.getContent().equals(")")) &&
+                            !(cur.getContent().equals("]")) &&
+                            (!s.equals("++") && !s.equals("--") &&
                             !cur.getContent().equals("++") && !cur.getContent().equals("--") ||
                             cur.getContent().equals("++") && (s.equals("++") || s.equals("--")) ||
                             cur.getContent().equals("--") && (s.equals("++") || s.equals("--")))) {
@@ -193,10 +197,25 @@ public class JSParser {
                 if (ch == '(' || ch == ')') {
                     state = READY;
                     Token t = new Token(String.valueOf(ch));
+                    boolean is_func_declaration = cur.getType() == Token.VAR_NAME && (cur.prev.getType() == Token.KEYWORD && cur.prev.getContent().equals("function") ||
+                            cur.prev.prev != null && cur.prev.prev.getType() == Token.KEYWORD && cur.prev.prev.getContent().equals("function") && cur.prev.getContent().equals("*"));
+                    if (ch == '(' && cur.getType() == Token.VAR_NAME && !is_func_declaration) {
+                        t.setType(Token.OP);
+                    } else if (ch == ')') {
+                        Token tt = cur;
+                        while (tt != head && !tt.getContent().equals("(")) {
+                            tt = tt.prev;
+                        }
+                        if (tt.getType() == Token.OP && tt.getContent().equals("(")) {
+                            t.setType(Token.OP);
+                        }
+                    }
                     last_token = "";
                     cur.next = t;
                     t.prev = cur;
                     cur = t;
+                    pos++;
+                    continue;
                 }
             }
 
@@ -284,7 +303,7 @@ public class JSParser {
             }
 
             //Found an array declaration
-            if ((ch == '[' || ch == ']') && state != READ_STRING) {
+            if ((ch == '[' || ch == ']') && state != READ_STRING && !(ch == '[' && (cur.getType() == Token.VAR_NAME || cur.getType() == Token.ARRAY_END || cur.getType() == Token.OBJECT_END || cur.getContent().equals(")") || cur.getContent().equals("]") || last_token.equals("]"))) && !(ch == ']' && (stack.size() == 0 || stack.lastElement() != READ_ARRAY))) {
                 if (state != READY) {
                     state = READY;
                     Token t = new Token(last_token);
@@ -301,6 +320,7 @@ public class JSParser {
                 if (ch == '[') stack.add(READ_ARRAY);
                 else stack.removeElementAt(stack.size()-1);
                 Token t = new Token(String.valueOf(ch));
+                t.setType(ch == '[' ? Token.ARRAY_START : Token.ARRAY_END);
                 last_token = "";
                 cur.next = t;
                 t.prev = cur;
@@ -329,6 +349,9 @@ public class JSParser {
                 if (!String.valueOf(ch).matches("[,<>~^|&*/%!?:+=-]") || !valid) {
                     state = READY;
                     Token t = new Token(last_token);
+                    if (last_token.equals("]")) {
+                        t.setType(Token.OP);
+                    }
                     last_token = "";
                     cur.next = t;
                     t.prev = cur;
@@ -336,6 +359,9 @@ public class JSParser {
 
                     if (!Character.isWhitespace(ch)) {
                         continue;
+                    }
+                    if (pos == data.length()-1) {
+                        break;
                     }
                 } /* else {
                     if (!String.valueOf(ch).matches("[<>~^|&*%/?!:=+-]")) {
@@ -363,7 +389,7 @@ public class JSParser {
                 if (Character.isWhitespace(ch) ||
                         substate == READ_OBJECT_VALUE && (ch == ',' || ch == '}') ||
                         substate == READ_ARRAY && ch == ',' ||
-                        String.valueOf(ch).matches("[,()<>~^|&*/%!?;:+=-]")) {
+                        String.valueOf(ch).matches("[,()<>~^|&*/%!?;:+=-\\[\\]]")) {
                     state = READY;
                     Token t = new Token(last_token);
                     last_token = "";

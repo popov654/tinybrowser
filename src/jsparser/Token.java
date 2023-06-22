@@ -13,7 +13,7 @@ public class Token {
             type = str.charAt(0) == '(' ? BRACE_OPEN : BRACE_CLOSE;
         } else if (str.length() == 1 && (str.charAt(0) == '{' || str.charAt(0) == '}')) {
             type = str.charAt(0) == '{' ? BLOCK_START : BLOCK_END;
-        } else if (str.matches("[,<>~^|&*/%!?:+=-]{1,3}|typeof|in|instanceof")) {
+        } else if (str.matches("[<>~^|&*/%!?:+=-]{1,3}|typeof|in|instanceof|[,.\\[\\]]")) {
             type = OP;
             p = Expression.priorities.get(str);
         } else if (str.matches("^\\(.*\\)$")) {
@@ -59,6 +59,9 @@ public class Token {
 
     public void setType(int value) {
         type = value;
+        if (type == OP) {
+            p = Expression.priorities.get(str);
+        }
     }
 
     private String str;

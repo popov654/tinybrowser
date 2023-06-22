@@ -73,13 +73,19 @@ public class JSString extends JSObject implements Comparable {
         if (str.getValue().equals("length")) {
             return new JSInt(value.length());
         }
+        if (str.asInt().toString().matches("[0-9][1-9]*")) {
+            return new JSString(value.charAt(Integer.parseInt(str.toString())) + "");
+        }
         return ((JSObject)items.get("__proto__")).get(str);
     }
-
+    
     @Override
     public JSValue get(String str) {
         if (str.equals("length")) {
             return new JSInt(value.length());
+        }
+        if (str.matches("[0-9][1-9]*")) {
+            return new JSString(value.charAt(Integer.parseInt(str)) + "");
         }
         return ((JSObject)items.get("__proto__")).get(str);
     }

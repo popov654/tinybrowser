@@ -113,6 +113,9 @@ public class JSArray extends JSObject {
         if (str.getValue().equals("length")) {
             return new JSInt(items.size());
         }
+        if (str.asInt().toString().matches("[0-9][1-9]*")) {
+            return items.get((int)str.asInt().getValue());
+        }
         return ((JSObject)_items.get("__proto__")).get(str);
     }
 
@@ -120,6 +123,9 @@ public class JSArray extends JSObject {
     public JSValue get(String str) {
         if (str.equals("length")) {
             return new JSInt(items.size());
+        }
+        if (str.matches("[0-9][1-9]*")) {
+            return items.get(Integer.parseInt(str));
         }
         if (str.equals("__proto__")) {
             return _items.get("__proto__");
