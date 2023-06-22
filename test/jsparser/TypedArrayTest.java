@@ -27,7 +27,7 @@ public class TypedArrayTest {
 
     @Before
     public void setUp() {
-        JSParser jp = new JSParser("var a = new UInt16Array(); a.push(1); a.push(2); a.push(3); a[3] = 4; a[4] = 5;");
+        JSParser jp = new JSParser("var a = new UInt16Array(5); a[0] = 3; a[1] = 4; a[2] = 5; a[3] = 65536");
         Expression exp = Expression.create(jp.getHead()).eval();
         instance = (TypedArray) Expression.getVar("a", exp);
     }
@@ -37,53 +37,22 @@ public class TypedArrayTest {
     }
 
     /**
-     * Test of slice method, of class JSFloat.
+     * Test of slice method, of class TypedArray.
      */
     @Test
     public void testSlice_JSInt_JSInt() {
-        assertEquals("UInt16Array[2, 3]", instance.slice(new JSInt(1), new JSInt(3)).toString());
+        TypedArray copy = (TypedArray) instance.slice(new JSInt(1), new JSInt(3));
+        assertEquals("UInt16Array[4, 5]", copy.toString());
     }
 
     /**
-     * Test of slice method, of class JSFloat.
+     * Test of slice method, of class TypedArray.
      */
     @Test
     public void testSlice() {
         JSArray a = instance.slice();
-        assertEquals("UInt16Array[1, 2, 3, 4, 5]", a.toString());
+        assertEquals("UInt16Array[3, 4, 5, 0, 0]", a.toString());
         assertFalse(instance.equals(a));
-    }
-
-   /**
-     * Test of push method, of class JSFloat.
-     */
-    @Test
-    public void testPush() {
-        assertEquals("UInt16Array[1, 2, 3, 4, 5, 6]", instance.slice().push(new JSInt(6)).toString());
-    }
-
-   /**
-     * Test of pop method, of class JSFloat.
-     */
-    @Test
-    public void testPop() {
-        assertEquals("UInt16Array[1, 2, 3, 4]", instance.slice().pop().toString());
-    }
-
-       /**
-     * Test of shift method, of class JSFloat.
-     */
-    @Test
-    public void testShift() {
-        assertEquals("UInt16Array[2, 3, 4, 5]", instance.slice().shift().toString());
-    }
-
-   /**
-     * Test of unshift method, of class JSFloat.
-     */
-    @Test
-    public void testUnshift() {
-        assertEquals("UInt16Array[0, 1, 2, 3, 4, 5]", instance.slice().unshift(new JSInt(0)).toString());
     }
 
     /**
@@ -91,11 +60,11 @@ public class TypedArrayTest {
      */
     @Test
     public void testSlice_JSInt() {
-        assertEquals("UInt16Array[3, 4, 5]", instance.slice(new JSInt(2)).toString());
+        assertEquals("UInt16Array[5, 0, 0]", instance.slice(new JSInt(2)).toString());
     }
 
     /**
-     * Test of asBool method, of class JSFloat.
+     * Test of asBool method, of class TypedArray.
      */
     @Test
     public void testAsBool() {
@@ -103,7 +72,7 @@ public class TypedArrayTest {
     }
 
     /**
-     * Test of asInt method, of class JSFloat.
+     * Test of asInt method, of class TypedArray.
      */
     @Test
     public void testAsInt() {
@@ -112,7 +81,7 @@ public class TypedArrayTest {
     }
 
     /**
-     * Test of asFloat method, of class JSFloat.
+     * Test of asFloat method, of class TypedArray.
      */
     @Test
     public void testAsFloat() {
@@ -121,15 +90,15 @@ public class TypedArrayTest {
     }
 
     /**
-     * Test of asString method, of class JSFloat.
+     * Test of asString method, of class TypedArray.
      */
     @Test
     public void testAsString() {
-        assertEquals("UInt16Array[1, 2, 3, 4, 5]", instance.asString().getValue());
+        assertEquals("UInt16Array[3, 4, 5, 0, 0]", instance.asString().getValue());
     }
 
     /**
-     * Test of getType method, of class JSFloat.
+     * Test of getType method, of class TypedArray.
      */
     @Test
     public void testGetType() {
@@ -137,7 +106,7 @@ public class TypedArrayTest {
     }
 
     /**
-     * Test of toString method, of class JSFloat.
+     * Test of toString method, of class TypedArray.
      */
     @Test
     public void testToString() {

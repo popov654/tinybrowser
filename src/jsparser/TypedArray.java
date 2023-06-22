@@ -1,6 +1,6 @@
 package jsparser;
 
-import java.util.Vector;
+import java.util.Arrays;
 
 /**
  *
@@ -10,18 +10,40 @@ public class TypedArray extends JSArray {
 
     public TypedArray() {}
 
-    public TypedArray(int bits) {
+    public TypedArray(int bits, int length) {
         bytes = bits / 8;
         type = "UInt" + bits + "Array";
+        buffer = new ArrayBuffer(length * bytes);
+    }
+
+    public TypedArray(int bits, ArrayBuffer buf) {
+        bytes = bits / 8;
+        type = "UInt" + bits + "Array";
+        buffer = buf;
+    }
+
+    public TypedArray(int bits, JSArray array) {
+        bytes = bits / 8;
+        type = "UInt" + bits + "Array";
+        byte[] data = new byte[array.items.size() * bytes];
+        for (int i = 0; i < array.items.size(); i++) {
+            long val = array.get(i).asInt().getValue();
+            for (int j = 0; j < bytes; j++) {
+                data[bytes * i + j] = (byte)(val & 0xFF);
+                val >>>= 8;
+            }
+        }
+        buffer = new ArrayBuffer(data);
     }
 
     @Override
     public JSValue get(int index) {
         long result = 0;
+        byte[] data = buffer.data;
 
-        if (bytes * index <= data.size() - bytes) {
+        if (bytes * index <= data.length - bytes) {
             for (int i = 0; i < bytes; i++) {
-                long comp = (data.get(bytes * index + i) & 0xFF) << 8 * i;
+                long comp = (data[bytes * index + i] & 0xFF) << 8 * i;
                 result = result | comp;
             }
         }
@@ -37,13 +59,10 @@ public class TypedArray extends JSArray {
     @Override
     public boolean set(int index, JSValue value) {
         long val = value.asInt().getValue();
-        if (bytes * index == data.size()) {
-            for (int i = 0; i < bytes; i++) {
-                data.add((byte) 0);
-            }
-        }
+        byte[] data = buffer.data;
+        
         for (int i = 0; i < bytes; i++) {
-            data.set(bytes * index + i, (byte)(val & 0xFF));
+            data[bytes * index + i] = (byte)(val & 0xFF);
             val >>>= 8;
         }
         return true;
@@ -55,71 +74,64 @@ public class TypedArray extends JSArray {
     }
 
     @Override
-    public JSArray slice() {
-        TypedArray copy = new TypedArray(bytes * 8);
-        for (int i = 0; i < data.size(); i++) {
-            copy.data.add(data.get(i));
+    public JSValue get(String key) {
+        if (key.equals("buffer")) {
+            return buffer;
         }
-        return copy;
+        return super.get(key);
+    }
+
+    @Override
+    public JSValue get(JSString str) {
+        return get(str.getValue());
+    }
+
+    @Override
+    public JSArray slice() {
+        return new TypedArray(bytes * 8, buffer);
     }
 
     @Override
     public JSArray slice(JSInt from, JSInt to) {
-        TypedArray copy = new TypedArray(bytes * 8);
         int fromIndex = (int) from.getValue() * bytes;
-        int toIndex = (int) Math.min(to.getValue() * bytes, data.size());
-        for (int i = fromIndex; i < toIndex; i++) {
-            copy.data.add(data.get(i));
-        }
-        return copy;
+        int toIndex = (int) Math.min(to.getValue() * bytes, buffer.data.length);
+        byte[] copyBytes = Arrays.copyOfRange(buffer.data, fromIndex, toIndex);
+
+        return new TypedArray(bytes * 8, new ArrayBuffer(copyBytes));
     }
 
     @Override
     public JSArray slice(JSInt from) {
-        return slice(from, new JSInt(data.size() / bytes));
+        int fromIndex = (int) from.getValue() * bytes;
+        int toIndex = buffer.data.length;
+        byte[] copyBytes = Arrays.copyOfRange(buffer.data, fromIndex, toIndex);
+
+        return new TypedArray(bytes * 8, new ArrayBuffer(copyBytes));
     }
 
     @Override
     public JSArray push(JSValue v) {
-        set(data.size() / bytes, v);
         return this;
     }
 
     @Override
     public JSArray pop() {
-        for (int i = 0; i < bytes; i++) {
-            data.remove(data.size()-1);
-        }
         return this;
     }
 
     @Override
     public JSArray shift() {
-        for (int i = 0; i < bytes; i++) {
-            data.remove(0);
-        }
         return this;
     }
 
     @Override
     public JSArray unshift(JSValue value) {
-        if (!value.getType().equals("Integer")) {
-            return this;
-        }
-        long val = value.asInt().getValue();
-        if (val >= Math.pow(256, bytes)) {
-            return this;
-        }
-        for (int i = 0; i < bytes; i++) {
-            data.add(0, (byte)(val & 0xFF));
-            val >>>= 8;
-        }
         return this;
     }
 
     @Override
     public JSInt length() {
-        return new JSInt(data.size() / bytes);
+        return new JSInt(buffer.data.length / bytes);
     }
 
     @Override
@@ -131,7 +143,8 @@ public class TypedArray extends JSArray {
     public String toString() {
         //String shortString = type + "[]";
         String result = "";
-        for (int i = 0; i < data.size() / bytes; i++) {
+        byte[] data = buffer.data;
+        for (int i = 0; i < data.length / bytes; i++) {
             if (i > 0) result += ", ";
             result += get(i).toString();
         }
@@ -141,5 +154,5 @@ public class TypedArray extends JSArray {
     public String type = "UInt8Array";
 
     public int bytes = 1;
-    public Vector<Byte> data = new Vector<Byte>();
+    public ArrayBuffer buffer;
 }
