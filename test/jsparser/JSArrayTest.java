@@ -36,7 +36,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of slice method, of class JSFloat.
+     * Test of slice method, of class JSArray.
      */
     @Test
     public void testSlice_JSInt_JSInt() {
@@ -44,7 +44,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of slice method, of class JSFloat.
+     * Test of slice method, of class JSArray.
      */
     @Test
     public void testSlice() {
@@ -54,7 +54,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of splice method, of class JSFloat.
+     * Test of splice method, of class JSArray.
      */
     @Test
     public void testSplice() {
@@ -66,7 +66,7 @@ public class JSArrayTest {
     }
 
    /**
-     * Test of push method, of class JSFloat.
+     * Test of push method, of class JSArray.
      */
     @Test
     public void testPush() {
@@ -74,7 +74,7 @@ public class JSArrayTest {
     }
 
    /**
-     * Test of pop method, of class JSFloat.
+     * Test of pop method, of class JSArray.
      */
     @Test
     public void testPop() {
@@ -82,7 +82,7 @@ public class JSArrayTest {
     }
 
        /**
-     * Test of shift method, of class JSFloat.
+     * Test of shift method, of class JSArray.
      */
     @Test
     public void testShift() {
@@ -90,7 +90,7 @@ public class JSArrayTest {
     }
 
    /**
-     * Test of unshift method, of class JSFloat.
+     * Test of unshift method, of class JSArray.
      */
     @Test
     public void testUnshift() {
@@ -98,7 +98,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of slice method, of class JSFloat.
+     * Test of slice method, of class JSArray.
      */
     @Test
     public void testSlice_JSInt() {
@@ -106,7 +106,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of asBool method, of class JSFloat.
+     * Test of asBool method, of class JSArray.
      */
     @Test
     public void testAsBool() {
@@ -114,7 +114,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of asInt method, of class JSFloat.
+     * Test of asInt method, of class JSArray.
      */
     @Test
     public void testAsInt() {
@@ -123,7 +123,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of asFloat method, of class JSFloat.
+     * Test of asFloat method, of class JSArray.
      */
     @Test
     public void testAsFloat() {
@@ -132,7 +132,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of asString method, of class JSFloat.
+     * Test of asString method, of class JSArray.
      */
     @Test
     public void testAsString() {
@@ -140,7 +140,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of getType method, of class JSFloat.
+     * Test of getType method, of class JSArray.
      */
     @Test
     public void testGetType() {
@@ -148,7 +148,7 @@ public class JSArrayTest {
     }
 
     /**
-     * Test of toString method, of class JSFloat.
+     * Test of toString method, of class JSArray.
      */
     @Test
     public void testToString() {
