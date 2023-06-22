@@ -98,12 +98,14 @@ public class JSArray extends JSObject {
         }
     }
 
-    public JSValue set(JSInt index, JSValue value) {
-        return items.set((int)index.getValue(), value);
+    public boolean set(JSInt index, JSValue value) {
+        items.set((int)index.getValue(), value);
+        return true;
     }
 
-    public JSValue set(int index, JSValue value) {
-        return items.set(index, value);
+    public boolean set(int index, JSValue value) {
+        items.set(index, value);
+        return true;
     }
 
     @Override

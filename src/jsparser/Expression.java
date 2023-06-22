@@ -229,6 +229,9 @@ public class Expression {
         FileC file = new FileC();
         FileReaderC fileR = new FileReaderC();
         FileWriterC fileW = new FileWriterC();
+        TypedArrayC uint8array = new TypedArrayC(8);
+        TypedArrayC uint16array = new TypedArrayC(16);
+        TypedArrayC uint32array = new TypedArrayC(32);
         PromiseC p = new PromiseC();
         Block b = new Block(head);
         Window w = new Window(b);
@@ -246,6 +249,9 @@ public class Expression {
         b.scope.put("File", file);
         b.scope.put("FileReader", fileR);
         b.scope.put("FileWriter", fileW);
+        b.scope.put("UInt8Array", uint8array);
+        b.scope.put("UInt16Array", uint16array);
+        b.scope.put("UInt32Array", uint32array);
         b.scope.put("XMLHttpRequest", h);
         b.scope.put("Node", hn);
         b.scope.put("HTMLElement", he);
