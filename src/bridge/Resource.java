@@ -3,6 +3,7 @@ package bridge;
 import htmlparser.Node;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.charset.Charset;
 import render.WebDocument;
 
 /**
@@ -79,6 +80,15 @@ public class Resource {
         loaded = false;
     }
 
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public void setCharset(Charset ch) {
+        charset = ch;
+    }
+
+    private Charset charset;
 
     public static class Type {
         public static final int STYLE = 0;

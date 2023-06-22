@@ -5,6 +5,7 @@ import htmlparser.HTMLParser;
 import htmlparser.Node;
 import htmlparser.NodeActionCallback;
 import htmlparser.NodeEvent;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Set;
@@ -70,7 +71,7 @@ public class CSSParser {
                 } else if (!global_rule) {
                     result.add(new QuerySelector(current_query, group, hp, block));
                 } else {
-                    global_rules.put(current_query, parseRules(block));
+                    global_rules.put(current_query, parseRules(block, hp.charset));
                     at_rule = false;
                 }
                 open = false;
@@ -158,7 +159,7 @@ public class CSSParser {
         }
     }
 
-    public static LinkedHashMap<String, String> parseRules(String rules) {
+    public static LinkedHashMap<String, String> parseRules(String rules, Charset charset) {
         LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
         int pos = 0;
         String rule = "";
@@ -191,6 +192,9 @@ public class CSSParser {
                 String val = p[1].trim();
                 if (val.matches("\".*\"") || val.matches("\'.*\'")) {
                     val = val.substring(1, val.length()-1);
+                }
+                if (charset != null && charset.displayName().startsWith("UTF")) {
+                    val = new String(val.getBytes(), charset);
                 }
                 result.put(p[0].trim().toLowerCase(), val);
             }

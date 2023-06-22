@@ -1,10 +1,12 @@
 package htmlparser;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -12,6 +14,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import network.Request;
+import tinybrowser.CharsetDetector;
 
 /**
  *
@@ -19,9 +22,7 @@ import network.Request;
  */
 public class HTMLParser {
 
-    public HTMLParser() {
-        
-    }
+    public HTMLParser() {}
 
     public HTMLParser(String filename) {
         loadFile(filename);
@@ -82,6 +83,7 @@ public class HTMLParser {
             return;
         }
         ObjectInputStream is = null;
+        charset = CharsetDetector.detectCharset(new File(filename));
         try {
             FileInputStream in = new FileInputStream(filename);
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -112,6 +114,9 @@ public class HTMLParser {
             if (curNode == root) return;
             Node text = new Node(curNode, 3);
             text.nodeValue = cur_text;
+            if (charset != null && charset.displayName().startsWith("UTF")) {
+                text.nodeValue = new String(text.nodeValue.getBytes(), charset);
+            }
         }
         cur_text = "";
         last_start = pos+1;
@@ -520,4 +525,5 @@ public class HTMLParser {
     private HashMap<String, Vector<Node>> names = new HashMap<String, Vector<Node>>();
 
     public String data = "";
+    public Charset charset;
 }

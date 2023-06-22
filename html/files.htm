@@ -63,6 +63,9 @@ window.addEventListener('load', function() {
       if (document.getElementById('result').value != '') {
          var fw = new FileWriter()
          fw.writeText(document.getElementById('result').value, null, 'windows-1251')
+         // var enc = new TextEncoder('windows-1251')
+         // var data = enc.encode('Привет')
+         // fw.write(data, 'text_test.txt', 'text/plain')
       }
    }
    

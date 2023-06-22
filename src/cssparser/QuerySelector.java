@@ -22,7 +22,7 @@ public class QuerySelector {
             children = new Vector<QuerySelector>();
             resultSet = new Vector<Node>();
             this.query = query;
-            this.rules = CSSParser.parseRules(rules);
+            this.rules = CSSParser.parseRules(rules, hp.charset);
             this.group = group;
             this.hp = hp;
             for (int i = 0; i < s.length; i++) {
@@ -33,7 +33,7 @@ public class QuerySelector {
             }
         } else {
             this.query = query;
-            this.rules = CSSParser.parseRules(rules);
+            this.rules = CSSParser.parseRules(rules, hp.charset);
             this.group = group;
             this.hp = hp;
             parse();

@@ -17,6 +17,7 @@ import jsparser.HTMLElement;
 import network.Request;
 import render.Block;
 import render.WebDocument;
+import tinybrowser.CharsetDetector;
 import tinybrowser.Reader;
 
 /**
@@ -178,6 +179,9 @@ public class ResourceManager {
                         loadResourceContent(resource);
                         String content = resource.getContent();
                         if (content != null && !content.isEmpty()) {
+                            if (resource.getCharset() != null && resource.getCharset().displayName().startsWith("UTF")) {
+                                content = new String(content.getBytes(), resource.getCharset());
+                            }
                             document.builder.cssParser.setStyleForNode(resource.getNode(), content);
                             if (document.document != null) {
                                 document.builder.reapplyDocumentStyles(document.document);
@@ -208,7 +212,7 @@ public class ResourceManager {
                                     script.content = content;
                                     script.loaded = true;
                                     if (document.document != null) {
-                                        document.builder.compileScript(script);
+                                        document.builder.compileScript(script, resource.getCharset());
                                     }
                                     break;
                                 }
@@ -276,6 +280,7 @@ public class ResourceManager {
                 }
                 fr.close();
                 content = sb.toString().trim();
+                resource.setCharset(CharsetDetector.detectCharset(f));
             } catch (IOException ex) {
                 Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
             }

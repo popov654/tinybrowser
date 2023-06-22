@@ -5,11 +5,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tinybrowser.CharsetDetector;
 
 /**
  *
@@ -20,6 +22,12 @@ public class JSParser {
     public JSParser() {}
 
     public JSParser(String data) {
+        this.data = data;
+        scan();
+    }
+
+    public JSParser(String data, Charset charset) {
+        this.charset = charset;
         this.data = data;
         scan();
     }
@@ -43,6 +51,7 @@ public class JSParser {
 
     public void loadFile(String filename) {
         ObjectInputStream is = null;
+        charset = CharsetDetector.detectCharset(new java.io.File(filename));
         try {
             FileInputStream in = new FileInputStream(filename);
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -287,7 +296,7 @@ public class JSParser {
             if ((ch == '[' || ch == ']') && state != READ_STRING) {
                 if (state != READY) {
                     state = READY;
-                    Token t = new Token(last_token);
+                    Token t = new Token(last_token, charset);
                     last_token = "";
                     cur.next = t;
                     t.prev = cur;
@@ -365,7 +374,7 @@ public class JSParser {
                         substate == READ_ARRAY && ch == ',' ||
                         String.valueOf(ch).matches("[,()<>~^|&*/%!?;:+=-]")) {
                     state = READY;
-                    Token t = new Token(last_token);
+                    Token t = new Token(last_token, charset);
                     last_token = "";
                     cur.next = t;
                     t.prev = cur;
@@ -430,7 +439,7 @@ public class JSParser {
                 String s = last_token;
                 if (substate != READ_OBJECT_FIELD) s = "\"" + s + "\"";
                 else s = "<" + s + ">";
-                Token t = new Token(s);
+                Token t = new Token(s, charset);
                 strToken = '\0';
                 last_token = "";
                 cur.next = t;
@@ -546,4 +555,5 @@ public class JSParser {
     //private Hashtable<String, Vector<Node>> classes = new Hashtable<String, Vector<Node>>();
 
     public String data = "";
+    public Charset charset;
 }
