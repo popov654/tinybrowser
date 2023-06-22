@@ -64,6 +64,8 @@ public class JSBlobC extends Function {
                     blobs.add(new Blob(file.file));
                     if (mimeType.isEmpty()) mimeType = network.Request.getMimeType(file.file.getName());
                 }
+            } else if (list.items.get(i) instanceof TypedArray) {
+                blobs.add(new Blob(((TypedArray) list.items.get(i)).buffer.data));
             }
         }
 

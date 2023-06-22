@@ -22,12 +22,22 @@ public class FileWriterProto extends JSObject {
         public JSValue call(final JSObject context, Vector<JSValue> args, boolean as_constr) {
 
             if (args.size() == 0) {
-                JSError e = new JSError(null, "Type error: argument 1 must be a File or a Blob", getCaller().getStack());
+                JSError e = new JSError(null, "Arguments error: at least 1 argument expected", getCaller().getStack());
                 getCaller().error = e;
                 return Undefined.getInstance();
             }
 
-            final JSBlob blob = (JSBlob) args.get(0);
+            JSBlob blob;
+
+            if (args.get(0) instanceof TypedArray) {
+                blob = new JSBlob(new Blob(((TypedArray)args.get(0)).buffer.data));
+            } else if (args.get(0) instanceof JSBlob) {
+                blob = (JSBlob) args.get(0);
+            } else {
+                JSError e = new JSError(null, "Type error: argument 1 must be a File, a Blob or a TypedArray", getCaller().getStack());
+                getCaller().error = e;
+                return Undefined.getInstance();
+            }
 
             if (args.size() >= 3) {
                 blob.getBlob().mimeType = args.get(2).asString().getValue();
