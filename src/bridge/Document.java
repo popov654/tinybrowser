@@ -2,6 +2,7 @@ package bridge;
 
 import cache.Cache;
 import htmlparser.Node;
+import java.nio.charset.Charset;
 import javax.swing.JFrame;
 import render.Block;
 import render.WebDocument;
@@ -45,6 +46,8 @@ public class Document {
     }
 
     private ResourceManager resourceManager;
+
+    public Charset charset;
 
     public Builder builder;
     public Node rootNode;

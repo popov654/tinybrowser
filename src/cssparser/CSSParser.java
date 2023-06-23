@@ -71,7 +71,7 @@ public class CSSParser {
                 } else if (!global_rule) {
                     result.add(new QuerySelector(current_query, group, hp, block));
                 } else {
-                    global_rules.put(current_query, parseRules(block, hp.charset));
+                    global_rules.put(current_query, parseRules(block));
                     at_rule = false;
                 }
                 open = false;
@@ -159,7 +159,7 @@ public class CSSParser {
         }
     }
 
-    public static LinkedHashMap<String, String> parseRules(String rules, Charset charset) {
+    public static LinkedHashMap<String, String> parseRules(String rules) {
         LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
         int pos = 0;
         String rule = "";
@@ -192,9 +192,6 @@ public class CSSParser {
                 String val = p[1].trim();
                 if (val.matches("\".*\"") || val.matches("\'.*\'")) {
                     val = val.substring(1, val.length()-1);
-                }
-                if (charset != null && charset.displayName().startsWith("UTF")) {
-                    val = new String(val.getBytes(), charset);
                 }
                 result.put(p[0].trim().toLowerCase(), val);
             }

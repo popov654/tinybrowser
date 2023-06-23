@@ -26,12 +26,6 @@ public class JSParser {
         scan();
     }
 
-    public JSParser(String data, Charset charset) {
-        this.charset = charset;
-        this.data = data;
-        scan();
-    }
-
     public JSParser(String filename, boolean fromFile) {
         loadFile(filename);
         scan();
@@ -51,7 +45,7 @@ public class JSParser {
 
     public void loadFile(String filename) {
         ObjectInputStream is = null;
-        charset = CharsetDetector.detectCharset(new java.io.File(filename));
+        Charset charset = CharsetDetector.detectCharset(new java.io.File(filename));
         try {
             FileInputStream in = new FileInputStream(filename);
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -65,6 +59,9 @@ public class JSParser {
             }
             br.close();
             in.close();
+            if (charset.displayName().startsWith("UTF")) {
+                data = new String(data.getBytes(), charset);
+            }
         } catch (IOException ex) {
             Logger.getLogger(JSParser.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -296,7 +293,7 @@ public class JSParser {
             if ((ch == '[' || ch == ']') && state != READ_STRING) {
                 if (state != READY) {
                     state = READY;
-                    Token t = new Token(last_token, charset);
+                    Token t = new Token(last_token);
                     last_token = "";
                     cur.next = t;
                     t.prev = cur;
@@ -374,7 +371,7 @@ public class JSParser {
                         substate == READ_ARRAY && ch == ',' ||
                         String.valueOf(ch).matches("[,()<>~^|&*/%!?;:+=-]")) {
                     state = READY;
-                    Token t = new Token(last_token, charset);
+                    Token t = new Token(last_token);
                     last_token = "";
                     cur.next = t;
                     t.prev = cur;
@@ -439,7 +436,7 @@ public class JSParser {
                 String s = last_token;
                 if (substate != READ_OBJECT_FIELD) s = "\"" + s + "\"";
                 else s = "<" + s + ">";
-                Token t = new Token(s, charset);
+                Token t = new Token(s);
                 strToken = '\0';
                 last_token = "";
                 cur.next = t;
@@ -555,5 +552,4 @@ public class JSParser {
     //private Hashtable<String, Vector<Node>> classes = new Hashtable<String, Vector<Node>>();
 
     public String data = "";
-    public Charset charset;
 }

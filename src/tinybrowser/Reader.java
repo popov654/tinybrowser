@@ -11,6 +11,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -76,6 +77,7 @@ public class Reader {
         Document document = new Document(builder, hp.getRootNode(), null, new DefaultCache());
         document.document = renderDocument;
         builder.documentWrap = document;
+        document.charset = hp.charset;
 
         CSSParser parser = new CSSParser(hp);
         builder.cssParser = parser;

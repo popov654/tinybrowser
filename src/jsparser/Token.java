@@ -9,11 +9,7 @@ import java.util.Vector;
  */
 public class Token {
 
-    public Token(String s) {
-        this(s, null);
-    }
-    
-    public Token(String str, Charset charset) {
+    public Token(String str) {
         this.str = str;
         if (str.length() == 1 && (str.charAt(0) == '(' || str.charAt(0) == ')')) {
             type = str.charAt(0) == '(' ? BRACE_OPEN : BRACE_CLOSE;
@@ -46,9 +42,6 @@ public class Token {
             type = SEMICOLON;
         } else if (str.length() > 0) {
             type = VALUE;
-            if (str.startsWith("\"") && str.endsWith("\"") && charset != null && charset.displayName().startsWith("UTF")) {
-                str = new String(str.getBytes(), charset);
-            }
         } else {
             type = EMPTY;
         }

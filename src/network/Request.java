@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
 import render.Util;
 import render.WebDocument;
+import tinybrowser.CharsetDetector;
 
 /**
  *
@@ -70,6 +71,12 @@ public class Request {
                         System.out.println("Loaded file \"" + fullPath + "\" in " + (end - start) + " ms");
 
                         content = sb.toString().trim();
+
+                        Charset response_charset = CharsetDetector.detectCharset(f);
+                        if (response_charset.displayName().startsWith("UTF")) {
+                            content = new String(content.getBytes(), charset);
+                        }
+
                         return content;
                     } catch (IOException ex) {
                         Logger.getLogger(Request.class.getName()).log(Level.SEVERE, null, ex);
@@ -180,6 +187,8 @@ public class Request {
                     System.out.println("Charset declaration found: " + explicitCharset.toLowerCase());
                 }
                 response = new String(bytes, charset);
+            } else {
+                response = new String(bytes, CharsetDetector.detectCharset(bytes));
             }
             
         } catch (IOException ex) {

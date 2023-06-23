@@ -212,7 +212,7 @@ public class ResourceManager {
                                     script.content = content;
                                     script.loaded = true;
                                     if (document.document != null) {
-                                        document.builder.compileScript(script, resource.getCharset());
+                                        document.builder.compileScript(script);
                                     }
                                     break;
                                 }
@@ -279,8 +279,7 @@ public class ResourceManager {
                     sb.append(buffer);
                 }
                 fr.close();
-                content = sb.toString().trim();
-                resource.setCharset(CharsetDetector.detectCharset(f));
+                content = new String(sb.toString().getBytes(), CharsetDetector.detectCharset(f)).trim();
             } catch (IOException ex) {
                 Logger.getLogger(ResourceManager.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -97,6 +97,9 @@ public class HTMLParser {
             }
             br.close();
             in.close();
+            if (charset.displayName().startsWith("UTF")) {
+                data = new String(data.getBytes(), charset);
+            }
         } catch (IOException ex) {
             Logger.getLogger(HTMLParser.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -114,9 +117,6 @@ public class HTMLParser {
             if (curNode == root) return;
             Node text = new Node(curNode, 3);
             text.nodeValue = cur_text;
-            if (charset != null && charset.displayName().startsWith("UTF")) {
-                text.nodeValue = new String(text.nodeValue.getBytes(), charset);
-            }
         }
         cur_text = "";
         last_start = pos+1;
