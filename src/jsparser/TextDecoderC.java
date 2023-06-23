@@ -7,7 +7,7 @@ import java.util.Vector;
  *
  * @author Alex
  */
-public class TextEncoderC extends Function {
+public class TextDecoderC extends Function {
 
     @Override
     public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
@@ -21,15 +21,15 @@ public class TextEncoderC extends Function {
             charset = args.get(0).asString().getValue();
         }
         
-        return new TextEncoder(charset);
+        return new TextDecoder(charset);
     }
 
-    class TextEncoder extends JSObject {
+    class TextDecoder extends JSObject {
 
-        TextEncoder(String enc) {
+        TextDecoder(String enc) {
             charset = enc;
             items.put("charset", new JSString(charset));
-            items.put("encode", new Function() {
+            items.put("decode", new Function() {
                 @Override
                 public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
                     return call(context, args);
@@ -42,22 +42,26 @@ public class TextEncoderC extends Function {
                         getCaller().error = e;
                         return Undefined.getInstance();
                     }
-                    if (!args.get(0).getType().equals("String")) {
-                        JSError e = new JSError(null, "Type error: argument 1 must be a string", getCaller().getStack());
+                    if (!args.get(0).getType().equals("Array")) {
+                        JSError e = new JSError(null, "Type error: argument 1 must be an array", getCaller().getStack());
                         getCaller().error = e;
                         return Undefined.getInstance();
                     }
-                    String text = args.get(0).asString().getValue();
-                    byte[] bytes = new String(text.getBytes(), Charset.forName(charset)).getBytes();
+                    
+                    JSArray a = (JSArray) args.get(0);
+                    byte[] bytes = new byte[(int) a.get("length").asInt().getValue()];
+                    for (int i = 0; i < bytes.length; i++) {
+                        bytes[i] = (byte) (a.get(i).asInt().getValue() & 0xFF);
+                    }
 
-                    return new TypedArray(8, new ArrayBuffer(bytes));
+                    return new JSString(new String(bytes, Charset.forName(charset)));
                 }
             });
         }
 
         @Override
         public String toString() {
-            return "TextEncoder { charset: '" + charset + "' }";
+            return "TextDecoder { charset: '" + charset + "' }";
         }
 
         public String charset;
