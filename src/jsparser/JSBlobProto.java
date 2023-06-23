@@ -12,6 +12,7 @@ public class JSBlobProto extends JSObject {
 
     private JSBlobProto() {
         items.put("slice", new sliceFunction());
+        items.put("buffer", new bufferFunction());
         items.put("text", new textFunction());
         items.put("dataURL", new dataURLFunction());
     }
@@ -45,6 +46,18 @@ public class JSBlobProto extends JSObject {
             }
 
             return new JSBlob(b);
+        }
+    }
+
+    class bufferFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            JSValue result = new ArrayBuffer(((JSBlob)context).blob.getBytes());
+            Promise p = new Promise(null);
+            p.setResult(result);
+            p.setState(Promise.FULFILLED);
+
+            return p;
         }
     }
 
