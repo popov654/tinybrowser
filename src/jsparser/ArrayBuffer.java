@@ -17,6 +17,25 @@ public class ArrayBuffer extends JSArray {
     }
 
     @Override
+    public JSValue get(JSString str) {
+        if (str.getValue().equals("length")) {
+            return new JSInt(data.length);
+        }
+        return ((JSObject)_items.get("__proto__")).get(str);
+    }
+
+    @Override
+    public JSValue get(String str) {
+        if (str.equals("length")) {
+            return new JSInt(data.length);
+        }
+        if (str.equals("__proto__")) {
+            return _items.get("__proto__");
+        }
+        return ((JSObject)_items.get("__proto__")).get(str);
+    }
+
+    @Override
     public JSValue get(int index) {
         if (index >= 0 && index < data.length) {
             return new JSInt(data[index]);
