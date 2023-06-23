@@ -1,6 +1,5 @@
 package jsparser;
 
-import java.util.Vector;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -56,7 +55,18 @@ public class TypedArrayTest {
     }
 
     /**
-     * Test of slice method, of class JSFloat.
+     * Test of buffer property, of class TypedArray.
+     */
+    @Test
+    public void testArrayBuffer() {
+        JSParser jp = new JSParser("var a = new UInt16Array(5); a[0] = 3; a[1] = 4; a[2] = 5; var b = new UInt8Array(a.buffer); var c = new UInt8Array(a.buffer, 2, 3)");
+        Expression exp = Expression.create(jp.getHead()).eval();
+        assertEquals("UInt8Array[3, 0, 4, 0, 5, 0, 0, 0, 0, 0]", Expression.getVar("b", exp).toString());
+        assertEquals("UInt8Array[4, 0, 5]", Expression.getVar("c", exp).toString());
+    }
+
+    /**
+     * Test of slice method, of class TypedArray.
      */
     @Test
     public void testSlice_JSInt() {
