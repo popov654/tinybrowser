@@ -1456,7 +1456,7 @@ public class LayoutTests extends JFrame {
             else if (args[0].equals("absolute")) test = 12;
             else if (args[0].equals("fixed")) test = 13;
             else if (args[0].equals("auto-marings")) test = 14;
-            else if (args[0].equals("z-index")) test = 16;
+            else if (args[0].equals("z-index")) test = 15;
             else if (args[0].equals("lists")) test = 16;
             else if (args[0].equals("borders")) test = 17;
             else if (args[0].equals("gradients")) test = 18;
