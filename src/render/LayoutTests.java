@@ -123,6 +123,7 @@ public class LayoutTests extends JFrame {
         d.setPositioning(Block.Position.STATIC);
         d.setBorderRadius(0, 17, 0, 17);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
+        d.setBoxSizing(Block.BoxSizing.BORDER_BOX);
         d.setMargins(4);
         d.setPaddings(15, 17, 15, 17);
         d.setWidth(-1);
@@ -149,6 +150,7 @@ public class LayoutTests extends JFrame {
         d2.setPositioning(Block.Position.STATIC);
         d2.setDisplayType(Block.Display.INLINE_BLOCK);
         d2.setVerticalAlign(Block.VerticalAlign.ALIGN_MIDDLE);
+        d2.setBoxSizing(Block.BoxSizing.BORDER_BOX);
         d2.setBorderRadius(35);
         d2.setMargins(4);
         d2.setPaddings(0);
