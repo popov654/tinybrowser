@@ -588,15 +588,6 @@ public class LayoutTests extends JFrame {
             document.root.forceRepaintAll();
             document.repaint();
         }
-
-        Timer t1 = new Timer(1500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                network.Request.makeRequest("http://popov654.pp.ru/copybox/photo.jpg");
-            }
-        });
-        t1.setRepeats(false);
-        t1.start();
     }
 
     public void testImages(int width, int height) {
