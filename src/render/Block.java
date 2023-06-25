@@ -9222,6 +9222,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             expression = expr;
         }
 
+        @Override
+        public DynamicValue clone() {
+            return new DynamicValue(length.value, length.unit, expression);
+        }
+
         public CssLength length;
         public String expression;
     }
@@ -9610,6 +9615,11 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
         b.border = new RoundedBorder(b, b.borderWidth, b.arc, b.borderColor, b.borderType);
 
+        Set<String> dims = dimensions.keySet();
+        for (String dim: dims) {
+            b.dimensions.put(dim, dimensions.get(dim).clone());
+        }
+
         if (background != null) {
             b.background = background.clone();
             b.has_animation = has_animation;
@@ -9673,8 +9683,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         b.defaultChecked = defaultChecked;
         b.labelFor = labelFor;
         b.buttonType = buttonType;
-
-        b.dimensions = dimensions;
 
         b.sel = sel;
         b.needToRestoreSelection = needToRestoreSelection;
