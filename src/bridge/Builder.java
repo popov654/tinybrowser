@@ -816,7 +816,7 @@ public class Builder {
         if (node.nodeType != 1) return;
         HTMLElement el = HTMLElement.create(node);
 
-        Set<String> attrs = node.attributes.keySet();
+        Set<String> attrs = new HashSet<String>(node.attributes.keySet());
         for (String attr: attrs) {
             if (attr.startsWith("on")) {
                 String code = node.getAttribute(attr);
@@ -945,7 +945,7 @@ public class Builder {
         HashMap<Node, Styles> map = StyleMap.getDocumentStyles(doc);
         HashMap<Node, HashMap<String, String>> runtimeStyleMap = new HashMap<Node, HashMap<String, String>>();
         if (map != null) {
-            Set<Node> nodes = map.keySet();
+            Set<Node> nodes = new HashSet(map.keySet());
             for (Node node: nodes) {
                 runtimeStyleMap.put(node, map.get(node).runtimeStyles);
                 Block block = Mapper.get(node);

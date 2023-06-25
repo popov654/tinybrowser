@@ -2449,7 +2449,7 @@ public class Expression {
             parent_block.error = new JSError(start.val, "Access error: undefined is not an object", getStack());
             err = true;
         }
-        while (!thr && start.next != null && start.next.getType() == Token.BRACE_OPEN) {
+        while (!thr && !err && start.next != null && start.next.getType() == Token.BRACE_OPEN) {
             functionCall(start.next);
         }
         if (!silent && parent_block.error == null) {
