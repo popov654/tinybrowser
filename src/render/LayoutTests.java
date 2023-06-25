@@ -93,6 +93,7 @@ public class LayoutTests extends JFrame {
 
         Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
+        d.setBoxSizing(Block.BoxSizing.BORDER_BOX);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d.setMargins(4);
         d.setPaddings(15, 17, 15, 17);
@@ -254,6 +255,7 @@ public class LayoutTests extends JFrame {
 
         final Block d = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d.setPositioning(Block.Position.STATIC);
+        d.setBoxSizing(Block.BoxSizing.BORDER_BOX);
         //d.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d.setMargins(4);
         d.setPaddings(15, 17, 15, 17);
@@ -308,6 +310,8 @@ public class LayoutTests extends JFrame {
 
         final Block d2 = new Block(document, null, 136, 92, 1, 7, Color.MAGENTA);
         d2.setPositioning(Block.Position.STATIC);
+        d2.setBoxSizing(Block.BoxSizing.BORDER_BOX);
+
         //d2.setDisplayType(Drawable.Display.INLINE_BLOCK);
         d2.setMargins(4);
         d2.setPaddings(15, 17, 15, 17);
@@ -1481,7 +1485,7 @@ public class LayoutTests extends JFrame {
     }
 
     public static void main(String[] args) {
-        int test = 1;
+        int test = 0;
         int list_type = 2;
 
         if (args.length > 0) {
