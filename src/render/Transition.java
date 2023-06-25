@@ -11,6 +11,7 @@ public class Transition {
 
     public Transition(Block b, TransitionInfo info, String property, String start_value, String end_value) {
         this(b, property, info.duration, start_value, end_value, info.timingFunction, info.delay);
+        bezierCoords = calculateCubicBezier(info.bezierCoeficients);
     }
 
     public Transition(Block b, String property, int duration, String start_value, String end_value) {
@@ -340,9 +341,28 @@ public class Transition {
                 return (double)-2 / (110 * Math.pow(q + 0.15, 8) + 2) + 1;
             case TimingFunction.BOUNCE:
                 return 5 * q * q - 4 * q * q * q;
+            case TimingFunction.BEZIER:
+                return q == 1 ? 1 : bezierCoords[(int) Math.floor(q * bezierCoords.length)];
 
         }
         return q;
+    }
+
+    public double[] calculateCubicBezier(double[] coeffs) {
+        return calculateCubicBezier(coeffs[0], coeffs[1], coeffs[2], coeffs[3]);
+    }
+
+    public double[] calculateCubicBezier(double a, double b, double c, double d) {
+        int steps = 100;
+        double[] values = new double[steps];
+        for (int i = 0; i < steps; i++) {
+            double t = 1d / steps * i;
+            double x = 3*a*t*(1-t)*(1-t) +3*c*t*t*(1-t) + t*t*t;
+            double y = 3*b*t*(1-t)*(1-t) +3*d*t*t*(1-t) + t*t*t;
+            int index = (int) Math.floor(x * steps);
+            values[index] = y;
+        }
+        return values;
     }
 
 
@@ -350,6 +370,7 @@ public class Transition {
     public String property;
     public int timingFunction;
     public int delay = 0;
+    double[] bezierCoords = {};
 
     public long startedAt = 0;
     public int duration = 0;
@@ -380,5 +401,6 @@ public class Transition {
         public static final int EASE_IN_OUT = 3;
         public static final int EASE = 4;
         public static final int BOUNCE = 5;
+        public static final int BEZIER = 6;
     }
 }
