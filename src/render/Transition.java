@@ -22,8 +22,8 @@ public class Transition {
         this.end_rule = end_value;
         passiveMode = block.passiveTransitionMode;
 
-        if (start_value != null || property.endsWith("color") ||
-                end_value != null && b.parseColor(end_value) != null) {
+        if ((start_value != null || property.endsWith("color") ||
+                end_value != null && b.parseColor(end_value) != null) && !property.startsWith("background")) {
             if (start_value != null) {
                 startColor = b.parseColor(start_value);
             }
@@ -184,7 +184,7 @@ public class Transition {
     }
 
     public void stop() {
-        update(1);
+        update(System.currentTimeMillis() - startedAt > 20 ? 1 : 0);
         block.activeTransitions.remove(this);
         if (value_type.equals("background")) {
             block.background = block.target_background;

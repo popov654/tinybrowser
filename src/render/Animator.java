@@ -28,12 +28,16 @@ public class Animator implements ActionListener {
         int old_height = block.viewport_height;
 
         boolean passiveMode = true;
-        for (Transition t: (Vector<Transition>) block.activeTransitions.clone()) {
-            if (t.block != block) continue;
-            if (!t.passiveMode) passiveMode = false;
-            block.document.lastSetProperties.add(t.property);
-            t.update();
-            count++;
+
+        synchronized (block) {
+            Vector<Transition> transitions = (Vector<Transition>) block.activeTransitions.clone();
+            for (Transition t: transitions) {
+                if (t.block != block) continue;
+                if (!t.passiveMode) passiveMode = false;
+                block.document.lastSetProperties.add(t.property);
+                t.update();
+                count++;
+            }
         }
 
         if (passiveMode) {
@@ -48,5 +52,5 @@ public class Animator implements ActionListener {
         }
     }
 
-    public Block block;
+    public final Block block;
 }

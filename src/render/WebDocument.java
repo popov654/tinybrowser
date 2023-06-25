@@ -829,6 +829,9 @@ public class WebDocument extends JPanel {
             }
         }
         b.document.root.setNeedRestoreSelection(true);
+        if (lastSetProperties.contains("color") && b.textRenderingMode == 0) {
+            b.setTextColorRecursive(b.color);
+        }
         block.forceRepaint();
         repaint();
         b.document.root.setNeedRestoreSelection(false);

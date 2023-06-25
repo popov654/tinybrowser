@@ -5417,6 +5417,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     }
 
     public void updateTextLayer() {
+        if (!document.ready || no_draw) return;
         if (text_layer != null) {
             Component[] c = text_layer.getComponents();
             for (int i = 0; i < c.length; i++) {
@@ -7530,6 +7531,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 int n = 0;
                 String property = "";
                 int timingFunction = Transition.TimingFunction.LINEAR;
+                double[] coeffs = {0, 0, 1, 1};
                 int duration = 0;
                 int delay = 0;
                 Vector<String> timingFuncs = new Vector<String>(Arrays.asList(new String[] {"linear", "ease-in", "ease-out", "ease", "bounce"}));
@@ -7559,7 +7561,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                             delay = time;
                         }
                         n++;
-                    } else if (timingFuncs.contains(str.trim())) {
+                    } else if (timingFuncs.contains(str.trim()) || str.trim().matches("cubic-bezier\\([0-9.]+,\\s*[0-9.]+,\\s*[0-9.]+,\\s*[0-9.]+\\)")) {
                         if (str.trim().equals("linear")) {
                             timingFunction = Transition.TimingFunction.LINEAR;
                         } else if (str.trim().equals("ease-in")) {
@@ -7570,6 +7572,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                             timingFunction = Transition.TimingFunction.EASE;
                         } else if (str.trim().equals("bounce")) {
                             timingFunction = Transition.TimingFunction.BOUNCE;
+                        } else {
+                            String[] cf = str.trim().substring(13, str.trim().length()-1).split(",\\s*");
+                            for (int j = 0; j < 4; j++) {
+                                coeffs[j] = Double.parseDouble(cf[j]);
+                            }
+                            timingFunction = Transition.TimingFunction.BEZIER;
                         }
                     } else if (str.matches("[a-z-]+[a-z]")) {
                         property = str;
@@ -7577,7 +7585,12 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 }
 
                 if (duration > 0 && !property.isEmpty()) {
-                    TransitionInfo trans = new TransitionInfo(this, property, duration, timingFunction, delay);
+                    TransitionInfo trans;
+                    if (timingFunction != Transition.TimingFunction.BEZIER) {
+                        trans = new TransitionInfo(this, property, duration, timingFunction, delay);
+                    } else {
+                        trans = new TransitionInfo(this, property, duration, coeffs, delay);
+                    }
                     transitions.put(property, trans);
                 }
             }
