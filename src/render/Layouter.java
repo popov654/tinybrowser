@@ -134,35 +134,42 @@ public class Layouter {
         Line new_line = new Line(block);
         if (x_axis) {
             cur_x = block.borderWidth[3] + block.paddings[3];
-            cur_y = last_line != null && last_line.parent == new_line.parent ? last_line.getY() + last_line.getHeight() + offset :
-                                    block.borderWidth[0] + block.paddings[0] + offset;
+            cur_y = last_line != null && last_line.parent == new_line.parent ? last_line.getY() + last_line.getHeight() + offset : block.borderWidth[0] + block.paddings[0] + offset;
         } else {
-            cur_x = last_line == null ? block.borderWidth[3] + block.paddings[3] : last_line.getX() + last_line.getHeight() + offset;
+            cur_x = last_line != null && last_line.parent == new_line.parent ? last_line.getY() + last_line.getHeight() + offset : block.borderWidth[3] + block.paddings[3] + offset;
             cur_y = block.borderWidth[0] + block.paddings[0];
         }
-        if (float_left_last_el != null && cur_y < float_left_last_el.getOffsetTop() +
-                float_left_last_el.height + float_left_last_el.margins[2]) {
-            if ((clear & Block.ClearType.LEFT) > 0 || float_left_last_el.getOffsetLeft() +
-                   float_left_last_el.width + float_left_last_el.margins[1] + d.margins[3] + d.width  + d.margins[1] > block.width - block.paddings[3] - block.paddings[1]) {
-                int m = Math.max(float_left_last_el.margins[2], d.margins[0]);
-                cur_y += float_left_last_el.height + m;
-            } else {
-                cur_x += float_left_offset;
+
+        int w = block.viewport_width - block.borderWidth[1] - block.paddings[1] - block.borderWidth[3] - block.paddings[3];
+
+        if (float_left_last_el != null || float_right_last_el != null) {
+            if (float_left_last_el != null && cur_y < float_left_last_el.getOffsetTop() +
+                    float_left_last_el.height + float_left_last_el.margins[2]) {
+                if ((clear & Block.ClearType.LEFT) > 0 || float_left_last_el.getOffsetLeft() +
+                       float_left_last_el.width + float_left_last_el.margins[1] + d.margins[3] + d.width + d.margins[1] > block.width - block.paddings[3] - block.paddings[1]) {
+                    int m = Math.max(float_left_last_el.margins[2], d.margins[0]);
+                    cur_y += float_left_last_el.height + m;
+                } else if (!block.rtl) {
+                    cur_x += float_left_offset;
+                    w -= float_left_offset;
+                }
             }
+
+            if (float_right_last_el != null && cur_y < float_right_last_el.getOffsetTop() +
+                    float_right_last_el.height + float_right_last_el.margins[2]) {
+                if ((clear & Block.ClearType.RIGHT) > 0) {
+                    cur_y = float_right_last_el.height + float_right_last_el.margins[2];
+                } else if (block.rtl) {
+                    cur_x += float_right_offset;
+                    w -= float_right_offset;
+                }
+            }
+            new_line.setWidth(w);
         }
 
         new_line.setX(cur_x);
         new_line.setY(cur_y);
 
-        int w = block.viewport_width - block.borderWidth[1] - block.paddings[1] - block.borderWidth[3] - block.paddings[3];
-        if (float_right_last_el != null && cur_y < float_right_last_el.getOffsetTop() +
-                float_right_last_el.height + float_right_last_el.margins[2]) {
-            if ((clear & Block.ClearType.RIGHT) > 0) {
-                cur_y = float_right_last_el.height + float_right_last_el.margins[2];
-            } else {
-                w -= float_right_offset;
-            }
-        }
         if (w < 0) {
             w = b.viewport_width - b.borderWidth[1] - b.paddings[1] - b.borderWidth[3] - b.paddings[3];
         }
@@ -171,6 +178,7 @@ public class Layouter {
             w = !block.auto_height ? b.viewport_height - b.borderWidth[2] - b.paddings[2] - b.borderWidth[0] - b.paddings[0] : Integer.MAX_VALUE;
         }
         new_line.setWidth(w);
+
         return new_line;
     }
 
@@ -369,7 +377,7 @@ public class Layouter {
             last_word = -1;
             return;
         }
-        int parent_width = block.width - block.borderWidth[3] - block.paddings[3] - block.borderWidth[1] - block.paddings[1];
+        int parent_width = Math.max(0, block.width - block.borderWidth[3] - block.paddings[3] - block.borderWidth[1] - block.paddings[1]);
         if (last_line.cur_pos + width > last_line.getWidth() && !(last_line.cur_pos == 0 && width > parent_width)
                 && block.white_space == Block.WhiteSpace.NORMAL) {
             //Remove trailing spaces
@@ -450,7 +458,7 @@ public class Layouter {
             }
         }
         if (d.display_type == Block.Display.NONE) return;
-        int offset = 0;
+        int offset = (last_line == null ? block.borderWidth[0] + block.paddings[0] : 0) + d.margins[0];
         stack.add(d);
         if (d.float_type != Block.FloatType.NONE) {
             positionFloat(d);
@@ -758,7 +766,7 @@ public class Layouter {
             cur_y = last_line.getY();
 
             if (!b.isImage) {
-                b.width = b.viewport_width = last_line.getWidth() - last_line.cur_pos - b.margins[!block.rtl ? 3 : 1];
+                b.width = b.viewport_width = Math.max(0, last_line.getWidth() - last_line.cur_pos - b.margins[!block.rtl ? 3 : 1]);
                 b.orig_width = (int)Math.floor(b.width / b.ratio);
             } else {
                 b.performLayout(true);
@@ -1156,11 +1164,12 @@ public class Layouter {
     }
 
     public void positionFloat(Block d) {
+        int availableWidth = block.width - float_left_offset - float_right_offset;
         if (d.float_type == Block.FloatType.LEFT) {
             cur_x = float_left_offset + d.margins[3];         
 
             int last_block_margin = last_block != null ? last_block.margins[2] : 0;
-            int last_block_y = last_block != null ? last_block.getOffsetTop() + last_block.height : 0;
+            int last_block_y = last_block != null ? last_block.getOffsetTop() + last_block.height : block.paddings[0];
             
             int offset = last_block_margin + d.margins[0];
             cur_y = float_left_last_el != null ? Math.max(float_left_last_el.getOffsetTop(), last_block_y + offset) :
@@ -1174,8 +1183,7 @@ public class Layouter {
             d.setX(cur_x);
             d.setY(cur_y);
 
-            if (cur_x > block.width - block.borderWidth[1] - block.borderWidth[3] - block.paddings[1] - block.paddings[3] &&
-                    !(d.width > block.width - block.borderWidth[1] - block.paddings[1] - block.borderWidth[3] - block.paddings[3])) {
+            if (cur_x > block.width - block.borderWidth[1] - block.borderWidth[3] - block.paddings[1] - block.paddings[3] && d.width > availableWidth) {
                 cur_x = d.margins[3];
 
                 cur_y += float_left_last_el != null ? float_left_last_el.height + float_left_last_el.margins[2] :
@@ -1188,12 +1196,13 @@ public class Layouter {
             return;
         }
         if (d.float_type == Block.FloatType.RIGHT) {
-            cur_x = block.width - block.borderWidth[1] - block.paddings[1] -
+            cur_x = block.width - block.borderWidth[1] -
                     float_right_offset - d.margins[1] - d.width;
             float_right_offset += d.margins[3] + d.width + d.margins[1];
-            
-            if (cur_x < block.paddings[3] + d.margins[3] &&
-                    !(d.width > block.width - block.borderWidth[1] - block.paddings[1] - block.borderWidth[3] - block.paddings[3])) {
+            d.setX(cur_x);
+            d.setY(cur_y);
+
+            if (cur_x > block.width - block.borderWidth[1] - block.borderWidth[3] - block.paddings[1] - block.paddings[3] && d.width > availableWidth) {
                 cur_x = block.width - block.borderWidth[1] - block.paddings[1] -
                         d.margins[1] - d.width;
                 int offset = float_right_last_el != null ? Math.max(float_right_last_el.margins[2], d.margins[0]) :
@@ -1213,6 +1222,11 @@ public class Layouter {
         if (b.table == null) {
             b.table = new TableLayout(b);
         }
+    }
+
+    public void resetFloatOffsets() {
+        float_left_offset = block.borderWidth[3] + block.paddings[3];
+        float_right_offset = block.borderWidth[1] + block.paddings[1];
     }
 
     public int getFullLineSize(Block b) {
@@ -1241,6 +1255,14 @@ public class Layouter {
 
     public Block getBlock() {
         return block;
+    }
+
+    public int getFloatOffsetLeft() {
+        return float_left_offset;
+    }
+
+    public int getFloatOffsetRight() {
+        return float_right_offset;
     }
 
     public static Vector<Block> stack = new Vector<Block>();

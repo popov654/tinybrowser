@@ -380,6 +380,67 @@ public class RenderTests {
     }
 
     @Test
+    public void floatsTest() {
+        lt.testFloats();
+        lt.setVisible(true);
+
+        try {
+            Thread.sleep(300);
+            lt.getDocument().processResize();
+        } catch (InterruptedException ex) {}
+
+        int[] data = new int[4];
+
+        Robot robot;
+        try {
+            robot = new Robot();
+            Point p = lt.getLocation();
+            Rectangle rect = document.getBounds();
+            int border = document.borderSize;
+
+            Insets insets = lt.getInsets();
+            if (insets != null) {
+                p.x += insets.left;
+                p.y += insets.top;
+            }
+
+            try {
+                Thread.sleep(1800);
+            } catch (InterruptedException ex) {}
+
+            BufferedImage img = robot.createScreenCapture(new Rectangle(p.x + rect.x + border, p.y + rect.y + border, document.root.width, document.root.height));
+
+            img.getData().getPixel(27, 27, data);
+            assertEquals(160, data[0]);
+            assertEquals(160, data[1]);
+            assertEquals(160, data[2]);
+
+            img.getData().getPixel(document.root.width - 28, 27, data);
+            assertEquals(160, data[0]);
+            assertEquals(160, data[1]);
+            assertEquals(160, data[2]);
+//
+//            try {
+//                Thread.sleep(1800);
+//            } catch (InterruptedException ex) {}
+//
+//            img = robot.createScreenCapture(new Rectangle(p.x + rect.x + border, p.y + rect.y + border, document.root.width, document.root.height));
+//
+//            img.getData().getPixel(28, 150, data);
+//            assertEquals(130, data[0]);
+//            assertEquals(178,  data[1]);
+//            assertEquals(224, data[2]);
+
+            //System.err.println(data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
+
+            //javax.imageio.ImageIO.write(img, "png", new File("snapshot.png"));
+        } catch (Exception ex) {}
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException ex) {}
+    }
+
+    @Test
     public void imagesTest() {
         lt.setVisible(true);
         lt.testImages(230, 170);

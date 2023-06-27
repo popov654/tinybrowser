@@ -1736,7 +1736,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             original.clearSelection();
         }
         for (int i = 0; i < children.size(); i++) {
-            if (children.get(i).positioning != Position.STATIC ||
+            if (children.get(i).float_type != FloatType.NONE || children.get(i).positioning != Position.STATIC ||
                     children.get(i).display_type == Display.TABLE_ROW || children.get(i).display_type == Display.TABLE_CELL) {
                 children.get(i).clearSelection();
                 children.get(i).selected(false);
@@ -4212,6 +4212,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
+        layouter.resetFloatOffsets();
+
         for (int i = 0; i < floats.size(); i++) {
             Block el = floats.get(i);
             if (el.viewport_width == 0) el.viewport_width = el.width;
@@ -5606,8 +5608,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setTextAlign(int value) {
         text_align = value;
-        Layouter.applyHorizontalAlignment(this);
-        repaint();
+        if (document != null && document.ready) {
+            Layouter.applyHorizontalAlignment(this);
+            repaint();
+        }
     }
 
     public void setVerticalAlign(int value) {
@@ -6161,16 +6165,22 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 boolean is_flex = parent.display_type == Block.Display.FLEX || parent.display_type == Block.Display.INLINE_FLEX;
                 boolean x_axis = parent.flex_direction == Block.Direction.ROW || parent.flex_direction == Block.Direction.ROW_REVERSED;
 
+                int availableWidth = parent.width - parent.borderWidth[1] - parent.borderWidth[3] - margins[1] - margins[3] - parent.paddings[3] - parent.paddings[1];
+
+                if (parent.layouter != null) {
+                    availableWidth -= (parent.layouter.getFloatOffsetLeft() + parent.layouter.getFloatOffsetRight());
+                }
+
                 if (line == null) {
                     _x_ = margins[3];
-                    width = parent.width-parent.borderWidth[1]-parent.borderWidth[3]-margins[1]-_x_-parent.paddings[3]-parent.paddings[1];
+                    width = Math.max(0, availableWidth);
                 } else {
-                    width = !is_flex || x_axis ? line.getWidth()-margins[1]-margins[3] : line.getHeight()-margins[1]-margins[3];
+                    width = !is_flex || x_axis ? Math.max(0, line.getWidth()-margins[1]-margins[3]) : Math.max(0, line.getHeight()-margins[1]-margins[3]);
                 }
                 orig_width = (int)Math.round(width / ratio);
             } else if (document != null) {
                 _x_ = margins[3];
-                width = document.width-document.borderSize*2-margins[1]-_x_;
+                width = document.width - document.borderSize*2 - margins[1] - margins[3];
                 orig_width = (int)Math.round(width / ratio);
             }
             if (max_width > -1 && width > max_width) width = max_width;
@@ -6651,6 +6661,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             h -= paddings[0] + paddings[2];
         }
         setWidthHeight((int) Math.round(w / ratio), (int) Math.round(h / ratio));
+    }
+
+    public void setFloatType(int value) {
+        float_type = value;
     }
 
     public void removeTextLayers() {

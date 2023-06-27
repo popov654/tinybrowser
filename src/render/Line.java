@@ -75,18 +75,18 @@ public class Line {
             }
         }
         
-        int x = !parent.rtl ? left + cur_pos : width - cur_pos - d._getWidth();
+        int x = !parent.rtl ? left + cur_pos : Math.max(0, width - cur_pos - d._getWidth());
         int y = top;
 
         if (is_flex) {
             if (parent.flex_direction == Block.Direction.ROW_REVERSED) {
-                x = width - cur_pos - d._getWidth();
+                x = Math.max(0, width - cur_pos - d._getWidth());
             } else if (parent.flex_direction == Block.Direction.COLUMN) {
                 x = left;
                 y = top + cur_pos;
             } else if (parent.flex_direction == Block.Direction.COLUMN_REVERSED) {
                 x = left;
-                y = width - cur_pos - d._getWidth();
+                y = Math.max(0, width - cur_pos - d._getWidth());
             }
         }
 
@@ -119,7 +119,7 @@ public class Line {
         else if (d instanceof Block) {
             Block b = (Block)d;
             if (b.auto_width) {
-                b.width = width - b.margins[3] - b.margins[1];
+                b.width = Math.max(0, width - b.margins[3] - b.margins[1]);
                 b.orig_width = (int)Math.floor(b.width / b.ratio);
             }
         }

@@ -1119,6 +1119,57 @@ public class LayoutTests extends JFrame {
         }
     }
 
+    public void testFloats() {
+
+        document.ready = false;
+
+        Color borderColor = new Color(160, 160, 160);
+
+        document.root.setPaddings(18);
+
+        Block left = new Block(document, null, -1, -1, 1, 0, borderColor);
+        left.setPositioning(Block.Position.STATIC);
+        left.setWidthHeight(80, 60);
+        left.setBackgroundColor(new Color(179, 236, 179));
+        left.setTextAlign(Block.TextAlign.ALIGN_CENTER);
+
+        Block textLeft = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        textLeft.setDisplayType(Block.Display.INLINE);
+        textLeft.addText("Left");
+        left.addElement(textLeft);
+
+        left.setFloatType(Block.FloatType.LEFT);
+
+        document.root.addElement(left, true);
+
+        Block right = new Block(document, null, -1, -1, 1, 0, borderColor);
+        right.setPositioning(Block.Position.STATIC);
+        right.setWidthHeight(88, 48);
+        right.setBackgroundColor(new Color(179, 236, 249));
+        right.setTextAlign(Block.TextAlign.ALIGN_CENTER);
+
+        Block textRight = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        textRight.setDisplayType(Block.Display.INLINE);
+        textRight.addText("Right");
+        right.addElement(textRight);
+
+        right.setFloatType(Block.FloatType.RIGHT);
+
+        document.root.addElement(right, true);
+
+        Block textNormal = new Block(document, null, -1, -1, 0, 0, Color.BLACK);
+        textNormal.addText("Text");
+
+        document.root.addElement(textNormal, true);
+
+        document.ready = true;
+
+        if (this.isVisible()) {
+            document.root.performLayout();
+            document.root.forceRepaintAll();
+        }
+    }
+
     public void testZIndex() {
         //root.setPositioning(Block.Position.RELATIVE);
         document.root.removeAllElements();
@@ -1498,25 +1549,27 @@ public class LayoutTests extends JFrame {
                      break;
             case 14: lt.testAutoMargins(60, 15);
                      break;
-            case 15: lt.testZIndex();
+            case 15: lt.testFloats();
                      break;
-            case 16: lt.testLists(list_type);
+            case 16: lt.testZIndex();
                      break;
-            case 17: lt.testBorders();
+            case 17: lt.testLists(list_type);
                      break;
-            case 18: lt.testGradients();
+            case 18: lt.testBorders();
                      break;
-            case 19: lt.testChildDocuments();
+            case 19: lt.testGradients();
                      break;
-            case 20: lt.testFontSize();
+            case 20: lt.testChildDocuments();
                      break;
-            case 21: lt.testViewportUnits();
+            case 21: lt.testFontSize();
                      break;
-            case 22: lt.testTransitions();
+            case 22: lt.testViewportUnits();
                      break;
-            case 23: lt.testFlexPositioning();
+            case 23: lt.testTransitions();
                      break;
-            case 24: lt.aspectRatioTest();
+            case 24: lt.testFlexPositioning();
+                     break;
+            case 25: lt.aspectRatioTest();
                      break;
         }
 
