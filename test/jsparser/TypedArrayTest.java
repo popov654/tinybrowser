@@ -35,14 +35,6 @@ public class TypedArrayTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of slice method, of class TypedArray.
-     */
-    @Test
-    public void testSlice_JSInt_JSInt() {
-        TypedArray copy = (TypedArray) instance.slice(new JSInt(1), new JSInt(3));
-        assertEquals("UInt16Array[4, 5]", copy.toString());
-    }
 
     /**
      * Test of slice method, of class TypedArray.
@@ -55,6 +47,46 @@ public class TypedArrayTest {
     }
 
     /**
+     * Test of slice method, of class TypedArray.
+     */
+    @Test
+    public void testSlice_JSInt() {
+        TypedArray copy = (TypedArray) instance.slice(new JSInt(2));
+        assertFalse(copy.buffer.data == instance.buffer.data);
+        assertEquals("UInt16Array[5, 0, 0]", copy.toString());
+    }
+
+    /**
+     * Test of slice method, of class TypedArray.
+     */
+    @Test
+    public void testSlice_JSInt_JSInt() {
+        TypedArray copy = (TypedArray) instance.slice(new JSInt(1), new JSInt(3));
+        assertFalse(copy.buffer.data == instance.buffer.data);
+        assertEquals("UInt16Array[4, 5]", copy.toString());
+    }
+
+    /**
+     * Test of subArray method, of class TypedArray.
+     */
+    @Test
+    public void testSubarray_JSInt() {
+        TypedArray copy = (TypedArray) instance.subArray(new JSInt(2));
+        assertTrue(copy.buffer.data == instance.buffer.data);
+        assertEquals("UInt16Array[5, 0, 0]", copy.toString());
+    }
+
+    /**
+     * Test of subArray method, of class TypedArray.
+     */
+    @Test
+    public void testSubarray_JSInt_JSInt() {
+        TypedArray copy = (TypedArray) instance.subArray(new JSInt(1), new JSInt(3));
+        assertTrue(copy.buffer.data == instance.buffer.data);
+        assertEquals("UInt16Array[4, 5]", copy.toString());
+    }
+
+    /**
      * Test of buffer property, of class TypedArray.
      */
     @Test
@@ -63,14 +95,6 @@ public class TypedArrayTest {
         Expression exp = Expression.create(jp.getHead()).eval();
         assertEquals("UInt8Array[3, 0, 4, 0, 5, 0, 0, 0, 0, 0]", Expression.getVar("b", exp).toString());
         assertEquals("UInt8Array[4, 0, 5]", Expression.getVar("c", exp).toString());
-    }
-
-    /**
-     * Test of slice method, of class TypedArray.
-     */
-    @Test
-    public void testSlice_JSInt() {
-        assertEquals("UInt16Array[5, 0, 0]", instance.slice(new JSInt(2)).toString());
     }
 
     /**
@@ -123,5 +147,5 @@ public class TypedArrayTest {
         testAsString();
     }
 
-    private JSArray instance;
+    private TypedArray instance;
 }

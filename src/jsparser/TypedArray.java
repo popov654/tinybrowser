@@ -8,18 +8,22 @@ import java.util.Arrays;
  */
 public class TypedArray extends JSArray {
 
-    public TypedArray() {}
+    public TypedArray() {
+        _items.put("__proto__", TypedArrayProto.getInstance());
+    }
 
     public TypedArray(int bits, int length) {
         bytes = bits / 8;
         type = "UInt" + bits + "Array";
         buffer = new ArrayBuffer(length * bytes);
+        _items.put("__proto__", TypedArrayProto.getInstance());
     }
 
     public TypedArray(int bits, ArrayBuffer buf) {
         bytes = bits / 8;
         type = "UInt" + bits + "Array";
         buffer = buf;
+        _items.put("__proto__", TypedArrayProto.getInstance());
     }
 
     public TypedArray(int bits, JSArray array) {
@@ -34,6 +38,7 @@ public class TypedArray extends JSArray {
             }
         }
         buffer = new ArrayBuffer(data);
+        _items.put("__proto__", TypedArrayProto.getInstance());
     }
 
     @Override
@@ -41,9 +46,9 @@ public class TypedArray extends JSArray {
         long result = 0;
         byte[] data = buffer.data;
 
-        if (bytes * index <= data.length - bytes) {
+        if (buffer.start + bytes * index <= buffer.end - bytes) {
             for (int i = 0; i < bytes; i++) {
-                long comp = (data[bytes * index + i] & 0xFF) << 8 * i;
+                long comp = (data[buffer.start + bytes * index + i] & 0xFF) << 8 * i;
                 result = result | comp;
             }
         }
@@ -78,6 +83,9 @@ public class TypedArray extends JSArray {
         if (key.equals("buffer")) {
             return buffer;
         }
+        if (key.equals("byteLength")) {
+            return new JSInt(buffer.end - buffer.start);
+        }
         return super.get(key);
     }
 
@@ -88,7 +96,7 @@ public class TypedArray extends JSArray {
 
     @Override
     public JSArray slice() {
-        return new TypedArray(bytes * 8, buffer);
+        return new TypedArray(bytes * 8, buffer.clone());
     }
 
     @Override
@@ -107,6 +115,20 @@ public class TypedArray extends JSArray {
         byte[] copyBytes = Arrays.copyOfRange(buffer.data, fromIndex, toIndex);
 
         return new TypedArray(bytes * 8, new ArrayBuffer(copyBytes));
+    }
+
+    public JSArray subArray(JSInt from, JSInt to) {
+        int fromIndex = (int) from.getValue() * bytes;
+        int toIndex = (int) Math.min(to.getValue() * bytes, buffer.data.length);
+
+        return new TypedArray(bytes * 8, new ArrayBuffer(buffer.data, fromIndex, toIndex));
+    }
+
+    public JSArray subArray(JSInt from) {
+        int fromIndex = (int) from.getValue() * bytes;
+        int toIndex = buffer.end;
+        
+        return new TypedArray(bytes * 8, new ArrayBuffer(buffer.data, fromIndex, toIndex));
     }
 
     @Override
@@ -144,7 +166,7 @@ public class TypedArray extends JSArray {
         //String shortString = type + "[]";
         String result = "";
         byte[] data = buffer.data;
-        for (int i = 0; i < data.length / bytes; i++) {
+        for (int i = 0; i < (buffer.end - buffer.start) / bytes; i++) {
             if (i > 0) result += ", ";
             result += get(i).toString();
         }

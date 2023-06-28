@@ -1,5 +1,7 @@
 package jsparser;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Alex
@@ -10,16 +12,24 @@ public class ArrayBuffer extends JSArray {
 
     public ArrayBuffer(int length) {
         data = new byte[length];
+        end = length;
     }
 
     public ArrayBuffer(byte[] byteData) {
         data = byteData;
+        end = data.length;
+    }
+
+    public ArrayBuffer(byte[] byteData, int from, int to) {
+        data = byteData;
+        start = from;
+        end = Math.min(to, data.length);
     }
 
     @Override
     public JSValue get(JSString str) {
         if (str.getValue().equals("length")) {
-            return new JSInt(data.length);
+            return new JSInt(end - start);
         }
         return ((JSObject)_items.get("__proto__")).get(str);
     }
@@ -27,7 +37,7 @@ public class ArrayBuffer extends JSArray {
     @Override
     public JSValue get(String str) {
         if (str.equals("length")) {
-            return new JSInt(data.length);
+            return new JSInt(end - start);
         }
         if (str.equals("__proto__")) {
             return _items.get("__proto__");
@@ -37,8 +47,8 @@ public class ArrayBuffer extends JSArray {
 
     @Override
     public JSValue get(int index) {
-        if (index >= 0 && index < data.length) {
-            return new JSInt(data[index]);
+        if (index >= 0 && index < end - start) {
+            return new JSInt(data[start + index]);
         }
 
         return Undefined.getInstance();
@@ -52,10 +62,10 @@ public class ArrayBuffer extends JSArray {
     @Override
     public boolean set(int index, JSValue value) {
         long val = value.asInt().getValue();
-        if (index < 0 || index >= data.length) {
+        if (index < 0 || index >= end) {
             return false;
         }
-        data[index] = (byte)(val & 0xFF);
+        data[start + index] = (byte)(val & 0xFF);
         return true;
     }
 
@@ -66,7 +76,7 @@ public class ArrayBuffer extends JSArray {
 
     @Override
     public JSInt length() {
-        return new JSInt(data != null ? data.length : 0);
+        return new JSInt(data != null ? end - start : 0);
     }
 
     @Override
@@ -78,6 +88,14 @@ public class ArrayBuffer extends JSArray {
     public String toString() {
         return "[object ArrayBuffer]";
     }
+
+    @Override
+    public ArrayBuffer clone() {
+        return new ArrayBuffer(Arrays.copyOf(data, data.length), start, end);
+    }
+
+    public int start = 0;
+    public int end = 0;
 
     public byte[] data;
 }

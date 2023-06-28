@@ -11,10 +11,14 @@ public class TypedArrayC extends ArrayC {
 
     public TypedArrayC() {
         super();
+        items.put("prototype", TypedArrayProto.getInstance());
+        TypedArrayProto.getInstance().set("constructor", this);
     }
 
     public TypedArrayC(int bits) {
         super();
+        items.put("prototype", TypedArrayProto.getInstance());
+        TypedArrayProto.getInstance().set("constructor", this);
         this.bits = bits;
     }
 
