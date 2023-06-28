@@ -10566,7 +10566,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
     private void processLinks(boolean was_hovered, int x, int y) {
         boolean flag = false;
         if (x >= _x_ && x <= _x_ + width && y >= _y_ && y <= _y_ + height &&
-              (hasParentLink || href != null) && !was_hovered && !hovered) {
+              (hasParentLink || href != null) && !was_hovered) {
             hovered = true;
             if (!originalStyles.containsKey("text_underline")) {
                 originalStyles.put("text_underline", text_underline);
