@@ -86,6 +86,9 @@ public class TypedArray extends JSArray {
         if (key.equals("byteLength")) {
             return new JSInt(buffer.end - buffer.start);
         }
+        if (key.equals("BYTES_PER_ELEMENT")) {
+            return new JSInt(bytes);
+        }
         return super.get(key);
     }
 
