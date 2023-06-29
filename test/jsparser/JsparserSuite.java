@@ -12,7 +12,7 @@ import org.junit.runners.Suite;
  * @author Alex
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({jsparser.JSStringTest.class,jsparser.JSFloatTest.class,jsparser.JSValueTest.class,jsparser.JSIntTest.class,jsparser.ExpressionTest.class,jsparser.NaNTest.class,jsparser.JSParserTest.class,jsparser.TokenTest.class,jsparser.JSBoolTest.class})
+@Suite.SuiteClasses({jsparser.JSParserTest.class,jsparser.TokenTest.class,jsparser.ExpressionTest.class,jsparser.JSValueTest.class,jsparser.JSStringTest.class,jsparser.JSFloatTest.class,jsparser.JSBoolTest.class,jsparser.JSIntTest.class,jsparser.NaNTest.class,jsparser.JSDateTest.class,jsparser.JSArrayTest.class,jsparser.JSObjectTest.class,jsparser.TypedArrayTest.class})
 public class JsparserSuite {
 
     @BeforeClass
