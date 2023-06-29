@@ -177,6 +177,7 @@ public class Request {
         try {
             is = con.getInputStream();
             int size = Math.min(con.getContentLength(), 30000000);
+            if (size < 0) return null;
             byte[] bytes = getBytes(is, size, progressListener);
             response = new String(bytes, charset);
             Pattern p = Pattern.compile("<meta\\s+con-equiv=\"Content-Type\"\\s+content=\"text/html;\\s*charset=([a-zA-Z0-9-]+)\"");

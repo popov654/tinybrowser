@@ -37,8 +37,8 @@ public class XHRTest {
      */
     @Test
     public void testXmlHttpRequest() {
-        JSParser jp = new JSParser("var xhr = new XMLHttpRequest(); xhr.open(\"GET\", \"https://google.com\", false);  var result = \"\"; xhr.onload = function() { result = this.response.slice(2, 9) }; xhr.send(null)");
-        System.out.println("var xhr = new XMLHttpRequest(); xhr.open(\"GET\", \"https://google.com\", false); var result = \"\"; xhr.onload = function() { result = this.response.slice(2, 9) }; xhr.send(null)");
+        JSParser jp = new JSParser("var xhr = new XMLHttpRequest(); xhr.open(\"GET\", \"https://google.com\", false);  var result = \"\"; xhr.onload = function() { result = this.response && this.response.slice(2, 9) }; xhr.send(null)");
+        System.out.println("var xhr = new XMLHttpRequest(); xhr.open(\"GET\", \"https://google.com\", false); var result = \"\"; xhr.onload = function() { result = this.response && this.response.slice(2, 9) }; xhr.send(null)");
         Expression exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"doctype\"", Expression.getVar("result", exp).toString());

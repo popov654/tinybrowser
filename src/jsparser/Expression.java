@@ -503,7 +503,7 @@ public class Expression {
                 if (first) {
                     head = op.prev;
                     int level = 0;
-                    while (head != start && (!head.getContent().equals("(") || level < 0)) {
+                    while (head != start && (!head.getContent().equals("(") || level < 0) && !head.getContent().equals("=")) {
                         if (head.getContent().equals("(")) level++;
                         if (head.getContent().equals(")")) level--;
                         head = head.prev;
@@ -530,7 +530,7 @@ public class Expression {
                 
                 int level1 = 0;
                 int level2 = 0;
-                while (ct != null && !(ct.getType() == Token.OP && ct.p <= op.p)) {
+                while (ct != null && !(ct.getType() == Token.OP && ct.p <= op.p && level1 == 0)) {
                     if (ct.getType() == Token.BRACE_OPEN) level1++;
                     if (ct.getType() == Token.BRACE_CLOSE) level1--;
                     if (ct.getType() == Token.ARRAY_START) level2++;
