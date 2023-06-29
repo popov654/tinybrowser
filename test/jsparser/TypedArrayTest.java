@@ -121,6 +121,16 @@ public class TypedArrayTest {
     }
 
     /**
+     * Test of clamped TypedArray.
+     */
+    @Test
+    public void testClampedArray() {
+        JSParser jp = new JSParser("var a = new UInt8ClampedArray(5); a[0] = 238; a[1] = 260; a[2] = -3");
+        Expression exp = Expression.create(jp.getHead()).eval();
+        assertEquals("UInt8ClampedArray[238, 255, 0, 0, 0]", Expression.getVar("a", exp).toString());
+    }
+
+    /**
      * Test of asBool method, of class TypedArray.
      */
     @Test

@@ -47,6 +47,11 @@ public class TypedArray extends JSArray {
         bytes = 8;
     }
 
+    public void setIsClamped() {
+        isClamped = true;
+        type = type.replaceAll("(?<=\\d+)Array", "ClampedArray");
+    }
+
     @Override
     public JSValue get(int index) {
         long result = 0;
@@ -88,7 +93,11 @@ public class TypedArray extends JSArray {
         if (isFloat) {
             val = Double.doubleToLongBits(value.asFloat().getValue());
         } else {
-            val = value.asInt().getValue();
+            if (isClamped) {
+                val = Math.max(0, Math.min((long) Math.pow(2, bytes * 8) - 1, value.asInt().getValue()));
+            } else {
+                val = value.asInt().getValue();
+            }
         }
         byte[] data = buffer.data;
 
@@ -212,6 +221,7 @@ public class TypedArray extends JSArray {
     public String type = "UInt8Array";
 
     public boolean isFloat = false;
+    public boolean isClamped = false;
 
     public int bytes = 1;
     public ArrayBuffer buffer;
