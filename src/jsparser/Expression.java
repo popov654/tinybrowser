@@ -251,6 +251,7 @@ public class Expression {
         TypedArrayC uint8array = new TypedArrayC(8);
         TypedArrayC uint16array = new TypedArrayC(16);
         TypedArrayC uint32array = new TypedArrayC(32);
+        TypedArrayC float64array = new TypedArrayC(64, true);
         TextEncoderC textEncoder = new TextEncoderC();
         TextDecoderC textDecoder = new TextDecoderC();
         PromiseC p = new PromiseC();
@@ -273,6 +274,7 @@ public class Expression {
         b.scope.put("UInt8Array", uint8array);
         b.scope.put("UInt16Array", uint16array);
         b.scope.put("UInt32Array", uint32array);
+        b.scope.put("Float64Array", float64array);
         b.scope.put("TextEncoder", textEncoder);
         b.scope.put("TextDecoder", textDecoder);
         b.scope.put("XMLHttpRequest", h);

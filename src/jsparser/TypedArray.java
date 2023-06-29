@@ -41,6 +41,12 @@ public class TypedArray extends JSArray {
         _items.put("__proto__", TypedArrayProto.getInstance());
     }
 
+    public void setIsFloat() {
+        isFloat = true;
+        type = "Float64Array";
+        bytes = 8;
+    }
+
     @Override
     public JSValue get(int index) {
         long result = 0;
@@ -48,9 +54,24 @@ public class TypedArray extends JSArray {
 
         if (buffer.start + bytes * index <= buffer.end - bytes) {
             for (int i = 0; i < bytes; i++) {
-                long comp = (data[buffer.start + bytes * index + i] & 0xFF) << 8 * i;
+                int sh1 = (8 * i) & 0x0F;
+                int sh2 = ((8 * i) & 0xF0) >>> 4;
+                int res = (data[buffer.start + bytes * index + i] & 0xFF);
+                long comp = 0;
+                if (sh2 > 0) {
+                    comp = res;
+                    for (int j = 0; j < sh2; j++) {
+                        comp = comp << 0x10;
+                    }
+                    comp <<= sh1;
+                } else {
+                    comp = res << sh1;
+                }
                 result = result | comp;
             }
+        }
+        if (isFloat) {
+            return new JSFloat(Double.longBitsToDouble(result));
         }
 
         return new JSInt(result);
@@ -63,12 +84,24 @@ public class TypedArray extends JSArray {
 
     @Override
     public boolean set(int index, JSValue value) {
-        long val = value.asInt().getValue();
+        long val = 0;
+        if (isFloat) {
+            val = Double.doubleToLongBits(value.asFloat().getValue());
+        } else {
+            val = value.asInt().getValue();
+        }
         byte[] data = buffer.data;
-        
-        for (int i = 0; i < bytes; i++) {
-            data[buffer.start + bytes * index + i] = (byte)(val & 0xFF);
-            val >>>= 8;
+
+        if (bytes > 4) {
+            for (int i = 0; i < bytes; i++) {
+                data[buffer.start + bytes * (index+1) - 1 - i] = (byte)(val >>> 56);
+                val <<= 8;
+            }
+        } else {
+            for (int i = 0; i < bytes; i++) {
+                data[buffer.start + bytes * index + i] = (byte)(val & 0xFF);
+                val >>>= 8;
+            }
         }
         return true;
     }
@@ -177,6 +210,8 @@ public class TypedArray extends JSArray {
     }
 
     public String type = "UInt8Array";
+
+    public boolean isFloat = false;
 
     public int bytes = 1;
     public ArrayBuffer buffer;

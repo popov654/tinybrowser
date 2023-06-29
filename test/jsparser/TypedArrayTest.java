@@ -109,6 +109,18 @@ public class TypedArrayTest {
     }
 
     /**
+     * Test of float64 TypedArray.
+     */
+    @Test
+    public void testFloat64Array() {
+        JSParser jp = new JSParser("var a = new Float64Array(5); a[0] = 1.5; a[1] = 3.75; a[2] = 5; var x = a[0]; var y = a[1]; var z = a[2]");
+        Expression exp = Expression.create(jp.getHead()).eval();
+        assertEquals("1.5", Expression.getVar("x", exp).toString());
+        assertEquals("3.75", Expression.getVar("y", exp).toString());
+        assertEquals("5.0", Expression.getVar("z", exp).toString());
+    }
+
+    /**
      * Test of asBool method, of class TypedArray.
      */
     @Test
