@@ -249,6 +249,7 @@ public class Expression {
         FileReaderC fileR = new FileReaderC();
         FileWriterC fileW = new FileWriterC();
         ArrayBufferC arrayBuffer = new ArrayBufferC();
+        DataViewC dataView = new DataViewC();
         TypedArrayC uint8array = new TypedArrayC(8);
         TypedArrayC uint16array = new TypedArrayC(16);
         TypedArrayC uint32array = new TypedArrayC(32);
@@ -276,6 +277,7 @@ public class Expression {
         b.scope.put("FileReader", fileR);
         b.scope.put("FileWriter", fileW);
         b.scope.put("ArrayBuffer", arrayBuffer);
+        b.scope.put("DataView", dataView);
         b.scope.put("UInt8Array", uint8array);
         b.scope.put("UInt16Array", uint16array);
         b.scope.put("UInt32Array", uint32array);
