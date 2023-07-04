@@ -87,6 +87,17 @@ public class TypedArrayTest {
     }
 
     /**
+     * Test of set method, of class TypedArray.
+     */
+    @Test
+    public void testSet() {
+        JSParser jp = new JSParser("var a = new UInt16Array(5); a[0] = 3; a[1] = 4; a[2] = 5; var b = new UInt8Array(3); b.set(a); var c = new UInt8Array(3); c.set(a, 1);");
+        Expression exp = Expression.create(jp.getHead()).eval();
+        assertEquals("UInt8Array[3, 4, 5]", Expression.getVar("b", exp).toString());
+        assertEquals("UInt8Array[0, 3, 4]", Expression.getVar("c", exp).toString());
+    }
+
+    /**
      * Test of buffer property, of class TypedArray.
      */
     @Test

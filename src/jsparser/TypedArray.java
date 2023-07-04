@@ -67,7 +67,7 @@ public class TypedArray extends JSArray {
         byte[] data = buffer.data;
         
         for (int i = 0; i < bytes; i++) {
-            data[bytes * index + i] = (byte)(val & 0xFF);
+            data[buffer.start + bytes * index + i] = (byte)(val & 0xFF);
             val >>>= 8;
         }
         return true;
