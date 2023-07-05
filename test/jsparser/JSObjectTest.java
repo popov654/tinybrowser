@@ -39,7 +39,7 @@ public class JSObjectTest {
      */
     @Test
     public void testGetType() {
-        assertEquals(instance.getType(), "Object");
+        assertEquals("Object", instance.getType());
     }
 
     /**
@@ -51,7 +51,7 @@ public class JSObjectTest {
         JSObject obj = (JSObject)Expression.create(jp.getHead()).eval().getValue();
         obj.isFrozen = true;
         obj.set("test", new JSString("123"));
-        assertEquals(obj.toString(), "{value: \"value\"}");
+        assertEquals("{value: \"value\"}", obj.toString());
     }
 
     /**
@@ -59,11 +59,11 @@ public class JSObjectTest {
      */
     @Test
     public void testToString() {
-        assertEquals(instance.toString(), "{value: \"value\"}");
+        assertEquals("{value: \"value\"}", instance.toString());
         instance.print_proto = true;
-        assertEquals(instance.toString(), "{__proto__: ObjectPrototype, value: \"value\"}");
+        assertEquals("{__proto__: ObjectPrototype, value: \"value\"}", instance.toString());
         JSObject.print_protos = true;
-        assertEquals(instance.toString(), "{__proto__: {__proto__: ObjectPrototype, hasOwnProperty: function (), toString: function (), constructor: function ()}, value: \"value\"}");
+        assertEquals("{__proto__: {__proto__: ObjectPrototype, hasOwnProperty: function (), toString: function (), constructor: function ()}, value: \"value\"}", instance.toString());
         instance.print_proto = false;
         JSObject.print_protos = false;
     }

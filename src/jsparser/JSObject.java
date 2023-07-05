@@ -37,16 +37,19 @@ public class JSObject extends JSValue {
         String key = "";
         int state = 0;
         while (t != null && level > 0) {
-            if (t.getType() == Token.OBJECT_START && state == 1) {
-                level++;
+            if (t.getType() == Token.OBJECT_START && state == 1 && level2 == 0) {
                 items.put(key, new JSObject(t, exp));
             }
-            if (t.getType() == Token.ARRAY_START && state == 1) {
-                level2++;
+            if (t.getType() == Token.ARRAY_START && state == 1 && level2 == 0) {
                 items.put(key, new JSArray(t, exp));
             }
+            if (t.getType() == Token.OBJECT_START) level++;
+            if (t.getType() == Token.ARRAY_START) level2++;
             if (t.getType() == Token.OBJECT_END) level--;
             if (t.getType() == Token.ARRAY_END) level2--;
+            if (t.getType() == Token.OBJECT_END && level == 0) {
+                break;
+            }
             if (t.getType() == Token.OP && t.getContent().equals(":")) {
                 state = 1;
             }

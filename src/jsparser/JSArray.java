@@ -39,16 +39,19 @@ public class JSArray extends JSObject {
         int level2 = 0;
         Token t = head.next;
         while (t != null && level > 0) {
-            if (t.getType() == Token.ARRAY_START) {
-                level++;
+            if (t.getType() == Token.ARRAY_START && level2 == 0) {
                 items.add(new JSArray(t, exp));
             }
-            if (t.getType() == Token.OBJECT_START) {
-                level2++;
+            if (t.getType() == Token.OBJECT_START && level2 == 0) {
                 items.add(new JSObject(t, exp));
             }
+            if (t.getType() == Token.ARRAY_START) level++;
+            if (t.getType() == Token.OBJECT_START) level2++;
             if (t.getType() == Token.ARRAY_END) level--;
             if (t.getType() == Token.OBJECT_END) level2--;
+            if (t.getType() == Token.ARRAY_END && level == 0) {
+                break;
+            }
             if ((t.getType() == Token.VAR_NAME ||
                     (t.getType() == Token.OP && !t.getContent().equals(","))
                     || t.getType() == Token.VALUE) && level == 1 && level2 == 0) {
