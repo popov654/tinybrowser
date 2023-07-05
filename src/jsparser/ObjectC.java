@@ -64,6 +64,87 @@ public class ObjectC extends Function {
                 return new JSBool(context.isFrozen);
             }
         });
+        items.put("defineProperty", new Function() {
+            @Override
+            public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+                if (args.size() < 2) {
+                    JSError e = new JSError(null, "Arguments error: at least 2 arguments expected", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                if (!(args.get(0) instanceof JSObject)) {
+                    JSError e = new JSError(null, "Type error: argument 1 must be an Object", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                if (!args.get(1).getType().equals("String")) {
+                    JSError e = new JSError(null, "Type error: argument 2 must be a String", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                if (args.size() > 2 && !(args.get(2) instanceof JSObject)) {
+                    JSError e = new JSError(null, "Type error: argument 3 must be an Object", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+
+                JSObject ctx = (JSObject) args.get(0);
+                JSObject descriptor = args.size() > 2 ? (JSObject)args.get(2) : new JSObject();
+                ctx.defineCustomProperty(args.get(1).asString().getValue(), descriptor);
+                
+                return Undefined.getInstance();
+            }
+        });
+        items.put("removeProperty", new Function() {
+            @Override
+            public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+                if (args.size() < 2) {
+                    JSError e = new JSError(null, "Arguments error: at least 2 arguments expected", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                if (!(args.get(0) instanceof JSObject)) {
+                    JSError e = new JSError(null, "Type error: argument 1 must be an Object", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                if (!args.get(1).getType().equals("String")) {
+                    JSError e = new JSError(null, "Type error: argument 2 must be a String", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+
+                JSObject ctx = (JSObject) args.get(0);
+                ctx.removeProperty(args.get(1).asString().getValue());
+
+                return Undefined.getInstance();
+            }
+        });
+        items.put("propertyIsEnumerable", new Function() {
+            @Override
+            public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+                if (args.size() < 2) {
+                    JSError e = new JSError(null, "Arguments error: at least 2 arguments expected", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                if (!(args.get(0) instanceof JSObject)) {
+                    JSError e = new JSError(null, "Type error: argument 1 must be an Object", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+                if (!args.get(1).getType().equals("String")) {
+                    JSError e = new JSError(null, "Type error: argument 2 must be a String", getCaller().getStack());
+                    getCaller().error = e;
+                    return Undefined.getInstance();
+                }
+
+                JSObject ctx = (JSObject) args.get(0);
+                CustomProperty p = ctx.customProperties.get(args.get(1).asString().getValue());
+
+                return new JSBool(p.enumerable);
+            }
+        });
     }
 
 }

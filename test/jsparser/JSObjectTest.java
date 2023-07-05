@@ -69,6 +69,21 @@ public class JSObjectTest {
     }
 
     /**
+     * Test of custom properties.
+     */
+    @Test
+    public void testCustomProperties() {
+        JSParser jp = new JSParser("var obj = { x: 1 }; " +
+                "Object.defineProperty(obj, 'y', { value: 2, writable: false, configurable: false }); " +
+                "console.log('Enumerable: ' + (obj.propertyIsEnumerable('y') ? 'yes' : 'no')); " +
+                "delete obj.y; obj.y = 3");
+        Expression exp = Expression.create(jp.getHead()).eval();
+        JSObject obj = (JSObject) Expression.getVar("obj", exp);
+        assertTrue(obj.hasOwnProperty("y"));
+        assertTrue(((JSInt)obj.get("y")).getValue() == 2);
+    }
+
+    /**
      * Test of getType method, of class JSObject.
      */
     @Test
@@ -77,7 +92,7 @@ public class JSObjectTest {
         instance.print_proto = true;
         assertEquals("{__proto__: ObjectPrototype, value: \"value\"}", instance.toString());
         JSObject.print_protos = true;
-        assertEquals("{__proto__: {__proto__: ObjectPrototype, hasOwnProperty: function (), toString: function (), constructor: function ()}, value: \"value\"}", instance.toString());
+        assertEquals("{__proto__: {__proto__: ObjectPrototype, propertyIsEnumerable: function (), hasOwnProperty: function (), toString: function (), constructor: function ()}, value: \"value\"}", instance.toString());
         instance.print_proto = false;
         JSObject.print_protos = false;
     }

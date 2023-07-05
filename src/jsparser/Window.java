@@ -93,6 +93,7 @@ public class Window extends JSObject {
             }
             return Undefined.getInstance();
         }
+        @Override
         public void setContext(Block b) {
             ctx = b;
         }
@@ -317,13 +318,14 @@ public class Window extends JSObject {
     }
 
     @Override
-    public JSValue removeProperty(JSString str) {
-        return items.remove(str.getValue());
+    public void removeProperty(JSString str) {
+        removeProperty(str.getValue());
     }
 
     @Override
-    public JSValue removeProperty(String str) {
-        return items.remove(str);
+    public void removeProperty(String str) {
+        customProperties.remove(str);
+        items.remove(str);
     }
 
     @Override

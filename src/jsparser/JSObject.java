@@ -3,7 +3,10 @@ package jsparser;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.Vector;
 
 /**
  *
@@ -125,6 +128,9 @@ public class JSObject extends JSValue {
 
     public JSValue get(String str) {
         JSValue val = items.get(str);
+        if (val == null) {
+            val = getCustomPropertyValue(str);
+        }
         if (val == null && items.containsKey("__proto__") &&
                 items.get("__proto__") instanceof JSObject) {
             return ((JSObject)items.get("__proto__")).get(str);
@@ -133,17 +139,18 @@ public class JSObject extends JSValue {
     }
 
     public void set(JSString str, JSValue value) {
-        if (!items.containsKey(str.getValue()) && isFrozen) {
-            return;
-        }
-        items.put(str.getValue(), value);
-        if (!(str.getValue().startsWith("on") && value instanceof HTMLElement)) {
-            value.incrementRefCount();
-        }
+        set(str.getValue(), value);
     }
 
     public void set(String str, JSValue value) {
         if (!items.containsKey(str) && isFrozen) {
+            return;
+        }
+        if (customProperties.containsKey(str)) {
+            setCustomPropertyValue(str, value);
+            if (customProperties.get(str).value == value) {
+                value.incrementRefCount();
+            }
             return;
         }
         items.put(str, value);
@@ -152,29 +159,79 @@ public class JSObject extends JSValue {
         }
     }
 
-    public HashMap<String, JSValue> getProperties() {
-        return (LinkedHashMap<String, JSValue>)items.clone();
+
+    public void defineCustomProperty(String key, JSObject descriptor) {
+        customProperties.put(key, new CustomProperty(descriptor));
     }
 
-    public JSValue getOwnProperty(String str) {
-        JSValue val = items.get(str);
+    public JSValue getCustomPropertyValue(String key) {
+        if (customProperties.containsKey(key)) {
+            CustomProperty p = customProperties.get(key);
+            if (p.get != null) {
+                return p.get.call(new Vector<JSValue>());
+            }
+            return p.value;
+        }
+        return null;
+    }
+
+    public void setCustomPropertyValue(String key, JSValue value) {
+        if (customProperties.containsKey(key)) {
+            CustomProperty p = customProperties.get(key);
+            if (!p.writable) return;
+            if (p.set != null) {
+                Vector<JSValue> args = new Vector<JSValue>();
+                args.add(value);
+                p.set.call(args);
+                return;
+            }
+            p.value = value;
+        }
+    }
+
+    public void removeCustomProperty(String key) {
+        CustomProperty p = customProperties.get(key);
+        if (p != null && p.configurable) {
+            customProperties.remove(key);
+        }
+    }
+
+    public HashMap<String, JSValue> getProperties() {
+        LinkedHashMap<String, JSValue> props = (LinkedHashMap<String, JSValue>) items.clone();
+        LinkedHashMap<String, JSValue> customProps = new LinkedHashMap<String, JSValue>();
+        Set<String> keys = customProperties.keySet();
+        for (String key: keys) {
+            CustomProperty p = customProperties.get(key);
+            if (!p.enumerable) continue;
+            customProps.put(key, getCustomPropertyValue(key));
+        }
+        props.putAll(customProps);
+        return props;
+    }
+
+    public JSValue getOwnProperty(String key) {
+        JSValue val = items.get(key);
+        if (val == null) {
+            val = getCustomPropertyValue(key);
+        }
         return val != null ? val : Undefined.getInstance();
     }
 
     public boolean hasOwnProperty(JSString str) {
-        return items.containsKey(str.getValue());
+        return hasOwnProperty(str.getValue());
     }
 
     public boolean hasOwnProperty(String str) {
-        return items.containsKey(str);
+        return items.containsKey(str) || customProperties.containsKey(str);
     }
 
-    public JSValue removeProperty(JSString str) {
-        return items.remove(str.getValue());
+    public void removeProperty(JSString str) {
+        removeProperty(str.getValue());
     }
 
-    public JSValue removeProperty(String str) {
-        return items.remove(str);
+    public void removeProperty(String str) {
+        removeCustomProperty(str);
+        items.remove(str);
     }
 
     @Override
@@ -200,7 +257,8 @@ public class JSObject extends JSValue {
     @Override
     public String toString() {
         String result = "";
-        Set keys = items.keySet();
+        LinkedHashSet keys = new LinkedHashSet(items.keySet());
+        keys.addAll(customProperties.keySet());
         Iterator it = keys.iterator();
         while (it.hasNext()) {
             String str = (String)it.next();
@@ -246,6 +304,7 @@ public class JSObject extends JSValue {
     }
 
     protected LinkedHashMap<String, JSValue> items = new LinkedHashMap<String, JSValue>();
+    protected LinkedHashMap<String, CustomProperty> customProperties = new LinkedHashMap<String, CustomProperty>();
     private String type = "Object";
     public boolean isFrozen = false;
     public boolean print_proto = false;
