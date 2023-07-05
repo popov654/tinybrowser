@@ -43,7 +43,7 @@ public class Block extends Expression {
             if (((type <= 6 || type >= 9 && type <= 12) && start == null) ||
                   type == 6 || type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield")) {
                 boolean needSplit = type == Token.KEYWORD && !end.getContent().matches("new|yield") ||
-                                    type == Token.VAR_NAME && end.prev != null && end.prev.getContent().matches("\\)|}");
+                                    type == Token.VAR_NAME && end.prev != null && (end.prev.getContent().matches("\\)|}") || end.prev.getType() == Token.VALUE);
                 if (end.prev != null && end.prev.getType() != Token.EMPTY && needSplit) {
                     end.prev.next = null;
                 }

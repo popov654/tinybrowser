@@ -634,7 +634,7 @@ public class Expression {
         int level1 = 0;
         int level2 = 0;
         int level3 = 0;
-        while (t != start && !t.prev.getContent().equals(",") && !t.prev.getContent().equals("(")) {
+        while (t != start && !t.prev.getContent().equals(",") && !(t.prev.getContent().equals("(") && level3 == 0)) {
             if (t.prev.getType() == Token.ARRAY_START && level1 == 0) break;
             if (t.prev.getType() == Token.OBJECT_START && level2 == 0) break;
             if (t.prev.getType() == Token.BRACE_OPEN && level3 == 0) break;
@@ -736,8 +736,10 @@ public class Expression {
             e.silent = true;
             e.eval();
             if (!result && t2 == end) {
-                start.setContent(e.getValue().toString());
-                start.val = e.getValue();
+                if (e.getValue() != null) {
+                    start.setContent(e.getValue().toString());
+                    start.val = e.getValue();
+                }
                 start.next = null;
                 token.next = null;
                 return;
