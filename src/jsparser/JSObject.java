@@ -26,7 +26,7 @@ public class JSObject extends JSValue {
         items.put(str.getValue(), val);
     }
 
-    public JSObject(Token head, Expression exp) {
+    public JSObject(Token head, Expression exp, TokenPointer pointer) {
         items.put("__proto__", ObjectProto.getInstance());
         if (head.getType() != Token.OBJECT_START) {
             return;
@@ -38,16 +38,23 @@ public class JSObject extends JSValue {
         int state = 0;
         while (t != null && level > 0) {
             if (t.getType() == Token.OBJECT_START && state == 1 && level2 == 0) {
-                items.put(key, new JSObject(t, exp));
+                TokenPointer p = new TokenPointer(t);
+                items.put(key, new JSObject(t, exp, p));
+                t = p.token;
             }
             if (t.getType() == Token.ARRAY_START && state == 1 && level2 == 0) {
-                items.put(key, new JSArray(t, exp));
+                TokenPointer p = new TokenPointer(t);
+                items.put(key, new JSArray(t, exp, p));
+                t = p.token;
             }
             if (t.getType() == Token.OBJECT_START) level++;
             if (t.getType() == Token.ARRAY_START) level2++;
             if (t.getType() == Token.OBJECT_END) level--;
             if (t.getType() == Token.ARRAY_END) level2--;
             if (t.getType() == Token.OBJECT_END && level == 0) {
+                if (pointer != null) {
+                    pointer.token = t.next;
+                }
                 break;
             }
             if (t.getType() == Token.OP && t.getContent().equals(":")) {

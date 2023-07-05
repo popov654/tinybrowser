@@ -358,7 +358,7 @@ public class Expression {
                         t2 = t2.next;
                     }
                     last = new Token("[]");
-                    last.val = new JSArray(t, this);
+                    last.val = new JSArray(t, this, null);
                 } else {
                     level2++;
                     int lvl = level2;
@@ -368,7 +368,7 @@ public class Expression {
                         t2 = t2.next;
                     }
                     last = new Token("{}");
-                    last.val = new JSObject(t, this);
+                    last.val = new JSObject(t, this, null);
                 }
                 last.prev = t.prev;
                 t.prev.next = last;

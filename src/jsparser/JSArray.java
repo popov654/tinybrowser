@@ -29,7 +29,7 @@ public class JSArray extends JSObject {
         }
     }
 
-    public JSArray(Token head, Expression exp) {
+    public JSArray(Token head, Expression exp, TokenPointer pointer) {
         _items = super.items;
         _items.put("__proto__", ArrayProto.getInstance());
         if (head.getType() != Token.ARRAY_START) {
@@ -40,16 +40,23 @@ public class JSArray extends JSObject {
         Token t = head.next;
         while (t != null && level > 0) {
             if (t.getType() == Token.ARRAY_START && level2 == 0) {
-                items.add(new JSArray(t, exp));
+                TokenPointer p = new TokenPointer(t);
+                items.add(new JSArray(t, exp, p));
+                t = p.token;
             }
             if (t.getType() == Token.OBJECT_START && level2 == 0) {
-                items.add(new JSObject(t, exp));
+                TokenPointer p = new TokenPointer(t);
+                items.add(new JSObject(t, exp, p));
+                t = p.token;
             }
             if (t.getType() == Token.ARRAY_START) level++;
             if (t.getType() == Token.OBJECT_START) level2++;
             if (t.getType() == Token.ARRAY_END) level--;
             if (t.getType() == Token.OBJECT_END) level2--;
             if (t.getType() == Token.ARRAY_END && level == 0) {
+                if (pointer != null) {
+                    pointer.token = t.next;
+                }
                 break;
             }
             if ((t.getType() == Token.VAR_NAME ||
