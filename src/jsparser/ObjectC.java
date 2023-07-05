@@ -11,6 +11,7 @@ public class ObjectC extends Function {
     public ObjectC() {
         items.put("prototype", ObjectProto.getInstance());
         ObjectProto.getInstance().set("constructor", this);
+        addMethods();
     }
 
     @Override
@@ -40,6 +41,29 @@ public class ObjectC extends Function {
             }
         }
         return new JSObject();
+    }
+
+    private void addMethods() {
+        final JSObject instance = this;
+        items.put("freeze", new Function() {
+            @Override
+            public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+                if (args.size() == 0 || !(args.get(0) instanceof JSObject)) {
+                    return Undefined.getInstance();
+                }
+                ((JSObject)args.get(0)).isFrozen = true;
+                return Undefined.getInstance();
+            }
+        });
+        items.put("isFrozen", new Function() {
+            @Override
+            public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+                if (args.size() == 0 || !(args.get(0) instanceof JSObject)) {
+                    new JSBool(false);
+                }
+                return new JSBool(context.isFrozen);
+            }
+        });
     }
 
 }

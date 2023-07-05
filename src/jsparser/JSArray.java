@@ -138,6 +138,9 @@ public class JSArray extends JSObject {
     }
 
     public JSArray push(JSValue v) {
+        if (isFrozen) {
+            return this;
+        }
         items.add(v);
         v.incrementRefCount();
         return this;
@@ -156,6 +159,9 @@ public class JSArray extends JSObject {
     }
 
     public JSArray unshift(JSValue v) {
+        if (isFrozen) {
+            return this;
+        }
         items.insertElementAt(v, 0);
         v.incrementRefCount();
         return this;
@@ -183,6 +189,9 @@ public class JSArray extends JSObject {
     }
 
     public JSArray splice(JSInt from, JSInt count, Vector<JSValue> ins) {
+        if (isFrozen) {
+            return this;
+        }
         Vector<JSValue> n = new Vector<JSValue>();
         for (int i = 0; i < count.getValue(); i++) {
             n.add(items.get((int)from.getValue()));
@@ -195,6 +204,9 @@ public class JSArray extends JSObject {
     }
 
     public JSArray insert(int index, JSValue value) {
+        if (isFrozen) {
+            return this;
+        }
         items.insertElementAt(value, index);
         return this;
     }

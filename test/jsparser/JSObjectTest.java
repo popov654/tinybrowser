@@ -35,7 +35,7 @@ public class JSObjectTest {
     }
 
     /**
-     * Test of getType method, of class JSFloat.
+     * Test of getType method, of class JSObject.
      */
     @Test
     public void testGetType() {
@@ -43,7 +43,19 @@ public class JSObjectTest {
     }
 
     /**
-     * Test of getType method, of class JSFloat.
+     * Test of freeze method, of class JSObject.
+     */
+    @Test
+    public void testFreeze() {
+        JSParser jp = new JSParser("{ value: \"value\" }");
+        JSObject obj = (JSObject)Expression.create(jp.getHead()).eval().getValue();
+        obj.isFrozen = true;
+        obj.set("test", new JSString("123"));
+        assertEquals(obj.toString(), "{value: \"value\"}");
+    }
+
+    /**
+     * Test of getType method, of class JSObject.
      */
     @Test
     public void testToString() {

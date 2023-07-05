@@ -123,6 +123,9 @@ public class JSObject extends JSValue {
     }
 
     public void set(JSString str, JSValue value) {
+        if (!items.containsKey(str.getValue()) && isFrozen) {
+            return;
+        }
         items.put(str.getValue(), value);
         if (!(str.getValue().startsWith("on") && value instanceof HTMLElement)) {
             value.incrementRefCount();
@@ -130,6 +133,9 @@ public class JSObject extends JSValue {
     }
 
     public void set(String str, JSValue value) {
+        if (!items.containsKey(str) && isFrozen) {
+            return;
+        }
         items.put(str, value);
         if (!(str.startsWith("on") && this instanceof HTMLElement && value instanceof Function) && !str.equals("constructor")) {
             value.incrementRefCount();
@@ -214,6 +220,7 @@ public class JSObject extends JSValue {
 
     protected LinkedHashMap<String, JSValue> items = new LinkedHashMap<String, JSValue>();
     private String type = "Object";
+    public boolean isFrozen = false;
     public boolean print_proto = false;
     public static boolean print_protos = false;
 }

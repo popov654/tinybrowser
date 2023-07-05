@@ -908,6 +908,12 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("false", exp.getValue().toString());
+        jp = new JSParser("var obj = { x: 1 }; Object.freeze(obj); obj.y = 2");
+        System.out.println("var obj = { x: 1 }; Object.freeze(obj); obj.y = 2");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        JSValue val = ((JSObject) Expression.getVar("obj", exp)).get("y");
+        assertEquals(val, Undefined.getInstance());
     }
 
    /**
