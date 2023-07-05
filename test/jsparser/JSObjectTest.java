@@ -55,6 +55,20 @@ public class JSObjectTest {
     }
 
     /**
+     * Test of freeze deepClone, of class JSObject.
+     */
+    @Test
+    public void testDeepClone() {
+        JSParser jp = new JSParser("{ value: \"value\", obj: { x: 1, y: 2 }, array: [{ z: 3 }, \"data\"] }");
+        JSObject obj = (JSObject)Expression.create(jp.getHead()).eval().getValue();
+        JSObject clone = obj.deepClone();
+        assertFalse(obj.get("obj").equals(clone.get("obj")));
+        assertFalse(obj.get("array").equals(clone.get("array")));
+        assertFalse(((JSArray)obj.get("array")).get(0).equals(((JSArray)clone.get("array")).get(0)));
+        assertEquals("{value: \"value\", obj: {x: 1, y: 2}, array: [{z: 3}, \"data\"]}", clone.toString());
+    }
+
+    /**
      * Test of getType method, of class JSObject.
      */
     @Test

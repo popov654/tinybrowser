@@ -287,6 +287,22 @@ public class JSArray extends JSObject {
     }
 
     @Override
+    public JSArray deepClone() {
+        JSObject cloneObj = super.deepClone();
+        Vector<JSValue> v = new Vector<JSValue>();
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getType().matches("Object|Array")) {
+                v.add(((JSObject)items.get(i)).deepClone());
+            } else {
+                v.add(JSValue.create(items.get(i).getType(), items.get(i).toString()));
+            }
+        }
+        JSArray clone = new JSArray(v);
+        clone._items = cloneObj.items;
+        return clone;
+    }
+
+    @Override
     public String getType() {
         return type;
     }

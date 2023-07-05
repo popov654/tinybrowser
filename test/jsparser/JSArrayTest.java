@@ -140,6 +140,18 @@ public class JSArrayTest {
     }
 
     /**
+     * Test of freeze deepClone, of class JSArray.
+     */
+    @Test
+    public void testDeepClone() {
+        JSParser jp = new JSParser("[{ x: 1 }, \"data\"]");
+        JSArray arr = (JSArray)Expression.create(jp.getHead()).eval().getValue();
+        JSArray clone = arr.deepClone();
+        assertFalse(arr.get(0).equals(clone.get(0)));
+        assertEquals("[{x: 1}, \"data\"]", clone.toString());
+    }
+
+    /**
      * Test of getType method, of class JSArray.
      */
     @Test

@@ -228,6 +228,23 @@ public class JSObject extends JSValue {
         return copy;
     }
 
+    public JSObject deepClone() {
+        JSObject copy = new JSObject();
+        copy.items = new LinkedHashMap<String, JSValue>();
+        Set<String> keys = items.keySet();
+        for (String key: keys) {
+            JSValue val = items.get(key);
+            if (key.matches("__proto__|prototype|constructor")) {
+                copy.items.put(key, val);
+            } else if (val.getType().matches("Object|Array")) {
+                copy.items.put(key, ((JSObject)val).deepClone());
+            } else {
+                copy.items.put(key, JSValue.create(val.getType(), val.toString()));
+            }
+        }
+        return copy;
+    }
+
     protected LinkedHashMap<String, JSValue> items = new LinkedHashMap<String, JSValue>();
     private String type = "Object";
     public boolean isFrozen = false;
