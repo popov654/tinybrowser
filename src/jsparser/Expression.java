@@ -634,7 +634,7 @@ public class Expression {
         int level1 = 0;
         int level2 = 0;
         int level3 = 0;
-        while (t != start && !t.prev.getContent().equals(",") && !(t.prev.getContent().equals("(") && level3 == 0)) {
+        while (t != start && !t.prev.getContent().matches(",|\\(|[*/&|~+-]?=")) {
             if (t.prev.getType() == Token.ARRAY_START && level1 == 0) break;
             if (t.prev.getType() == Token.OBJECT_START && level2 == 0) break;
             if (t.prev.getType() == Token.BRACE_OPEN && level3 == 0) break;
@@ -687,7 +687,7 @@ public class Expression {
         level2 = 0;
         level3 = 0;
 
-        while (t.prev != token && !t.prev.getContent().equals(":") || level1 > 0 || level2 > 0 || level3 > 0) {
+        while (t.prev != token && !t.prev.getContent().equals(":") || level1 != 0 || level2 != 0 || level3 != 0) {
             if (t.getType() == Token.ARRAY_START) level1++;
             if (t.getType() == Token.OBJECT_START) level2++;
             if (t.getType() == Token.BRACE_OPEN) level3++;
@@ -711,7 +711,17 @@ public class Expression {
 
         t = t.prev;
 
-        while (t.prev != token && !t.prev.getContent().equals(":") && !t.prev.getContent().equals("?")) {
+        level1 = 0;
+        level2 = 0;
+        level3 = 0;
+
+        while (t.prev != token && !t.prev.getContent().equals(":") || level1 != 0 || level2 != 0 || level3 != 0) {
+            if (t.getType() == Token.ARRAY_START) level1++;
+            if (t.getType() == Token.OBJECT_START) level2++;
+            if (t.getType() == Token.BRACE_OPEN) level3++;
+            if (t.getType() == Token.ARRAY_END) level1--;
+            if (t.getType() == Token.OBJECT_END) level2--;
+            if (t.getType() == Token.BRACE_CLOSE) level3--;
             t = t.prev;
         }
 
@@ -754,8 +764,8 @@ public class Expression {
                 before.next = res;
             }
             res.prev = before;
-            if (t.next != null) {
-                t.next.prev = res;
+            if (after != null && after.next != null) {
+                after.next.prev = res;
             }
             res.next = after;
             token.next = res.next;
@@ -2335,9 +2345,6 @@ public class Expression {
                     while (ct != null && (ct.getType() != Token.BRACE_OPEN || level <= 0)) {
                         if (ct.getType() == Token.BRACE_OPEN) level++;
                         if (ct.getType() == Token.BRACE_CLOSE) level--;
-                        if (ct.getType() == Token.BRACE_OPEN && level > 0) {
-                            break;
-                        }
                         if (level > 0) {
                             if (ct.prev.getType() == Token.ARRAY_END || ct.prev.getType() == Token.BRACE_CLOSE ||
                                    ct.prev.getType() == Token.OBJECT_ENTITY || ct.prev.getType() == Token.VAR_NAME) {
