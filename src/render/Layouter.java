@@ -469,7 +469,7 @@ public class Layouter {
         if (d.display_type == Block.Display.TABLE) {
             layoutTable(d);
         }
-        if (d.display_type == Block.Display.TABLE_ROW || d.parent.display_type == Block.Display.TABLE_CELL) {
+        if (d.display_type == Block.Display.TABLE_ROW || d.display_type == Block.Display.TABLE_CELL) {
             return;
         }
         if (d.display_type == Block.Display.BLOCK || d.display_type == Block.Display.TABLE ||

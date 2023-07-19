@@ -15,6 +15,9 @@ public class TableLayout {
         this.border_collapse = b.border_collapse;
         Vector<Block> els = b.getChildren();
         for (int i = 0; i < els.size(); i++) {
+            if (els.get(i).type == Block.NodeTypes.TEXT) {
+                continue;
+            }
             if (border_collapse) {
                 Block row = els.get(i);
                 row.borderWidth[1] = 0;
@@ -337,8 +340,14 @@ public class TableLayout {
                 //cell.cy = rows.get(i).cy;
 
                 if (i == cell.cy) {
+                    int old_x = cell.block._x_;
+                    int old_y = cell.block._y_;
                     cell.x = cell.block._x_ = block._x_ + x;
                     cell.y = cell.block._y_ = block._y_ + y;
+                    for (Block child: cell.block.children) {
+                        child.setX(child._x_ - old_x);
+                        child.setY(child._y_ - old_y);
+                    }
                 }
 
                 System.out.println("(" + cell.x + ", " + cell.y + ")");

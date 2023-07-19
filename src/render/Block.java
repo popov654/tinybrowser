@@ -1937,6 +1937,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             background.background_size_y = viewport_height;
             special = false;
         }
+        min_width = min_size = pref_size = width;
 
         return true;
     }
@@ -1945,6 +1946,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         if (inputType == Input.NONE) return false;
         if (!inputReady) {
             createInput();
+            min_width = min_size = pref_size = width;
         } else {
             return false;
         }
@@ -3826,10 +3828,6 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (auto_height && !preserve_height && last != null) {
                     viewport_height = height = last.getY() + last.getHeight() + paddings[2] + borderWidth[2];
                 }
-                if (is_table_cell && auto_width) {
-                    width = Math.max(min_width, pref_size);
-                    orig_width = (int)Math.floor(width / ratio);
-                }
             } else {
 
                 if (el.viewport_width == 0) el.viewport_width = el.width;
@@ -3850,6 +3848,13 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 if (scrollbar_y != null) {
                     document.panel.setComponentZOrder(scrollbar_y, 0);
                 }
+            }
+        }
+        if (is_table_cell && auto_width) {
+            width = Math.max(min_width, pref_size);
+            orig_width = (int)Math.floor(width / ratio);
+            for (int i = 0; i < lines.size(); i++) {
+                lines.get(i).setWidth(width);
             }
         }
         pref_size += paddings[3] + paddings[1] + borderWidth[3] + borderWidth[1];
@@ -4388,6 +4393,18 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public boolean isInline() {
         return display_type == Display.INLINE_BLOCK || display_type == Display.INLINE || display_type == Display.INLINE_FLEX || display_type == Display.INLINE_TABLE;
+    }
+
+    public boolean isTable() {
+        return display_type == Display.TABLE || parent.parent.display_type == Display.INLINE_TABLE;
+    }
+
+    public boolean isTableRow() {
+        return display_type == Display.TABLE_ROW;
+    }
+
+    public boolean isTableCell() {
+        return parent != null && parent.parent != null && (parent.parent.display_type == Display.TABLE || parent.parent.display_type == Display.INLINE_TABLE);
     }
 
     public void findPreferredSizes() {

@@ -278,7 +278,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        testBuilder("html" + File.separator + "files.htm");
+        testBuilder("html" + File.separator + "table.htm");
     }
 
     private static String installPath;

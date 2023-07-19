@@ -107,7 +107,8 @@ public class Builder {
     }
 
     public Block buildElement(WebDocument document, Block parent, Node node) {
-        if (node.nodeType != ELEMENT && (node.nodeType != TEXT || node.nodeValue.matches("\n+") && parent.white_space != Block.WhiteSpace.PRE_WRAP)) {
+        if (node.nodeType != ELEMENT && (node.nodeType != TEXT || node.nodeValue.matches("\n+") && parent.white_space != Block.WhiteSpace.PRE_WRAP ||
+              node.parent != null && (node.parent.tagName.equals("tr") || node.parent.tagName.equals("table")))) {
             return null;
         }
         if (document == null) document = this.document;
@@ -409,8 +410,12 @@ public class Builder {
             b.display_type = Block.Display.TABLE_ROW;
         } else if (node.tagName.equals("td")) {
             b.display_type = Block.Display.TABLE_CELL;
-            b.colspan = Integer.parseInt(node.getAttribute("colspan"));
-            b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
+            if (node.hasAttribute("colspan")) {
+                b.colspan = Integer.parseInt(node.getAttribute("colspan"));
+            }
+            if (node.hasAttribute("rowspan")) {
+                b.rowspan = Integer.parseInt(node.getAttribute("rowspan"));
+            }
         }
         if (b.document != null && b.document.ready && force_update && b.display_type != old_value) {
             b.setDisplayType(b.display_type);
@@ -919,6 +924,23 @@ public class Builder {
                 b.setHeight(Integer.parseInt(node.getAttribute("height")));
             }
         }
+        if (b.node.hasAttribute("border") && b.node.getAttribute("border").matches("\\d+")) {
+            for (int i = 0; i < 4; i++) {
+                if (b.borderColor[i].getAlpha() == 0) {
+                    b.borderColor[i] = new Color(b.borderColor[i].getRed(), b.borderColor[i].getGreen(), b.borderColor[i].getBlue());
+                }
+            }
+            b.setBorderWidth(Integer.parseInt(b.node.getAttribute("border")));
+            if (b.display_type == Block.Display.TABLE || b.display_type == Block.Display.INLINE_TABLE) {
+                applyTableBorderToCells(b);
+            }
+        }
+        if (b.node.tagName.equals("table") && b.node.hasAttribute("cellspacing") && b.node.getAttribute("cellspacing").matches("\\d+") && b.isTableCell()) {
+            b.border_spacing = Integer.parseInt(b.node.getAttribute("cellspacing"));
+        }
+        if (b.node.tagName.equals("td") && b.node.hasAttribute("cellpadding") && b.node.getAttribute("cellpadding").matches("\\d+") && b.isTableCell()) {
+            b.setPaddings(Integer.parseInt(b.node.getAttribute("cellpadding")));
+        }
         boolean flag = b.inputReady;
         if (b.inputType != Block.Input.NONE && flag) {
             b.inputReady = false;
@@ -927,6 +949,25 @@ public class Builder {
         document.ready = ready;
         if (b.inputType != Block.Input.NONE && flag) {
             b.doIncrementLayout();
+        }
+    }
+
+    private void applyTableBorderToCells(Block b) {
+        Vector<Block> rows = b.getChildren();
+        for (int i = 0; i < rows.size(); i++) {
+            for (int j = 0; j < rows.size(); j++) {
+                Block row = rows.get(i);
+                if (row.display_type != Block.Display.TABLE_ROW) continue;
+                if (row.getChildren().get(j).display_type == Block.Display.TABLE_CELL) {
+                    Block cell = row.getChildren().get(j);
+                    for (int k = 0; k < 4; k++) {
+                        if (cell.borderColor[k].getAlpha() == 0) {
+                            cell.borderColor[k] = new Color(cell.borderColor[k].getRed(), cell.borderColor[k].getGreen(), cell.borderColor[k].getBlue());
+                        }
+                    }
+                    cell.setBorderWidth(Integer.parseInt(b.node.getAttribute("border")));
+                }
+            }
         }
     }
 
@@ -1216,6 +1257,13 @@ public class Builder {
         resetStyles(b, true, force);
         for (int i = 0; i < b.getChildren().size(); i++) {
             resetStylesRecursive(b.getChildren().get(i), true, force);
+        }
+
+        if (b.display_type == Block.Display.TABLE || b.display_type == Block.Display.INLINE_TABLE) {
+            if (b.node.hasAttribute("border") && b.node.getAttribute("border").matches("\\d+")) {
+                b.setBorderWidth(Integer.parseInt(b.node.getAttribute("border")));
+                applyTableBorderToCells(b);
+            }
         }
 
         if (b.inputType != Block.Input.NONE && force) {
