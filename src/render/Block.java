@@ -5896,7 +5896,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < 4; i++) {
             borderColor[i] = col;
         }
-        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+        Color[] correctedColor = getCorrectedBorderColor();
+        this.border = new RoundedBorder(this, borderWidth, arc, correctedColor, borderType);
         forceRepaint();
     }
 
@@ -5910,9 +5911,42 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         for (int i = 0; i < 4; i++) {
             borderWidth[i] = bw;
         }
-        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+        Color[] correctedColor = getCorrectedBorderColor();
+        this.border = new RoundedBorder(this, borderWidth, arc, correctedColor, borderType);
         updateAbsolutePositionedChildren();
         forceRepaint();
+    }
+
+    public Color[] getCorrectedBorderColor() {
+        Color[] colors = new Color[4];
+        for (int i = 0; i < 4; i++) {
+            colors[i] = borderColor[i];
+        }
+        if (WebDocument.scale_borders && scale_borders && parent != null && ratio < Math.ceil(ratio)) {
+            float[] compParent = new float[4];
+            Color parentBgColor = parent.background != null ? parent.background.bgcolor : null;
+            Block b = parent;
+            while (b.parent != null && parentBgColor == null) {
+                b = b.parent;
+                parentBgColor = parent.background != null ? parent.background.bgcolor : null;
+            }
+            if (parentBgColor == null) {
+                parentBgColor = new Color(255, 255, 255);
+            }
+            Color.RGBtoHSB(parentBgColor.getRed(), parentBgColor.getGreen(), parentBgColor.getBlue(), compParent);
+            for (int i = 0; i < 4; i++) {
+                if (borderWidth[i] == 0) continue;
+                float[] comp = new float[4];
+                Color.RGBtoHSB(borderColor[i].getRed(), borderColor[i].getGreen(), borderColor[i].getBlue(), comp);
+                if (compParent[2] == comp[2]) {
+                    continue;
+                }
+                comp[2] += (Math.ceil(ratio) - ratio) * 2 * 0.43 * (compParent[2] < comp[2] ? -1 : 1);
+                comp[2] = Math.max(0, Math.min(1, comp[2]));
+                colors[i] = new Color(Color.HSBtoRGB(comp[0], comp[1], comp[2]));
+            }
+        }
+        return colors;
     }
 
     public void setBorderRadius(int radius) {
@@ -5962,7 +5996,8 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
 
     public void setBorderColor(Color[] col) {
         borderColor = col;
-        this.border = new RoundedBorder(this, borderWidth, arc, borderColor, borderType);
+        Color[] correctedColor = getCorrectedBorderColor();
+        this.border = new RoundedBorder(this, borderWidth, arc, correctedColor, borderType);
         forceRepaint();
     }
 
