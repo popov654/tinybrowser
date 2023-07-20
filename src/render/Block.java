@@ -3935,7 +3935,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             }
         }
 
-        boolean is_flex = display_type == Block.Display.FLEX || display_type == Block.Display.INLINE_FLEX;
+        boolean is_flex = display_type == Display.FLEX || display_type == Display.INLINE_FLEX;
 
         if (text_align != TextAlign.ALIGN_LEFT || is_flex && flex_justify != FlexJustify.START) {
             Layouter.applyHorizontalAlignment(this);

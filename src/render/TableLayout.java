@@ -357,7 +357,17 @@ public class TableLayout {
                     cell.width += cellspacing + col_widths[k];
                 }
                 cell.block.width = cell.block.viewport_width = cell.width;
+                cell.block.orig_width = (int)Math.floor(cell.block.width / cell.block.ratio);
 
+                int w = cell.block.width - cell.block.borderWidth[1] - cell.block.paddings[1] - cell.block.borderWidth[3] - cell.block.paddings[3];
+                for (int k = 0; k < cell.block.lines.size(); k++) {
+                    cell.block.lines.get(k).setWidth(w);
+                }
+
+                boolean is_flex = cell.block.display_type == Block.Display.FLEX || cell.block.display_type == Block.Display.INLINE_FLEX;
+                if (cell.block.text_align != Block.TextAlign.ALIGN_LEFT || is_flex && cell.block.flex_justify != Block.FlexJustify.START) {
+                    Layouter.applyHorizontalAlignment(cell.block);
+                }
                 
                 if (i == cell.cy) cell.height = row_heights[i];
                 
