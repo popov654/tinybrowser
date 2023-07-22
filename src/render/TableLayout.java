@@ -229,8 +229,6 @@ public class TableLayout {
                 }
             }
             for (int i = 0; i < cols_n; i++) {
-                //weights[i] = (double)col_widths[i] / sum_w;
-                //weights[i] = 1f / cols_n;
                 col_widths[i] = i < cols_n-1 ? (int)Math.round(w * weights[i]) : w - s;
                 s += col_widths[i];
             }
@@ -417,18 +415,10 @@ public class TableLayout {
     }
 
     Vector<Cell> pendingCells = new Vector<Cell>();
-
     Vector<Row> rows = new Vector<Row>();
-    
+
     public Vector<Vector<Block>> table_data;
-
-    public int cellpadding = 1;
     public int cellspacing = 2;
-
     public boolean border_collapse = false;
-
-    public void init(int w, int h) {
-        
-    }
     
 }
