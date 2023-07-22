@@ -1,7 +1,5 @@
 package render;
 
-import com.sun.imageio.plugins.gif.GIFImageReader;
-import com.sun.imageio.plugins.gif.GIFImageReaderSpi;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -75,6 +73,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.ButtonModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -5515,8 +5514,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 f = new File(path);
                 background.image = ImageIO.read(f);
             }
-            ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
-            ir.setInput(ImageIO.createImageInputStream(f));
+
+            ImageInputStream stream = ImageIO.createImageInputStream(f);
+            Iterator readers = ImageIO.getImageReaders(stream);
+            if (!readers.hasNext()) {
+                throw new RuntimeException("No GIF image reader found");
+            }
+            ImageReader ir = (ImageReader) readers.next();
+            ir.setInput(stream);
+
             if (ir.getNumImages(true) > 1) {
                 if (has_animation) {
                     stopWatcher();
@@ -5554,8 +5560,15 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                 f = new File(background.imgSrc);
                 background.image = ImageIO.read(f);
             }
-            ImageReader ir = new GIFImageReader(new GIFImageReaderSpi());
-            ir.setInput(ImageIO.createImageInputStream(f));
+
+            ImageInputStream stream = ImageIO.createImageInputStream(f);
+            Iterator readers = ImageIO.getImageReaders(stream);
+            if (!readers.hasNext()) {
+                throw new RuntimeException("No GIF image reader found");
+            }
+            ImageReader ir = (ImageReader) readers.next();
+            ir.setInput(stream);
+
             if (ir.getNumImages(true) > 1) {
                 if (has_animation) {
                     stopWatcher();
