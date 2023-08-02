@@ -24,16 +24,25 @@ public class PromiseC extends Function {
     @Override
     public JSValue call(JSObject context, Vector<JSValue> args) {
         if (args.size() == 0) return new Promise(null);
+
+        Window w = (Window)Block.getVar("window", getCaller());
+        if (w == null) {
+            Block b = getCaller().parent_block;
+            while (b.parent_block != null) {
+                b = b.parent_block;
+            }
+            w = new Window(b);
+            Expression.setVar("window", w, b, Block.var);
+        }
+
         if (!args.get(0).getType().equals("Function")) {
             JSError e = new JSError(null, "Type error: argument is not a function", getCaller().getStack());
             getCaller().error = e;
             Promise p = new Promise(null);
-            Window w = (Window)Block.getVar("window", getCaller());
             w.addPromise(p);
             return p;
         }
         Promise p = new Promise((Function)args.get(0));
-        Window w = (Window)Block.getVar("window", getCaller());
         w.addPromise(p);
         return p;
     }

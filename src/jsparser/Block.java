@@ -887,6 +887,7 @@ public class Block extends Expression {
                         System.out.println(return_value);
                     }
                 }
+                onFinished();
                 return this;
             }
             if (error != null) {
@@ -905,6 +906,8 @@ public class Block extends Expression {
                     next.error = error;
                 } else if (parent_block != null) {
                     parent_block.error = error;
+                    onFinished();
+                    
                     return this;
                 } else {
                     System.err.println(error.getText());
@@ -912,6 +915,7 @@ public class Block extends Expression {
                     if (!stack.isEmpty()) {
                         System.err.println(error.printStack());
                     }
+                    onFinished();
                     return this;
                 }
             }
@@ -932,6 +936,11 @@ public class Block extends Expression {
                 }
             }
         }
+        onFinished();  
+        return this;
+    }
+
+    private void onFinished() {
         if (func != null) {
             JSValue document = Block.getVar("document", this);
             if (document != null && document instanceof HTMLDocument) {
@@ -948,7 +957,6 @@ public class Block extends Expression {
                 ((Window)w).runPromises();
             }
         }
-        return this;
     }
 
     public void setType(int type) {
