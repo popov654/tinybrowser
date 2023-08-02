@@ -15,8 +15,14 @@ public class Generator extends JSObject {
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (args.size() > 0) {
                 block.yt_value = args.get(0);
+            } else {
+                Expression last_exp = block.last > 0 ? block.children.get(block.last) : null;
+                if (last_exp != null && last_exp.yt != null && !(last_exp.yt.val instanceof Generator)) {
+                    block.yt_value = last_value;
+                }
             }
             block.eval();
+            last_value = block.return_value;
             JSObject result = new JSObject();
             if (!done) {
                 result.set("value", block.return_value);
@@ -79,6 +85,7 @@ public class Generator extends JSObject {
         return type;
     }
 
+    private JSValue last_value;
     private Block block = null;
     private boolean done = false;
     private String type = "Object";

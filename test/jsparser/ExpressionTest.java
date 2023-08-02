@@ -1159,6 +1159,11 @@ public class ExpressionTest {
         Expression exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("{value: 1, done: false}", exp.getValue().toString());
+        jp = new JSParser("function* gen() { var x = yield 1; yield x + 1; return 3 } var g = gen(); g.next(); g.next()");
+        System.out.println("function* gen() { var x = yield 1; yield x + 1; return 3 } var g = gen(); g.next(); g.next()");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("{value: 2, done: false}", exp.getValue().toString());
         jp = new JSParser("function* gen() { yield 1; yield 2; yield* gen2(); return 3 } function* gen2() { yield 4; yield 5 } var g = gen(); var a = []; for (var i = 0; i < 5; i++) a.push(g.next().value); a");
         System.out.println("function* gen() { yield 1; yield 2; yield* gen2(); return 3 } function* gen2() { yield 4; yield 5 } var g = gen(); var a = []; for (var i = 0; i < 5; i++) a.push(g.next().value); a");
         exp = Expression.create(jp.getHead());

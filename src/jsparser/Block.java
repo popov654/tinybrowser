@@ -755,7 +755,7 @@ public class Block extends Expression {
             }
         }
         Block b = this;
-        while (b != null && !b.is_gen) {
+        while (b != null && !b.is_gen && b.yt_value == null) {
             b = b.parent_block;
         }
         int from = 0;
@@ -864,6 +864,10 @@ public class Block extends Expression {
                     error = new JSError(error.getValue(), error.getText(), e.getStack());
                 }
                 if (!(e instanceof Block) && e.yt != null && yt_value != null) {
+                    if (e.yt.prev == e.start) {
+                        from++;
+                        continue;
+                    }
                     e.setYieldValue(yt_value);
                     yt_value = null;
                 }
