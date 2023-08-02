@@ -104,6 +104,54 @@ public class Main {
         }
     }
 
+    public static void testTimeout() {
+        JSParser jp = new JSParser("function f() { 5 }; setTimeout(f, 1200)");
+        System.out.println("function f() { 5 }; setTimeout(f, 1200)");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+    }
+
+    public static void testInterval() {
+        JSParser jp = new JSParser("var i = 0; function f() { i+=10; if (i >= 50) clearInterval(t); }; var t = setInterval(f, 500)");
+        System.out.println("var i = 0; function f() { i+=10; if (i >= 50) clearInterval(t); }; var t = setInterval(f, 500)");
+        Expression exp = Expression.create(jp.getHead());
+        exp.setSilent(true);
+        exp.eval();
+        ((jsparser.Function)Expression.getVar("f", exp)).setSilent(false);
+    }
+
+    public static void testPromises() {
+//        JSParser jp = new JSParser("function cbk1(str) { \"Promise 1 fulfilled: \" + str; return str } function cbk2(str) { setTimeout(str => { \"Promise 2 fulfilled: \" + str }, 1000); throw \"ERROR\" } function cbk3(str) { \"Promise 3 fulfilled: \" + str; return str } function err(str) { \"An error has occured: \" + str } function f(resolve, reject) { setTimeout(function() { resolve(\"OK\") }, 300) }; (new Promise(f)).then(cbk1).then(cbk2).then(cbk3, err)");
+//        System.out.println();
+//        System.out.println("function cbk1(str) { \"Promise 1 fulfilled: \" + str; return str }");
+//        System.out.println("function cbk2(str) { setTimeout(str => { \"Promise 2 fulfilled: \" + str }, 1000); throw \"ERROR\" }");
+//        System.out.println("function cbk3(str) { \"Promise 3 fulfilled: \" + str; return str }");
+//        System.out.println("function err(str) { \"An error has occured: \" + str }");
+//        System.out.println("function f(resolve, reject) { setTimeout(function() { resolve(\"OK\") }, 300) }");
+//        System.out.println("(new Promise(f)).then(cbk1).then(cbk2).then(cbk3, err)");
+//        System.out.println();
+        JSParser jp = new JSParser("function cbk(str) { setTimeout(function() { \"Promise 1 fulfilled: \" + str; return str }, 500) } function err(str) { setTimeout(function() { \"An error has occured: \" + str }, 500) } function f1(resolve, reject) { setTimeout(function() { resolve(\"OK1\") }, 300) }; function f2(resolve, reject) { setTimeout(function() { resolve(\"OK2\") }, 400) }; Promise.all([new Promise(f1), new Promise(f2)]).then(cbk, err)");
+        System.out.println();
+        System.out.println("function cbk(str) { setTimeout(function() { \"Promise fulfilled: \" + str; return str }, 500) }");
+        System.out.println("function err(str) { setTimeout(function() { \"An error has occured: \" + str }, 500) }");
+        System.out.println("function f1(resolve, reject) { setTimeout(function() { resolve(\"OK1\") }, 300) }");
+        System.out.println("function f2(resolve, reject) { setTimeout(function() { resolve(\"OK2\") }, 1400) }");
+        System.out.println("Promise.all([new Promise(f1), new Promise(f2)]).then(cbk, err)");
+        System.out.println();
+        Expression exp = Expression.create(jp.getHead());
+        //((jsparser.Function)Expression.getVar("f", exp)).setSilent(true);
+        //((jsparser.Function)Expression.getVar("cbk2", exp)).setSilent(true);
+        exp.eval();
+        /*jsparser.Function f = (jsparser.Function)Expression.getVar("f", exp);
+        f.setSilent(true);
+        ((jsparser.Function)Expression.getVar("cbk2", exp)).setSilent(true);
+        jsparser.Promise p = new jsparser.Promise(f);
+        p.then((jsparser.Function)Expression.getVar("cbk1", exp))
+                .then((jsparser.Function)Expression.getVar("cbk2", exp))
+                .then((jsparser.Function)Expression.getVar("cbk3", exp),
+                      (jsparser.Function)Expression.getVar("err", exp));*/
+    }
+
     class CustomPlayer extends CustomElement {
 
         public CustomPlayer(WebDocument document, Node node) {
