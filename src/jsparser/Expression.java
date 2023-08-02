@@ -55,7 +55,7 @@ public class Expression {
                     continue;
                 }
 
-                else if (type == 15 && end.getContent().equals("return")) {
+                else if (type == 15 && t.getContent().equals("return")) {
                     ret = true;
                     t.prev.next = t.next;
                     if (t.next != null) {
