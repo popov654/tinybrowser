@@ -119,6 +119,12 @@ public class Promise extends JSObject {
         containers.remove(p);
     }
 
+    @Override
+    public String toString() {
+        String status = (state == PENDING ? "pending" : (state == FULFILLED ? "fulfilled" : "rejected"));
+        return "Promise<" + status + ">";
+    }
+
     public static int PENDING = 0;
     public static int FULFILLED = 1;
     public static int REJECTED = 2;
