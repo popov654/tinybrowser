@@ -215,7 +215,7 @@ public class Expression {
         if (!is_inner_func) {
             source = source.replaceAll(";\\s*", ";\n" + pad);
         }
-        if (ret && !source.matches("^\\s*return.*")) {
+        if (ret && !source.replaceAll("\n", "").matches("^\\s*return.*")) {
             source = source.replaceAll("^(\\s*)", "$1return ").replaceAll("return (;|$)", "return$1");
         }
         if (!is_condition && !source.endsWith(" else ") && !source.endsWith(";") && !source.endsWith("{") && !source.endsWith("}") && !getContent().equals("switch")) source += ";";
