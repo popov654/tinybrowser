@@ -383,6 +383,10 @@ public class Window extends JSObject {
         promises.add(p);
     }
 
+    public void removePromise(Promise p) {
+        promises.remove(p);
+    }
+
     public java.awt.event.ComponentAdapter resizeListener = new java.awt.event.ComponentAdapter() {
         @Override
         public void componentMoved(java.awt.event.ComponentEvent evt) {}

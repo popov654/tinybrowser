@@ -112,7 +112,7 @@ public class Expression {
                     continue;
                 }
 
-                if (type == 15 && end.getContent().matches("new|yield")) {
+                if (type == 15 && end.getContent().matches("new|yield|await")) {
                     t = t.next;
                     continue;
                 }
@@ -120,7 +120,7 @@ public class Expression {
                 end = t;
                 t = t.next;
 
-                if (type == 15 && !end.getContent().matches("if|switch|case|var|let|new|yield")) {
+                if (type == 15 && !end.getContent().matches("if|switch|case|var|let|new|yield|await")) {
                     end.next = null;
                     break;
                 }
@@ -827,6 +827,17 @@ public class Expression {
                 checkYield(t.next);
                 return;
             }
+            if (t.getContent().equals("await") && t.next == null) {
+                if (t.next == null) {
+                    parent_block.error = new JSError(null, "Syntax error: value after await expected", getStack());
+                    return;
+                }
+                if (t.next.getType() == Token.VALUE) {
+                    t.next.val = JSValue.create(JSValue.getType(t.next.getContent()), t.next.getContent());
+                }
+                checkAwait(t.next);
+                return;
+            }
             t = t.next;
         }
         getTokenValue(t);
@@ -1033,6 +1044,7 @@ public class Expression {
                 functionCall(nt.next);
             } else {
                 checkYield(nt);
+                checkAwait(nt);
                 removeBraces(nt);
             }
         }
@@ -1101,6 +1113,92 @@ public class Expression {
         }
     }
 
+    private void checkAwait(Token t) {
+        if (t.prev.getType() != Token.KEYWORD || !t.prev.getContent().equals("await")) {
+            return;
+        }
+        at = t;
+        if (t.next != null &&
+            !(t.next.getContent().equals(",") || t.next.getType() == Token.BRACE_CLOSE)) {
+            accessObjectProperties(t);
+            return;
+        }
+        if (t.val == null) {
+            if (t.getType() == Token.VALUE) {
+                t.val = JSValue.create(JSValue.getType(t.getContent()), t.getContent());
+            } else if (t.getType() == Token.VAR_NAME) {
+                t.val = Expression.getVar(t.getContent(), this);
+            }
+        }
+        Block b = parent_block;
+        if (b == null) {
+            parent_block.error = new JSError(null, "Await cannot be used in normal code blocks", getStack());
+            return;
+        } else if (!(t.val instanceof Function || t.val instanceof Promise)) {
+            t.prev.prev.next = t;
+            if (t.prev == start) {
+                start = t;
+            }
+            t.prev = t.prev.prev;
+        } else {
+            b.return_value = at.val;
+
+            if (b.return_value instanceof Promise && ((Promise)b.return_value).state != Promise.PENDING) {
+                b.return_value = ((Promise)b.return_value).result;
+            }
+
+            if (!(b.return_value instanceof Promise)) {
+                String str = b.return_value.toString();
+                if (b.return_value.getType().equals("Array")) str = "[]";
+                else if (b.return_value.getType().equals("Object")) str = "{}";
+                else if (b.return_value.getType().equals("Function")) str = "{Function}";
+                Token tt = new Token(str);
+                tt.val = b.return_value;
+                t.prev.prev.next = tt;
+                tt.prev = t.prev.prev;
+                if (t.prev == start) {
+                    start = tt;
+                }
+            } else {
+                ((Promise)b.return_value).asyncCallerFuncBlock = parent_block;
+                t.prev.prev.next = t;
+                t.prev = t.prev.prev;
+                at = t;
+                if (t.next != null) {
+                    t.next.prev = t.prev.prev;
+                    if (t.prev == start) {
+                        start = t.next;
+                    }
+                }
+                if (t.prev == start) {
+                    String str = b.return_value.toString();
+                    if (b.return_value.getType().equals("Array")) str = "[]";
+                    else if (b.return_value.getType().equals("Object")) str = "{}";
+                    else if (b.return_value.getType().equals("Function")) str = "{Function}";
+                    Token tt = new Token(str);
+                    tt.val = b.return_value;
+                    t.prev.prev.next = tt;
+                    tt.prev = t.prev.prev;
+                    start = tt;
+                    at = tt;
+                }
+                breakExecution();
+                //((Promise)b.return_value).run();
+            }
+        }
+    }
+
+    private void breakExecution() {
+        parent_block.state = Block.RETURN;
+        if (parent_block.func != null) {
+            Block b = parent_block.func.getCaller();
+            while (b != null) {
+                b.state = Block.RETURN;
+                b = b.func != null ? b.func.getCaller() : null;
+            }
+        }
+    }
+
     public void setYieldValue(JSValue value) {
         if (value == null || yt == null) return;
         String str = value.toString();
@@ -1119,6 +1217,26 @@ public class Expression {
             yt.next.prev = t;
         }
         yt = null;
+    }
+
+    public void setAwaitValue(JSValue value) {
+        if (value == null || at == null) return;
+        String str = value.toString();
+        if (value.getType().equals("Array")) str = "[]";
+        else if (value.getType().equals("Object")) str = "{}";
+        else if (value.getType().equals("Function")) str = "{Function}";
+        Token t = new Token(str);
+        t.val = value;
+        t.prev = at.prev;
+        at.prev.next = t;
+        if (at.prev == start) {
+            start = t;
+        }
+        t.next = at.next;
+        if (at.next != null) {
+            at.next.prev = t;
+        }
+        at = null;
     }
 
     private void removeBraces(Token t) {
@@ -1311,6 +1429,10 @@ public class Expression {
             target = ((Function)target).getBody().scope.get("constructor");
         }
         JSValue result = target.call((JSObject)ts.prev.ctx, params, as_constr);
+        if (ts.prev.prev != null && ts.prev.prev.getContent().equals("await") &&
+              ((Function)target).getBody() != null && ((Function)target).getBody().state == Block.RETURN) {
+            return;
+        }
         if (ts.prev.getContent().equals("setTimeout") && ((JSObject)ts.prev.ctx).equals(getVar("window", this))) {
             silent = true;
             if (display_timers) {
@@ -1338,6 +1460,7 @@ public class Expression {
         }
         else {
             checkYield(rt);
+            checkAwait(rt);
             removeBraces(rt);
         }
     }
@@ -1404,8 +1527,10 @@ public class Expression {
             }
             return this;
         }
+        parent_block.lastExpr = this;
         if (reusable) {
             exec = this.clone();
+            parent_block.lastExpr = exec;
             return exec.eval();
         }
         n = 0;
@@ -1440,7 +1565,7 @@ public class Expression {
                 System.err.println("Infinite loop detected");
                 return this;
             }
-            if (yt != null) return this;
+            if (yt != null || at != null) return this;
             Token t = start;
             int p = 0;
             Token op = t;
@@ -1783,7 +1908,7 @@ public class Expression {
                         }
                         if (op.next != null && !op.getContent().matches("&&|\\|\\||,") &&
                                 ((op.next.getType() == Token.VAR_NAME || op.next.getType() == Token.ARRAY_ENTITY || op.next.getType() == Token.OBJECT_ENTITY ||
-                                 (op.next.getType() == Token.KEYWORD && op.next.getContent().matches("new|yeild"))) &&
+                                 (op.next.getType() == Token.KEYWORD && op.next.getContent().matches("new|yeild|await"))) &&
                                 op.next.next != null && (op.next.next.getType() == Token.DOT ||
                                 op.next.next.getType() == Token.ARRAY_START) || op.next.getType() == Token.BRACE_OPEN)) {
                             accessObjectProperties(op.next);
@@ -1793,6 +1918,10 @@ public class Expression {
                         if (op.next != null && op.next.getType() == Token.KEYWORD && op.next.getContent().equals("yield") &&
                                 op.next.next != null && op.next.next.getType() == Token.VALUE) {
                             checkYield(op.next.next);
+                            return this;
+                        }
+                        if (op.next != null && op.next.getType() == Token.KEYWORD && op.next.getContent().equals("await") && op.next.next != null) {
+                            checkAwait(op.next.next);
                             return this;
                         }
                         if (!op.getContent().equals("=") && op.prev.val == null && op.prev.getType() == Token.VAR_NAME) {
@@ -2432,10 +2561,14 @@ public class Expression {
             checkYield(start.next);
             return this;
         }
+        else if (start.val == null && start.getType() == Token.KEYWORD && start.getContent().equals("await") && start.next != null) {
+            checkAwait(start.next);
+            return this;
+        }
         else if (start.val == null && (start.getType() == Token.KEYWORD && start.getContent().matches("new|yield") ||
                 start.getType() == Token.BRACE_OPEN)) {
             accessObjectProperties(start);
-            if (yt != null) return this;
+            if (yt != null || at != null) return this;
         }
         if (start.val == null) {
             while (start.getType() == Token.BRACE_OPEN && end.getType() == Token.BRACE_CLOSE) {
@@ -2683,6 +2816,7 @@ public class Expression {
 
     public Block parent_block;
     public Token yt = null;
+    public Token at = null;
 
     public String source = "";
 

@@ -152,6 +152,26 @@ public class Main {
                       (jsparser.Function)Expression.getVar("err", exp));*/
     }
 
+    public static void testAwait() {
+        JSParser jp = new JSParser("function f() { var x = 3; return await g() } function g() { return \"world\" } f()");
+        System.out.println();
+        System.out.println("function f() { var x = 3; return await g() } function g() { return \"world\" } f()");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        
+        jp = new JSParser("function f() { var x = 3; return \"Hello \" + await g() } async function g() { return new Promise(function(resolve, reject) { resolve(\"world\") }, null) } f()");
+        System.out.println();
+        System.out.println("function f() { var x = 3; return \"Hello \" + await g() } async function g() { return new Promise(function(resolve, reject) { resolve(\"world\") }, null) } f()");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+
+        jp = new JSParser("function f() { var x = 3; return \"Hello \" + await g() } async function g() { return new Promise(function(resolve, reject) { resolve(\"world\") }, null) } await f(); console.log(\"end\")");
+        System.out.println();
+        System.out.println("function f() { var x = 3; return \"Hello \" + await g() } async function g() { return new Promise(function(resolve, reject) { resolve(\"world\") }, null) } await f(); console.log(\"end\")");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+    }
+
     class CustomPlayer extends CustomElement {
 
         public CustomPlayer(WebDocument document, Node node) {
@@ -326,7 +346,8 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        testBuilder("html" + File.separator + "table.htm");
+        //testBuilder("html" + File.separator + "table.htm");
+        testAwait();
     }
 
     private static String installPath;

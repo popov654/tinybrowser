@@ -41,8 +41,8 @@ public class Block extends Expression {
         while (end != null) {
             type = end.getType();
             if (((type <= 6 || type >= 9 && type <= 12) && start == null) ||
-                  type == 6 || type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield")) {
-                boolean needSplit = type == Token.KEYWORD && !end.getContent().matches("new|yield") ||
+                  type == 6 || type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield|await")) {
+                boolean needSplit = type == Token.KEYWORD && !end.getContent().matches("new|yield|await") ||
                                     type == Token.VAR_NAME && end.prev != null && (end.prev.getContent().matches("\\)|}") || end.prev.getType() == Token.VALUE);
                 if (end.prev != null && end.prev.getType() != Token.EMPTY && needSplit) {
                     end.prev.next = null;
@@ -55,7 +55,7 @@ public class Block extends Expression {
                 }
             }
             if (start != null && (end.next == null || type == Token.SEMICOLON ||
-                    (type != Token.BLOCK_START && type != Token.BLOCK_END && end.next.getType() == Token.KEYWORD && !end.next.getContent().matches("let|var|break|continue|return|throw|delete|function|class|new|yield")) ||
+                    (type != Token.BLOCK_START && type != Token.BLOCK_END && end.next.getType() == Token.KEYWORD && !end.next.getContent().matches("let|var|break|continue|return|throw|delete|function|class|new|yield|await")) ||
                     (type == Token.BLOCK_START || type == Token.BLOCK_END) && level == 0 && func_start == null)) {
                 
                 if (cycle_exp != null) {
@@ -391,6 +391,7 @@ public class Block extends Expression {
                 is_func_start = true;
                 func_named = false;
                 func_class = end.getContent().equals("class");
+                async_func = end.prev != null && end.prev.getContent().equals("async");
             }
             else if (type == Token.FIELD_NAME && (end.prev == null || end.prev.getType() == Token.EMPTY || end.prev.getContent().equals(",")) && end.next != null && end.next.getType() == Token.BRACE_OPEN ||
                      type == Token.VAR_NAME && end.next != null && end.next.getType() == Token.BRACE_OPEN && parent != null && parent.func_class) {
@@ -629,10 +630,12 @@ public class Block extends Expression {
                 }
                 if (func_start != null) {
                     if (func_name != null && !func_named || parent != null && parent.func_class) {
-                        scope.put(func_name, new Function(func_args, b, func_name));
+                        Function f = new Function(func_args, b, func_name);
+                        scope.put(func_name, f);
                         if (func_gen) {
-                            ((Function)scope.get(func_name)).setAsGenerator();
+                            f.setAsGenerator();
                         }
+                        f.setAsync(async_func);
                         ((Function)scope.get(func_name)).setIsClass(func_class);
                     } else {
                         Token tc = func_start;
@@ -755,11 +758,11 @@ public class Block extends Expression {
             }
         }
         Block b = this;
-        while (b != null && !b.is_gen && b.yt_value == null) {
+        while (b != null && !b.is_gen && b.yt_value == null && b.at_value == null) {
             b = b.parent_block;
         }
         int from = 0;
-        if (b != null && last != -1) {
+        if (last != -1) {
             from = last;
         }
         Vector<JSValue> keys = new Vector<JSValue>();
@@ -799,13 +802,16 @@ public class Block extends Expression {
                 cur_index++;
             }
             Expression e = children.get(i);
+            if (last != -1 && i == from && lastExpr != null && (yt_value != null || at_value != null)) {
+                e = lastExpr;
+            }
             if (!(e instanceof Block) && e.isKeyword()) {
                 if (e.getContent().equals("if")) {
                     if (i == children.size()-1) return this;
                     JSValue v = e.eval().getValue().asBool();
                     if (((JSBool)v).getValue() && i + 1 < children.size()) {
-                        children.get(i+1).eval();
                         last = i+1;
+                        children.get(i+1).eval();
                         i += 1;
                         if (i+1 < children.size()) {
                             e = children.get(i+1);
@@ -869,12 +875,33 @@ public class Block extends Expression {
                         continue;
                     }
                     e.setYieldValue(yt_value);
+                    e.updateSource();
                     yt_value = null;
                 }
+                if (!(e instanceof Block) && e.at != null && at_value != null) {
+                    if (e.at.prev == e.start) {
+                        from++;
+                        continue;
+                    }
+                    e.setAwaitValue(at_value);
+                    e.updateSource();
+                    at_value = null;
+                }
                 e.yt = null;
+                e.at = null;
                 e.eval();
                 if (error == null) last = i;
                 if (i == children.size()-1 && is_gen) done = true;
+                if (state == RETURN) {
+                    if (parent_block == null && func == null) {
+                        JSValue w = Block.getVar("window", this);
+                        if (w != Undefined.getInstance()) {
+                            ((Window)w).runPromises();
+                        }
+                    }
+                    resumeParent();
+                    return this;
+                }
             }
             if (!(e instanceof Block) && e.isReturn() &&
                     (block_type != Block.CASE || sw_flag) || state == Block.RETURN) {
@@ -907,7 +934,6 @@ public class Block extends Expression {
                 } else if (parent_block != null) {
                     parent_block.error = error;
                     onFinished();
-                    
                     return this;
                 } else {
                     System.err.println(error.getText());
@@ -936,7 +962,8 @@ public class Block extends Expression {
                 }
             }
         }
-        onFinished();  
+        onFinished();
+        resumeParent();
         return this;
     }
 
@@ -956,6 +983,33 @@ public class Block extends Expression {
             if (w != Undefined.getInstance()) {
                 ((Window)w).runPromises();
             }
+        }
+    }
+
+    private void resumeParent() {
+        Block b = func == null ? parent_block : func.getCaller();
+        if (b != null && b.lastExpr != null && !(b.lastExpr instanceof Block) && b.lastExpr.at != null) {
+            if (!(return_value instanceof Promise)) {
+                b.lastExpr.setAwaitValue(return_value);
+                b.state = Block.NORMAL;
+                b.eval();
+            } else {
+                Token t = b.lastExpr.at;
+                while (t != null && t.getType() != Token.OP && t.getType() != Token.BLOCK_END) {
+                    t = t.next;
+                }
+                if (t != null) {
+                    t.prev = b.lastExpr.at;
+                }
+                b.lastExpr.at.next = t;
+            }
+        }
+    }
+
+    public static void resumeAsyncFunction(Promise promise) {
+        if (promise.state > 0 && promise.next.isEmpty()) {
+            promise.asyncCallerFuncBlock.at_value = promise.result;
+            promise.asyncCallerFuncBlock.eval();
         }
     }
 
@@ -1203,6 +1257,7 @@ public class Block extends Expression {
     public boolean is_gen = false;
     public boolean done = false;
     public JSValue yt_value;
+    public JSValue at_value;
     public Function func = null;
     public JSValue return_value = Undefined.getInstance();
 
@@ -1211,6 +1266,7 @@ public class Block extends Expression {
     protected Vector<Expression> children = new Vector<Expression>();
 
     protected int last = -1;
+    protected Expression lastExpr;
 
     protected Console console = null;
 
@@ -1240,6 +1296,7 @@ public class Block extends Expression {
     private String f_in_obj = null;
     private int f_in_vsc = 2;
     private boolean post_check = false;
+    private boolean async_func = false;
     private String func_name = null;
     private Vector<String> func_args = null;
     private Token func_start = null;

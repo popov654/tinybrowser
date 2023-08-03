@@ -85,6 +85,8 @@ public class Token {
         keywords.add("function");
         keywords.add("class");
         keywords.add("return");
+        keywords.add("async");
+        keywords.add("await");
         keywords.add("if");
         keywords.add("else");
         keywords.add("for");

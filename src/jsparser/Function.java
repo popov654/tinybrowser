@@ -90,6 +90,10 @@ public class Function extends JSObject {
         is_generator = true;
     }
 
+    public void setAsync(boolean value) {
+        is_async = value;
+    }
+
     public JSError getError() {
         return body.error;
     }
@@ -140,6 +144,10 @@ public class Function extends JSObject {
 
     public boolean isClass() {
         return is_class;
+    }
+
+    public boolean isAsync() {
+        return is_async;
     }
 
     public void setIsClass(boolean value) {
@@ -249,7 +257,7 @@ public class Function extends JSObject {
         for (int i = 0; i < level; i++) {
             pad += "  ";
         }
-        String signature = is_lambda ? "(" + getArguments() + ") => " : "function" + (is_generator ? "*" : "") + " (" + getArguments() + ")";
+        String signature = is_lambda ? "(" + getArguments() + ") => " : (is_async ? "async " : "") + "function" + (is_generator ? "*" : "") + " (" + getArguments() + ")";
         return pad + signature + (body != null ? " " + body.toString(level) : "");
     }
 
@@ -266,5 +274,6 @@ public class Function extends JSObject {
     private boolean is_lambda;
     private boolean is_generator;
     private boolean is_class;
+    private boolean is_async;
     protected String type = "Function";
 }

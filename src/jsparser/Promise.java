@@ -1,5 +1,7 @@
 package jsparser;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Vector;
 
 /**
@@ -94,6 +96,26 @@ public class Promise extends JSObject {
             }
             next.clear();
         }
+        if (next.isEmpty()) {
+            Block b = onFulfilled.getCaller();
+            if (b == null && func != null) {
+                b = func.getBody().parent_block;
+            }
+            Window w = (Window) Expression.getVar("window", b);
+            w.removePromise(this);
+
+            if (asyncCallerFuncBlock != null) {
+                final Promise promise = this;
+                javax.swing.Timer timer = new javax.swing.Timer(30, new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Block.resumeAsyncFunction(promise);
+                    }
+                });
+                timer.setRepeats(false);
+                timer.start();
+            }
+        }
         for (int i = 0; i < containers.size(); i++) {
             containers.get(i).notify(this, result, state);
         }
@@ -142,4 +164,6 @@ public class Promise extends JSObject {
 
     protected int state = 0;
     protected Function func;
+
+    public Block asyncCallerFuncBlock;
 }
