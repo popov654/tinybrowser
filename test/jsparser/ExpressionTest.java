@@ -1144,6 +1144,7 @@ public class ExpressionTest {
         assertEquals("1", exp.getValue().toString());
         System.out.println("Done: " + ((jsparser.Block)exp).done);
         ((Block)exp).yt_value = new JSInt(5);
+        ((Block)exp).state = Block.NORMAL;
         exp.eval();
         assertEquals("10", exp.getValue().toString());
         System.out.println("Done: " + ((jsparser.Block)exp).done);

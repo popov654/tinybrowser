@@ -761,10 +761,16 @@ public class Block extends Expression {
         while (b != null && !b.is_gen && b.yt_value == null && b.at_value == null) {
             b = b.parent_block;
         }
+
         int from = 0;
         if (last != -1) {
             from = last;
         }
+        if (yt_value == null && last != -1 && is_gen && !(lastExpr.yt != null && lastExpr.yt.val instanceof Generator && !((Generator)lastExpr.yt.val).isDone())) {
+            lastExpr = null;
+            from++;
+        }
+
         Vector<JSValue> keys = new Vector<JSValue>();
         JSValue obj = null;
         if (f_in_obj != null) {
@@ -870,7 +876,7 @@ public class Block extends Expression {
                     error = new JSError(error.getValue(), error.getText(), e.getStack());
                 }
                 if (!(e instanceof Block) && e.yt != null && yt_value != null) {
-                    if (e.yt.prev == e.start) {
+                    if (e.yt.prev == e.start && (!(e.yt.val instanceof Generator) || ((Generator)e.yt.val).isDone())) {
                         from++;
                         continue;
                     }
@@ -890,6 +896,9 @@ public class Block extends Expression {
                 e.yt = null;
                 e.at = null;
                 e.eval();
+                if (is_gen) {
+                    state = e.yt != null ? RETURN : NORMAL;
+                }
                 if (error == null) last = i;
                 if (i == children.size()-1 && is_gen) done = true;
                 if (state == RETURN) {
