@@ -26,8 +26,8 @@ public class Token {
         } else if (str.matches("^<[\\w0-9 _-]+>$")) {
             type = FIELD_NAME;
             this.str = str.substring(1, str.length()-1);
-        } else if (str.length() == 1 && (str.charAt(0) == '[' || str.charAt(0) == ']')) {
-            type = str.charAt(0) == '[' ? ARRAY_START : ARRAY_END;
+        } else if (str.length() == 1 && (str.charAt(0) == '[' || str.charAt(0) == ']') || str.equals("?.[")) {
+            type = str.charAt(0) == '[' || str.equals("?.[") ? ARRAY_START : ARRAY_END;
         } else if (str.length() == 2 && (str.equals("{{") || str.equals("}}"))) {
             type = str.equals("{{") ? OBJECT_START : OBJECT_END;
         } else if (str.equals("[]")) {
@@ -36,7 +36,7 @@ public class Token {
             type = OBJECT_ENTITY;
         } else if (str.length() == 1 && str.equals(",")) {
             type = COMMA;
-        } else if (str.length() == 1 && str.equals(".")) {
+        } else if (str.matches("\\??\\.")) {
             type = DOT;
         } else if (str.length() == 1 && str.equals(";")) {
             type = SEMICOLON;

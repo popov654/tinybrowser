@@ -263,6 +263,13 @@ public class JSParser {
                     t.prev = cur;
                     cur = t;
                     if (String.valueOf(ch).matches("[(){}\\[\\].,<>^|&*/%?;:+=-]")) {
+                        if (pos < data.length()-2 && data.substring(pos, pos+3).equals("?.[")) {
+                            last_token = "?.";
+                            pos += 2;
+                        } else if (pos < data.length()-1 && data.substring(pos, pos+2).equals("?.")) {
+                            last_token = "?";
+                            pos += 1;
+                        }
                         continue;
                     }
                 } else if (!String.valueOf(ch).matches("[a-zA-Z0-9$_-]")) {
@@ -306,7 +313,8 @@ public class JSParser {
                 }
                 if (ch == '[') stack.add(READ_ARRAY);
                 else stack.removeElementAt(stack.size()-1);
-                Token t = new Token(String.valueOf(ch));
+                String str = (last_token.equals("?.") ? last_token : "") + ch;
+                Token t = new Token(str);
                 last_token = "";
                 cur.next = t;
                 t.prev = cur;
@@ -449,7 +457,8 @@ public class JSParser {
             if (esc) esc = false;
 
             if (state == READY && (ch == ',' || ch == ':' || ch == '.')) {
-                Token t = new Token(String.valueOf(ch));
+                String str = (last_token.equals("?") ? last_token : "") + ch;
+                Token t = new Token(str);
                 last_token = "";
                 cur.next = t;
                 t.prev = cur;

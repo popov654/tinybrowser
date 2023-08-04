@@ -671,6 +671,16 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"value\"", exp.getValue().toString());
+        jp = new JSParser("var a = { b: null }; a.b?.c");
+        System.out.println("var a = { b: null }; a.b?.c");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("undefined", exp.getValue().toString());
+        jp = new JSParser("var a = { b: null }; a.b?.['c']");
+        System.out.println("var a = { b: null }; a.b?.['c']");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("undefined", exp.getValue().toString());
     }
 
     /**

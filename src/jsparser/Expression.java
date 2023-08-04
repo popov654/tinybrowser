@@ -845,6 +845,7 @@ public class Expression {
                 t.next != null && (t.next.getType() == Token.DOT ||
                 t.next.getType() == Token.ARRAY_START || t.next.getType() == Token.BRACE_OPEN)) {
             Vector<JSValue> v = new Vector<JSValue>();
+            Vector<Boolean> s = new Vector<Boolean>();
             JSValue val = t.val;
             JSValue ctx = Expression.getVar("window", this);
             Token t2 = t.next;
@@ -855,6 +856,7 @@ public class Expression {
                     } else {
                         v.add(JSValue.create("String", t2.getContent()));
                     }
+                    s.add(t2.prev.getContent().startsWith("?"));
                 } else if ((t2.getType() == Token.VAR_NAME || t2.getType() == Token.VALUE) && t2.prev.getType() == Token.ARRAY_START) {
                     if (t2.next.getType() == Token.ARRAY_END) {
                         if (t2.getType() == Token.VAR_NAME) {
@@ -890,8 +892,10 @@ public class Expression {
                         t2 = t3;
                         t3 = null;
                     }
+                    s.add(t2.prev.getContent().startsWith("?"));
                 } else if (t2.getType() == Token.VALUE) {
                     v.add(JSValue.create(JSValue.getType(t2.getContent()), t2.getContent()));
+                    s.add(t2.prev.getContent().startsWith("?"));
                 } else if (t2.getType() == Token.DOT && t2.next != null &&
                         (t2.next.getType() == Token.ARRAY_START || t2.next.getType() == Token.ARRAY_END)) {
                     parent_block.error = new JSError(null, "Syntax error: " + t2.next.getContent()  + " is not allowed after .", getStack());
@@ -911,7 +915,7 @@ public class Expression {
                         parent_block.error = new JSError(null, "Syntax error: ) expected, but end of line found", getStack());
                         return;
                     }
-                    Token tn1 = new Token("[");
+                    Token tn1 = new Token((t2.prev.getContent().startsWith("?") ? "?." : "") + "[");
                     Token tn2 = new Token("]");
                     t2.prev.next = tn1;
                     tn1.prev = t2.prev;
@@ -929,9 +933,11 @@ public class Expression {
             }
             int last = 0;
             for (int i = 0; i < v.size(); i++) {
-                if (!val.getType().matches("Array|Integer|Float|Number|String|Object|Function")) {
+                if (!val.getType().matches("Array|Integer|Float|Number|String|Object|Function") && !s.get(i)) {
                     err = true;
                     break;
+                } else if (s.get(i)) {
+                    val = new JSObject();
                 }
                 if (v.get(i) == null) return;
                 if (v.get(i).getType().equals("Integer")) {
@@ -974,7 +980,7 @@ public class Expression {
                         ((DynamicContext)val).setContext(this.parent_block);
                     }
                     if (val instanceof Undefined) {
-                        if (i < v.size()-1) err = true;
+                        if (i < v.size()-1 && !s.get(i)) err = true;
                         last = i;
                         break;
                     }
