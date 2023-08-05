@@ -27,6 +27,15 @@ public class Node {
         nodeType = node_type;
     }
 
+    public Node(int node_type, String data) {
+        nodeType = node_type;
+        if (nodeType == 1) {
+            tagName = data;
+        } else if (nodeType == 3 || nodeType == 8) {
+            nodeValue = data;
+        }
+    }
+
     public Node(Node parent_node, int node_type) {
         if (parent_node.nodeType == 1) {
             parent = parent_node;
@@ -40,6 +49,7 @@ public class Node {
         if (node == null) {
             return false;
         }
+        node.parent = this;
         children.add(node);
         if (document != null && nodeType == 1) {
             document.indexNode(node);
