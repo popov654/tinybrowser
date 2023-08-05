@@ -284,7 +284,7 @@ public class HTMLParser {
     }
 
     public void scan() {
-        while (pos < data.length()-1) scanNext();
+        while (pos < data.length()) scanNext();
         if (state != READY && !cur_tag.isEmpty()) {
             data += '>';
             scanNext();
