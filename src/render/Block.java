@@ -10166,7 +10166,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             Color sel_color = WebDocument.active_document == document ? this.selection_color : this.selection_inactive_color;
             for (int i = 0; i < text_layer.getComponents().length; i++) {
                 JLabel c = (JLabel)text_layer.getComponents()[i];
-                if (x >= c.getX() && x <= c.getX() + c.getWidth() &&
+                if (x >= c.getX() && x < c.getX() + c.getWidth() &&
                     y >= c.getY() && y <= c.getY() + c.getHeight()) {
                     int i1 = i;
                     while (i1 >= 0 && ((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) {
@@ -10177,6 +10177,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
                     }
                     if (i1 < 0 || !((JLabel)text_layer.getComponents()[i1]).getText().matches("\\w")) {
                         i1++;
+                    }
+                    if (i == 0 && text_layer.getComponents().length > 1 && ((JLabel)text_layer.getComponents()[i]).getText().matches("\\s")) {
+                        i++;
                     }
                     int i2 = i;
                     while (i2 <= text_layer.getComponents().length-1 && ((JLabel)text_layer.getComponents()[i2]).getText().matches("\\w")) {
