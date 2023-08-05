@@ -5192,7 +5192,10 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             @Override
             public void mouseClicked(MouseEvent e) {
                 Block b = (Block) ((Component)e.getSource()).getParent().getParent();
-                document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, b._x_ - b.parent.scroll_x, b._y_ - b.parent.scroll_y, 1, false));
+                if (b.width == 0) return;
+                int pos = b.original == null ? b.parent.children.indexOf(b) : b.parent.children.indexOf(b.original);
+                int x = (pos == 0 || !b.parent.children.get(pos-1).text_italic) ? b._x_ - b.parent.scroll_x : b._x_ - b.parent.scroll_x + 2;
+                document.root.mouseClicked(new MouseEvent(b, MouseEvent.MOUSE_CLICKED, 0, 0, x, b._y_ - b.parent.scroll_y, 1, false));
             }
 
             @Override
