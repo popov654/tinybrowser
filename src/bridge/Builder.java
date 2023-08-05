@@ -945,7 +945,18 @@ public class Builder {
         if (b.inputType != Block.Input.NONE && flag) {
             b.inputReady = false;
         }
-        String value = b.inputValue;
+        if (b.node.tagName.matches("b|strong")) {
+            b.text_bold = true;
+        }
+        else if (b.node.tagName.matches("i|em")) {
+            b.text_italic = true;
+        }
+        else if (b.node.tagName.equals("u")) {
+            b.text_underline = true;
+        }
+        else if (b.node.tagName.equals("s")) {
+            b.text_strikethrough = true;
+        }
         document.ready = ready;
         if (b.inputType != Block.Input.NONE && flag) {
             b.doIncrementLayout();
