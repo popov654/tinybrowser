@@ -10465,12 +10465,9 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
             c.setColor(color);
             return;
         }
-        if (c.glyph.isOpaque()) {
-            //System.out.println("Unselected line element '" + c.getText() + "'");
-            c.glyph.setOpaque(false);
-            c.glyph.setForeground(color);
-            c.glyph.setBackground(null);
-        }
+        c.glyph.setOpaque(false);
+        c.glyph.setForeground(color);
+        c.glyph.setBackground(null);
     }
 
     @Override
