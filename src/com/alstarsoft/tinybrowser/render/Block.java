@@ -352,6 +352,7 @@ public class Block extends JPanel implements Drawable, MouseListener, MouseMotio
         @Override
         public void mousePressed(MouseEvent e) {
             isDown = true;
+            WebDocument.active_document = document;
         }
 
         @Override

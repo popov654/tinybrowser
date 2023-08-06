@@ -230,6 +230,7 @@ public class Reader {
 
         c.setLayout(new CardLayout());
         c.add(document, "main");
+        document.setRootParentListener();
 
         //c.setPreferredSize(new Dimension(document.width + 18, document.height + 18));
 

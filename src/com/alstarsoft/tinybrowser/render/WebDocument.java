@@ -191,6 +191,39 @@ public class WebDocument extends JPanel {
         
     }
 
+    public void setRootParentListener() {
+        if (root.getParent() != null && root.getParent().getParent() != null) {
+            java.awt.Component c = root;
+            while (c.getParent() != null) {
+                c = c.getParent();
+            }
+            c.addMouseListener(root.parentListener);
+            final Block instance = root;
+            root.parentMotionListener = new MouseMotionListener() {
+
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (root.parentListener.isDown) {
+                        java.awt.Component c = instance;
+                        int x = 0, y = 0;
+                        while (c != null && c != e.getSource()) {
+                            x += c.getX();
+                            y += c.getY();
+                            c = c.getParent();
+                        }
+                        MouseEvent evt = new MouseEvent((Block)instance, 0, 0, 0, e.getX() - x, e.getY() - y, 1, false);
+                        instance.mouseDragged(evt);
+                    }
+                }
+
+                @Override
+                public void mouseMoved(MouseEvent e) {}
+
+            };
+            c.addMouseMotionListener(root.parentMotionListener);
+        }
+    }
+
     public Block getFocusedElement() {
         if (focusIndex >= 0) {
             return focusableElements.get(focusIndex);
