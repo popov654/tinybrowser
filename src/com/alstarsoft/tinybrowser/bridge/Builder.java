@@ -352,9 +352,12 @@ public class Builder {
         }
 
         if (node.nodeType == 1) {
+            String color = (b != document.root || node.hasAttribute("bgcolor")) ? node.getAttribute("bgcolor") : null;
             b.id = node.getAttribute("id");
             b.setTextColor(node.getAttribute("color"));
-            b.setBackgroundColor(node.getAttribute("bgcolor"));
+            if (color != null) {
+                b.setBackgroundColor(node.getAttribute("bgcolor"));
+            }
 
             if (!customElements.containsKey(node.tagName)) {
                 setDefaultDisplayType(b, false);
