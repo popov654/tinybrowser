@@ -6,6 +6,7 @@ import bridge.Mapper;
 import cache.DefaultCache;
 import cssparser.CSSParser;
 import htmlparser.HTMLParser;
+import htmlparser.Node;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -13,6 +14,7 @@ import java.awt.Dimension;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -48,6 +50,16 @@ public class Reader {
             hp.printTree();
             System.out.println();
             System.out.println("----------------------------------");
+        }
+
+        if (hp.getRootNode().children.size() != 2 ||
+              !hp.getRootNode().children.get(0).tagName.equals("head") ||
+              !hp.getRootNode().children.get(1).tagName.equals("body")) {
+            Vector<Node> children = (Vector<Node>) hp.getRootNode().children.clone();
+            hp.getRootNode().children.clear();
+            hp.getRootNode().addChild(new Node(1, "head"));
+            hp.getRootNode().addChild(new Node(1, "body"));
+            hp.getRootNode().children.get(1).children = children;
         }
 
         Builder builder = new Builder();
