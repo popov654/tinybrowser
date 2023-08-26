@@ -1,11 +1,5 @@
 package com.alstarsoft.tinybrowser.jsparser;
 
-import com.alstarsoft.tinybrowser.jsparser.JSArray;
-import com.alstarsoft.tinybrowser.jsparser.JSInt;
-import com.alstarsoft.tinybrowser.jsparser.JSObject;
-import com.alstarsoft.tinybrowser.jsparser.JSParser;
-import com.alstarsoft.tinybrowser.jsparser.JSString;
-import com.alstarsoft.tinybrowser.jsparser.Expression;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -19,8 +13,7 @@ import static org.junit.Assert.*;
  */
 public class JSObjectTest {
 
-    public JSObjectTest() {
-    }
+    public JSObjectTest() {}
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -53,10 +46,12 @@ public class JSObjectTest {
      */
     @Test
     public void testFreeze() {
-        JSParser jp = new JSParser("{ value: \"value\" }");
-        JSObject obj = (JSObject)Expression.create(jp.getHead()).eval().getValue();
-        obj.isFrozen = true;
-        obj.set("test", new JSString("123"));
+        JSParser jp = new JSParser("var obj = { value: \"value\" }; Object.freeze(obj); obj.test = \"123\"; delete obj.test");
+        System.out.println("var obj = { value: \"value\" }; Object.freeze(obj); obj.test = \"123\"; delete obj.test");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        JSObject obj = (JSObject)Expression.getVar("obj", exp);
+        assertTrue(obj.isFrozen);
         assertEquals("{value: \"value\"}", obj.toString());
     }
 
@@ -65,12 +60,13 @@ public class JSObjectTest {
      */
     @Test
     public void testSeal() {
-        JSParser jp = new JSParser("{ value: \"value\" }");
-        JSObject obj = (JSObject)Expression.create(jp.getHead()).eval().getValue();
-        obj.isSealed = true;
-        obj.set("test", new JSString("123"));
-        obj.set("value", new JSString("345"));
-        assertEquals("{value: \"345\"}", obj.toString());
+        JSParser jp = new JSParser("var obj = { value: \"value\" }; Object.seal(obj); obj.test = \"123\"; delete obj.test; obj.value = \"123\"");
+        System.out.println("var obj = { value: \"value\" }; Object.seal(obj); obj.test = \"123\"; delete obj.test; obj.value = \"123\"");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        JSObject obj = (JSObject)Expression.getVar("obj", exp);
+        assertTrue(obj.isSealed);
+        assertEquals("{value: \"123\"}", obj.toString());
     }
 
     /**
