@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.Vector;
 
 /**
@@ -230,6 +229,7 @@ public class JSObject extends JSValue {
     }
 
     public void removeProperty(String str) {
+        if (isFrozen || isSealed) return;
         removeCustomProperty(str);
         items.remove(str);
     }
