@@ -63,6 +63,11 @@ public class Token {
         type = value;
     }
 
+    @Override
+    public String toString() {
+        return "SyntaxToken['" + str + "']";
+    }
+
     private String str;
     private int type;
 
