@@ -143,7 +143,7 @@ public class JSObject extends JSValue {
     }
 
     public void set(String str, JSValue value) {
-        if (!items.containsKey(str) && isFrozen) {
+        if (!items.containsKey(str) && (isFrozen || isSealed)) {
             return;
         }
         if (customProperties.containsKey(str)) {
@@ -307,6 +307,7 @@ public class JSObject extends JSValue {
     protected LinkedHashMap<String, CustomProperty> customProperties = new LinkedHashMap<String, CustomProperty>();
     private String type = "Object";
     public boolean isFrozen = false;
+    public boolean isSealed = false;
     public boolean print_proto = false;
     public static boolean print_protos = false;
 }

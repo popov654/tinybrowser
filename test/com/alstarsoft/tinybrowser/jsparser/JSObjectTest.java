@@ -61,6 +61,19 @@ public class JSObjectTest {
     }
 
     /**
+     * Test of seal method, of class JSObject.
+     */
+    @Test
+    public void testSeal() {
+        JSParser jp = new JSParser("{ value: \"value\" }");
+        JSObject obj = (JSObject)Expression.create(jp.getHead()).eval().getValue();
+        obj.isSealed = true;
+        obj.set("test", new JSString("123"));
+        obj.set("value", new JSString("345"));
+        assertEquals("{value: \"345\"}", obj.toString());
+    }
+
+    /**
      * Test of freeze deepClone, of class JSObject.
      */
     @Test

@@ -64,6 +64,25 @@ public class JSObjectC extends Function {
                 return new JSBool(context.isFrozen);
             }
         });
+        items.put("seal", new Function() {
+            @Override
+            public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+                if (args.size() == 0 || !(args.get(0) instanceof JSObject)) {
+                    return Undefined.getInstance();
+                }
+                ((JSObject)args.get(0)).isSealed = true;
+                return Undefined.getInstance();
+            }
+        });
+        items.put("isSealed", new Function() {
+            @Override
+            public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+                if (args.size() == 0 || !(args.get(0) instanceof JSObject)) {
+                    new JSBool(false);
+                }
+                return new JSBool(context.isSealed);
+            }
+        });
         items.put("defineProperty", new Function() {
             @Override
             public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
