@@ -10,7 +10,7 @@ import java.util.Vector;
 public class FormDataC extends Function {
 
     public FormDataC() {
-        items.put("prototype", ObjectProto.getInstance());
+        items.put("prototype", JSObjectProto.getInstance());
     }
 
     @Override

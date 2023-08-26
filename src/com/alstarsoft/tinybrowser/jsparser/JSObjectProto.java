@@ -8,15 +8,15 @@ import java.util.Vector;
  *
  * @author Alex
  */
-public class ObjectProto extends JSObject {
+public class JSObjectProto extends JSObject {
 
-    private ObjectProto() {
+    private JSObjectProto() {
         items.put("propertyIsEnumerable", new propertyIsEnumerableFunction());
         items.put("hasOwnProperty", new hasOwnPropertyFunction());
         items.put("toString", new toStringFunction());
     }
 
-    public static ObjectProto getInstance() {
+    public static JSObjectProto getInstance() {
         return instance;
     }
 
@@ -74,5 +74,5 @@ public class ObjectProto extends JSObject {
     }
 
     private String type = "Object";
-    private static ObjectProto instance = new ObjectProto();
+    private static JSObjectProto instance = new JSObjectProto();
 }

@@ -15,8 +15,8 @@ import java.util.Vector;
 public class JSObject extends JSValue {
 
     public JSObject() {
-        if (!(this instanceof ObjectProto)) {
-            items.put("__proto__", ObjectProto.getInstance());
+        if (!(this instanceof JSObjectProto)) {
+            items.put("__proto__", JSObjectProto.getInstance());
         } else {
             items.put("__proto__", this);
         }
@@ -25,12 +25,12 @@ public class JSObject extends JSValue {
     public JSObject(boolean is_proto) {}
 
     public JSObject(JSString str, JSValue val) {
-        items.put("__proto__", ObjectProto.getInstance());
+        items.put("__proto__", JSObjectProto.getInstance());
         items.put(str.getValue(), val);
     }
 
     public JSObject(Token head, Expression exp, TokenPointer pointer) {
-        items.put("__proto__", ObjectProto.getInstance());
+        items.put("__proto__", JSObjectProto.getInstance());
         if (head.getType() != Token.OBJECT_START) {
             return;
         }
@@ -265,7 +265,7 @@ public class JSObject extends JSValue {
             if (str.equals("__proto__") && !print_proto && !print_protos) continue;
             if (result.length() > 0) result += ", ";
             String value = (print_proto || print_protos) && str.equals("__proto__") ?
-                ((this.equals(ObjectProto.getInstance()) || !print_protos && getOwnProperty(str).equals(ObjectProto.getInstance())) ?
+                ((this.equals(JSObjectProto.getInstance()) || !print_protos && getOwnProperty(str).equals(JSObjectProto.getInstance())) ?
                     "ObjectPrototype" :
                     getOwnProperty(str).toString()) :
                 getOwnProperty(str).toString();

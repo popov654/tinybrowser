@@ -16,15 +16,15 @@ public class JSFloat extends JSObject implements Comparable {
         }
     }
     public JSFloat(int val) {
-        items.put("__proto__", ObjectProto.getInstance());
+        items.put("__proto__", JSObjectProto.getInstance());
         value = (float)val;
     }
     public JSFloat(float val) {
-        items.put("__proto__", ObjectProto.getInstance());
+        items.put("__proto__", JSObjectProto.getInstance());
         value = val;
     }
     public JSFloat(double val) {
-        items.put("__proto__", ObjectProto.getInstance());
+        items.put("__proto__", JSObjectProto.getInstance());
         value = val;
     }
 

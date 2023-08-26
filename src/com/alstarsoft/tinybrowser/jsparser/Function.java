@@ -54,7 +54,7 @@ public class Function extends JSObject {
         if (as_constr) {
             JSObject obj = new JSObject();
             JSObject proto = items.containsKey("prototype") ?
-                (JSObject)items.get("prototype") : ObjectProto.getInstance();
+                (JSObject)items.get("prototype") : JSObjectProto.getInstance();
             proto.set("constructor", this);
             obj.set("__proto__", proto);
             body.scope.put("this", obj);

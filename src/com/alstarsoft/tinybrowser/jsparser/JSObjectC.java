@@ -6,11 +6,11 @@ import java.util.Vector;
  *
  * @author Alex
  */
-public class ObjectC extends Function {
+public class JSObjectC extends Function {
 
-    public ObjectC() {
-        items.put("prototype", ObjectProto.getInstance());
-        ObjectProto.getInstance().set("constructor", this);
+    public JSObjectC() {
+        items.put("prototype", JSObjectProto.getInstance());
+        JSObjectProto.getInstance().set("constructor", this);
         addMethods();
     }
 

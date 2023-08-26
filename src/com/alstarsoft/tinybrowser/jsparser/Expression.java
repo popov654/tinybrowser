@@ -229,7 +229,7 @@ public class Expression {
     }
 
     public static Expression create(Token head) {
-        ObjectC o = new ObjectC();
+        JSObjectC o = new JSObjectC();
         ( (JSObject)( (JSObject)o.get("__proto__") ).get("hasOwnProperty") ).set("__proto__", FunctionProto.getInstance());
         ( (JSObject)( (JSObject)o.get("__proto__") ).get("toString") ).set("__proto__", FunctionProto.getInstance());
         ArrayC a = new ArrayC();
@@ -2291,14 +2291,14 @@ public class Expression {
                         value = op.next.val.equals(Expression.getVar("String", this));
                     } else {
                         JSObject obj = (JSObject)((JSObject)op.prev.val).get("__proto__");
-                        while (obj != ObjectProto.getInstance()) {
+                        while (obj != JSObjectProto.getInstance()) {
                             if (obj.get("constructor").equals(op.next.val)) {
                                 value = true;
                                 break;
                             }
                             obj = (JSObject)obj.get("__proto__");
                         }
-                        if (obj == ObjectProto.getInstance()) {
+                        if (obj == JSObjectProto.getInstance()) {
                             value = op.next.val.equals(Expression.getVar("Object", this));
                         }
                     }
