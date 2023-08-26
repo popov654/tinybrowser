@@ -1,6 +1,7 @@
 package com.alstarsoft.tinybrowser.jsparser;
 
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 
@@ -11,6 +12,7 @@ import java.util.Vector;
 public class JSObjectProto extends JSObject {
 
     private JSObjectProto() {
+        items.put("entries", new entriesFunction());
         items.put("propertyIsEnumerable", new propertyIsEnumerableFunction());
         items.put("hasOwnProperty", new hasOwnPropertyFunction());
         items.put("toString", new toStringFunction());
@@ -48,6 +50,24 @@ public class JSObjectProto extends JSObject {
     @Override
     public String getType() {
         return type;
+    }
+
+    class entriesFunction extends Function {
+        @Override
+        public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
+            Vector<JSValue> v = new Vector<JSValue>();
+            Set<Entry<String, JSValue>> entries = context.items.entrySet();
+            for (Entry<String, JSValue> entry: entries) {
+                if (!context.hasOwnProperty(entry.getKey()) || entry.getKey().equals("__proto__")) {
+                    continue;
+                }
+                JSArray a = new JSArray();
+                a.push(new JSString(entry.getKey()));
+                a.push(entry.getValue());
+                v.add(a);
+            }
+            return new JSArray(v);
+        }
     }
 
     class propertyIsEnumerableFunction extends Function {

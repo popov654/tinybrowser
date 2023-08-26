@@ -42,6 +42,20 @@ public class JSObjectTest {
     }
 
     /**
+     * Test of entires method, of class JSObject.
+     */
+    @Test
+    public void testEntries() {
+        JSParser jp = new JSParser("var obj = { value: \"value\", number: 42 }; var entries = obj.entries()");
+        System.out.println("var obj = { value: \"value\", number: 42 }; var entries = obj.entries()");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        JSValue obj = (JSValue) Expression.getVar("entries", exp);
+        assertTrue(obj instanceof JSArray);
+        assertEquals("[[\"value\", \"value\"], [\"number\", 42]]", ((JSArray)obj).toString());
+    }
+
+    /**
      * Test of freeze method, of class JSObject.
      */
     @Test
@@ -107,7 +121,7 @@ public class JSObjectTest {
         instance.print_proto = true;
         assertEquals("{__proto__: ObjectPrototype, value: \"value\"}", instance.toString());
         JSObject.print_protos = true;
-        assertEquals("{__proto__: {__proto__: ObjectPrototype, propertyIsEnumerable: function (), hasOwnProperty: function (), toString: function (), constructor: function ()}, value: \"value\"}", instance.toString());
+        assertEquals("{__proto__: {__proto__: ObjectPrototype, entries: function (), propertyIsEnumerable: function (), hasOwnProperty: function (), toString: function (), constructor: function ()}, value: \"value\"}", instance.toString());
         instance.print_proto = false;
         JSObject.print_protos = false;
     }
