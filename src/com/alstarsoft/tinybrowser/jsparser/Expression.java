@@ -634,7 +634,14 @@ public class Expression {
         int level1 = 0;
         int level2 = 0;
         int level3 = 0;
-        while (t != start && !t.prev.getContent().matches(",|\\(|[*/&|~+-]?=")) {
+        while (t != start && !t.prev.getContent().matches(",|\\(|[*/&|~+-]?=") || level3 < 0) {
+            if (level1 < 0 || level2 < 0) {
+                JSError e = new JSError(null, "Syntax error in ternary operator", parent_block.getStack());
+                parent_block.error = e;
+                System.err.println("Syntax error in ternary operator");
+                err = true;
+                return;
+            }
             if (t.prev.getType() == Token.ARRAY_START && level1 == 0) break;
             if (t.prev.getType() == Token.OBJECT_START && level2 == 0) break;
             if (t.prev.getType() == Token.BRACE_OPEN && level3 == 0) break;
