@@ -576,7 +576,7 @@ public class Entry extends javax.swing.JPanel {
     private boolean hovered = false;
 
     public void open() {
-        marker.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/triangle.png")));
+        marker.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/alstarsoft/tinybrowser/resources/triangle.png")));
         threeDots.setVisible(false);
         headerTag3.setVisible(false);
         content.setVisible(true);
@@ -595,7 +595,7 @@ public class Entry extends javax.swing.JPanel {
     }
 
     public void close() {
-        marker.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/triangle2.png")));
+        marker.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/alstarsoft/tinybrowser/resources/triangle2.png")));
         content.setVisible(false);
         footer.setVisible(false);
         boolean has_children = node.children.size() > 0;
@@ -705,7 +705,7 @@ public class Entry extends javax.swing.JPanel {
         headerMargin.setPreferredSize(new java.awt.Dimension(30, 26));
 
         marker.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        marker.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/triangle.png"))); // NOI18N
+        marker.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/alstarsoft/tinybrowser/resources/triangle.png"))); // NOI18N
         marker.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         marker.setPreferredSize(new java.awt.Dimension(22, 22));
 
