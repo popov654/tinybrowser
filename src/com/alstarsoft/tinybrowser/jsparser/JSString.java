@@ -64,6 +64,18 @@ public class JSString extends JSObject implements Comparable {
         return new JSString(String.valueOf(value.charAt((int)index.getValue())));
     }
 
+    public JSString replace(JSString from, JSString to) {
+        return new JSString(value.replace(from.getValue(), to.getValue()));
+    }
+
+    public JSString replaceRegexp(String regexp, JSString to) {
+        return new JSString(value.replace(regexp, to.getValue()));
+    }
+
+    public JSString replaceRegexpAll(String regexp, JSString to) {
+        return new JSString(value.replaceAll(regexp, to.getValue()));
+    }
+
     public JSString get(int index) {
         return charAt(new JSInt(index));
     }
