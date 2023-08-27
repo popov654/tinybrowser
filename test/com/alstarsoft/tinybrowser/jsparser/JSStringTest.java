@@ -76,12 +76,37 @@ public class JSStringTest {
         assertEquals("S", ((JSString)instance.split(new JSString("")).get(3)).getValue());
     }
 
-        /**
+   /**
      * Test of slice method, of class JSString.
      */
     @Test
     public void testSlice_JSInt_JSInt() {
         assertEquals("Str", instance.slice(new JSInt(3), new JSInt(6)).getValue());
+    }
+
+   /**
+     * Test of replace method, of class JSString.
+     */
+    @Test
+    public void testReplace() {
+        JSString str = new JSString("A testable string for the test");
+        JSString result = str.replace(new JSString("test"), new JSString("fold"));
+        System.out.println(result.toString());
+        assertEquals("\"A foldable string for the fold\"", result.toString());
+
+        JSParser jp = new JSParser("var str = \"A testable string for the test\"; function f(match, pos, string) { return \"trust\" }; str = str.replace(\"test\", f)");
+        System.out.println("var str = \"A testable string for the test\"; function f(match, pos, string) { return \"trust\" }; str = str.replace(\"test\", f)");
+        Expression exp = Expression.create(jp.getHead()).eval();
+        result = Expression.getVar("str", exp).asString();
+        System.out.println(result.toString());
+        assertEquals("\"A trustable string for the test\"", result.toString());
+
+        jp = new JSParser("var str = \"A testable string for the test\"; function f(match, pos, string) { return \"trust\" }; str = str.replace(/\\btest[a-z]*/g, f)");
+        System.out.println("var str = \"A testable string for the test\"; function f(match, pos, string) { return \"trust\" }; str = str.replace(/\\btest[a-z]*/g, f)");
+        exp = Expression.create(jp.getHead()).eval();
+        result = Expression.getVar("str", exp).asString();
+        System.out.println(result.toString());
+        assertEquals("\"A trust string for the trust\"", result.toString());
     }
 
     /**
