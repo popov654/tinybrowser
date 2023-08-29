@@ -79,6 +79,13 @@ public abstract class JSValue {
         if (type.charAt(0) == 'N') {
             return NaN.getInstance();
         }
+        if (value.matches("/.*/[a-z]*")) {
+            String pattern = value.substring(1, value.lastIndexOf('/'));
+            String flags = value.substring(value.lastIndexOf('/') + 1);
+            RegExp regexp = new RegExp(pattern);
+            regexp.setFlags(flags);
+            return regexp;
+        }
         if (type.equals("null")) {
             return Null.getInstance();
         }

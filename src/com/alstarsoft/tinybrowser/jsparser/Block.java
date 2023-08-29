@@ -40,7 +40,7 @@ public class Block extends Expression {
         int level = 0;
         while (end != null) {
             type = end.getType();
-            if (((type <= 6 || type >= 9 && type <= 12) && start == null) ||
+            if (((type <= 6 || type >= 9 && type <= 12 || type == 22) && start == null) ||
                   type == 6 || type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield|await")) {
                 boolean needSplit = type == Token.KEYWORD && !end.getContent().matches("new|yield|await") ||
                                     type == Token.VAR_NAME && end.prev != null && (end.prev.getContent().matches("\\)|}") || end.prev.getType() == Token.VALUE);

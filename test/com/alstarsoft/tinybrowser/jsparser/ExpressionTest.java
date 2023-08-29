@@ -483,6 +483,39 @@ public class ExpressionTest {
      * Test of eval method, of class Expression.
      */
     @Test
+    public void testRegExpInitialization() {
+        JSParser jp = new JSParser("a = /[a-z]+/i; b = /\\d+/");
+        System.out.println("a = /[a-z]+/i; b = /\\d+/");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertTrue(Expression.getVar("a", exp) instanceof RegExp);
+        assertTrue(Expression.getVar("b", exp) instanceof RegExp);
+        assertEquals("/[a-z]+/i", Expression.getVar("a", exp).toString());
+        assertEquals("/\\d+/", Expression.getVar("b", exp).toString());
+    }
+
+    /**
+     * Test of eval method, of class Expression.
+     */
+    @Test
+    public void testRegExpMethodsInvokation() {
+        JSParser jp = new JSParser("/[a-z]+/.test(\"string\")");
+        System.out.println("/[a-z]+/.test(\"string\")");
+        Expression exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("true", exp.getValue().toString());
+
+        jp = new JSParser("/[a-z]+/.test(\"Back to the 80s\")");
+        System.out.println("/[a-z]+/.test(\"Back to the 80s\")");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("false", exp.getValue().toString());
+    }
+
+    /**
+     * Test of eval method, of class Expression.
+     */
+    @Test
     public void testArrayInitialization() {
         JSParser jp = new JSParser("a = 3, b = [1, 2, a, a+1]");
         System.out.println("a = 3, b = [1, 2, a, a+1]");

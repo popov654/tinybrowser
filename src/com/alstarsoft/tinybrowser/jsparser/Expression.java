@@ -390,6 +390,16 @@ public class Expression {
         }
     }
 
+    private void initRegularExpressions() {
+        Token t = start;
+        while (t != null) {
+            if (t.getType() == Token.REGEXP) {
+                t.val = JSValue.create("RegExp", t.getContent());
+            }
+            t = t.next;
+        }
+    }
+
     private void applyBraces() {
         Token t = start;
         int level = 0;
@@ -848,7 +858,8 @@ public class Expression {
             t = t.next;
         }
         getTokenValue(t);
-        if (((t.getType() == Token.VALUE && t.val != null && t.val.getType().equals("String")) || t.getType() == Token.VAR_NAME || t.getType() == Token.ARRAY_ENTITY || t.getType() == Token.OBJECT_ENTITY) &&
+        if (((t.getType() == Token.VALUE && t.val != null && t.val.getType().equals("String")) || t.getType() == Token.VAR_NAME ||
+                t.getType() == Token.ARRAY_ENTITY || t.getType() == Token.OBJECT_ENTITY || t.getType() == Token.REGEXP) &&
                 t.next != null && (t.next.getType() == Token.DOT ||
                 t.next.getType() == Token.ARRAY_START || t.next.getType() == Token.BRACE_OPEN)) {
             Vector<JSValue> v = new Vector<JSValue>();
@@ -1562,6 +1573,7 @@ public class Expression {
             return this;
         }
         initArraysAndObjects();
+        initRegularExpressions();
         applySquareBracesRuntime();
         processLogicalOps();
 
@@ -2609,7 +2621,7 @@ public class Expression {
                 start.val = new JSInt((int)val);
             }
         }
-        if (start.val.getType().matches("Array|Integer|Float|Number|Object|String|Function") && start.next != null) {
+        if (start.val.getType().matches("Array|Integer|Float|Number|Object|RegExp|String|Function") && start.next != null) {
             accessObjectProperties(start);
         }
         if (start.next != null && (start.next.getType() == Token.DOT || start.next.getType() == Token.ARRAY_START)) {

@@ -66,6 +66,21 @@ public class RegExp extends JSObject {
         return Null.getInstance();
     }
 
+    @Override
+    public String toString() {
+        String s = "";
+        if ((flags & Pattern.CASE_INSENSITIVE) > 0) {
+            s += "i";
+        }
+        if ((flags & Pattern.MULTILINE) > 0) {
+            s += "m";
+        }
+        if (global) {
+            s += "g";
+        }
+        return "/" + source + "/" + s;
+    }
+
     public Matcher matcher;
     public String source;
     public int flags = 0;

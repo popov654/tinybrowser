@@ -182,7 +182,9 @@ public class JSParser {
                     }
                 }
                 //Found an operator
-                if (!num && String.valueOf(ch).matches("[,<>~^|&*/%!?:+=-]")) {
+                boolean maybeRegexp = ch == '/' && !esc && cur.getType() != Token.VALUE && cur.getType() != Token.VAR_NAME &&
+                    cur.getType() != Token.BRACE_CLOSE && cur.getType() != Token.ARRAY_END && cur.getType() != Token.OBJECT_END;
+                if (!num && String.valueOf(ch).matches("[,<>~^|&/*%!?:+=-]") && !maybeRegexp) {
                     last_token = "";
                     state = READ_OPERATOR;
                     String s = pos + 2 < data.length() ? data.substring(pos, pos+2) : data.substring(pos);
@@ -297,7 +299,7 @@ public class JSParser {
             }
 
             //Found an array declaration
-            if ((ch == '[' || ch == ']') && state != READ_STRING) {
+            if ((ch == '[' || ch == ']') && state != READ_STRING && state != READ_REGEXP) {
                 if (state != READY) {
                     state = READY;
                     Token t = new Token(last_token);
@@ -395,7 +397,7 @@ public class JSParser {
             }
 
             //Found an object declaration
-            if ((ch == '{' || ch == '}') && state != READ_STRING) {
+            if ((ch == '{' || ch == '}') && state != READ_STRING && state != READ_REGEXP) {
                 if (state != READY && state != READ_STRING) {
                     System.err.println("Unexpected object value on line " + line);
                     correct = false;
@@ -426,7 +428,7 @@ public class JSParser {
                 cur = t;
             }
 
-            if (esc && state != READ_STRING) {
+            if (esc && state != READ_STRING && state != READ_REGEXP) {
                  System.err.println("Unexpected escape character " + ch + " on line " + line);
                  correct = false;
                  return;
@@ -450,6 +452,36 @@ public class JSParser {
                 cur.next = t;
                 t.prev = cur;
                 cur = t;
+                pos++;
+                continue;
+            }
+
+            if (state == READY && (ch == '/') && !esc && cur.getType() != Token.VALUE && cur.getType() != Token.VAR_NAME &&
+                    cur.getType() != Token.BRACE_CLOSE && cur.getType() != Token.ARRAY_END && cur.getType() != Token.OBJECT_END) {
+                state = READ_REGEXP;
+                strToken = ch;
+                pos++;
+                continue;
+            }
+
+            if (state == READ_REGEXP && ch == '/' && !esc) {
+                state = READY;
+                String flags = "";
+                while (pos < data.length()-1 && data.charAt(pos+1) >= 'a' && data.charAt(pos+1) <= 'z') {
+                    flags += data.charAt(pos+1);
+                    pos++;
+                }
+                String s = '/' + last_token + '/' + flags;
+                Token t = new Token(s);
+                strToken = '\0';
+                last_token = "";
+                cur.next = t;
+                t.prev = cur;
+                cur = t;
+                pos++;
+                continue;
+            } else if (state == READ_REGEXP) {
+                last_token += ch;
                 pos++;
                 continue;
             }
@@ -549,6 +581,7 @@ public class JSParser {
     private int READ_FUNC_ARGS = 8;
     private int READ_FUNC_BLOCK = 9;
     private int READ_COMMENT = 10;
+    private int READ_REGEXP = 11;
 
     private boolean comment_multiline;
 

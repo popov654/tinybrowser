@@ -34,6 +34,8 @@ public class Token {
             type = ARRAY_ENTITY;
         } else if (str.matches("\\{(Function)?\\}")) {
             type = OBJECT_ENTITY;
+        } else if (str.matches("/.*/[a-z]*")) {
+            type = REGEXP;
         } else if (str.length() == 1 && str.equals(",")) {
             type = COMMA;
         } else if (str.matches("\\??\\.")) {
@@ -130,4 +132,5 @@ public class Token {
     public static int EMPTY = 19;
     public static int ARRAY_ENTITY = 20;
     public static int OBJECT_ENTITY = 21;
+    public static int REGEXP = 22;
 }
