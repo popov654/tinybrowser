@@ -1687,6 +1687,21 @@ public class ExpressionTest {
         exp.eval();
         assertTrue(((Block)exp).scope.containsKey("a"));
         assertFalse(((Block)((Block)exp).children.get(0)).scope.containsKey("a"));
+        jp = new JSParser("{ const a = 1 }");
+        System.out.println("{ const a = 1 }");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertTrue(((Block)((Block)exp).children.get(0)).scope.containsKey("a"));
+        assertTrue(((Block)((Block)exp).children.get(0)).constVars.contains("a"));
+        assertFalse(((Block)exp).scope.containsKey("a"));
+        jp = new JSParser("{ const a = 1; a = 2 }");
+        System.out.println("{ const a = 1; a = 2 }");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertTrue(((Block)((Block)exp).children.get(0)).scope.containsKey("a"));
+        assertTrue(((Block)((Block)exp).children.get(0)).constVars.contains("a"));
+        assertFalse(((Block)exp).scope.containsKey("a"));
+        assertNotNull(((Block)exp).error);
     }
 
     /**

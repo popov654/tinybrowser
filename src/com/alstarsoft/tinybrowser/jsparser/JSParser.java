@@ -624,8 +624,6 @@ public class JSParser {
     private Token cur = null;
     private Token head = null;
     public String errorDescription;
-    //private Hashtable<String, Node> ids = new Hashtable<String, Node>();
-    //private Hashtable<String, Vector<Node>> classes = new Hashtable<String, Vector<Node>>();
 
     public String data = "";
 }

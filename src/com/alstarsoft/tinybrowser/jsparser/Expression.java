@@ -18,7 +18,7 @@ public class Expression {
         Token t = start;
         while (t != null) {
             int type = t.getType();
-            if (mode > 0 && type == 6 && (t.next == null ||
+            if (mode > 0 && !isConst && type == 6 && (t.next == null ||
                     t.next.getType() == 2 && t.next.getContent().matches("[*/%&|^+-]?=") ||
                     t.next.getType() == 18)) {
                 Expression.setVar(t.getContent(), Undefined.getInstance(), this, mode);
@@ -43,8 +43,9 @@ public class Expression {
                 }
                 break;
             } else {
-                if (type == 15 && t.getContent().matches("var|let")) {
+                if (type == 15 && t.getContent().matches("var|let|const")) {
                     mode = t.getContent().equals("var") ? var : let;
+                    isConst = t.getContent().equals("const");
                     if (t == start && (t.next == null || t.next.getType() != Token.VAR_NAME)) {
                         System.err.println("Syntax error");
                     }
@@ -120,7 +121,7 @@ public class Expression {
                 end = t;
                 t = t.next;
 
-                if (type == 15 && !end.getContent().matches("if|switch|case|var|let|new|yield|await")) {
+                if (type == 15 && !end.getContent().matches("if|switch|case|var|let|const|new|yield|await")) {
                     end.next = null;
                     break;
                 }
@@ -160,7 +161,7 @@ public class Expression {
         if (ret && !token.getContent().equals("return")) {
             source += "return ";
         }
-        if (getContent().matches("var|let")) {
+        if (getContent().matches("var|let|const")) {
             source += getContent() + " ";
         }
 
@@ -2653,7 +2654,7 @@ public class Expression {
             }
             if (parent_block != null) parent_block.error = e;
         }
-        if (del && start.getType() == Token.VAR_NAME) {
+        if (del && start.getType() == Token.VAR_NAME && !isConst) {
             if (start.index == null &&
                     (!parent_block.scope.containsKey(start.getContent()) || parent_block.parent_block == null)) {
                 JSObject wo = parent_block.getWithObject();
@@ -2830,6 +2831,7 @@ public class Expression {
     public static int let = 1;
     public static int var = 2;
     private int mode = 0;
+    protected boolean isConst;
     private boolean ret;
     private boolean del;
     private boolean thr;

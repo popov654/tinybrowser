@@ -3,6 +3,7 @@ package com.alstarsoft.tinybrowser.jsparser;
 import com.alstarsoft.tinybrowser.htmlparser.HTMLParser;
 import com.alstarsoft.tinybrowser.htmlparser.Node;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
@@ -41,7 +42,7 @@ public class Block extends Expression {
         while (end != null) {
             type = end.getType();
             if (((type <= 6 || type >= 9 && type <= 12 || type == 22) && start == null) ||
-                  type == 6 || type == 15 && end.getContent().matches("let|var|if|break|continue|return|throw|delete|new|yield|await")) {
+                  type == 6 || type == 15 && end.getContent().matches("const|let|var|if|break|continue|return|throw|delete|new|yield|await")) {
                 boolean needSplit = type == Token.KEYWORD && !end.getContent().matches("new|yield|await") ||
                                     type == Token.VAR_NAME && end.prev != null && (end.prev.getContent().matches("\\)|}") || end.prev.getType() == Token.VALUE);
                 if (end.prev != null && end.prev.getType() != Token.EMPTY && needSplit) {
@@ -1099,15 +1100,21 @@ public class Block extends Expression {
     }
 
     public static void setVar(String name, JSValue val, Expression exp, int mode, boolean force) {
+        Block b = exp instanceof Block ? (Block)exp : exp.parent_block;
         if (name.charAt(0) == '-') {
-            Block block = exp instanceof Block ? (Block)exp : exp.parent_block;
-            block.error = new JSError(null, "Syntax error in assignment", exp.getStack());
+            b.error = new JSError(null, "Syntax error in assignment", exp.getStack());
             name = name.substring(1);
         }
-        Block b = exp instanceof Block ? (Block)exp : exp.parent_block;
         JSObject wo = b.getWithObject();
         if (wo != null && wo.hasOwnProperty(name)) {
             wo.set(name, val);
+        }
+        if (b.constVars.contains(name)) {
+            b.error = new JSError(null, "Runtime error: assignment to constant variable", exp.getStack());
+            return;
+        }
+        if (exp.isConst && !(exp instanceof Block)) {
+            b.constVars.add(name);
         }
         if (mode != Expression.let) {
             boolean found = false;
@@ -1271,6 +1278,7 @@ public class Block extends Expression {
     public JSValue return_value = Undefined.getInstance();
 
     public HashMap<String, JSValue> scope = new HashMap<String, JSValue>();
+    public HashSet<String> constVars = new HashSet<String>();
 
     protected Vector<Expression> children = new Vector<Expression>();
 

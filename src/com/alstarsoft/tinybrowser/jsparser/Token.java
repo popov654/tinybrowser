@@ -1,6 +1,5 @@
 package com.alstarsoft.tinybrowser.jsparser;
 
-import java.nio.charset.Charset;
 import java.util.Vector;
 
 /**
@@ -87,6 +86,7 @@ public class Token {
     static {
         keywords.add("let");
         keywords.add("var");
+        keywords.add("const");
         keywords.add("new");
         keywords.add("yield");
         keywords.add("function");
