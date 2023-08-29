@@ -92,7 +92,7 @@ public class Block extends Expression {
                         t = t.next;
                     }
                     if (t == null || t.prev == end.next || t.next == null) {
-                        System.err.println("Syntax error");
+                        System.err.println("Syntax error: ')' after 'if' was expected");
                         return;
                     }
                     Token th = t.next;
@@ -106,14 +106,14 @@ public class Block extends Expression {
 
                     continue;
                 } else {
-                    System.err.println("Syntax error");
+                    System.err.println("Syntax error: '(' after 'if' was expected");
                     return;
                 }
             }
             else if (type == Token.KEYWORD && end.getContent().equals("else")) {
                 int n = children.size()-2;
                 if (n < 0 || !children.get(n).isKeyword() || !children.get(n).getContent().equals("if")) {
-                    System.err.println("Unexpected token else");
+                    System.err.println("Unexpected token 'else'");
                     return;
                 }
                 if (end.next != null) {
@@ -123,7 +123,7 @@ public class Block extends Expression {
                     end = t;
                     continue;
                 } else {
-                    System.err.println("Syntax error");
+                    System.err.println("Syntax error: unexpected end of expression after 'else'");
                     return;
                 }
             }
@@ -138,7 +138,7 @@ public class Block extends Expression {
                     }
                     if (t == null || t.prev == end.next || t.next == null ||
                             t.next.getType() != Token.BLOCK_START) {
-                        System.err.println("Syntax error");
+                        System.err.println("Syntax error: ')' after 'switch' was expected");
                         return;
                     }
 
@@ -151,18 +151,18 @@ public class Block extends Expression {
                     end = th;
                     continue;
                 } else {
-                    System.err.println("Syntax error");
+                    System.err.println("Syntax error: '(' after 'switch' was expected");
                     return;
                 }
             }
             else if (type == Token.KEYWORD && end.getContent().equals("case")) {
                 if (block_type != Block.CASE) {
-                    System.err.println("Unexpected token case");
+                    System.err.println("Syntax error: unexpected token 'case'");
                     return;
                 }
                 Token th = end.next.next;
                 if (th == null || !th.getContent().equals(":")) {
-                    System.err.println("Syntax error");
+                    System.err.println("Syntax error: ':' after 'case' was expected");
                     return;
                 }
                 end.next.next = null;
@@ -176,7 +176,7 @@ public class Block extends Expression {
             else if (type == Token.KEYWORD && end.getContent().equals("for")) {
                 Token t = end.next;
                 if (t == null || t.getType() != Token.BRACE_OPEN) {
-                    System.err.println("Syntax error in for declaration");
+                    System.err.println("Syntax error in 'for' declaration");
                     return;
                 }
                 t = t.next;
@@ -193,7 +193,7 @@ public class Block extends Expression {
                         t.next.next.getType() == Token.OP && t.next.next.getContent().equals("in")) {
                     if (t.next.next.next == null || t.next.next.next.next == null ||
                             t.next.next.next.next.getType() != Token.BRACE_CLOSE) {
-                        System.err.println("Syntax error in for declaration");
+                        System.err.println("Syntax error in 'for' declaration");
                         return;
                     }
                     for_in_varscope = t.getContent().equals("let") ? Expression.let : Expression.var;
@@ -215,7 +215,7 @@ public class Block extends Expression {
                         t = t.next;
                     }
                     if (t == null || t.getType() == Token.BRACE_CLOSE && lvl == 0 && i < 2) {
-                        System.err.println("Syntax error in for declaration");
+                        System.err.println("Syntax error in 'for' declaration");
                         return;
                     }
                     if (th != null) {
@@ -226,7 +226,7 @@ public class Block extends Expression {
                     t = t.next;
                 }
                 if (t == null) {
-                    System.err.println("Syntax error: no block found after for");
+                    System.err.println("Syntax error: unexpected end of expression after 'for'");
                     return;
                 }
 
@@ -239,7 +239,7 @@ public class Block extends Expression {
             else if (type == Token.KEYWORD && end.getContent().equals("while")) {
                 Token t = end.next;
                 if (t == null || t.getType() != Token.BRACE_OPEN) {
-                    System.err.println("Syntax error in while declaration");
+                    System.err.println("Syntax error in 'while' declaration");
                     return;
                 }
                 t = t.next;
@@ -254,7 +254,7 @@ public class Block extends Expression {
                     t = t.next;
                 }
                 if (t == null) {
-                    System.err.println("Syntax error in while declaration");
+                    System.err.println("Syntax error in 'while' declaration");
                     return;
                 }
                 if (th != null) {
@@ -263,7 +263,7 @@ public class Block extends Expression {
                     th = null;
                     t = t.next;
                 } else {
-                    System.err.println("Syntax error in while declaration");
+                    System.err.println("Syntax error in 'while' declaration");
                     return;
                 }
 
@@ -271,7 +271,7 @@ public class Block extends Expression {
                 cycle_exp[2] = null;
                 
                 if (t == null && !post_cycle) {
-                    System.err.println("Syntax error: no block found after while");
+                    System.err.println("Syntax error: unexpected end of expression after 'while'");
                     return;
                 }
 
@@ -297,7 +297,7 @@ public class Block extends Expression {
             }
             else if (type == Token.KEYWORD && end.getContent().equals("do")) {
                 if (end.next == null) {
-                    System.err.println("Syntax error: no block found after do");
+                    System.err.println("Syntax error: unexpected end of expression after 'do'");
                     return;
                 }
                 post_cycle = true;
@@ -307,7 +307,7 @@ public class Block extends Expression {
             else if (type == Token.KEYWORD && end.getContent().equals("with")) {
                 Token t = end.next;
                 if (t == null || t.getType() != Token.BRACE_OPEN) {
-                    System.err.println("Syntax error in with declaration");
+                    System.err.println("Syntax error in 'with' declaration");
                     return;
                 }
                 t = t.next;
@@ -321,7 +321,7 @@ public class Block extends Expression {
                     t = t.next;
                 }
                 if (t == null) {
-                    System.err.println("Syntax error in with declaration");
+                    System.err.println("Syntax error in 'with' declaration");
                     return;
                 }
                 if (th != null) {
@@ -330,7 +330,7 @@ public class Block extends Expression {
                     th = null;
                     t = t.next;
                 } else {
-                    System.err.println("Syntax error in with declaration");
+                    System.err.println("Syntax error in 'with' declaration");
                     return;
                 }
 
@@ -353,7 +353,7 @@ public class Block extends Expression {
                 catch_flag = true;
                 Token t = end.next;
                 if (t == null || t.getType() != Token.BRACE_OPEN) {
-                    System.err.println("Syntax error in catch declaration");
+                    System.err.println("Syntax error in 'catch' declaration");
                     return;
                 }
                 t = t.next;
@@ -366,7 +366,7 @@ public class Block extends Expression {
                     t = t.next;
                 }
                 if (t == null || t.next == null) {
-                    System.err.println("Syntax error in catch declaration");
+                    System.err.println("Syntax error in 'catch' declaration");
                     return;
                 }
                 t = t.next;
@@ -420,7 +420,7 @@ public class Block extends Expression {
                 }
                 if (end != null && (end.getType() == Token.VAR_NAME || end.getType() == Token.FIELD_NAME)) {
                     if (end.next == null || (!func_class && end.next.getType() != Token.BRACE_OPEN || func_class && end.next.getType() != Token.BLOCK_START)) {
-                        System.err.println("Syntax error in function declaration");
+                        System.err.println("Syntax error: ')' expected after 'function'");
                         return;
                     }
                     if (end.getType() == Token.VAR_NAME) {
@@ -429,7 +429,7 @@ public class Block extends Expression {
                     if (!func_class) end = end.next.next;
                 } else {
                     if (end == null || end.getType() != Token.BRACE_OPEN) {
-                        System.err.println("Syntax error in function declaration");
+                        System.err.println("Syntax error: '(' expected after 'function'");
                         return;
                     }
                     end = end.next;
@@ -439,7 +439,7 @@ public class Block extends Expression {
                     if (end.getType() == Token.VAR_NAME) {
                         if (!(end.prev.getType() == Token.OP && end.prev.getContent().equals(",") || end.prev.getType() == Token.BRACE_OPEN)
                                 || !(end.next.getType() == Token.OP && end.next.getContent().equals(",") || end.next.getType() == Token.BRACE_CLOSE)) {
-                            System.err.println("Syntax error in function declaration");
+                            System.err.println("Syntax error in function declaration arguments list");
                             return;
                         }
                         func_args.add(end.getContent());
@@ -448,7 +448,7 @@ public class Block extends Expression {
                 }
                 if (end == null || end.prev.getType() == Token.OP && end.prev.getContent().equals(",") ||
                         end.next == null || end.next.getType() != Token.BLOCK_START) {
-                    System.err.println("Syntax error in function declaration");
+                    System.err.println("Syntax error: ')' expected after arguments list in function declaration");
                     return;
                 }
                 end = end.next;
@@ -458,7 +458,7 @@ public class Block extends Expression {
                 Token t = end;
                 Token t2 = t;
                 if (end.prev == null || end.next == null) {
-                    System.err.println("Syntax error in function declaration");
+                    System.err.println("Syntax error: function body expected after '=>' in arrow function declaration");
                     return;
                 }
                 if (end.prev.getType() == Token.BRACE_CLOSE) {
@@ -471,7 +471,7 @@ public class Block extends Expression {
                     }
                     t2 = t;
                     if (t == null) {
-                        System.err.println("Syntax error in function declaration");
+                        System.err.println("Syntax error: ')' expected after arguments list in arrow function declaration");
                         return;
                     }
                     func_args = new Vector<String>();
@@ -480,7 +480,7 @@ public class Block extends Expression {
                         if (t2.getType() == Token.VAR_NAME) {
                             if (!(t2.prev.getType() == Token.OP && t2.prev.getContent().equals(",") || t2.prev.getType() == Token.BRACE_OPEN)
                                     || !(t2.next.getType() == Token.OP && t2.next.getContent().equals(",") || t2.next.getType() == Token.BRACE_CLOSE)) {
-                                System.err.println("Syntax error in function declaration");
+                                System.err.println("Syntax error in arguments list in arrow function declaration");
                                 return;
                             }
                             func_args.add(t2.getContent());
@@ -515,7 +515,7 @@ public class Block extends Expression {
                     t.prev = ts;
                     func_start = ts;
                 } else {
-                    System.err.println("Syntax error in function declaration");
+                    System.err.println("Syntax error in arrow function declaration");
                     return;
                 }
                 end.next.prev = end.prev;
@@ -538,7 +538,7 @@ public class Block extends Expression {
                         tt = tt.next;
                     }
                     if (tt == end) {
-                        System.err.println("Syntax error in function declaration");
+                        System.err.println("Syntax error: missing '}' after function body");
                         return;
                     }
                     end.prev.next = t;
@@ -568,7 +568,7 @@ public class Block extends Expression {
                     end = end.next;
                 }
                 if (post_cycle && !(end.next.getType() == Token.KEYWORD && end.next.getContent().equals("while"))) {
-                    System.err.println("Syntax error: while expected");
+                    System.err.println("Syntax error: 'while' expected");
                     post_cycle = false;
                     return;
                 }
@@ -609,7 +609,7 @@ public class Block extends Expression {
                 if (catch_flag) {
                     Expression e = !children.isEmpty() ? children.lastElement() : null;
                     if (e == null || !(e instanceof Block) || !((Block)e).is_try && !((Block)e).is_catch) {
-                        System.err.println("Unexpected catch block");
+                        System.err.println("Unexpected 'catch' block");
                         return;
                     }
                     b.is_catch = true;
@@ -622,7 +622,7 @@ public class Block extends Expression {
                 if (finally_flag) {
                     Expression e = !children.isEmpty() ? children.lastElement() : null;
                     if (e == null || !(e instanceof Block) || !((Block)e).is_catch) {
-                        System.err.println("Unexpected finally block");
+                        System.err.println("Unexpected 'finally' block");
                         return;
                     }
                     b.is_finally = true;
