@@ -125,7 +125,6 @@ public class JSConsole {
         scrollpane2.getInsets();
         scrollpane2.setBorder(null);
 
-        consolepane.add(scrollpane2);
         scrollpane2.setBackground(Color.WHITE);
         scrollpane2.setOpaque(true);
         scrollpane2.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -176,121 +175,7 @@ public class JSConsole {
 
         consoleInput.setFont(new Font("Consolas", Font.PLAIN, 16));
         consoleInput.setBorder(BorderFactory.createEmptyBorder(3, 6, 3, 6));
-        consoleInput.addKeyListener(new KeyListener() {
-
-            @Override
-            public void keyTyped(KeyEvent e) {}
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int key_code = e.getKeyCode();
-                if (key_code == KeyEvent.VK_BACK_SPACE || key_code == KeyEvent.VK_DELETE ||
-                      key_code == KeyEvent.VK_ENTER && (e.isShiftDown() || e.isControlDown())) {
-                    int n = consoleInput.getText().split("\n").length;
-                    Frame frame = (Frame) SwingUtilities.getWindowAncestor(consoleInput);
-                    Dimension dim = frame.getSize();
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        consoleInput.setText(consoleInput.getText() + "\n");
-                        frame.setSize(dim.width, dim.height + line_height);
-                        consoleInput.setRows(n + 1);
-                        consolepane.setPreferredSize(new Dimension(consolepane.getPreferredSize().width, consolepane.getSize().height + line_height));
-                    } else {
-                        int pos = consoleInput.getCaretPosition();
-                        if (pos > 0 && key_code == KeyEvent.VK_BACK_SPACE && consoleInput.getText().charAt(pos-1) == '\n' ||
-                              pos < consoleInput.getText().length() - 1 && key_code == KeyEvent.VK_DELETE && consoleInput.getText().charAt(pos+1) == '\n') {
-                            frame.setSize(dim.width, dim.height - line_height);
-                            consoleInput.setRows(n - 1);
-                            consolepane.setPreferredSize(new Dimension(consolepane.getPreferredSize().width, consolepane.getSize().height - line_height));
-                        }
-                        timer.start();
-                    }
-                    return;
-                }
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    if (suggestions != null && suggestions.selectedItem != null) {
-                        String text = ((JLabel)((Container)suggestions.selectedItem).getComponent(0)).getText();
-                        updateCurrentToken(((JTextArea)e.getSource()), text);
-                        e.consume();
-                        return;
-                    }
-                    String code = ((JTextArea)e.getSource()).getText();
-                    JSParser jp = new JSParser(code);
-                    com.alstarsoft.tinybrowser.jsparser.Block b = (com.alstarsoft.tinybrowser.jsparser.Block) Expression.create(jp.getHead());
-                    if (root.node != null) {
-                        b.setDocument(root.node.document);
-                        Builder builder = document.root.builder;
-                        b.scope = scope = builder.scope;
-                        if (scope == null) {
-                            b.setDocument(root.node.document);
-                            scope = b.scope;
-                        }
-                        b.setConsole((com.alstarsoft.tinybrowser.jsparser.Console)scope.get("console"));
-                    }
-                    Frame parent = frame.getOwner() != null ? (Frame) frame.getOwner() : frame;
-                    b.setWindowFrame(parent);
-
-                    int pos = 0;
-                    Vector<String> data = null;
-
-                    JSValue c = b.scope.get("console");
-                    if (!(c instanceof Undefined)) {
-                        data = ((Console)c).getData();
-                        pos = data.size();
-                    }
-
-                    if (data != null) {
-                        for (int i = pos; i < data.size(); i++) {
-                            addEntry(data.get(i));
-                        }
-                    }
-
-                    b.eval();
-
-                    JSValue result = b.getValue();
-
-                    addEntry(((JTextArea)e.getSource()).getText(), false);
-                    if (result.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") || result instanceof Function) {
-                        addEntry(b.getValue().toString());
-                    } else {
-                        addObjectEntry(result);
-                    }
-
-                    ((JTextArea)e.getSource()).setText("");
-                    if (suggestions != null) {
-                        suggestions.setVisible(false);
-                    }
-
-                    consoleInput.setRows(0);
-                    e.consume();
-                    return;
-                }
-                if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) && suggestions != null && suggestions.isVisible()) {
-                    Suggestion s = (Suggestion) suggestions.getSelectedItem();
-                    if (s == null) {
-                        suggestions.setSelectedItem(suggestions.getComponent(0));
-                    } else {
-                        suggestions.setSelectedItem(e.getKeyCode() == KeyEvent.VK_UP ? s.prev : s.next);
-                    }
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (timer.isRunning()) timer.stop();
-                if (e.getKeyCode() != KeyEvent.VK_LEFT && e.getKeyCode() != KeyEvent.VK_RIGHT &&
-                      e.getKeyCode() != KeyEvent.VK_UP && e.getKeyCode() != KeyEvent.VK_DOWN) {
-                    findCurrentTokenSuggestions((JTextComponent) e.getSource());
-                }
-            }
-
-            Timer timer = new Timer(100, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    findCurrentTokenSuggestions(consoleInput);
-                }
-            });
-
-        });
+        consoleInput.addKeyListener(new ConsoleInputKeyListener(root));
 
         initPopupMenu();
 
@@ -303,12 +188,12 @@ public class JSConsole {
                     if (con != null && con instanceof Console) {
                         Vector<String> data = ((Console)con).getData();
                         for (String line: data) {
-                            addEntry(line);
+                            addResultEntry(line);
                         }
                         ((Console)con).addListener(new Console.Listener() {
                             @Override
                             public void log(String message) {
-                                addEntry(message);
+                                addResultEntry(message);
                             }
 
                             @Override
@@ -340,6 +225,139 @@ public class JSConsole {
                 });
             }
         });
+    }
+
+    class ConsoleInputKeyListener implements KeyListener {
+
+        ConsoleInputKeyListener(Block docRoot) {
+            consolepane = (JPanel) consoleInput.getParent();
+            root = docRoot;
+        }
+
+        @Override
+        public void keyTyped(KeyEvent e) {}
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            int key_code = e.getKeyCode();
+            if (key_code == KeyEvent.VK_BACK_SPACE || key_code == KeyEvent.VK_DELETE ||
+                  key_code == KeyEvent.VK_ENTER && (e.isShiftDown() || e.isControlDown())) {
+                int n = consoleInput.getText().split("\n").length;
+                Frame frame = (Frame) SwingUtilities.getWindowAncestor(consoleInput);
+                Dimension dim = frame.getSize();
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    consoleInput.setText(consoleInput.getText() + "\n");
+                    frame.setSize(dim.width, dim.height + line_height);
+                    consoleInput.setRows(n + 1);
+                    consolepane.setPreferredSize(new Dimension(consolepane.getPreferredSize().width, consolepane.getSize().height + line_height));
+                } else {
+                    int pos = consoleInput.getCaretPosition();
+                    if (pos > 0 && key_code == KeyEvent.VK_BACK_SPACE && consoleInput.getText().charAt(pos-1) == '\n' ||
+                          pos < consoleInput.getText().length() - 1 && key_code == KeyEvent.VK_DELETE && consoleInput.getText().charAt(pos+1) == '\n') {
+                        frame.setSize(dim.width, dim.height - line_height);
+                        consoleInput.setRows(n - 1);
+                        consolepane.setPreferredSize(new Dimension(consolepane.getPreferredSize().width, consolepane.getSize().height - line_height));
+                    }
+                    timer.start();
+                }
+                return;
+            }
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if (suggestions != null && suggestions.selectedItem != null) {
+                    String text = ((JLabel)((Container)suggestions.selectedItem).getComponent(0)).getText();
+                    updateCurrentToken(((JTextArea)e.getSource()), text);
+                    e.consume();
+                    return;
+                }
+                String code = ((JTextArea)e.getSource()).getText();
+                JSParser jp = new JSParser(code);
+                if (!jp.correct) {
+                    if (jp.errorDescription != null) {
+                        addErrorMessage(jp.errorDescription);
+                    }
+                } else {
+                    com.alstarsoft.tinybrowser.jsparser.Block b = (com.alstarsoft.tinybrowser.jsparser.Block) Expression.create(jp.getHead());
+                    if (root.node != null) {
+                        b.setDocument(root.node.document);
+                        Builder builder = root.builder;
+                        b.scope = scope = builder.scope;
+                        if (scope == null) {
+                            b.setDocument(root.node.document);
+                            scope = b.scope;
+                        }
+                        b.setConsole((com.alstarsoft.tinybrowser.jsparser.Console)scope.get("console"));
+                    }
+                    Frame frame = (Frame) SwingUtilities.getWindowAncestor(consoleInput);
+                    Frame parent = frame.getOwner() != null ? (Frame) frame.getOwner() : frame;
+                    b.setWindowFrame(parent);
+
+                    int pos = 0;
+                    Vector<String> data = null;
+
+                    JSValue c = b.scope.get("console");
+                    if (!(c instanceof Undefined)) {
+                        data = ((Console)c).getData();
+                        pos = data.size();
+                    }
+
+                    if (data != null) {
+                        for (int i = pos; i < data.size(); i++) {
+                            addResultEntry(data.get(i));
+                        }
+                    }
+
+                    b.eval();
+
+                    JSValue result = b.getValue();
+
+                    addEntry(((JTextArea)e.getSource()).getText());
+                    if (result.getType().matches("Boolean|Integer|Float|Number|String|null|undefined") || result instanceof Function) {
+                        addResultEntry(b.getValue().toString());
+                    } else {
+                        addObjectEntry(result);
+                    }
+
+                }
+
+                ((JTextArea)e.getSource()).setText("");
+                if (suggestions != null) {
+                    suggestions.setVisible(false);
+                }
+
+                consoleInput.setRows(0);
+                e.consume();
+                return;
+            }
+            if ((e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) && suggestions != null && suggestions.isVisible()) {
+                Suggestion s = (Suggestion) suggestions.getSelectedItem();
+                if (s == null) {
+                    suggestions.setSelectedItem(suggestions.getComponent(0));
+                } else {
+                    suggestions.setSelectedItem(e.getKeyCode() == KeyEvent.VK_UP ? s.prev : s.next);
+                }
+            }
+
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            if (timer.isRunning()) timer.stop();
+            if (e.getKeyCode() != KeyEvent.VK_LEFT && e.getKeyCode() != KeyEvent.VK_RIGHT &&
+                  e.getKeyCode() != KeyEvent.VK_UP && e.getKeyCode() != KeyEvent.VK_DOWN) {
+                findCurrentTokenSuggestions((JTextComponent) e.getSource());
+            }
+        }
+
+        Timer timer = new Timer(100, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                findCurrentTokenSuggestions(consoleInput);
+            }
+        });
+
+        private JPanel consolepane;
+        private Block root;
+
     }
 
     private void initPopupMenu() {
@@ -381,10 +399,18 @@ public class JSConsole {
     };
 
     private void addEntry(String str) {
-        addEntry(str, true);
+        addEntry(str, false, false);
     }
 
-    private void addEntry(String str, boolean isResult) {
+    private void addResultEntry(String str) {
+        addEntry(str, true, false);
+    }
+
+    private void addErrorMessage(String str) {
+        addEntry(str, true, true);
+    }
+
+    private void addEntry(String str, boolean isResult, boolean isError) {
         JPanel resultPanel = new JPanel();
         resultPanel.setOpaque(false);
         resultPanel.setBorder(BorderFactory.createEmptyBorder(1, 3, 1, 3));
@@ -396,6 +422,9 @@ public class JSConsole {
             text.setForeground(new Color(120, 25, 0));
         } else {
             text.setFont(new Font("Consolas", Font.ITALIC, 16));
+        }
+        if (isError) {
+            text.setForeground(new Color(228, 25, 10));
         }
         FontMetrics fm = text.getFontMetrics(text.getFont());
 
@@ -488,6 +517,17 @@ public class JSConsole {
         }
 
         console.add(resultPanel);
+        Timer t = new Timer(100, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                console.revalidate();
+                ((JScrollPane)console.getParent().getParent()).revalidate();
+                javax.swing.JScrollBar sc = ((JScrollPane)(console.getParent().getParent())).getVerticalScrollBar();
+                sc.setValue(sc.getMaximum());
+            }
+        });
+        t.setRepeats(false);
+        t.start();
         resultPanel.addMouseListener(contextMenuListener);
 
     }
