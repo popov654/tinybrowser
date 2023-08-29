@@ -25,7 +25,7 @@ public abstract class JSValue {
         if (value.equals("{}")) {
             return "Object";
         }
-        if (value.matches("^([\"']).*\\1$")) {
+        if (value.replaceAll("\n", "").matches("^([\"']).*\\1$")) {
             return "String";
         }
         if (value.matches("^[+-]?(0x[0-9a-fA-F]+|0?[0-9]+)$")) {
@@ -54,7 +54,7 @@ public abstract class JSValue {
 
     public static JSValue create(String type, String value) {
         if (type.charAt(0) == 'S') {
-            if (value.matches("^\".*\"$")) {
+            if (value.replaceAll("\n", "").matches("^\".*\"$")) {
                 value = value.substring(1, value.length()-1);
             }
             return new JSString(value);

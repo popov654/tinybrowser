@@ -152,6 +152,40 @@ public class JSParser {
                 }
             }
 
+            if (esc && state == READ_STRING && (new String("rntvuU")).contains(ch + "")) {
+                esc = false;
+                if (ch == 'n') {
+                    last_token += '\n';
+                    pos++;
+                    continue;
+                }
+                if (ch == 'r') {
+                    last_token += '\r';
+                    pos++;
+                    continue;
+                }
+                if (ch == 't') {
+                    last_token += '\t';
+                    pos++;
+                    continue;
+                }
+                if (ch == 'u' || ch == 'U') {
+                    pos++;
+                    ch = data.charAt(pos);
+                    int charCode = 0;
+                    while ((ch >= '0' && ch <= '9' || ch >='a' && ch <= 'f' || ch >= 'A' && ch <= 'F') && pos < data.length()) {
+                        charCode *= 16;
+                        charCode += Integer.parseInt(ch + "", 16);
+                        pos++;
+                        ch = data.charAt(pos);
+                    }
+                    if (Character.isDefined(charCode)) {
+                        last_token += Character.valueOf((char) charCode);
+                    }
+                    continue;
+                }
+            }
+
             if (ch == '\n') {
                 line++;
                 lastLineStartPos = pos+1;

@@ -1,15 +1,5 @@
 package com.alstarsoft.tinybrowser.jsparser;
 
-import com.alstarsoft.tinybrowser.jsparser.JSArray;
-import com.alstarsoft.tinybrowser.jsparser.JSInt;
-import com.alstarsoft.tinybrowser.jsparser.JSObject;
-import com.alstarsoft.tinybrowser.jsparser.JSParser;
-import com.alstarsoft.tinybrowser.jsparser.JSString;
-import com.alstarsoft.tinybrowser.jsparser.Block;
-import com.alstarsoft.tinybrowser.jsparser.Undefined;
-import com.alstarsoft.tinybrowser.jsparser.JSValue;
-import com.alstarsoft.tinybrowser.jsparser.Expression;
-import com.alstarsoft.tinybrowser.jsparser.Function;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -910,6 +900,14 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"World\"", exp.getValue().toString());
+        jp = new JSParser("\"Hello\\nWorld\"");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("\"Hello\nWorld\"", exp.getValue().toString());
+        jp = new JSParser("\"\\u00ae\"");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("\"®\"", exp.getValue().toString());
         
         jp = new JSParser("\" \\\"\\\" \"");
         System.out.println("\" \\\"\\\" \"");
