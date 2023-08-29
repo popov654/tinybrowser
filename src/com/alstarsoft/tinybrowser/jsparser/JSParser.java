@@ -77,11 +77,16 @@ public class JSParser {
     private boolean checkLevel(char ch) {
         lvl += (ch == '{') ? 1 : -1;
         if (lvl < 0) {
-            System.err.println("Unexpected token " + ch + " on line " + line);
+            errorDescription = getErrorMessage("unexpected token");
+            System.err.println(errorDescription);
             correct = false;
             return false;
         }
         return true;
+    }
+
+    private String getErrorMessage(String msg) {
+        return "Syntax error: " + msg + " (" + line + ":" + (pos - lastLineStartPos + 1) + ")";
     }
 
     private void scan() {
@@ -123,14 +128,16 @@ public class JSParser {
                 state = READY;
                 pos++;
                 line++;
+                lastLineStartPos = pos;
                 continue;
             }
 
             else if (state == READ_COMMENT) {
+                pos++;
                 if (ch == '\n') {
                     line++;
+                    lastLineStartPos = pos;
                 }
-                pos++;
                 continue;
             }
 
@@ -147,8 +154,10 @@ public class JSParser {
 
             if (ch == '\n') {
                 line++;
+                lastLineStartPos = pos+1;
                 if (state == READ_STRING && !esc) {
-                    System.err.println("Unexpected new line character " + ch + " on line " + line);
+                    errorDescription = getErrorMessage("unexpected new line character");
+                    System.err.println(errorDescription);
                     correct = false;
                     return;
                 }
@@ -171,7 +180,8 @@ public class JSParser {
                         last_token = "";
                         state = READ_NUMBER;
                         if (cur.getType() == Token.VALUE && substate == 0) {
-                            System.err.println("Unexpected number value " + ch + " on line " + line);
+                            errorDescription = getErrorMessage("unexpected number value");
+                            System.err.println(errorDescription);
                             correct = false;
                             return;
                         }
@@ -500,9 +510,31 @@ public class JSParser {
             if (state != READY) last_token += ch;
 
             pos++;
-            if (last_token.length() > 0 && pos == data.length()) {
+
+            if (last_token.length() > 0 && pos == data.length() &&
+                  !(state == READ_STRING || state == READ_OBJECT_FIELD ||
+                    state == READ_OBJECT_VALUE || state == READ_ARRAY || state == READ_REGEXP)) {
                 data += " ";
             }
+        }
+
+        if (state != READY) {
+            if (state == READ_STRING) {
+                errorDescription = getErrorMessage("unterminated string");
+            }
+            if (state == READ_REGEXP) {
+                errorDescription = getErrorMessage("unterminated regular expression");
+            }
+            if (state == READ_OBJECT_FIELD || state == READ_OBJECT_VALUE) {
+                errorDescription = getErrorMessage("unterminated object declaration");
+            }
+            if (state == READ_ARRAY) {
+                errorDescription = getErrorMessage("unterminated array declaration");
+            }
+            correct = false;
+            System.err.println(errorDescription);
+
+            return;
         }
     }
 
@@ -527,6 +559,7 @@ public class JSParser {
 
     private int state;
     private int line = 1;
+    private int lastLineStartPos = 0;
 
     private static String[] ops = new String[37];
 
@@ -590,6 +623,7 @@ public class JSParser {
     private int pos = 0;
     private Token cur = null;
     private Token head = null;
+    public String errorDescription;
     //private Hashtable<String, Node> ids = new Hashtable<String, Node>();
     //private Hashtable<String, Vector<Node>> classes = new Hashtable<String, Vector<Node>>();
 

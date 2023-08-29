@@ -733,6 +733,7 @@ public class Builder {
     public void compileScript(ScriptElement script) {
         HTMLParser parser = this.document.root.node.document;
         JSParser jp = new JSParser(script.content);
+        if (!jp.correct) return;
         com.alstarsoft.tinybrowser.jsparser.Block block = (com.alstarsoft.tinybrowser.jsparser.Block)Expression.create(jp.getHead());
         Set<String> globals = new HashSet<String>(Arrays.asList(new String[] {"document", "window", "location", "screen", "alert", "confirm", "prompt", "console", "eval", "setTimeout", "clearTimeout", "setInterval", "clearInterval",
             "parseInt", "parseFloat", "getComputedStyle", "addEventListener", "removeEventListener", "Object", "Number", "HTMLElement", "Node", "Math", "Array", "String", "Date", "Function", "Promise", "JSON", "Blob", "File", "FileReader", "FileWriter", "FormData", "URL", "XMLHttpRequest"}));
