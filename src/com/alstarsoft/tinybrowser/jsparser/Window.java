@@ -21,8 +21,7 @@ public class Window extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (args.size() == 0) {
-                args.add(JSValue.create("String", ""));
-                
+                args.add(JSValue.create("String", "", block));
             }
             alert(args.get(0).asString().getValue());
             return Undefined.getInstance();
@@ -33,8 +32,7 @@ public class Window extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (args.size() == 0) {
-                args.add(JSValue.create("String", ""));
-
+                args.add(JSValue.create("String", "", block));
             }
             boolean value = confirm(args.get(0).asString().getValue());
             return new JSBool(value);
@@ -45,8 +43,7 @@ public class Window extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (args.size() == 0) {
-                args.add(JSValue.create("String", ""));
-
+                args.add(JSValue.create("String", "", block));
             }
             String value = prompt(args.get(0).asString().getValue());
             return new JSString(value);

@@ -64,7 +64,7 @@ public class JSArray extends JSObject {
                     || t.getType() == Token.VALUE) && level == 1 && level2 == 0) {
                 if (t.getType() == Token.VALUE && (t.next.getType() == Token.OP && t.next.getContent().equals(",") ||
                         t.next.getType() == Token.ARRAY_END)) {
-                    items.add(JSValue.create(JSValue.getType(t.getContent()), t.getContent()));
+                    items.add(JSValue.create(JSValue.getType(t.getContent()), t.getContent(), block));
                 } else {
                     Token ct = t;
                     while (ct != null && (ct.next.getType() != Token.OP || !ct.next.getContent().equals(",")) &&
@@ -294,7 +294,7 @@ public class JSArray extends JSObject {
             if (items.get(i).getType().matches("Object|Array")) {
                 v.add(((JSObject)items.get(i)).deepClone());
             } else {
-                v.add(JSValue.create(items.get(i).getType(), items.get(i).toString()));
+                v.add(JSValue.create(items.get(i).getType(), items.get(i).toString(), block));
             }
         }
         JSArray clone = new JSArray(v);

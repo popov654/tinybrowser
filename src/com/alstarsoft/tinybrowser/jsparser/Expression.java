@@ -395,7 +395,7 @@ public class Expression {
         Token t = start;
         while (t != null) {
             if (t.getType() == Token.REGEXP) {
-                t.val = JSValue.create("RegExp", t.getContent());
+                t.val = JSValue.create("RegExp", t.getContent(), parent_block);
             }
             t = t.next;
         }
@@ -840,7 +840,7 @@ public class Expression {
                     return;
                 }
                 if (t.next.getType() == Token.VALUE) {
-                    t.next.val = JSValue.create(JSValue.getType(t.next.getContent()), t.next.getContent());
+                    t.next.val = JSValue.create(JSValue.getType(t.next.getContent()), t.next.getContent(), parent_block);
                 }
                 checkYield(t.next);
                 return;
@@ -851,7 +851,7 @@ public class Expression {
                     return;
                 }
                 if (t.next.getType() == Token.VALUE) {
-                    t.next.val = JSValue.create(JSValue.getType(t.next.getContent()), t.next.getContent());
+                    t.next.val = JSValue.create(JSValue.getType(t.next.getContent()), t.next.getContent(), parent_block);
                 }
                 checkAwait(t.next);
                 return;
@@ -873,7 +873,7 @@ public class Expression {
                     if (t2.exp != null) {
                         v.add(t2.val == null ? t2.exp.eval().getValue() : t2.val);
                     } else {
-                        v.add(JSValue.create("String", t2.getContent()));
+                        v.add(JSValue.create("String", t2.getContent(), parent_block));
                     }
                     s.add(t2.prev.getContent().startsWith("?"));
                 } else if ((t2.getType() == Token.VAR_NAME || t2.getType() == Token.VALUE) && t2.prev.getType() == Token.ARRAY_START) {
@@ -888,7 +888,7 @@ public class Expression {
                             if (t2.exp != null) {
                                 v.add(t2.val == null ? t2.exp.eval().getValue() : t2.val);
                             } else {
-                                v.add(JSValue.create(JSValue.getType(t2.getContent()), t2.getContent()));
+                                v.add(JSValue.create(JSValue.getType(t2.getContent()), t2.getContent(), parent_block));
                             }
                         }
                     } else {
@@ -913,7 +913,7 @@ public class Expression {
                     }
                     s.add(t2.prev.getContent().startsWith("?"));
                 } else if (t2.getType() == Token.VALUE) {
-                    v.add(JSValue.create(JSValue.getType(t2.getContent()), t2.getContent()));
+                    v.add(JSValue.create(JSValue.getType(t2.getContent()), t2.getContent(), parent_block));
                     s.add(t2.prev.getContent().startsWith("?"));
                 } else if (t2.getType() == Token.DOT && t2.next != null &&
                         (t2.next.getType() == Token.ARRAY_START || t2.next.getType() == Token.ARRAY_END)) {
@@ -996,7 +996,7 @@ public class Expression {
                     
                     if (index.getValue().equals("eval") &&
                             val.equals(((JSObject)Expression.getVar("window", this)).get("eval"))) {
-                        ((DynamicContext)val).setContext(this.parent_block);
+                        ((DynamicContext)val).setContext(parent_block);
                     }
                     if (val instanceof Undefined) {
                         if (i < v.size()-1 && !s.get(i)) err = true;
@@ -1086,7 +1086,7 @@ public class Expression {
         }
         if (t.val == null) {
             if (t.getType() == Token.VALUE) {
-                t.val = JSValue.create(JSValue.getType(t.getContent()), t.getContent());
+                t.val = JSValue.create(JSValue.getType(t.getContent()), t.getContent(), parent_block);
             } else if (t.getType() == Token.VAR_NAME) {
                 t.val = Expression.getVar(t.getContent(), this);
             }
@@ -1150,7 +1150,7 @@ public class Expression {
         }
         if (t.val == null) {
             if (t.getType() == Token.VALUE) {
-                t.val = JSValue.create(JSValue.getType(t.getContent()), t.getContent());
+                t.val = JSValue.create(JSValue.getType(t.getContent()), t.getContent(), parent_block);
             } else if (t.getType() == Token.VAR_NAME) {
                 t.val = Expression.getVar(t.getContent(), this);
             }
@@ -1383,7 +1383,7 @@ public class Expression {
             if (t.getType() == Token.ARRAY_END) level2--;
             if ((t.next.getContent().equals(",") || t.next.getType() == Token.BRACE_CLOSE) && level1 == 0 && level2 == 0 && t == last) {
                 if (last.getType() == Token.VALUE && last.val == null) {
-                    params.add(JSValue.create(JSValue.getType(last.getContent()), last.getContent()));
+                    params.add(JSValue.create(JSValue.getType(last.getContent()), last.getContent(), parent_block));
                 } else if (last.val != null) {
                     params.add(last.val);
                 } else {
@@ -1611,7 +1611,7 @@ public class Expression {
                 //++5, ++a
                 if (op.next != null && (op.next.getType() == Token.VALUE || op.next.getType() == Token.VAR_NAME)) {
                     if (op.next.getType() == Token.VALUE) {
-                        op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent());
+                        op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent(), parent_block);
                         if (!op.next.val.getType().equals("Integer") && !op.next.val.getType().equals("Float")) {
                             System.err.println("Invalid " + c + " operator");
                             break;
@@ -1755,7 +1755,7 @@ public class Expression {
                     break;
                 }
                 if (op.next.getType() == Token.VALUE) {
-                    op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent());
+                    op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent(), parent_block);
                     op.next.val = new JSInt(~(op.next.val.asInt()).getValue());
                     op.next.setContent(op.next.val.toString());
                 }
@@ -1778,7 +1778,7 @@ public class Expression {
                     break;
                 }
                 if (op.next.getType() == Token.VALUE) {
-                    op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent());
+                    op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent(), parent_block);
                     op.next.val = new JSBool(!(op.next.val.asBool()).getValue());
                     op.next.setContent(op.next.val.toString());
                 } else {
@@ -1818,7 +1818,7 @@ public class Expression {
                 else if (op.next.getType() == Token.VAR_NAME && op.next.val == null) {
                     op.next.val = Expression.getVar(op.next.getContent(), this);
                 } else if (op.next.getType() == Token.VALUE) {
-                    op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent());
+                    op.next.val = JSValue.create(JSValue.getType(op.next.getContent()), op.next.getContent(), parent_block);
                 }
                 Token tn;
                 if (op.next.val == null) {
@@ -1890,10 +1890,10 @@ public class Expression {
                     }
                     if (!type.equals("Array") && !type.equals("Object")) {
                         if (op.prev.val == null && op.prev.getType() == Token.VALUE) {
-                            op.prev.val = JSValue.create(type, op.prev.getContent());
+                            op.prev.val = JSValue.create(type, op.prev.getContent(), parent_block);
                         }
                         if (op.next.val == null && op.next.getType() == Token.VALUE) {
-                            op.next.val = JSValue.create(type, op.next.getContent());
+                            op.next.val = JSValue.create(type, op.next.getContent(), parent_block);
                         }
                         if (op.prev.val == null && !op.getContent().equals(",") && (op.prev.getType() == Token.VAR_NAME || op.prev.getType() == Token.ARRAY_ENTITY || op.prev.getType() == Token.OBJECT_ENTITY) &&
                                 op.prev != start && op.prev.prev.getType() == Token.DOT ||
@@ -2020,7 +2020,7 @@ public class Expression {
                         if (op.prev.exp != null) {
                             op.prev.val = op.prev.exp.eval().getValue();
                         } else {
-                            op.prev.val = JSValue.create(JSValue.getType(op.prev.getContent()), op.prev.getContent());
+                            op.prev.val = JSValue.create(JSValue.getType(op.prev.getContent()), op.prev.getContent(), parent_block);
                         }
                     }
                     boolean val = op.prev.val.asBool().getValue();
@@ -2072,7 +2072,7 @@ public class Expression {
                         else if (type.equals("Float")) op.prev.val = op.prev.val.asFloat();
                         else if (type.equals("String")) op.prev.val = op.prev.val.asString();
                     } else {
-                        op.prev.val = JSValue.create(type, op.prev.val.asString().getValue());
+                        op.prev.val = JSValue.create(type, op.prev.val.asString().getValue(), parent_block);
                     }
                 }
                 if (!c.equals("=") && !c.equals(",") && op.next.val != null && !op.next.val.getType().equals(type) && !type.equals("Boolean") && !type.equals("Number")) {
@@ -2081,7 +2081,7 @@ public class Expression {
                         else if (type.equals("Float")) op.next.val = op.next.val.asFloat();
                         else if (type.equals("String")) op.next.val = op.next.val.asString();
                     } else {
-                        op.next.val = JSValue.create(type, op.next.val.asString().getValue());
+                        op.next.val = JSValue.create(type, op.next.val.asString().getValue(), parent_block);
                     }
                 }
                 JSValue result = null;
@@ -2096,11 +2096,11 @@ public class Expression {
                     if (type.equals("Array"))
                        result = ((JSArray)op.prev.val).concat((JSArray)op.next.val);
                     else if (type.equals("String"))
-                       result = JSValue.create(type, ((JSString)op.prev.val).getValue() + ((JSString)op.next.val).getValue());
+                       result = JSValue.create(type, ((JSString)op.prev.val).getValue() + ((JSString)op.next.val).getValue(), parent_block);
                     else if (type.equals("Float"))
-                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() + ((JSFloat)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() + ((JSFloat)op.next.val).getValue()), parent_block);
                     else if (type.equals("Integer"))
-                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() + ((JSInt)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() + ((JSInt)op.next.val).getValue()), parent_block);
                     else if (type.equals("Number")) {
                        if (op.prev.val instanceof Infinity && !(op.next.val instanceof Infinity) ||
                            !(op.prev.val instanceof Infinity) && op.next.val instanceof Infinity ||
@@ -2115,9 +2115,9 @@ public class Expression {
                 }
                 else if (c.matches("-=?")) {
                     if (type.equals("Float"))
-                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() - ((JSFloat)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() - ((JSFloat)op.next.val).getValue()), parent_block);
                     else if (type.equals("Integer"))
-                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() - ((JSInt)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() - ((JSInt)op.next.val).getValue()), parent_block);
                     else if (type.equals("Number")) {
                         if (op.prev.val instanceof Infinity && !(op.next.val instanceof Infinity) ||
                            !(op.prev.val instanceof Infinity) && op.next.val instanceof Infinity ||
@@ -2132,9 +2132,9 @@ public class Expression {
                 }
                 else if (c.matches("\\*=?")) {
                     if (type.equals("Float"))
-                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() * ((JSFloat)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() * ((JSFloat)op.next.val).getValue()), parent_block);
                     else if (type.equals("Integer"))
-                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() * ((JSInt)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() * ((JSInt)op.next.val).getValue()), parent_block);
                     else if (type.equals("Number"))
                        if (!(op.prev.val instanceof Infinity) && op.prev.val.asFloat().getValue() == 0 ||
                            !(op.next.val instanceof Infinity) && op.next.val.asFloat().getValue() == 0) {
@@ -2161,9 +2161,9 @@ public class Expression {
                     }
                     
                     else if (type.equals("Float"))
-                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() / ((JSFloat)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() / ((JSFloat)op.next.val).getValue()), parent_block);
                     else if (type.equals("Integer"))
-                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() / ((JSInt)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() / ((JSInt)op.next.val).getValue()), parent_block);
                     else if (type.equals("Number"))
                        if (op.prev.val instanceof Infinity && op.next.val instanceof Infinity) {
                            result = NaN.getInstance();
@@ -2179,11 +2179,11 @@ public class Expression {
                     if (op.next.getContent().equals("0")) { result = new NaN(); type = "NaN"; }
 
                     else if (type.equals("Float"))
-                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() % ((JSFloat)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSFloat)op.prev.val).getValue() % ((JSFloat)op.next.val).getValue()), parent_block);
                     else if (type.equals("Integer"))
-                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() % ((JSInt)op.next.val).getValue()));
+                       result = JSValue.create(type, String.valueOf(((JSInt)op.prev.val).getValue() % ((JSInt)op.next.val).getValue()), parent_block);
                     else if (type.equals("Number"))
-                       result = op.prev.val instanceof Infinity ? NaN.getInstance() : JSValue.create(op.prev.val.getType(), String.valueOf(op.prev.val.getType().charAt(0) == 'I' ? ((JSInt)op.prev.val).getValue() : ((JSFloat)op.prev.val).getValue()));
+                       result = op.prev.val instanceof Infinity ? NaN.getInstance() : JSValue.create(op.prev.val.getType(), String.valueOf(op.prev.val.getType().charAt(0) == 'I' ? ((JSInt)op.prev.val).getValue() : ((JSFloat)op.prev.val).getValue()), parent_block);
                     else if (type.equals("NaN"))
                        result = NaN.getInstance();
                 }
@@ -2468,7 +2468,7 @@ public class Expression {
                         break;
                     }
                     if (op.prev.val == null) {
-                        op.prev.val = JSValue.create(JSValue.getType(op.prev.getContent()), op.prev.getContent());
+                        op.prev.val = JSValue.create(JSValue.getType(op.prev.getContent()), op.prev.getContent(), parent_block);
                     }
                     if (op.prev.val.asBool().getValue()) {
                         op.prev.prev.next = op.next;
@@ -2551,7 +2551,7 @@ public class Expression {
                 if (op.prev.next != start) {
                     if (result != null) {
                         if (!c.equals("=") && !type.equals("Array") && !type.equals("Object") && !type.equals("Function")) {
-                            op.prev.val = JSValue.create(type, result.toString());
+                            op.prev.val = JSValue.create(type, result.toString(), parent_block);
                             op.prev.setContent(result.toString());
                             op.prev.setType(Token.VALUE);
                         } else {
@@ -2606,7 +2606,7 @@ public class Expression {
                 return this;
             }
             if (start.getType() == Token.VALUE) {
-                start.val = JSValue.create(JSValue.getType(start.getContent()), start.getContent());
+                start.val = JSValue.create(JSValue.getType(start.getContent()), start.getContent(), parent_block);
             } else if (start.getType() == Token.VAR_NAME) {
                 if (start.exp != null) {
                     start.val = start.exp.eval().getValue();
@@ -2633,6 +2633,9 @@ public class Expression {
             functionCall(start.next);
         }
         if (!silent && parent_block.error == null) {
+            if (start.val instanceof JSString && ((JSString)start.val).dynamic) {
+                ((JSString)start.val).evaluate();
+            }
             System.out.println(start.val.toString());
         }
         if (ret) {

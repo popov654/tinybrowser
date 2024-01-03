@@ -82,7 +82,7 @@ public class JSObject extends JSValue {
                     || t.getType() == Token.VALUE) && state == 1 && level == 1 && level2 == 0) {
                 if (t.getType() == Token.VALUE && (t.next.getType() == Token.OP && t.next.getContent().equals(",") ||
                         t.next.getType() == Token.OBJECT_END)) {
-                    items.put(key, JSValue.create(JSValue.getType(t.getContent()), t.getContent()));
+                    items.put(key, JSValue.create(JSValue.getType(t.getContent()), t.getContent(), block));
                 } else if (t.getType() == Token.OBJECT_ENTITY) {
                     t.val.incrementRefCount();
                     if (t.val instanceof Function) {
@@ -297,7 +297,7 @@ public class JSObject extends JSValue {
             } else if (val.getType().matches("Object|Array")) {
                 copy.items.put(key, ((JSObject)val).deepClone());
             } else {
-                copy.items.put(key, JSValue.create(val.getType(), val.toString()));
+                copy.items.put(key, JSValue.create(val.getType(), val.toString(), block));
             }
         }
         return copy;

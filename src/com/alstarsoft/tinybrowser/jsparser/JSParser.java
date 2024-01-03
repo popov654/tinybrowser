@@ -189,7 +189,7 @@ public class JSParser {
             if (ch == '\n') {
                 line++;
                 lastLineStartPos = pos+1;
-                if (state == READ_STRING && !esc) {
+                if (state == READ_STRING && strToken != '`' && !esc) {
                     errorDescription = getErrorMessage("unexpected new line character");
                     System.err.println(errorDescription);
                     correct = false;
@@ -478,7 +478,7 @@ public class JSParser {
                  return;
             }
 
-            if (state == READY && (ch == '"' || ch == '\'') && !esc) {
+            if (state == READY && (ch == '"' || ch == '\'' || ch == '`') && !esc) {
                 state = READ_STRING;
                 strToken = ch;
                 pos++;
@@ -488,7 +488,8 @@ public class JSParser {
             if (state == READ_STRING && ch == strToken && !esc) {
                 state = READY;
                 String s = last_token;
-                if (substate != READ_OBJECT_FIELD) s = "\"" + s + "\"";
+                if (strToken == '`') s = "`" + s + "`";
+                else if (substate != READ_OBJECT_FIELD) s = "\"" + s + "\"";
                 else s = "<" + s + ">";
                 Token t = new Token(s);
                 strToken = '\0';

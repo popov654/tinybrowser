@@ -908,6 +908,18 @@ public class ExpressionTest {
         exp = Expression.create(jp.getHead());
         exp.eval();
         assertEquals("\"®\"", exp.getValue().toString());
+
+        jp = new JSParser("var s = `Abc\ndef`");
+        System.out.println("var s = `Abc\ndef`");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("\"Abc\ndef\"", exp.getValue().toString());
+
+        jp = new JSParser("var n = 5; var s = `You have ${n} apples`");
+        System.out.println("var n = 5; var s = `You have ${n} apples`");
+        exp = Expression.create(jp.getHead());
+        exp.eval();
+        assertEquals("\"You have 5 apples\"", exp.getValue().toString());
         
         jp = new JSParser("\" \\\"\\\" \"");
         System.out.println("\" \\\"\\\" \"");
@@ -1015,7 +1027,7 @@ public class ExpressionTest {
         System.out.println("i++ (3 times)");
         Expression exp = Expression.create(jp.getHead());
         exp.setReusable(true);
-        Expression.setVar("i", com.alstarsoft.tinybrowser.jsparser.JSValue.create("Integer", "0"), exp, 0);
+        Expression.setVar("i", JSValue.create("Integer", "0", (Block)exp), exp, 0);
         for (int i = 0; i < n; i++) exp.eval();
         assertEquals("2", exp.getValue().toString());
         assertEquals("3", Expression.getVar("i", exp).toString());

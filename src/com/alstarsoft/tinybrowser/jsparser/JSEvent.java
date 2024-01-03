@@ -21,7 +21,7 @@ public class JSEvent extends JSObject {
         Set<String> keys = data.keySet();
         for (String key: keys) {
             String type = JSValue.getType(data.get(key));
-            JSValue val = JSValue.create(type, data.get(key));
+            JSValue val = JSValue.create(type, data.get(key), block);
             items.put(key, val);
         }
     }
@@ -37,7 +37,7 @@ public class JSEvent extends JSObject {
         Set<String> keys = data.keySet();
         for (String key: keys) {
             String type = JSValue.getType(data.get(key));
-            JSValue val = JSValue.create(type, data.get(key));
+            JSValue val = JSValue.create(type, data.get(key), block);
             items.put(key, val);
         }
     }

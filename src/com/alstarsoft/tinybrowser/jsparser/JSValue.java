@@ -25,7 +25,7 @@ public abstract class JSValue {
         if (value.equals("{}")) {
             return "Object";
         }
-        if (value.replaceAll("\n", "").matches("^([\"']).*\\1$")) {
+        if (value.replaceAll("\n", "").matches("^([\"'`]).*\\1$")) {
             return "String";
         }
         if (value.matches("^[+-]?(0x[0-9a-fA-F]+|0?[0-9]+)$")) {
@@ -52,47 +52,51 @@ public abstract class JSValue {
         return "null";
     }
 
-    public static JSValue create(String type, String value) {
+    public static JSValue create(String type, String value, Block block) {
+        JSValue val = null;
         if (type.charAt(0) == 'S') {
             if (value.replaceAll("\n", "").matches("^\".*\"$")) {
                 value = value.substring(1, value.length()-1);
             }
-            return new JSString(value);
+            val = new JSString(value);
         }
         if (type.charAt(0) == 'I') {
-            if (value.toLowerCase().equals("true")) return new JSInt(1);
-            else if (value.toLowerCase().equals("false")) return new JSInt(0);
-            else return new JSInt(value);
+            if (value.toLowerCase().equals("true")) val = new JSInt(1);
+            else if (value.toLowerCase().equals("false")) val = new JSInt(0);
+            else val = new JSInt(value);
         }
         if (type.charAt(0) == 'F') {
-            if (value.toLowerCase().equals("true")) return new JSFloat(1);
-            else if (value.toLowerCase().equals("false")) return new JSFloat(0);
-            else return new JSFloat(value);
+            if (value.toLowerCase().equals("true")) val = new JSFloat(1);
+            else if (value.toLowerCase().equals("false")) val = new JSFloat(0);
+            else val = new JSFloat(value);
         }
         if (type.charAt(0) == 'B') {
-            return new JSBool(value);
+            val = new JSBool(value);
         }
         if (type.equals("Number")) {
-            if (value.equals("NaN")) return NaN.getInstance();
-            else return Infinity.getInstance(value.charAt(0) != '-');
+            if (value.equals("NaN")) val = NaN.getInstance();
+            else val = Infinity.getInstance(value.charAt(0) != '-');
         }
-        if (type.charAt(0) == 'N') {
-            return NaN.getInstance();
+        else if (type.charAt(0) == 'N') {
+            val = NaN.getInstance();
         }
         if (value.matches("/.*/[a-z]*")) {
             String pattern = value.substring(1, value.lastIndexOf('/'));
             String flags = value.substring(value.lastIndexOf('/') + 1);
             RegExp regexp = new RegExp(pattern);
             regexp.setFlags(flags);
-            return regexp;
+            val = regexp;
         }
         if (type.equals("null")) {
-            return Null.getInstance();
+            val = Null.getInstance();
         }
         if (type.equals("undefined")) {
-            return Undefined.getInstance();
+            val = Undefined.getInstance();
         }
-        return null;
+        if (val != null) {
+            val.block = block;
+        }
+        return val;
     }
 
     public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
@@ -110,7 +114,7 @@ public abstract class JSValue {
 
     @Override
     public JSValue clone() {
-        return create(toString(), null);
+        return create(toString(), null, null);
     }
 
     public void incrementRefCount() {
@@ -163,6 +167,7 @@ public abstract class JSValue {
     public abstract JSBool asBool();
 
     public int ref_count = 0;
+    public Block block;
 
     private String type;
 }

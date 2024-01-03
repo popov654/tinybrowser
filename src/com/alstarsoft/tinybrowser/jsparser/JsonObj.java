@@ -90,7 +90,7 @@ public class JsonObj extends JSObject {
                         && state == 1 && level == 1 && level2 == 0) {
                     if (t.getType() == Token.VALUE && (t.next.getType() == Token.OP && t.next.getContent().equals(",") ||
                             t.next.getType() == Token.OBJECT_END)) {
-                        obj.set(key, JSValue.create(JSValue.getType(t.getContent()), t.getContent()));
+                        obj.set(key, JSValue.create(JSValue.getType(t.getContent()), t.getContent(), block));
                     } else {
                         b.error = new JSError(null, "Object parse error", b.getStack());
                         return null;
@@ -123,7 +123,7 @@ public class JsonObj extends JSObject {
                         (t.getType() == Token.OP && !t.getContent().equals(","))) && level == 1 && level2 == 0) {
                     if (t.getType() == Token.VALUE && (t.next.getType() == Token.OP && t.next.getContent().equals(",") ||
                             t.next.getType() == Token.ARRAY_END)) {
-                        a.push(JSValue.create(JSValue.getType(t.getContent()), t.getContent()));
+                        a.push(JSValue.create(JSValue.getType(t.getContent()), t.getContent(), block));
                     } else {
                         b.error = new JSError(null, "Object parse error", b.getStack());
                         return null;

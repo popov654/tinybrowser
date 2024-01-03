@@ -12,24 +12,24 @@ public class Generator extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (args.size() > 0) {
-                block.yt_value = args.get(0);
+                f_block.yt_value = args.get(0);
             } else {
-                Expression last_exp = block.last > -1 ? block.children.get(block.last) : null;
+                Expression last_exp = f_block.last > -1 ? f_block.children.get(f_block.last) : null;
                 if (last_exp != null && last_exp.yt != null && last_exp.yt != last_exp.start && !(last_exp.yt.val instanceof Generator)) {
-                    block.yt_value = last_value;
+                    f_block.yt_value = last_value;
                     last_exp.yt = null;
                 } else if (last_exp != null && last_exp.yt != null && last_exp.yt.prev == last_exp.start) {
-                    block.yt_value = null;
+                    f_block.yt_value = null;
                 }
             }
-            block.eval();
-            last_value = block.return_value;
+            f_block.eval();
+            last_value = f_block.return_value;
             JSObject result = new JSObject();
             if (!done) {
-                result.set("value", block.return_value);
+                result.set("value", f_block.return_value);
             }
-            result.set("done", new JSBool(block.done));
-            done = block.done;
+            result.set("done", new JSBool(f_block.done));
+            done = f_block.done;
             return result;
         }
     }
@@ -38,15 +38,15 @@ public class Generator extends JSObject {
         @Override
         public JSValue call(JSObject context, Vector<JSValue> args, boolean as_constr) {
             if (args.size() > 0) {
-                block.error = new JSError(args.get(0), "Error", null);
+                f_block.error = new JSError(args.get(0), "Error", null);
             }
-            block.eval();
+            f_block.eval();
             JSObject result = new JSObject();
             if (!done) {
-                result.set("value", block.return_value);
+                result.set("value", f_block.return_value);
             }
-            result.set("done", new JSBool(block.done));
-            done = block.done;
+            result.set("done", new JSBool(f_block.done));
+            done = f_block.done;
             return result;
         }
     }
@@ -54,7 +54,7 @@ public class Generator extends JSObject {
     public Generator(Block b) {
         b.is_func = true;
         b.is_gen = true;
-        block = b;
+        f_block = b;
         items.put("next", new nextFunction());
         items.put("throw", new throwFunction());
     }
@@ -77,8 +77,8 @@ public class Generator extends JSObject {
 
     @Override
     public String toString() {
-        if (block.func == null) return "{Generator}";
-        return block.func.toPaddedString(0);
+        if (f_block.func == null) return "{Generator}";
+        return f_block.func.toPaddedString(0);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class Generator extends JSObject {
     }
 
     private JSValue last_value;
-    private Block block = null;
+    private Block f_block = null;
     private boolean done = false;
     private String type = "Object";
 }
